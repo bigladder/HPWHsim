@@ -8,9 +8,14 @@
     "performance": {
       "heat_source_configurations": [
         {
-          "heat_distribution": [
-            1.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              1.0
+            ],
+            "weight": [
+              1.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSCONDENSERWATERHEATSOURCE"

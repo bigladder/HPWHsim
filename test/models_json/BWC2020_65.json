@@ -8,20 +8,18 @@
     "performance": {
       "heat_source_configurations": [
         {
-          "heat_distribution": [
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.5,
+              0.5833333333333333,
+              1.0
+            ],
+            "weight": [
+              0.0,
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -64,20 +62,20 @@
         },
         {
           "backup_heat_source_id": "compressor",
-          "heat_distribution": [
-            0.0,
-            0.2,
-            0.8,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.08333333333333333,
+              0.16666666666666666,
+              0.25,
+              1.0
+            ],
+            "weight": [
+              0.0,
+              0.25,
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -131,11 +129,16 @@
         },
         {
           "backup_heat_source_id": "resistiveElementBottom",
-          "heat_distribution": [
-            1.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.3333333333333333,
+              1.0
+            ],
+            "weight": [
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSCONDENSERWATERHEATSOURCE"

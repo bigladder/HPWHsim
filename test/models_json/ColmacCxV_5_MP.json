@@ -4,20 +4,18 @@
     "external_outlet_height": 0.0,
     "heat_source_configurations": [
       {
-        "heat_distribution": [
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
+        "heat_distribution": {
+          "normalized_height": [
+            0.25,
+            0.3333333333333333,
+            1.0
+          ],
+          "weight": [
+            0.0,
+            1.0,
+            0.0
+          ]
+        },
         "heat_source": {
           "metadata": {
             "schema": "RSCONDENSERWATERHEATSOURCE"

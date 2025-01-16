@@ -579,7 +579,14 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRAT
     {
         nlohmann::json j_heat_source_config;
         j_heat_source_config["id"] = heat_source_config.id;
-        j_heat_source_config["heat_distribution"] = heat_source_config.heat_distribution;
+
+        nlohmann::json heights = heat_source_config.heat_distribution.normalized_height;
+        nlohmann::json weights = heat_source_config.heat_distribution.weight;
+        nlohmann::json j_weight_dist;
+        j_weight_dist["normalized_height"] = heights;
+        j_weight_dist["weight"] = weights;
+
+        j_heat_source_config["heat_distribution"] = j_weight_dist;
 
         auto& heat_source = heat_source_config.heat_source;
         nlohmann::json j_heat_source;
@@ -681,7 +688,14 @@ void HPWH::to_json(
     {
         nlohmann::json j_heat_source_config;
         j_heat_source_config["id"] = heat_source_config.id;
-        j_heat_source_config["heat_distribution"] = heat_source_config.heat_distribution;
+
+        nlohmann::json heights = heat_source_config.heat_distribution.normalized_height;
+        nlohmann::json weights = heat_source_config.heat_distribution.weight;
+        nlohmann::json j_weight_dist;
+        j_weight_dist["normalized_height"] = heights;
+        j_weight_dist["weight"] = weights;
+
+        j_heat_source_config["heat_distribution"] = j_weight_dist;
 
         auto& heat_source = heat_source_config.heat_source;
         nlohmann::json j_heat_source;

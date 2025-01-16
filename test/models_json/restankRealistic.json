@@ -9,20 +9,18 @@
       "heat_source_configurations": [
         {
           "followed_by_heat_source_id": "resistiveElementBottom",
-          "heat_distribution": [
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.75,
+              0.8333333333333333,
+              1.0
+            ],
+            "weight": [
+              0.0,
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -54,20 +52,16 @@
           ]
         },
         {
-          "heat_distribution": [
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.08333333333333333,
+              1.0
+            ],
+            "weight": [
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"

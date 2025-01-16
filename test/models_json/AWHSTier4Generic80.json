@@ -10,20 +10,18 @@
         {
           "companion_heat_source_id": "compressor",
           "followed_by_heat_source_id": "compressor",
-          "heat_distribution": [
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.6666666666666666,
+              0.75,
+              1.0
+            ],
+            "weight": [
+              0.0,
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -57,20 +55,16 @@
         {
           "backup_heat_source_id": "compressor",
           "followed_by_heat_source_id": "compressor",
-          "heat_distribution": [
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.08333333333333333,
+              1.0
+            ],
+            "weight": [
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -124,20 +118,16 @@
         },
         {
           "backup_heat_source_id": "resistiveElementBottom",
-          "heat_distribution": [
-            0.2,
-            0.2,
-            0.2,
-            0.2,
-            0.2,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.4166666666666667,
+              1.0
+            ],
+            "weight": [
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSCONDENSERWATERHEATSOURCE"

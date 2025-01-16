@@ -221,16 +221,22 @@ void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 {
 
     heatDist = {{}, {}};
-    double prev_weight = 0.;
-    std::size_t nCond = condensity_in.size();
+    //double prev_height = 0.;
+    //double prev_weight = 0.;
+    auto nCond = condensity_in.size();
     for (std::size_t i = 0; i < nCond; ++i)
     {
+        double height = static_cast<double>(i + 1) / nCond;
         double weight = condensity_in[i];
-        if((weight != prev_weight) || (i == nCond - 1))
+        if (i == nCond - 1)
         {
-            heatDist.push_back({static_cast<double>(i + 1) / nCond, weight});
+            heatDist.push_back({height, weight});
+            break;
         }
-        prev_weight = weight;
+        if(weight != condensity_in[i + 1])
+        {
+            heatDist.push_back({height, weight});
+        }
     }
 }
 
@@ -380,8 +386,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
 {
     // Populate the vector of heat distribution
     int numNodes = hpwh->getNumNodes();
-    heatDistribution.reserve(numNodes);
-    heatDistribution.clear();
+    heatDistribution.resize(numNodes);
     double beginFrac = 0.;
     int i = 0;
     for (auto& dist: heatDistribution)
