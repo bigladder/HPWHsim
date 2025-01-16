@@ -409,7 +409,7 @@ class HPWH : public Courier::Sender
                 total += weight * (height - prevHeight);
                 prevHeight = height;
             }
-            return total;
+            return total / prevHeight;
         }
         double maxWeight() const
         {

@@ -389,13 +389,17 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     heatDistribution.resize(numNodes);
     double beginFrac = 0.;
     int i = 0;
+    double totalWeight = 0.;
     for (auto& dist: heatDistribution)
     {
-        double endFrac = (i + 1) / numNodes;
+        double endFrac = static_cast<double>(i + 1) / numNodes;
         dist = heatDist.normWeight(beginFrac, endFrac);
         beginFrac = endFrac;
         ++i;
+        totalWeight += dist;
     }
+    for (auto& dist: heatDistribution)
+        dist /= totalWeight;
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic)
