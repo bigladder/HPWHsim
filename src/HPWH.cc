@@ -2397,7 +2397,7 @@ int HPWH::getResistancePosition(int elementIndex) const
         send_error("This index is not a resistance element.");
     }
 
-    return 12. * heatSources[elementIndex]->heatDist.highestNormHeight();
+    return 12. * heatSources[elementIndex]->heatDist.lowestNormHeight();
 }
 
 void HPWH::updateSoCIfNecessary()
@@ -2558,7 +2558,7 @@ void HPWH::calcDerivedHeatingValues()
                 lowestElementIndex = i;
                 lowestPos = pos;
             }
-            pos = heatSources[i]->heatDist.highestNormHeight();
+            pos = heatSources[i]->heatDist.lowestNormHeight();
             if (pos >= highestPos)
             {
                 highestElementIndex = i;
