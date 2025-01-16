@@ -2396,8 +2396,8 @@ int HPWH::getResistancePosition(int elementIndex) const
     {
         send_error("This index is not a resistance element.");
     }
-
-    return 12. * heatSources[elementIndex]->heatDist.lowestNormHeight();
+    return static_cast<int>(HeatSource::CONDENSITY_SIZE *
+                            heatSources[elementIndex]->heatDist.lowestNormHeight());
 }
 
 void HPWH::updateSoCIfNecessary()
