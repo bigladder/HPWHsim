@@ -108,7 +108,7 @@ class HPWH::HeatSource : public Sender
     //  It is conceptually linked to the way condenser coils are wrapped around
     //  (or within) the tank, however a resistance heat source can also be simulated
     //  by specifying the entire condensity in one node. */
-    //std::vector<double> condensity;
+    // std::vector<double> condensity;
     WeightedDistribution heatDist;
 
     double Tshrinkage_C;

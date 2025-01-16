@@ -94,7 +94,6 @@ void HPWH::HeatSource::from(
     auto& config = hsc;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
 
-
     if (config.heat_distribution_is_set)
     {
         heatDist = {config.heat_distribution.normalized_height, config.heat_distribution.weight};
@@ -221,8 +220,8 @@ void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 {
 
     heatDist = {{}, {}};
-    //double prev_height = 0.;
-    //double prev_weight = 0.;
+    // double prev_height = 0.;
+    // double prev_weight = 0.;
     auto nCond = condensity_in.size();
     for (std::size_t i = 0; i < nCond; ++i)
     {
@@ -233,7 +232,7 @@ void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
             heatDist.push_back({height, weight});
             break;
         }
-        if(weight != condensity_in[i + 1])
+        if (weight != condensity_in[i + 1])
         {
             heatDist.push_back({height, weight});
         }
@@ -360,8 +359,8 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
     calcHeatDist(heatDistribution);
 
     // set the leftover capacity to 0
-    //auto distPoint = heatDist.rbegin();
-    //double totalWeight = heatDist.totalWeight();
+    // auto distPoint = heatDist.rbegin();
+    // double totalWeight = heatDist.totalWeight();
     int numNodes = hpwh->getNumNodes();
     double leftoverCap_kJ = 0.;
     for (int i = numNodes - 1; i >= 0; i--)
@@ -377,10 +376,7 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
     return leftoverCap_kJ;
 }
 
-double HPWH::HeatSource::getTankTemp() const
-{
-    return hpwh->getAverageTankTemp_C(heatDist);
-}
+double HPWH::HeatSource::getTankTemp() const { return hpwh->getAverageTankTemp_C(heatDist); }
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
 {
@@ -390,7 +386,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     double beginFrac = 0.;
     int i = 0;
     double totalWeight = 0.;
-    for (auto& dist: heatDistribution)
+    for (auto& dist : heatDistribution)
     {
         double endFrac = static_cast<double>(i + 1) / numNodes;
         dist = heatDist.normWeight(beginFrac, endFrac);
@@ -398,7 +394,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
         ++i;
         totalWeight += dist;
     }
-    for (auto& dist: heatDistribution)
+    for (auto& dist : heatDistribution)
         dist /= totalWeight;
 }
 
