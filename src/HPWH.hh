@@ -443,6 +443,8 @@ class HPWH : public Courier::Sender
             for (auto distPoint : (*this))
             {
                 double frac = distPoint.height / heightRange();
+                if (frac < beginFrac)
+                    continue;
                 if (frac > prevFrac)
                 {
                     if (frac > endFrac)
@@ -471,13 +473,13 @@ class HPWH : public Courier::Sender
         }
         double highestNormHeight() const
         {
-            for (auto distPoint = rbegin(); distPoint != rend(); ++distPoint)
+            double height = 0.;
+            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
             {
                 if (distPoint->weight > 0.)
-                    return distPoint->height / heightRange();
+                    height = distPoint->height;
             }
-
-            return 0.;
+            return height / heightRange();
         }
     };
     enum class DistributionType
