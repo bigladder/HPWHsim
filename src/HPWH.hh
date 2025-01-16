@@ -510,6 +510,7 @@ class HPWH : public Courier::Sender
             case DistributionType::Weighted:
                 return weightedDist.isValid();
             }
+            return false;
         }
     };
 
