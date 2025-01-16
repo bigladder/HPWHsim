@@ -58,8 +58,8 @@ void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CON
     isVIP = false;
 
     double dnode = 1. / condensitySize;
-    double beginFrac = dnode * (node - 1);
-    double endFrac = dnode * node;
+    double beginFrac = dnode * node;
+    double endFrac = dnode * (node + 1.);
     heatDist = {};
     if (beginFrac > 0.)
         heatDist.push_back({beginFrac, 0.});

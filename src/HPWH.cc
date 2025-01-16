@@ -2396,10 +2396,8 @@ int HPWH::getResistancePosition(int elementIndex) const
     {
         send_error("This index is not a resistance element.");
     }
-    bool foundPosition = false;
-    auto& dist = heatSources[elementIndex]->heatDist;
-    double position = heatSources[elementIndex]->heatDist.normHeight(0);
-    return 12 * position;
+
+    return 12. * heatSources[elementIndex]->heatDist.highestNormHeight();
 }
 
 void HPWH::updateSoCIfNecessary()
@@ -2681,7 +2679,6 @@ void HPWH::checkInputs()
         error_msgs.push("You must have at least one HeatSource.");
     }
 
-    double condensitySum;
     // loop through all heat sources to check each for malconfigurations
     for (int i = 0; i < getNumHeatSources(); i++)
     {

@@ -446,13 +446,16 @@ class HPWH : public Courier::Sender
                 if (frac > prevFrac)
                 {
                     if (frac > endFrac)
+                    {
                         res += distPoint.weight * (endFrac - prevFrac);
+                        break;
+                    }
                     else
                         res += distPoint.weight * (frac - prevFrac);
                 }
                 prevFrac = frac;
             }
-            return res;
+            return res / totalWeight();
         }
         double lowestNormHeight() const
         {
