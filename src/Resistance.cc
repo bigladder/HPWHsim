@@ -66,7 +66,7 @@ void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CON
     heatDist.push_back({endFrac, 1.});
     if (endFrac < 1.)
         heatDist.push_back({1., 0.});
-     power_kW = Watts / 1000.;
+    power_kW = Watts / 1000.;
 }
 
 void HPWH::Resistance::addHeat(double minutesToRun)

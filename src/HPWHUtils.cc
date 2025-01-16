@@ -152,7 +152,7 @@ int HPWH::findLowestNode(const WeightedDistribution& wdist, const int numTankNod
 {
     for (auto j = 0; j < numTankNodes; ++j)
     {
-        if (wdist.normWeight(j / numTankNodes) > 0.)
+        if (wdist.normWeight(j / numTankNodes, (j + 1.) / numTankNodes) > 0.)
             return j;
     }
 

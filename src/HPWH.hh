@@ -465,7 +465,7 @@ class HPWH : public Courier::Sender
             for (auto distPoint = begin(); distPoint != end(); ++distPoint)
             {
                 if (distPoint->weight > 0.)
-                    return prev_height  / heightRange();
+                    return prev_height / heightRange();
                 prev_height = distPoint->height;
             }
 
@@ -1016,7 +1016,6 @@ class HPWH : public Courier::Sender
 
     /// returns the tank temperature averaged using weighted logic nodes
     double getAverageTankTemp_C(const Distribution& dist) const;
-
 
     /// returns the tank temperature averaged using weighted logic nodes
     double getAverageTankTemp_C(const WeightedDistribution& wdist) const;
