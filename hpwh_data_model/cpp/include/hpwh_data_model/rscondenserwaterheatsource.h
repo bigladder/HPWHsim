@@ -12,9 +12,12 @@
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
-namespace hpwh_data_model {
-namespace rscondenserwaterheatsource_ns {
-enum class CoilConfiguration {
+namespace hpwh_data_model
+{
+namespace rscondenserwaterheatsource_ns
+{
+enum class CoilConfiguration
+{
     SUBMERGED,
     WRAPPED,
     EXTERNAL,
@@ -22,18 +25,20 @@ enum class CoilConfiguration {
 };
 const static std::unordered_map<CoilConfiguration, enum_info> CoilConfiguration_info {
     {CoilConfiguration::SUBMERGED, {"SUBMERGED", "Submerged", "Coil is submerged within the tank"}},
-    {CoilConfiguration::WRAPPED, {"WRAPPED", "Wrapped", "Coil is wrapped around the tank interior"}},
+    {CoilConfiguration::WRAPPED,
+     {"WRAPPED", "Wrapped", "Coil is wrapped around the tank interior"}},
     {CoilConfiguration::EXTERNAL, {"EXTERNAL", "External", "Coil is external to the tank"}},
-    {CoilConfiguration::UNKNOWN, {"UNKNOWN", "None", "None"}}
-};
+    {CoilConfiguration::UNKNOWN, {"UNKNOWN", "None", "None"}}};
 inline std::shared_ptr<Courier::Courier> logger;
 void set_logger(std::shared_ptr<Courier::Courier> value);
-struct Schema {
+struct Schema
+{
     const static std::string_view schema_title;
     const static std::string_view schema_version;
     const static std::string_view schema_description;
 };
-struct ProductInformation {
+struct ProductInformation
+{
     std::string manufacturer;
     std::string model_number;
     bool manufacturer_is_set;
@@ -45,14 +50,16 @@ struct ProductInformation {
     const static std::string_view manufacturer_name;
     const static std::string_view model_number_name;
 };
-struct Description {
+struct Description
+{
     rscondenserwaterheatsource_ns::ProductInformation product_information;
     bool product_information_is_set;
     const static std::string_view product_information_units;
     const static std::string_view product_information_description;
     const static std::string_view product_information_name;
 };
-struct GridVariables {
+struct GridVariables
+{
     std::vector<double> evaporator_environment_dry_bulb_temperature;
     std::vector<double> heat_source_temperature;
     std::vector<double> outlet_temperature;
@@ -69,7 +76,8 @@ struct GridVariables {
     const static std::string_view heat_source_temperature_name;
     const static std::string_view outlet_temperature_name;
 };
-struct LookupVariables {
+struct LookupVariables
+{
     std::vector<double> input_power;
     std::vector<double> heating_capacity;
     bool input_power_is_set;
@@ -81,7 +89,8 @@ struct LookupVariables {
     const static std::string_view input_power_name;
     const static std::string_view heating_capacity_name;
 };
-struct PerformanceMap {
+struct PerformanceMap
+{
     rscondenserwaterheatsource_ns::GridVariables grid_variables;
     rscondenserwaterheatsource_ns::LookupVariables lookup_variables;
     bool grid_variables_is_set;
@@ -93,7 +102,8 @@ struct PerformanceMap {
     const static std::string_view grid_variables_name;
     const static std::string_view lookup_variables_name;
 };
-struct SecondaryHeatExchanger {
+struct SecondaryHeatExchanger
+{
     double cold_side_temperature_offset;
     double hot_side_temperature_offset;
     double extra_pump_power;
@@ -110,7 +120,8 @@ struct SecondaryHeatExchanger {
     const static std::string_view hot_side_temperature_offset_name;
     const static std::string_view extra_pump_power_name;
 };
-struct Performance {
+struct Performance
+{
     rscondenserwaterheatsource_ns::PerformanceMap performance_map;
     double standby_power;
     rscondenserwaterheatsource_ns::CoilConfiguration coil_configuration;
@@ -157,7 +168,8 @@ struct Performance {
     const static std::string_view use_defrost_map_name;
     const static std::string_view secondary_heat_exchanger_name;
 };
-struct RSCONDENSERWATERHEATSOURCE : HeatSourceTemplate {
+struct RSCONDENSERWATERHEATSOURCE : HeatSourceTemplate
+{
     core_ns::Metadata metadata;
     rscondenserwaterheatsource_ns::Description description;
     rscondenserwaterheatsource_ns::Performance performance;
@@ -174,12 +186,13 @@ struct RSCONDENSERWATERHEATSOURCE : HeatSourceTemplate {
     const static std::string_view description_name;
     const static std::string_view performance_name;
 };
-NLOHMANN_JSON_SERIALIZE_ENUM (CoilConfiguration, {
-                                                    {CoilConfiguration::UNKNOWN, "UNKNOWN"},
-                                                    {CoilConfiguration::SUBMERGED, "SUBMERGED"},
-                                                    {CoilConfiguration::WRAPPED, "WRAPPED"},
-                                                    {CoilConfiguration::EXTERNAL, "EXTERNAL"},
-                                                })
+NLOHMANN_JSON_SERIALIZE_ENUM(CoilConfiguration,
+                             {
+                                 {CoilConfiguration::UNKNOWN, "UNKNOWN"},
+                                 {CoilConfiguration::SUBMERGED, "SUBMERGED"},
+                                 {CoilConfiguration::WRAPPED, "WRAPPED"},
+                                 {CoilConfiguration::EXTERNAL, "EXTERNAL"},
+                             })
 void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x);
 void from_json(const nlohmann::json& j, Description& x);
 void from_json(const nlohmann::json& j, ProductInformation& x);
@@ -188,6 +201,6 @@ void from_json(const nlohmann::json& j, PerformanceMap& x);
 void from_json(const nlohmann::json& j, GridVariables& x);
 void from_json(const nlohmann::json& j, LookupVariables& x);
 void from_json(const nlohmann::json& j, SecondaryHeatExchanger& x);
-}
-}
+} // namespace rscondenserwaterheatsource_ns
+} // namespace hpwh_data_model
 #endif
