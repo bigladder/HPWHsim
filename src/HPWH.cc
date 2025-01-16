@@ -2047,19 +2047,9 @@ double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
     return tank->getAverageNodeT_C(dist);
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Evaluates the average tank temperature based on weighted logic nodes.
-/// @note	Logic nodes must be normalizable and are referred to the fixed size LOGIC_NODE_SIZE.
-///         Node indices as associated with tank nodes as follows:
-///         node # 0: bottom tank node only;
-///         node # LOGIC_NODE_SIZE + 1: top node only;
-///         nodes # 1..LOGIC_NODE_SIZE: resampled tank nodes.
-/// @param[in]	nodeWeights	Discrete set of weighted nodes
-/// @return	Tank temperature (C)
-//-----------------------------------------------------------------------------
-double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
+double HPWH::getAverageTankTemp_C(const WeightedDistribution& wdist) const
 {
-    return tank->getAverageNodeT_C(nodeWeights);
+    return tank->getAverageNodeT_C(wdist);
 }
 
 double HPWH::getAverageTankTemp_C(const Distribution& dist) const
@@ -2407,21 +2397,9 @@ int HPWH::getResistancePosition(int elementIndex) const
         send_error("This index is not a resistance element.");
     }
     bool foundPosition = false;
-    int position = -1;
-    for (int i = 0; i < heatSources[elementIndex]->getCondensitySize(); i++)
-    {
-        if (heatSources[elementIndex]->condensity[i] > 0.)
-        { // res elements have a condensity
-            position = i;
-            foundPosition = true;
-            break;
-        }
-    }
-    if (!foundPosition)
-    {
-        send_error("Invalid resistance heat source.");
-    }
-    return position;
+    auto& dist = heatSources[elementIndex]->heatDist;
+    double position = heatSources[elementIndex]->heatDist.normHeight(0);
+    return 12 * position;
 }
 
 void HPWH::updateSoCIfNecessary()
@@ -2538,14 +2516,14 @@ void HPWH::calcDerivedHeatingValues()
     // find condentropy/shrinkage
     for (int i = 0; i < getNumHeatSources(); ++i)
     {
-        heatSources[i]->Tshrinkage_C = findShrinkageT_C(heatSources[i]->condensity);
+        heatSources[i]->Tshrinkage_C =
+            findShrinkageT_C(heatSources[i]->heatDist, tank->getNumNodes());
     }
 
     // find lowest node
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i]->lowestNode =
-            findLowestNode(heatSources[i]->condensity, tank->getNumNodes());
+        heatSources[i]->lowestNode = findLowestNode(heatSources[i]->heatDist, tank->getNumNodes());
     }
 
     // define condenser index and lowest resistance element index
@@ -2576,20 +2554,17 @@ void HPWH::calcDerivedHeatingValues()
                     send_warning("More than one resistance element is assigned to VIP.");
                 }
             }
-            int condensitySize = heatSources[i]->getCondensitySize();
-            for (int j = 0; j < condensitySize; ++j)
+            double pos = heatSources[i]->heatDist.lowestNormHeight();
+            if (pos < lowestPos)
             {
-                double pos = static_cast<double>(j) / condensitySize;
-                if ((heatSources[i]->condensity[j] > 0.) && (pos < lowestPos))
-                {
-                    lowestElementIndex = i;
-                    lowestPos = pos;
-                }
-                if ((heatSources[i]->condensity[j] > 0.) && (pos >= highestPos))
-                {
-                    highestElementIndex = i;
-                    highestPos = pos;
-                }
+                lowestElementIndex = i;
+                lowestPos = pos;
+            }
+            pos = heatSources[i]->heatDist.highestNormHeight();
+            if (pos >= highestPos)
+            {
+                highestElementIndex = i;
+                highestPos = pos;
             }
         }
     }
@@ -2742,18 +2717,11 @@ void HPWH::checkInputs()
                 error_msgs.push(fmt::format("Off logic at index {:d} is invalid.", i));
             }
         }
-
-        // check is condensity sums to 1
-        condensitySum = 0;
-
-        for (int j = 0; j < heatSources[i]->getCondensitySize(); j++)
-            condensitySum += heatSources[i]->condensity[j];
-        if (fabs(condensitySum - 1.0) > 1e-6)
+        // check is distribution is valid
+        if (!heatSources[i]->heatDist.isValid())
         {
-            error_msgs.push(fmt::format("The condensity for heatsource {:d} does not sum to 1. "
-                                        "It sums to {:g}.",
-                                        i,
-                                        condensitySum));
+            error_msgs.push(
+                fmt::format("The heat distribution for heatsource {:d} is invalid.", i));
         }
         // check that air flows are all set properly
         if (heatSources[i]->airflowFreedom > 1.0 || heatSources[i]->airflowFreedom <= 0.0)

@@ -144,7 +144,7 @@ class HPWH::Tank : public Sender
 
     double getAverageNodeT_C(const std::vector<double>& dist) const;
 
-    double getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const;
+    double getAverageNodeT_C(const WeightedDistribution& wdist) const;
 
     double getAverageNodeT_C(const Distribution& dist) const;
 

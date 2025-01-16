@@ -73,8 +73,6 @@ class HPWH::HeatSource : public Sender
     /// resampled to preserve a condensity vector of size CONDENSITY_SIZE.
     void setCondensity(const std::vector<double>& condensity_in);
 
-    int getCondensitySize() const;
-
   private:
     /** the creator of the heat source, necessary to access HPWH variables */
     HPWH* hpwh;
@@ -110,7 +108,8 @@ class HPWH::HeatSource : public Sender
     //  It is conceptually linked to the way condenser coils are wrapped around
     //  (or within) the tank, however a resistance heat source can also be simulated
     //  by specifying the entire condensity in one node. */
-    std::vector<double> condensity;
+    //std::vector<double> condensity;
+    WeightedDistribution heatDist;
 
     double Tshrinkage_C;
     /**< Tshrinkage_C is a derived from the condentropy (conditional entropy),

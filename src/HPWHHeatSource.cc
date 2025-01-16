@@ -66,7 +66,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
         followedByHeatSource = NULL;
     }
 
-    condensity = hSource.condensity;
+    heatDist = hSource.heatDist;
 
     Tshrinkage_C = hSource.Tshrinkage_C;
 
@@ -93,7 +93,12 @@ void HPWH::HeatSource::from(
 {
     auto& config = hsc;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
-    setCondensity(config.heat_distribution);
+
+
+    if (config.heat_distribution_is_set)
+    {
+        heatDist = {config.heat_distribution.normalized_height, config.heat_distribution.weight};
+    }
 
     if (config.turn_on_logic_is_set)
     {
@@ -132,7 +137,18 @@ void HPWH::HeatSource::from(
 void HPWH::HeatSource::to(
     hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc) const
 {
-    hsc.heat_distribution = condensity;
+    std::vector<double> heights = {}, weights = {};
+    for (std::size_t i = 0; i < heatDist.size(); ++i)
+    {
+        heights.push_back(heatDist.normHeight(i));
+        weights.push_back(heatDist.unitaryWeight(i));
+    }
+
+    hpwh_data_model::heat_source_configuration_ns::WeightedDistribution wd;
+    checkTo(heights, wd.normalized_height_is_set, wd.normalized_height);
+    checkTo(weights, wd.weight_is_set, wd.weight);
+    checkTo(wd, hsc.heat_distribution_is_set, hsc.heat_distribution);
+
     hsc.id = name;
 
     hsc.shut_off_logic.resize(shutOffLogicSet.size());
@@ -203,10 +219,20 @@ void HPWH::HeatSource::to(
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 {
-    condensity = condensity_in;
-}
 
-int HPWH::HeatSource::getCondensitySize() const { return static_cast<int>(condensity.size()); }
+    heatDist = {{}, {}};
+    double prev_weight = 0.;
+    std::size_t nCond = condensity_in.size();
+    for (std::size_t i = 0; i < nCond; ++i)
+    {
+        double weight = condensity_in[i];
+        if((weight != prev_weight) || (i == nCond - 1))
+        {
+            heatDist.push_back({static_cast<double>(i + 1) / nCond, weight});
+        }
+        prev_weight = weight;
+    }
+}
 
 int HPWH::HeatSource::findParent() const
 {
@@ -328,8 +354,11 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
     calcHeatDist(heatDistribution);
 
     // set the leftover capacity to 0
+    //auto distPoint = heatDist.rbegin();
+    //double totalWeight = heatDist.totalWeight();
+    int numNodes = hpwh->getNumNodes();
     double leftoverCap_kJ = 0.;
-    for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
+    for (int i = numNodes - 1; i >= 0; i--)
     {
         double nodeCap_kJ = cap_kJ * heatDistribution[i];
         if (nodeCap_kJ != 0.)
@@ -344,28 +373,24 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
 
 double HPWH::HeatSource::getTankTemp() const
 {
-
-    std::vector<double> resampledTankTemps(getCondensitySize());
-    resample(resampledTankTemps, hpwh->tank->nodeTs_C);
-
-    double tankTemp_C = 0.;
-
-    std::size_t j = 0;
-    for (auto& resampledNodeTemp : resampledTankTemps)
-    {
-        tankTemp_C += condensity[j] * resampledNodeTemp;
-        // Note that condensity is normalized.
-        ++j;
-    }
-
-    return tankTemp_C;
+    return hpwh->getAverageTankTemp_C(heatDist);
 }
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
 {
     // Populate the vector of heat distribution
-    heatDistribution.resize(hpwh->getNumNodes());
-    resampleExtensive(heatDistribution, condensity);
+    int numNodes = hpwh->getNumNodes();
+    heatDistribution.reserve(numNodes);
+    heatDistribution.clear();
+    double beginFrac = 0.;
+    int i = 0;
+    for (auto& dist: heatDistribution)
+    {
+        double endFrac = (i + 1) / numNodes;
+        dist = heatDist.normWeight(beginFrac, endFrac);
+        beginFrac = endFrac;
+        ++i;
+    }
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic)
