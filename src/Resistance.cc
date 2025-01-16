@@ -56,9 +56,17 @@ void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CON
 {
     isOn = false;
     isVIP = false;
-    condensity = std::vector<double>(condensitySize, 0.);
-    condensity[node] = 1;
-    power_kW = Watts / 1000.;
+
+    double dnode = 1. / condensitySize;
+    double beginFrac = dnode * (node - 1);
+    double endFrac = dnode * node;
+    heatDist = {};
+    if (beginFrac > 0.)
+        heatDist.push_back({beginFrac, 0.});
+    heatDist.push_back({endFrac, 1.});
+    if (endFrac < 1.)
+        heatDist.push_back({1., 0.});
+     power_kW = Watts / 1000.;
 }
 
 void HPWH::Resistance::addHeat(double minutesToRun)

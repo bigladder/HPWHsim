@@ -385,7 +385,7 @@ class HPWH : public Courier::Sender
     struct WeightedDistribution : public std::vector<DistributionPoint>
     {
       public:
-        WeightedDistribution(std::vector<double> heights, std::vector<double> weights)
+        WeightedDistribution(std::vector<double> heights = {}, std::vector<double> weights = {})
         {
             clear();
             reserve(heights.size());
@@ -435,6 +435,46 @@ class HPWH : public Courier::Sender
                     hasWeight = true;
             }
             return isNotEmpty && hasWeight && isSorted;
+        }
+        double normWeight(double beginFrac, double endFrac) const
+        {
+            double res = 0.;
+            double prevFrac = beginFrac;
+            for (auto distPoint : (*this))
+            {
+                double frac = distPoint.height / heightRange();
+                if (frac > prevFrac)
+                {
+                    if (frac > endFrac)
+                        res += distPoint.weight * (endFrac - prevFrac);
+                    else
+                        res += distPoint.weight * (frac - prevFrac);
+                }
+                prevFrac = frac;
+            }
+            return res;
+        }
+        double lowestNormHeight() const
+        {
+            double prev_height = 0.;
+            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
+            {
+                if (distPoint->weight > 0.)
+                    return prev_height  / heightRange();
+                prev_height = distPoint->height;
+            }
+
+            return 0.;
+        }
+        double highestNormHeight() const
+        {
+            for (auto distPoint = rbegin(); distPoint != rend(); ++distPoint)
+            {
+                if (distPoint->weight > 0.)
+                    return distPoint->height / heightRange();
+            }
+
+            return 0.;
         }
     };
     enum class DistributionType
@@ -970,10 +1010,11 @@ class HPWH : public Courier::Sender
     double getAverageTankTemp_C(const std::vector<double>& dist) const;
 
     /// returns the tank temperature averaged using weighted logic nodes
-    double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+    double getAverageTankTemp_C(const Distribution& dist) const;
+
 
     /// returns the tank temperature averaged using weighted logic nodes
-    double getAverageTankTemp_C(const Distribution& dist) const;
+    double getAverageTankTemp_C(const WeightedDistribution& wdist) const;
 
     void setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
@@ -1315,8 +1356,8 @@ class HPWH : public Courier::Sender
     }
     static double expitFunc(double x, double offset);
     static void normalize(std::vector<double>& distribution);
-    static int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes);
-    static double findShrinkageT_C(const std::vector<double>& nodeDist);
+    static int findLowestNode(const WeightedDistribution& wdist, const int numTankNodes);
+    static double findShrinkageT_C(const WeightedDistribution& wDist, const int numTankNodes);
     static void calcThermalDist(std::vector<double>& thermalDist,
                                 const double shrinkageT_C,
                                 const int lowestNode,

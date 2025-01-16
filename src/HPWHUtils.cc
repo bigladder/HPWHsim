@@ -148,39 +148,35 @@ void HPWH::normalize(std::vector<double>& distribution)
 }
 
 /*static*/
-int HPWH::findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
+int HPWH::findLowestNode(const WeightedDistribution& wdist, const int numTankNodes)
 {
-    int lowest = 0;
-    const int distSize = static_cast<int>(nodeDist.size());
-    double nodeRatio = static_cast<double>(numTankNodes) / distSize;
-
-    for (auto j = 0; j < distSize; ++j)
+    for (auto j = 0; j < numTankNodes; ++j)
     {
-        if (nodeDist[j] > 0.)
-        {
-            lowest = static_cast<int>(nodeRatio * j);
-            break;
-        }
+        if (wdist.normWeight(j / numTankNodes) > 0.)
+            return j;
     }
 
-    return lowest;
+    return 0;
 }
 
 /*static*/
-double HPWH::findShrinkageT_C(const std::vector<double>& nodeDist)
+double HPWH::findShrinkageT_C(const WeightedDistribution& wdist, const int numNodes)
 {
     double alphaT_C = 1., betaT_C = 2.;
     double condentropy = 0.;
-    for (std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode)
+    double fracBegin = 0.;
+    for (int iNode = 0; iNode < numNodes; ++iNode)
     {
-        double dist = nodeDist[iNode];
+        double fracEnd = static_cast<double>(iNode + 1) / numNodes;
+        double dist = wdist.normWeight(fracBegin, fracEnd);
         if (dist > 0.)
         {
             condentropy -= dist * log(dist);
         }
+        fracBegin = fracEnd;
     }
     // condentropy shifts as ln(# of condensity nodes)
-    double size_factor = static_cast<double>(nodeDist.size()) / HPWH::HeatSource::CONDENSITY_SIZE;
+    double size_factor = static_cast<double>(numNodes) / HPWH::HeatSource::CONDENSITY_SIZE;
     double standard_condentropy = condentropy - log(size_factor);
 
     return alphaT_C + standard_condentropy * betaT_C;
