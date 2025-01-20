@@ -131,12 +131,12 @@ class HPWH : public Courier::Sender
             nlohmann::json& j);
 
     static void
-    to_json(const hpwh_data_model::StateOfChargeBasedHeatingLogic&
+    to_json(const hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic&
                 soclogic,
             nlohmann::json& j);
 
     static void
-    to_json(const hpwh_data_model::TemperatureBasedHeatingLogic&
+    to_json(const hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic&
                 templogic,
             nlohmann::json& j);
 
