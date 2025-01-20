@@ -305,7 +305,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /*static*/
 std::shared_ptr<HPWH::HeatingLogic>
-HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::HeatingLogic& logic,
+HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::HeatingLogic& logic,
                          HPWH* hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
@@ -315,20 +315,20 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
     {
         switch (logic.comparison_type)
         {
-        case hpwh_data_model::heat_source_configuration_ns::ComparisonType::GREATER_THAN:
+        case hpwh_data_model::heat_source_configuration::ComparisonType::GREATER_THAN:
         {
             comparison_type = std::greater<>();
             break;
         }
 
-        case hpwh_data_model::heat_source_configuration_ns::ComparisonType::LESS_THAN:
+        case hpwh_data_model::heat_source_configuration::ComparisonType::LESS_THAN:
         {
             comparison_type = std::less<>();
             break;
         }
 
         default:
-        case hpwh_data_model::heat_source_configuration_ns::ComparisonType::UNKNOWN:
+        case hpwh_data_model::heat_source_configuration::ComparisonType::UNKNOWN:
         {
         }
         }
@@ -336,10 +336,10 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
 
     switch (logic.heating_logic_type)
     {
-    case hpwh_data_model::heat_source_configuration_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
+    case hpwh_data_model::heat_source_configuration::HeatingLogicType::STATE_OF_CHARGE_BASED:
     {
         auto soc_based_logic = reinterpret_cast<
-            hpwh_data_model::heat_source_configuration_ns::StateOfChargeBasedHeatingLogic*>(
+            hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic*>(
             logic.heating_logic.get());
 
         heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
@@ -348,12 +348,12 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
         break;
     }
 
-    case hpwh_data_model::heat_source_configuration_ns::HeatingLogicType::TEMPERATURE_BASED:
+    case hpwh_data_model::heat_source_configuration::HeatingLogicType::TEMPERATURE_BASED:
     default:
     {
         std::string label = "name";
         auto temp_based_logic = reinterpret_cast<
-            hpwh_data_model::heat_source_configuration_ns::TemperatureBasedHeatingLogic*>(
+            hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic*>(
             logic.heating_logic.get());
 
         double temp = 20.;
@@ -374,7 +374,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
         {
             switch (temp_based_logic->standby_temperature_location)
             {
-            case hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::
+            case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
                 TOP_OF_TANK:
             {
                 dist = {DistributionType::TopOfTank, {{}, {}}};
@@ -382,7 +382,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
                 checksStandby_in = true;
                 break;
             }
-            case hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::
+            case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
                 BOTTOM_OF_TANK:
             {
                 dist = {DistributionType::BottomOfTank, {{}, {}}};
@@ -420,13 +420,13 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
 }
 
 void HPWH::SoCBasedHeatingLogic::to(
-    hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heating_logic) const
+    hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic) const
 {
-    checkTo(hpwh_data_model::heat_source_configuration_ns::HeatingLogicType::STATE_OF_CHARGE_BASED,
+    checkTo(hpwh_data_model::heat_source_configuration::HeatingLogicType::STATE_OF_CHARGE_BASED,
             heating_logic.heating_logic_type_is_set,
             heating_logic.heating_logic_type);
 
-    hpwh_data_model::heat_source_configuration_ns::StateOfChargeBasedHeatingLogic logic;
+    hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic logic;
     checkTo(decisionPoint, logic.decision_point_is_set, logic.decision_point);
     checkTo(C_TO_K(tempMinUseful_C),
             logic.minimum_useful_temperature_is_set,
@@ -439,31 +439,31 @@ void HPWH::SoCBasedHeatingLogic::to(
 
     if (compare(1., 2.))
     {
-        checkTo(hpwh_data_model::heat_source_configuration_ns::ComparisonType::LESS_THAN,
+        checkTo(hpwh_data_model::heat_source_configuration::ComparisonType::LESS_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
     else
     {
-        checkTo(hpwh_data_model::heat_source_configuration_ns::ComparisonType::GREATER_THAN,
+        checkTo(hpwh_data_model::heat_source_configuration::ComparisonType::GREATER_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
 
     heating_logic.heating_logic = std::make_unique<
-        hpwh_data_model::heat_source_configuration_ns::StateOfChargeBasedHeatingLogic>();
+        hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic>();
     *heating_logic.heating_logic = logic;
     heating_logic.heating_logic_is_set = true;
 }
 
 void HPWH::TempBasedHeatingLogic::to(
-    hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heating_logic) const
+    hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic) const
 {
-    checkTo(hpwh_data_model::heat_source_configuration_ns::HeatingLogicType::TEMPERATURE_BASED,
+    checkTo(hpwh_data_model::heat_source_configuration::HeatingLogicType::TEMPERATURE_BASED,
             heating_logic.heating_logic_type_is_set,
             heating_logic.heating_logic_type);
 
-    hpwh_data_model::heat_source_configuration_ns::TemperatureBasedHeatingLogic logic;
+    hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic logic;
 
     checkTo(C_TO_K(decisionPoint),
             logic.absolute_temperature_is_set,
@@ -477,13 +477,13 @@ void HPWH::TempBasedHeatingLogic::to(
 
     if (compare(1., 2.))
     {
-        checkTo(hpwh_data_model::heat_source_configuration_ns::ComparisonType::LESS_THAN,
+        checkTo(hpwh_data_model::heat_source_configuration::ComparisonType::LESS_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
     else
     {
-        checkTo(hpwh_data_model::heat_source_configuration_ns::ComparisonType::GREATER_THAN,
+        checkTo(hpwh_data_model::heat_source_configuration::ComparisonType::GREATER_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
@@ -493,7 +493,7 @@ void HPWH::TempBasedHeatingLogic::to(
     case DistributionType::TopOfTank:
     {
         checkTo(
-            hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::TOP_OF_TANK,
+            hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::TOP_OF_TANK,
             logic.standby_temperature_location_is_set,
             logic.standby_temperature_location);
 
@@ -502,7 +502,7 @@ void HPWH::TempBasedHeatingLogic::to(
     }
     case DistributionType::BottomOfTank:
     {
-        checkTo(hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::
+        checkTo(hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
                     BOTTOM_OF_TANK,
                 logic.standby_temperature_location_is_set,
                 logic.standby_temperature_location);
@@ -519,7 +519,7 @@ void HPWH::TempBasedHeatingLogic::to(
             weights.push_back(dist.weightedDist.unitaryWeight(i));
         }
 
-        hpwh_data_model::heat_source_configuration_ns::WeightedDistribution wd;
+        hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
         checkTo(heights, wd.normalized_height_is_set, wd.normalized_height);
         checkTo(weights, wd.weight_is_set, wd.weight);
         checkTo(wd,
@@ -529,7 +529,7 @@ void HPWH::TempBasedHeatingLogic::to(
     }
     }
     heating_logic.heating_logic = std::make_unique<
-        hpwh_data_model::heat_source_configuration_ns::TemperatureBasedHeatingLogic>(logic);
+        hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic>(logic);
 
     heating_logic.heating_logic_is_set = true;
 }

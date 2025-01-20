@@ -4421,14 +4421,14 @@ void HPWH::initFromJSON(string sModelName)
 
     mapNameToPreset(sModelName, model);
 
-    hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi;
-    hpwh_data_model::hpwh_sim_input_ns::from_json(j, hsi);
+    hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
+    hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     from(hsi);
 }
 
 #endif
 
-void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
+void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
     checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
 
@@ -4441,14 +4441,14 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
     if (hsi.system_type_is_set)
         switch (hsi.system_type)
         {
-        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED:
+        case hpwh_data_model::hpwh_sim_input::HPWHSystemType::INTEGRATED:
         {
             if (hsi.integrated_system_is_set)
                 from(hsi.integrated_system);
 
             break;
         }
-        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL:
+        case hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL:
         {
             if (hsi.central_system_is_set)
             {
@@ -4471,14 +4471,14 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
             }
             break;
         }
-        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::UNKNOWN:
+        case hpwh_data_model::hpwh_sim_input::HPWHSystemType::UNKNOWN:
             return;
         }
 
     checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
 }
 
-void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
 
@@ -4500,18 +4500,18 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER:
         {
             auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
             heatSources.push_back(condenser);
 
             auto cond_ptr = reinterpret_cast<
-                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+                hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(
                 config.heat_source.get());
             condenser->from(*cond_ptr);
             break;
         }
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
         {
             heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
@@ -4574,7 +4574,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     }
 }
 
-void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);
@@ -4594,7 +4594,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER:
         {
             auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
             heatSources.push_back(condenser);
@@ -4623,12 +4623,12 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
             }
 
             auto ptr = reinterpret_cast<
-                hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP*>(
+                hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
                 config.heat_source.get());
             condenser->from(*ptr);
             break;
         }
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
         {
             heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
@@ -4695,7 +4695,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
     }
 }
 
-void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
+void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 {
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
@@ -4707,7 +4707,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
 
     if (hasACompressor() && (getCompressorCoilConfig() == Condenser::COIL_CONFIG::CONFIG_EXTERNAL))
     {
-        checkTo(hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL,
+        checkTo(hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL,
                 hsi.system_type_is_set,
                 hsi.system_type);
         to(hsi.central_system);
@@ -4716,7 +4716,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
     }
     else
     {
-        checkTo(hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED,
+        checkTo(hpwh_data_model::hpwh_sim_input::HPWHSystemType::INTEGRATED,
                 hsi.system_type_is_set,
                 hsi.system_type);
         to(hsi.integrated_system);
@@ -4725,10 +4725,10 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
     }
 }
 
-void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
+void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
-    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
+    checkTo(hpwh_data_model::ashrae205::SchemaType::RSINTEGRATEDWATERHEATER,
             metadata.schema_is_set,
             metadata.schema);
 
@@ -4759,7 +4759,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEAT
 }
 
 void HPWH::to(
-    hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs) const
+    hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const
 {
     tank->to(cwhs.tank);
 
@@ -4771,6 +4771,7 @@ void HPWH::to(
     for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
+
         heatSources[iHeatSource]->to(configuration);
         if (heatSources[iHeatSource]->isVIP)
         {
@@ -4793,16 +4794,31 @@ void HPWH::to(
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 
-    hpwh_data_model::central_water_heating_system_ns::ControlType ct;
+    hpwh_data_model::central_water_heating_system::ControlType ct;
     checkTo(ct,
             cwhs.control_type_is_set,
             cwhs.control_type);
 
-    condenser->isMultipass = (ct == hpwh_data_model::central_water_heating_system_ns::ControlType::FIXED_FLOW_RATE);
+    condenser->isMultipass = (ct == hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE);
     checkTo(condenser->mpFlowRate_LPS / 1000.,
             cwhs.fixed_flow_rate_is_set,
             cwhs.fixed_flow_rate,
             condenser->isMultipass);
+
+    if (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)
+    {
+        auto& shs = cwhs.secondary_heat_exchanger;
+        checkTo(condenser->secondaryHeatExchanger.coldSideTemperatureOffset_dC,
+                shs.cold_side_temperature_offset_is_set,
+                shs.cold_side_temperature_offset);
+        checkTo(condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                shs.hot_side_temperature_offset_is_set,
+                shs.hot_side_temperature_offset);
+        checkTo(condenser->secondaryHeatExchanger.extraPumpPower_W,
+                shs.extra_pump_power_is_set,
+                shs.extra_pump_power);
+        shs.secondary_heat_exchanger_is_set = true;
+    }
 }
 
 // convert to grid

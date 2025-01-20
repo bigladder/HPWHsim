@@ -61,9 +61,12 @@ if (${PROJECT_NAME}_USE_DATA_MODEL_GENERATION)
 
         include(poetry-install)
         poetry_install(${pythonScriptDir})
-        execute_process(
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${genCodeDir}"
 
+				if (NOT EXISTS "${dataModelDir}")
+					execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${genCodeDir}")
+				endif()
+
+        execute_process(
                 COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 RESULT_VARIABLE GIT_SUBMOD_RESULT
