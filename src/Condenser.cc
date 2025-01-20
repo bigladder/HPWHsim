@@ -229,42 +229,14 @@ void HPWH::Condenser::makeBtwxt()
     useBtwxtGrid = true;
 }
 
-void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
+void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP& hs)
 {
-    auto cond_ptr = reinterpret_cast<
-        hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-        rshs_ptr.get());
-
-    auto& perf = cond_ptr->performance;
-    switch (perf.coil_configuration)
-    {
-    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
-    {
-        configuration = COIL_CONFIG::CONFIG_SUBMERGED;
-        break;
-    }
-    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
-    {
-        configuration = COIL_CONFIG::CONFIG_WRAPPED;
-        break;
-    }
-    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
-    {
-        configuration = COIL_CONFIG::CONFIG_EXTERNAL;
-        break;
-    }
-    default:
-    {
-        break;
-    }
-    }
+    auto& perf = hs.performance;
 
     checkFrom(maxSetpoint_C,
               perf.maximum_refrigerant_temperature_is_set,
               K_TO_C(perf.maximum_refrigerant_temperature),
               100.);
-    checkFrom(maxT, perf.maximum_temperature_is_set, K_TO_C(perf.maximum_temperature), 100.);
-    checkFrom(minT, perf.minimum_temperature_is_set, K_TO_C(perf.minimum_temperature), -273.15);
     checkFrom(hysteresis_dC,
               perf.compressor_lockout_temperature_hysteresis_is_set,
               perf.compressor_lockout_temperature_hysteresis,
@@ -286,6 +258,8 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
             for (auto& T : grid_variables.evaporator_environment_dry_bulb_temperature)
                 evapTs_F.push_back(C_TO_F(K_TO_C(T)));
             perfGrid.push_back(evapTs_F);
+            maxT = evapTs_F.back();
+            minT = evapTs_F.front();
         }
 
         if (grid_variables.outlet_temperature_is_set)
@@ -351,14 +325,6 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
         standbyPower_kW = perf.standby_power / 1000.;
     }
 
-    if (perf.secondary_heat_exchanger_is_set)
-    {
-        auto& shs = perf.secondary_heat_exchanger;
-        secondaryHeatExchanger = {shs.cold_side_temperature_offset,
-                                  shs.hot_side_temperature_offset,
-                                  shs.extra_pump_power};
-    }
-
     if (hpwh->model == MODELS_NyleC60A_C_MP)
         resDefrost = {4.5, 5.0, 40.0}; // inputPower_KW, constTempLift_dF, onBelowTemp_F;
     else if (hpwh->model == MODELS_NyleC90A_C_MP)
@@ -377,18 +343,217 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
     }
 }
 
-void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
+void HPWH::Condenser::from(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& hs)
 {
-    auto cond_ptr = reinterpret_cast<
-        hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-        rshs_ptr.get());
+    auto& perf = hs.performance;
 
-    auto& metadata = cond_ptr->metadata;
+    checkFrom(maxSetpoint_C,
+              perf.maximum_refrigerant_temperature_is_set,
+              K_TO_C(perf.maximum_refrigerant_temperature),
+              100.);
+    checkFrom(hysteresis_dC,
+              perf.compressor_lockout_temperature_hysteresis_is_set,
+              perf.compressor_lockout_temperature_hysteresis,
+              0.);
+
+    // uses btwxt performance-grid interpolation
+    if (perf.performance_map_is_set)
+    {
+        auto& perf_map = perf.performance_map;
+
+        auto& grid_variables = perf_map.grid_variables;
+
+        perfGrid.reserve(3);
+        // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
+        if (grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
+        {
+            std::vector<double> evapTs_F = {};
+            evapTs_F.reserve(grid_variables.evaporator_environment_dry_bulb_temperature.size());
+            for (auto& T : grid_variables.evaporator_environment_dry_bulb_temperature)
+                evapTs_F.push_back(C_TO_F(K_TO_C(T)));
+            perfGrid.push_back(evapTs_F);
+            maxT = evapTs_F.back();
+            minT = evapTs_F.front();
+        }
+
+        if (grid_variables.heat_source_temperature_is_set)
+        {
+            std::vector<double> heatSourceTs_F = {};
+            heatSourceTs_F.reserve(grid_variables.heat_source_temperature.size());
+            for (auto& T : grid_variables.heat_source_temperature)
+                heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
+            perfGrid.push_back(heatSourceTs_F);
+        }
+
+        auto& lookup_variables = perf_map.lookup_variables;
+        perfGridValues.reserve(2);
+
+        std::size_t nVals = lookup_variables.input_power.size();
+        std::vector<double> inputPowers_kW(nVals), cops(nVals);
+        for (std::size_t i = 0; i < nVals; ++i)
+        {
+            inputPowers_kW[i] = lookup_variables.input_power[i] / 1000.;
+            cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
+        }
+
+        if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
+        {
+            if (isMultipass)
+                perfGridValues.push_back(inputPowers_kW);
+            else
+            {
+                std::vector<double> inputPowers_Btu_per_h(nVals);
+                for (std::size_t i = 0; i < nVals; ++i)
+                    inputPowers_Btu_per_h[i] = KW_TO_BTUperH(inputPowers_kW[i]);
+                perfGridValues.push_back(inputPowers_Btu_per_h);
+            }
+        }
+        else
+        {
+            std::vector<double> inputPowers_Btu_per_h(nVals);
+            for (std::size_t i = 0; i < nVals; ++i)
+                inputPowers_Btu_per_h[i] = KW_TO_BTUperH(inputPowers_kW[i]);
+            perfGridValues.push_back(inputPowers_Btu_per_h);
+        }
+        perfGridValues.push_back(cops);
+
+        makeBtwxt();
+    }
+
+    if (perf.use_defrost_map_is_set && perf.use_defrost_map)
+    {
+        setupDefrostMap();
+    }
+
+    if (perf.standby_power_is_set)
+    {
+        standbyPower_kW = perf.standby_power / 1000.;
+    }
+}
+
+void HPWH::Condenser::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& hs) const
+{
+    auto& metadata = hs.metadata;
     checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSCONDENSERWATERHEATSOURCE,
             metadata.schema_is_set,
             metadata.schema);
 
-    auto& perf = cond_ptr->performance;
+    auto& perf = hs.performance;
+    switch (configuration)
+    {
+    case COIL_CONFIG::CONFIG_SUBMERGED:
+    {
+        perf.coil_configuration =
+            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED;
+        perf.coil_configuration_is_set = true;
+        break;
+    }
+    case COIL_CONFIG::CONFIG_WRAPPED:
+    {
+        perf.coil_configuration =
+            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED;
+        perf.coil_configuration_is_set = true;
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+
+    checkTo(hysteresis_dC,
+            perf.compressor_lockout_temperature_hysteresis_is_set,
+            perf.compressor_lockout_temperature_hysteresis);
+
+    checkTo(C_TO_K(maxSetpoint_C),
+            perf.maximum_refrigerant_temperature_is_set,
+            perf.maximum_refrigerant_temperature);
+
+    if (useBtwxtGrid)
+    {
+        auto& map = perf.performance_map;
+
+        auto& grid_vars = map.grid_variables;
+
+        //
+        int iElem = 0;
+        std::vector<double> envTemp_K = {};
+        envTemp_K.reserve(perfGrid[0].size());
+        for (auto T : perfGrid[0])
+        {
+            envTemp_K.push_back(C_TO_K(F_TO_C(T)));
+        }
+        checkTo(envTemp_K,
+                grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
+                grid_vars.evaporator_environment_dry_bulb_temperature);
+
+        ++iElem;
+
+        //
+        std::vector<double> heatSourceTemp_K = {};
+        heatSourceTemp_K.reserve(perfGrid[iElem].size());
+        for (auto T : perfGrid[iElem])
+        {
+            heatSourceTemp_K.push_back(C_TO_K(F_TO_C(T)));
+        }
+
+        checkTo(heatSourceTemp_K,
+                grid_vars.heat_source_temperature_is_set,
+                grid_vars.heat_source_temperature);
+
+        auto& lookup_vars = map.lookup_variables;
+
+        std::size_t nVals = perfGridValues[0].size();
+        std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
+        for (std::size_t i = 0; i < nVals; ++i)
+        {
+            inputPowers_W[i] = 1000. * BTUperH_TO_KW(perfGridValues[0][i]); // from Btu/h
+            heatingCapacities_W[i] = perfGridValues[1][i] * inputPowers_W[i];
+        }
+
+        checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
+        checkTo(
+            heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
+
+        perf.performance_map_is_set = true;
+    }
+    else // convert to grid
+    {
+        std::vector<std::vector<double>> tempGrid = {};
+        std::vector<std::vector<double>> tempGridValues = {};
+
+        makeGridFromMap(tempGrid, tempGridValues);
+
+        auto& map = perf.performance_map;
+
+        auto& grid_vars = map.grid_variables;
+        int iElem = 0;
+        checkTo(tempGrid[iElem],
+                grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
+                grid_vars.evaporator_environment_dry_bulb_temperature);
+        ++iElem;
+
+        checkTo(tempGrid[iElem],
+                grid_vars.heat_source_temperature_is_set,
+                grid_vars.heat_source_temperature);
+
+        auto& lookup_vars = map.lookup_variables;
+        checkTo(tempGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
+        checkTo(
+            tempGridValues[1], lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
+
+        perf.performance_map_is_set = true;
+    }
+}
+
+void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP& hs) const
+{
+    auto& metadata = hs.metadata;
+    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSAIRTOWATERHEATPUMP,
+            metadata.schema_is_set,
+            metadata.schema);
+
+    auto& perf = hs.performance;
     switch (configuration)
     {
     case COIL_CONFIG::CONFIG_SUBMERGED:

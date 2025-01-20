@@ -10,6 +10,7 @@
 #include <rsresistancewaterheatsource.h>
 #include <rscondenserwaterheatsource.h>
 #include <rsintegratedwaterheater.h>
+#include <rsairtowaterheatpump.h>
 #include <centralwaterheatingsystem.h>
 #include <rstank.h>
 

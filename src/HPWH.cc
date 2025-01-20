@@ -4445,6 +4445,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
         {
             if (hsi.integrated_system_is_set)
                 from(hsi.integrated_system);
+
             break;
         }
         case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL:
@@ -4458,13 +4459,15 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
                     hsi.central_system.external_inlet_height * hsi.number_of_nodes);
                 compressor->externalOutletHeight = static_cast<int>(
                     hsi.central_system.external_outlet_height * hsi.number_of_nodes);
-                if (hsi.central_system.multipass_flow_rate_is_set)
+                if (hsi.central_system.fixed_flow_rate_is_set)
                 {
                     compressor->isMultipass = true;
-                    compressor->mpFlowRate_LPS = 1000. * hsi.central_system.multipass_flow_rate;
+                    compressor->mpFlowRate_LPS = 1000. * hsi.central_system.fixed_flow_rate;
                 }
                 else
                     compressor->isMultipass = false;
+
+                compressor->configuration = Condenser::COIL_CONFIG::CONFIG_EXTERNAL;
             }
             break;
         }
@@ -4499,8 +4502,13 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         {
         case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
         {
-            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.id));
-            heatSources[iHeatSource]->from(config.heat_source);
+            auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
+            heatSources.push_back(condenser);
+
+            auto cond_ptr = reinterpret_cast<
+                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+                config.heat_source.get());
+            condenser->from(*cond_ptr);
             break;
         }
         case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
@@ -4598,15 +4606,26 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
             checkFrom(ratio, cwhs.external_outlet_height_is_set, cwhs.external_outlet_height, 1.);
             condenser->externalOutletHeight = static_cast<int>(ratio * (tank->getNumNodes() - 1));
 
-            if (cwhs.multipass_flow_rate_is_set)
+            if (cwhs.fixed_flow_rate_is_set)
             {
                 condenser->isMultipass = true;
-                condenser->mpFlowRate_LPS = 1000. * cwhs.multipass_flow_rate;
+                condenser->mpFlowRate_LPS = 1000. * cwhs.fixed_flow_rate;
             }
             else
                 condenser->isMultipass = false;
-            condenser->from(config.heat_source);
 
+            if (cwhs.secondary_heat_exchanger_is_set)
+            {
+                auto& shs = cwhs.secondary_heat_exchanger;
+                condenser->secondaryHeatExchanger = {shs.cold_side_temperature_offset,
+                                          shs.hot_side_temperature_offset,
+                                          shs.extra_pump_power};
+            }
+
+            auto ptr = reinterpret_cast<
+                hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP*>(
+                config.heat_source.get());
+            condenser->from(*ptr);
             break;
         }
         case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
@@ -4774,9 +4793,15 @@ void HPWH::to(
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 
+    hpwh_data_model::central_water_heating_system_ns::ControlType ct;
+    checkTo(ct,
+            cwhs.control_type_is_set,
+            cwhs.control_type);
+
+    condenser->isMultipass = (ct == hpwh_data_model::central_water_heating_system_ns::ControlType::FIXED_FLOW_RATE);
     checkTo(condenser->mpFlowRate_LPS / 1000.,
-            cwhs.multipass_flow_rate_is_set,
-            cwhs.multipass_flow_rate,
+            cwhs.fixed_flow_rate_is_set,
+            cwhs.fixed_flow_rate,
             condenser->isMultipass);
 }
 

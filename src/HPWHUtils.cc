@@ -786,9 +786,23 @@ void HPWH::to_json(
     {
         j["external_outlet_height"] = cwhs.external_outlet_height;
     }
-    if (cwhs.multipass_flow_rate_is_set)
+    if (cwhs.control_type_is_set)
     {
-        j["multipass_flow_rate"] = cwhs.multipass_flow_rate;
+        j["control_type"] = cwhs.control_type;
+        if (cwhs.control_type == hpwh_data_model::central_water_heating_system_ns::ControlType::FIXED_FLOW_RATE)
+            if (cwhs.fixed_flow_rate_is_set)
+                j["fixed_flow_rate"] = cwhs.fixed_flow_rate;
+    }
+
+    if (cwhs.secondary_heat_exchanger_is_set)
+    {
+        nlohmann::json j_secondary_heat_exchanger;
+        auto& shs = cwhs.secondary_heat_exchanger;
+        j_secondary_heat_exchanger["cold_side_temperature_offset"] =
+            shs.cold_side_temperature_offset;
+        j_secondary_heat_exchanger["hot_side_temperature_offset"] = shs.hot_side_temperature_offset;
+        j_secondary_heat_exchanger["extra_pump_power"] = shs.extra_pump_power;
+        j["secondary_heat_exchanger"] = j_secondary_heat_exchanger;
     }
 }
 
@@ -831,14 +845,89 @@ void HPWH::to_json(
             perf.compressor_lockout_temperature_hysteresis;
     }
 
-    if (perf.maximum_temperature_is_set)
+    if (perf.maximum_refrigerant_temperature_is_set)
     {
-        j_perf["maximum_temperature"] = perf.maximum_temperature;
+        j_perf["maximum_refrigerant_temperature"] = perf.maximum_refrigerant_temperature;
     }
 
-    if (perf.minimum_temperature_is_set)
+    if (perf.performance_map_is_set)
     {
-        j_perf["minimum_temperature"] = perf.minimum_temperature;
+        nlohmann::json j_perf_map;
+
+        auto& grid_vars = perf.performance_map.grid_variables;
+        nlohmann::json j_grid_vars;
+
+        if (grid_vars.evaporator_environment_dry_bulb_temperature_is_set)
+        {
+            j_grid_vars["evaporator_environment_dry_bulb_temperature"] =
+                grid_vars.evaporator_environment_dry_bulb_temperature;
+        }
+
+        if (grid_vars.heat_source_temperature_is_set)
+        {
+            j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
+        }
+
+        j_perf_map["grid_variables"] = j_grid_vars;
+
+        auto& lookup_vars = perf.performance_map.lookup_variables;
+
+        nlohmann::json j_lookup_vars;
+        j_lookup_vars["input_power"] = lookup_vars.input_power;
+        j_lookup_vars["heating_capacity"] = lookup_vars.heating_capacity;
+        j_perf_map["lookup_variables"] = j_lookup_vars;
+
+        j_perf["performance_map"] = j_perf_map;
+    }
+    if (perf.coil_configuration_is_set)
+    {
+        switch (perf.coil_configuration)
+        {
+        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
+        {
+            j_perf["coil_configuration"] = "WRAPPED";
+            break;
+        }
+        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
+        {
+            j_perf["coil_configuration"] = "SUBMERGED";
+            break;
+        }
+        default:
+        {
+        }
+        }
+    }
+
+    if (perf.standby_power_is_set)
+    {
+        j_perf["standby_power"] = perf.standby_power;
+    }
+
+    if (perf.use_defrost_map_is_set)
+    {
+        j_perf["use_defrost_map"] = perf.use_defrost_map;
+    }
+
+    j["performance"] = j_perf;
+}
+
+/*static*/
+void HPWH::to_json(
+    const hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP& rshs,
+    nlohmann::json& j)
+{
+    nlohmann::json j_metadata;
+    j_metadata["schema"] = "RSAIRTOWATERHEATPUMP";
+    j["metadata"] = j_metadata;
+
+    auto& perf = rshs.performance;
+    nlohmann::json j_perf;
+
+    if (perf.compressor_lockout_temperature_hysteresis_is_set)
+    {
+        j_perf["compressor_lockout_temperature_hysteresis"] =
+            perf.compressor_lockout_temperature_hysteresis;
     }
 
     if (perf.maximum_refrigerant_temperature_is_set)
@@ -879,30 +968,6 @@ void HPWH::to_json(
 
         j_perf["performance_map"] = j_perf_map;
     }
-    if (perf.coil_configuration_is_set)
-    {
-        switch (perf.coil_configuration)
-        {
-        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
-        {
-            j_perf["coil_configuration"] = "WRAPPED";
-            break;
-        }
-        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
-        {
-            j_perf["coil_configuration"] = "SUBMERGED";
-            break;
-        }
-        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
-        {
-            j_perf["coil_configuration"] = "EXTERNAL";
-            break;
-        }
-        default:
-        {
-        }
-        }
-    }
 
     if (perf.standby_power_is_set)
     {
@@ -912,17 +977,6 @@ void HPWH::to_json(
     if (perf.use_defrost_map_is_set)
     {
         j_perf["use_defrost_map"] = perf.use_defrost_map;
-    }
-
-    if (perf.secondary_heat_exchanger_is_set)
-    {
-        nlohmann::json j_secondary_heat_exchanger;
-        auto& shs = perf.secondary_heat_exchanger;
-        j_secondary_heat_exchanger["cold_side_temperature_offset"] =
-            shs.cold_side_temperature_offset;
-        j_secondary_heat_exchanger["hot_side_temperature_offset"] = shs.hot_side_temperature_offset;
-        j_secondary_heat_exchanger["extra_pump_power"] = shs.extra_pump_power;
-        j_perf["secondary_heat_exchanger"] = j_secondary_heat_exchanger;
     }
 
     j["performance"] = j_perf;
