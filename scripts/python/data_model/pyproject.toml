@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "HPWHsim-python-scripts"
-version = "0.0.0"
+name = "hpwh-data-model"
+version = "0.1.0"
 description = ""
-authors = []
+authors = ["Big Ladder Software"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-pandas = "*"
-lattice = {git = "https://github.com/bigladder/lattice.git", rev = "c383d66be2fbd9c865b557cc511939449b5395e0"}
+python = "^3.10"
+#lattice = {path = "../../../lattice", develop = true}
+lattice = {git = "https://github.com/bigladder/lattice.git", branch = "cpp-cleanup"}
 
 [tool.poetry.dev-dependencies]
 doit = "0.36.0"

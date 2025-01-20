@@ -134,7 +134,7 @@ void HPWH::HeatSource::from(
 }
 
 void HPWH::HeatSource::to(
-    hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc) const
+    hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc, const hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType inputtype) const
 {
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
@@ -194,9 +194,15 @@ void HPWH::HeatSource::to(
     {
         hsc.heat_source_type =
             hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER;
-        hsc.heat_source = std::make_unique<
-            hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
+
+        if (inputtype == hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL)
+            hsc.heat_source = std::make_unique<
+                hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP>();
+        else
+            hsc.heat_source = std::make_unique<
+                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
         to(hsc.heat_source);
+
         break;
     }
 

@@ -119,6 +119,9 @@ class HPWH : public Courier::Sender
     to_json(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
             nlohmann::json& j);
 
+    static void to_json(const hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP& rshs,
+                        nlohmann::json& j);
+
     static void to_json(
         const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
         nlohmann::json& j);

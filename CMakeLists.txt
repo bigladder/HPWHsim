@@ -52,6 +52,7 @@ add_subdirectory(vendor)
 add_subdirectory(src)
 
 #generate hpwh-data-model source
+set(${PROJECT_NAME}_USE_DATA_MODEL_GENERATION TRUE CACHE BOOL "Use data-model source code generation" FORCE)
 if (${PROJECT_NAME}_USE_DATA_MODEL_GENERATION)
     set(srcCodeDir "${PROJECT_BINARY_DIR}/hpwh_data_model")
     if (NOT ${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
