@@ -19,12 +19,12 @@ class HPWH::HeatSource : public Sender
     virtual ~HeatSource() = default;
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void to(hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& config, const hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType inputtype) const;
-    void from(const hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& config);
+    void to(hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& config, const hpwh_data_model::hpwh_sim_input::HPWHSystemType inputtype) const;
+    void from(const hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& config);
 
     virtual HEATSOURCE_TYPE typeOfHeatSource() const = 0;
-    virtual void to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const = 0;
-    virtual void from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr) = 0;
+    virtual void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const = 0;
+    virtual void from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) = 0;
 
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 

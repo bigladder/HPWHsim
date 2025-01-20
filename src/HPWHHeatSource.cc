@@ -89,7 +89,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 }
 
 void HPWH::HeatSource::from(
-    const hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc)
+    const hpwh_data_model::heatsourceconfiguration::HeatSourceConfiguration& hsc)
 {
     auto& config = hsc;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
@@ -134,7 +134,7 @@ void HPWH::HeatSource::from(
 }
 
 void HPWH::HeatSource::to(
-    hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc, const hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType inputtype) const
+    hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& hsc, const hpwh_data_model::hpwh_sim_input::HPWHSystemType inputtype) const
 {
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
@@ -143,7 +143,7 @@ void HPWH::HeatSource::to(
         weights.push_back(heatDist.unitaryWeight(i));
     }
 
-    hpwh_data_model::heat_source_configuration_ns::WeightedDistribution wd;
+    hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
     checkTo(heights, wd.normalized_height_is_set, wd.normalized_height);
     checkTo(weights, wd.weight_is_set, wd.weight);
     checkTo(wd, hsc.heat_distribution_is_set, hsc.heat_distribution);
@@ -193,14 +193,14 @@ void HPWH::HeatSource::to(
     case TYPE_compressor:
     {
         hsc.heat_source_type =
-            hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER;
+            hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER;
 
-        if (inputtype == hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL)
+        if (inputtype == hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL)
             hsc.heat_source = std::make_unique<
-                hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP>();
+                hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP>();
         else
             hsc.heat_source = std::make_unique<
-                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
+                hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE>();
         to(hsc.heat_source);
 
         break;
@@ -209,9 +209,9 @@ void HPWH::HeatSource::to(
     case TYPE_resistance:
     {
         hsc.heat_source_type =
-            hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE;
+            hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE;
         hsc.heat_source = std::make_unique<
-            hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
+            hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE>();
         to(hsc.heat_source);
         break;
     }

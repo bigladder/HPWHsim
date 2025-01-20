@@ -229,7 +229,7 @@ void HPWH::Condenser::makeBtwxt()
     useBtwxtGrid = true;
 }
 
-void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP& hs)
+void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
     auto& perf = hs.performance;
 
@@ -343,7 +343,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump_ns::RSAIR
     }
 }
 
-void HPWH::Condenser::from(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& hs)
+void HPWH::Condenser::from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs)
 {
     auto& perf = hs.performance;
 
@@ -431,12 +431,9 @@ void HPWH::Condenser::from(const hpwh_data_model::rscondenserwaterheatsource_ns:
     }
 }
 
-void HPWH::Condenser::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& hs) const
+void HPWH::Condenser::to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
     auto& metadata = hs.metadata;
-    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSCONDENSERWATERHEATSOURCE,
-            metadata.schema_is_set,
-            metadata.schema);
 
     auto& perf = hs.performance;
     switch (configuration)
@@ -444,14 +441,14 @@ void HPWH::Condenser::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDE
     case COIL_CONFIG::CONFIG_SUBMERGED:
     {
         perf.coil_configuration =
-            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED;
+            hpwh_data_model::rscondenserwaterheatsource::CoilConfiguration::SUBMERGED;
         perf.coil_configuration_is_set = true;
         break;
     }
     case COIL_CONFIG::CONFIG_WRAPPED:
     {
         perf.coil_configuration =
-            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED;
+            hpwh_data_model::rscondenserwaterheatsource::CoilConfiguration::WRAPPED;
         perf.coil_configuration_is_set = true;
         break;
     }
@@ -546,70 +543,22 @@ void HPWH::Condenser::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDE
     }
 }
 
-void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump_ns::RSAIRTOWATERHEATPUMP& hs) const
+void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
 {
     auto& metadata = hs.metadata;
-    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSAIRTOWATERHEATPUMP,
-            metadata.schema_is_set,
-            metadata.schema);
 
     auto& perf = hs.performance;
-    switch (configuration)
-    {
-    case COIL_CONFIG::CONFIG_SUBMERGED:
-    {
-        perf.coil_configuration =
-            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED;
-        perf.coil_configuration_is_set = true;
-        break;
-    }
-    case COIL_CONFIG::CONFIG_WRAPPED:
-    {
-        perf.coil_configuration =
-            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED;
-        perf.coil_configuration_is_set = true;
-        break;
-    }
-    case COIL_CONFIG::CONFIG_EXTERNAL:
-    {
-        perf.coil_configuration =
-            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL;
-        perf.coil_configuration_is_set = true;
-
-        checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
-
-        break;
-    }
-    default:
-    {
-        break;
-    }
-    }
+    checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 
     checkTo(hysteresis_dC,
             perf.compressor_lockout_temperature_hysteresis_is_set,
             perf.compressor_lockout_temperature_hysteresis);
 
-    checkTo(C_TO_K(minT), perf.minimum_temperature_is_set, perf.minimum_temperature);
-    checkTo(C_TO_K(maxT), perf.maximum_temperature_is_set, perf.maximum_temperature);
     checkTo(C_TO_K(maxSetpoint_C),
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
 
-    if (secondaryHeatExchanger.extraPumpPower_W > 0.)
-    {
-        auto& shs = perf.secondary_heat_exchanger;
-        checkTo(secondaryHeatExchanger.coldSideTemperatureOffset_dC,
-                shs.cold_side_temperature_offset_is_set,
-                shs.cold_side_temperature_offset);
-        checkTo(secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                shs.hot_side_temperature_offset_is_set,
-                shs.hot_side_temperature_offset);
-        checkTo(secondaryHeatExchanger.extraPumpPower_W,
-                shs.extra_pump_power_is_set,
-                shs.extra_pump_power);
-        perf.secondary_heat_exchanger_is_set = true;
-    }
+
     if (useBtwxtGrid)
     {
         auto& map = perf.performance_map;
