@@ -89,7 +89,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 }
 
 void HPWH::HeatSource::from(
-    const hpwh_data_model::heatsourceconfiguration::HeatSourceConfiguration& hsc)
+    const hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& hsc)
 {
     auto& config = hsc;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
@@ -196,8 +196,12 @@ void HPWH::HeatSource::to(
             hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER;
 
         if (inputtype == hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL)
-            hsc.heat_source = std::make_unique<
+        {
+            std::unique_ptr<hpwh_data_model::heat_source_configuration::HeatSourceTemplate> hs;
+            hs = std::make_unique<
                 hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP>();
+            hsc.heat_source = hs;
+        }
         else
             hsc.heat_source = std::make_unique<
                 hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE>();
