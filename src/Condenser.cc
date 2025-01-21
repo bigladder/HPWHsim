@@ -438,18 +438,16 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
 
 void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs) const
 {
-    if (typeid(hs.get()) ==
-        typeid(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE))
-    {
-        auto hsp = reinterpret_cast<
-            hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(hs.get());
-        return to(*hsp);
-    }
-    else if (typeid(hs.get()) ==
-             typeid(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP))
+    if(configuration == COIL_CONFIG::CONFIG_EXTERNAL)
     {
         auto hsp = reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
             hs.get());
+        return to(*hsp);
+    }
+    else
+    {
+        auto hsp = reinterpret_cast<
+            hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(hs.get());
         return to(*hsp);
     }
 }

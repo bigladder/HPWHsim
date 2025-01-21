@@ -718,6 +718,15 @@ void HPWH::to_json(
                 heat_source.get());
             to_json(*hs, j_heat_source);
         }
+        if (heat_source_config.heat_source_type ==
+            hpwh_data_model::heat_source_configuration::HeatSourceType::AIRTOWATERHEATPUMP)
+        {
+            j_heat_source_config["heat_source_type"] = "AIRTOWATERHEATPUMP";
+            auto hs = reinterpret_cast<
+                hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
+                heat_source.get());
+            to_json(*hs, j_heat_source);
+        }
         j_heat_source_config["heat_source"] = j_heat_source;
 
         if (heat_source_config.turn_on_logic.size() > 0)

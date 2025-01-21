@@ -2100,7 +2100,7 @@ int HPWH::isCompressorExternal() const
         send_error("Current model does not have a compressor.");
     }
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    return static_cast<int>(cond_ptr->isExternalMultipass());
+    return static_cast<int>(cond_ptr->isExternal());
 }
 
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
@@ -4803,8 +4803,11 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
             cwhs.external_outlet_height);
 
     hpwh_data_model::central_water_heating_system::ControlType ct =
-        hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE;
-    checkTo(ct, cwhs.control_type_is_set, cwhs.control_type);
+        (condenser->isMultipass)?
+        hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE :
+                                 hpwh_data_model::central_water_heating_system::ControlType::FIXED_OUTLET_TEMPERATURE;
+
+       checkTo(ct, cwhs.control_type_is_set, cwhs.control_type);
 
     condenser->isMultipass =
         (ct == hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE);
