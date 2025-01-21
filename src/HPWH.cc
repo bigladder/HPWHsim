@@ -2093,6 +2093,16 @@ int HPWH::isCompressorExternalMultipass() const
     return static_cast<int>(cond_ptr->isExternalMultipass());
 }
 
+int HPWH::isCompressorExternal() const
+{
+    if (!hasACompressor())
+    {
+        send_error("Current model does not have a compressor.");
+    }
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return static_cast<int>(cond_ptr->isExternalMultipass());
+}
+
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
 
 bool HPWH::hasExternalHeatSource(std::size_t& heatSourceIndex) const
@@ -4618,13 +4628,13 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
             {
                 auto& shs = cwhs.secondary_heat_exchanger;
                 condenser->secondaryHeatExchanger = {shs.cold_side_temperature_offset,
-                                          shs.hot_side_temperature_offset,
-                                          shs.extra_pump_power};
+                                                     shs.hot_side_temperature_offset,
+                                                     shs.extra_pump_power};
             }
 
-            auto ptr = reinterpret_cast<
-                hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
-                config.heat_source.get());
+            auto ptr =
+                reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
+                    config.heat_source.get());
             condenser->from(*ptr);
             break;
         }
@@ -4728,9 +4738,8 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
-    checkTo(hpwh_data_model::ashrae205::SchemaType::RSINTEGRATEDWATERHEATER,
-            metadata.schema_is_set,
-            metadata.schema);
+    checkTo(
+        std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
 
     auto& performance = rswh.performance;
 
@@ -4758,8 +4767,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
             hasPrimaryHeatSource);
 }
 
-void HPWH::to(
-    hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const
+void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const
 {
     tank->to(cwhs.tank);
 
@@ -4794,12 +4802,12 @@ void HPWH::to(
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 
-    hpwh_data_model::central_water_heating_system::ControlType ct;
-    checkTo(ct,
-            cwhs.control_type_is_set,
-            cwhs.control_type);
+    hpwh_data_model::central_water_heating_system::ControlType ct =
+        hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE;
+    checkTo(ct, cwhs.control_type_is_set, cwhs.control_type);
 
-    condenser->isMultipass = (ct == hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE);
+    condenser->isMultipass =
+        (ct == hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE);
     checkTo(condenser->mpFlowRate_LPS / 1000.,
             cwhs.fixed_flow_rate_is_set,
             cwhs.fixed_flow_rate,
@@ -4817,7 +4825,7 @@ void HPWH::to(
         checkTo(condenser->secondaryHeatExchanger.extraPumpPower_W,
                 shs.extra_pump_power_is_set,
                 shs.extra_pump_power);
-        shs.secondary_heat_exchanger_is_set = true;
+        cwhs.secondary_heat_exchanger_is_set = true;
     }
 }
 

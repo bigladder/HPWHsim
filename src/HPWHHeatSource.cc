@@ -134,7 +134,7 @@ void HPWH::HeatSource::from(
 }
 
 void HPWH::HeatSource::to(
-    hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& hsc, const hpwh_data_model::hpwh_sim_input::HPWHSystemType inputtype) const
+    hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& hsc) const
 {
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
@@ -192,21 +192,21 @@ void HPWH::HeatSource::to(
     {
     case TYPE_compressor:
     {
-        hsc.heat_source_type =
-            hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER;
-
-        if (inputtype == hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL)
+        if (hpwh->isCompressorExternal())
         {
-            std::unique_ptr<hpwh_data_model::heat_source_configuration::HeatSourceTemplate> hs;
-            hs = std::make_unique<
-                hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP>();
-            hsc.heat_source = hs;
+            hsc.heat_source_type =
+                hpwh_data_model::heat_source_configuration::HeatSourceType::AIRTOWATERHEATPUMP;
+            hsc.heat_source =
+                std::make_unique<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP>();
         }
         else
+        {
+            hsc.heat_source_type =
+                hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER;
             hsc.heat_source = std::make_unique<
                 hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE>();
+        }
         to(hsc.heat_source);
-
         break;
     }
 

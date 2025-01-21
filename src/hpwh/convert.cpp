@@ -78,7 +78,7 @@ void convert(const std::string& sSpecType,
         hpwh.initFromJSON(sModelName);
     }
 
-    hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi;
+    hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh.to(hsi);
 
     nlohmann::json j;
