@@ -88,8 +88,7 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
     void setConstantMainsTemperature(double mains_C);
 
     // void to(hpwh_data_model::rsintegratedwaterheater::SoCBasedHeatingLogic& heating_logic);
-    void
-    to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
+    void to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
 
   private:
     double tempMinUseful_C;
@@ -136,8 +135,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setDecisionPoint(double value, bool absolute);
 
-    void
-    to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
+    void to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
 
     bool isAbsolute;
     Distribution dist;

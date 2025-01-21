@@ -492,20 +492,19 @@ void HPWH::TempBasedHeatingLogic::to(
     {
     case DistributionType::TopOfTank:
     {
-        checkTo(
-            hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::TOP_OF_TANK,
-            logic.standby_temperature_location_is_set,
-            logic.standby_temperature_location);
+        checkTo(hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::TOP_OF_TANK,
+                logic.standby_temperature_location_is_set,
+                logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
         break;
     }
     case DistributionType::BottomOfTank:
     {
-        checkTo(hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
-                    BOTTOM_OF_TANK,
-                logic.standby_temperature_location_is_set,
-                logic.standby_temperature_location);
+        checkTo(
+            hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::BOTTOM_OF_TANK,
+            logic.standby_temperature_location_is_set,
+            logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
         break;
@@ -528,8 +527,9 @@ void HPWH::TempBasedHeatingLogic::to(
         break;
     }
     }
-    heating_logic.heating_logic = std::make_unique<
-        hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic>(logic);
+    heating_logic.heating_logic =
+        std::make_unique<hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic>(
+            logic);
 
     heating_logic.heating_logic_is_set = true;
 }
