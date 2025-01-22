@@ -4455,41 +4455,41 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->perfMap.reserve(3);
 
-        double dPin_dT = 2.1;
-        double dcop_dT = -0.01;
+        double dPin_dTs = 2.1;
+        double dcop_dTs = -0.01;
         double Ts_op = 124.;
 
         double Pin50_op = 355.8;
         double cop50_op = 3.13;
-        double Pin50_0 = Pin50_op - dPin_dT * (Ts_op);
-        double cop50_0 = cop50_op - dcop_dT * (Ts_op);
+        double Pin50_0 = Pin50_op - dPin_dTs * (Ts_op - 0.);
+        double cop50_0 = cop50_op - dcop_dTs * (Ts_op - 0.);
 
         double Pin67_op = 272;
         double cop67_op = 4.25;
-        double Pin67_0 = Pin67_op - dPin_dT * (Ts_op);
-        double cop67_0 = cop67_op - dcop_dT * (Ts_op);
+        double Pin67_0 = Pin67_op - dPin_dTs * (Ts_op - 0.);
+        double cop67_0 = cop67_op - dcop_dTs * (Ts_op - 0.);
 
         double Pin95_op = 260.5;
         double cop95_op = 6.56;
-        double Pin95_0 = Pin95_op - dPin_dT * (Ts_op);
-        double cop95_0 = cop95_op - dcop_dT * (Ts_op);
+        double Pin95_0 = Pin95_op - dPin_dTs * (Ts_op - 0.);
+        double cop95_0 = cop95_op - dcop_dTs * (Ts_op - 0.);
 
         compressor->perfMap.push_back({
-            50,                     // Temperature (F)
-            {Pin50_0, dPin_dT, 0.}, // Input Power Coefficients (W)
-            {cop50_0, dcop_dT, 0.}  // COP Coefficients
+            50,                      // Temperature (F)
+            {Pin50_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
+            {cop50_0, dcop_dTs, 0.}  // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            67.5,                   // Temperature (F)
-            {Pin67_0, dPin_dT, 0.}, // Input Power Coefficients (W)
-            {cop67_0, dcop_dT, 0.}  // COP Coefficients
+            67.5,                    // Temperature (F)
+            {Pin67_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
+            {cop67_0, dcop_dTs, 0.}  // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            95,                     // Temperature (F)
-            {Pin95_0, dPin_dT, 0.}, // Input Power Coefficients (W)
-            {cop95_0, dcop_dT, 0.}  // COP Coefficients
+            95,                      // Temperature (F)
+            {Pin95_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
+            {cop95_0, dcop_dTs, 0.}  // COP Coefficients
         });
 
         compressor->minT = F_TO_C(23);
