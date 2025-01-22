@@ -655,12 +655,13 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             checkTo(
                 outletTemps_K, grid_vars.outlet_temperature_is_set, grid_vars.outlet_temperature);
             nVals *= outletTemps_K.size();
-            ++iElem;
         }
         else
         {
-            outletTemps_K.push_back(C_TO_K(hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
+            outletTemps_K.push_back(
+                C_TO_K(hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
         }
+        ++iElem;
 
         //
         std::vector<double> heatSourceTemps_K = {};
@@ -678,15 +679,6 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         auto& lookup_vars = map.lookup_variables;
 
         std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
-        for (std::size_t i = 0; i < nVals; ++i)
-        {
-            if (isMultipass)
-                inputPowers_W[i] = 1000. * perfGridValues[0][i]; // from kW
-            else
-                inputPowers_W[i] = 1000. * BTUperH_TO_KW(perfGridValues[0][i]); // from Btu/h
-
-            heatingCapacities_W[i] = perfGridValues[1][i] * inputPowers_W[i];
-        }
 
         std::size_t i = 0;
         for (auto& envTemp_K : envTemps_K)
@@ -891,7 +883,8 @@ void HPWH::Condenser::getCapacityMP(double externalT_C,
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {C_TO_F(externalT_C), C_TO_F(adjOutletT_C), C_TO_F(adjCondenserTemp_C)};
+        std::vector<double> target {
+            C_TO_F(externalT_C), C_TO_F(adjOutletT_C), C_TO_F(adjCondenserTemp_C)};
         btwxtInterp(input_BTUperHr, cop, target);
         input_BTUperHr = KW_TO_BTUperH(input_BTUperHr);
     }
@@ -1432,13 +1425,14 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
 
         if (isMultipass)
         {
-            outletTemps_K = {C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)};
+            outletTemps_K = {
+                C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)};
 
             // heat-source Ts
             tempGrid.reserve(3);
             tempGrid.push_back(envTemps_K);
-            tempGrid.push_back(heatSourceTemps_K);
             tempGrid.push_back(outletTemps_K); // not used
+            tempGrid.push_back(heatSourceTemps_K);
 
             std::size_t nTotVals = envTemps_K.size() * heatSourceTemps_K.size();
             std::vector<double> inputPowers_W(nTotVals), heatingCapacities_W(nTotVals);
@@ -1457,7 +1451,6 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             // outlet Ts
             tempGridValues.push_back(inputPowers_W);
             tempGridValues.push_back(heatingCapacities_W);
-
         }
         else
         {
