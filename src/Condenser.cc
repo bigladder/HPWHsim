@@ -657,6 +657,10 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             nVals *= outletTemps_K.size();
             ++iElem;
         }
+        else
+        {
+            outletTemps_K.push_back(C_TO_K(hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
+        }
 
         //
         std::vector<double> heatSourceTemps_K = {};
@@ -685,32 +689,22 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         }
 
         std::size_t i = 0;
-        if (isMultipass)
-            for (auto& envTemp_K : envTemps_K)
+        for (auto& envTemp_K : envTemps_K)
+            for (auto& outletTemp_K : outletTemps_K)
                 for (auto& heatSourceTemp_K : heatSourceTemps_K)
                 {
                     std::vector target = {C_TO_F(K_TO_C(envTemp_K)),
+                                          C_TO_F(K_TO_C(outletTemp_K)),
                                           C_TO_F(K_TO_C(heatSourceTemp_K))};
                     std::vector<double> result = perfRGI->get_values_at_target(target);
 
-                    inputPowers_W[i] = 1000. * result[0]; // from KW
+                    if (isMultipass)
+                        inputPowers_W[i] = 1000. * result[0]; // from KW
+                    else
+                        inputPowers_W[i] = 1000. * BTUperH_TO_KW(result[0]); // from Btu/h
                     heatingCapacities_W[i] = result[1] * inputPowers_W[i];
                     ++i;
                 }
-        else
-            for (auto& envTemp_K : envTemps_K)
-                for (auto& outletTemp_K : outletTemps_K)
-                    for (auto& heatSourceTemp_K : heatSourceTemps_K)
-                    {
-                        std::vector target = {C_TO_F(K_TO_C(envTemp_K)),
-                                              C_TO_F(K_TO_C(outletTemp_K)),
-                                              C_TO_F(K_TO_C(heatSourceTemp_K))};
-                        std::vector<double> result = perfRGI->get_values_at_target(target);
-
-                        inputPowers_W[i] = 1000. * BTUperH_TO_KW(result[0]); // from Btu/h
-                        heatingCapacities_W[i] = result[1] * inputPowers_W[i];
-                        ++i;
-                    }
 
         checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
         checkTo(
@@ -883,6 +877,7 @@ void HPWH::Condenser::getCapacityMP(double externalT_C,
     bool resDefrostHeatingOn = false;
     double adjCondenserTemp_C =
         condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffset_dC;
+    double adjOutletT_C = hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
     if (resDefrost.inputPwr_kW > 0)
@@ -896,7 +891,7 @@ void HPWH::Condenser::getCapacityMP(double externalT_C,
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {C_TO_F(externalT_C), C_TO_F(adjCondenserTemp_C)};
+        std::vector<double> target {C_TO_F(externalT_C), C_TO_F(adjOutletT_C), C_TO_F(adjCondenserTemp_C)};
         btwxtInterp(input_BTUperHr, cop, target);
         input_BTUperHr = KW_TO_BTUperH(input_BTUperHr);
     }
@@ -1437,9 +1432,14 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
 
         if (isMultipass)
         {
-            tempGrid.reserve(2);
+            outletTemps_K = {C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)};
+
+            // heat-source Ts
+            tempGrid.reserve(3);
             tempGrid.push_back(envTemps_K);
             tempGrid.push_back(heatSourceTemps_K);
+            tempGrid.push_back(outletTemps_K); // not used
+
             std::size_t nTotVals = envTemps_K.size() * heatSourceTemps_K.size();
             std::vector<double> inputPowers_W(nTotVals), heatingCapacities_W(nTotVals);
             std::size_t i = 0;
@@ -1454,8 +1454,10 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                     ++i;
                 }
 
+            // outlet Ts
             tempGridValues.push_back(inputPowers_W);
             tempGridValues.push_back(heatingCapacities_W);
+
         }
         else
         {
