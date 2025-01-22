@@ -465,7 +465,7 @@ stringcase = ">=1.2.0"
 type = "git"
 url = "https://github.com/bigladder/lattice.git"
 reference = "cpp-cleanup"
-resolved_reference = "fddff516b9d9f86b20f0da6a1901b92bf544dac9"
+resolved_reference = "df744aec1873fefe421e61ea7537d69a102a00a3"
 
 [[package]]
 name = "markdown"
