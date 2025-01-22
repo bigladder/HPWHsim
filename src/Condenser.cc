@@ -253,6 +253,24 @@ void HPWH::Condenser::from(
 {
     auto& perf = hs.performance;
 
+    switch (perf.coil_configuration)
+    {
+    case hpwh_data_model::rscondenserwaterheatsource::CoilConfiguration::SUBMERGED:
+    {
+        configuration = COIL_CONFIG::CONFIG_SUBMERGED;
+        break;
+    }
+    case hpwh_data_model::rscondenserwaterheatsource::CoilConfiguration::WRAPPED:
+    {
+        configuration = COIL_CONFIG::CONFIG_WRAPPED;
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+
     checkFrom(maxSetpoint_C,
               perf.maximum_refrigerant_temperature_is_set,
               K_TO_C(perf.maximum_refrigerant_temperature),
@@ -261,6 +279,7 @@ void HPWH::Condenser::from(
               perf.compressor_lockout_temperature_hysteresis_is_set,
               perf.compressor_lockout_temperature_hysteresis,
               0.);
+
 
     // uses btwxt performance-grid interpolation
     if (perf.performance_map_is_set)
@@ -324,6 +343,8 @@ void HPWH::Condenser::from(
 
 void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
+    configuration = COIL_CONFIG::CONFIG_EXTERNAL;
+
     auto& perf = hs.performance;
 
     checkFrom(maxSetpoint_C,
@@ -384,18 +405,8 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
             cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
         }
 
-        if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
-        {
-            if (isMultipass)
-                perfGridValues.push_back(inputPowers_kW);
-            else
-            {
-                std::vector<double> inputPowers_Btu_per_h(nVals);
-                for (std::size_t i = 0; i < nVals; ++i)
-                    inputPowers_Btu_per_h[i] = KW_TO_BTUperH(inputPowers_kW[i]);
-                perfGridValues.push_back(inputPowers_Btu_per_h);
-            }
-        }
+        if (isMultipass)
+            perfGridValues.push_back(inputPowers_kW);
         else
         {
             std::vector<double> inputPowers_Btu_per_h(nVals);
@@ -403,6 +414,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
                 inputPowers_Btu_per_h[i] = KW_TO_BTUperH(inputPowers_kW[i]);
             perfGridValues.push_back(inputPowers_Btu_per_h);
         }
+
         perfGridValues.push_back(cops);
 
         makeBtwxt();

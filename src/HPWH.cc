@@ -4604,7 +4604,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::AIRTOWATERHEATPUMP:
         {
             auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
             heatSources.push_back(condenser);
@@ -4631,7 +4631,6 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
                                                      shs.hot_side_temperature_offset,
                                                      shs.extra_pump_power};
             }
-
             auto ptr =
                 reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
                     config.heat_source.get());
