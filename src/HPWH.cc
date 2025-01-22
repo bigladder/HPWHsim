@@ -4802,11 +4802,11 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
             cwhs.external_outlet_height);
 
     hpwh_data_model::central_water_heating_system::ControlType ct =
-        (condenser->isMultipass)?
-        hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE :
-                                 hpwh_data_model::central_water_heating_system::ControlType::FIXED_OUTLET_TEMPERATURE;
+        (condenser->isMultipass)
+            ? hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE
+            : hpwh_data_model::central_water_heating_system::ControlType::FIXED_OUTLET_TEMPERATURE;
 
-       checkTo(ct, cwhs.control_type_is_set, cwhs.control_type);
+    checkTo(ct, cwhs.control_type_is_set, cwhs.control_type);
 
     condenser->isMultipass =
         (ct == hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE);
