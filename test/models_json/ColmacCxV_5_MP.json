@@ -97,6 +97,9 @@
                   329.15,
                   331.15,
                   333.15
+                ],
+                "outlet_temperature": [
+                  330.3722222222222
                 ]
               },
               "lookup_variables": {
