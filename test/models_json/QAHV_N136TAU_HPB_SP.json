@@ -24,6 +24,18 @@
             "maximum_refrigerant_temperature": 353.2055555555555,
             "performance_map": {
               "grid_variables": {
+                "condenser_entering_temperature": [
+                  278.15,
+                  282.15,
+                  290.15,
+                  297.15,
+                  302.15
+                ],
+                "condenser_leaving_temperature": [
+                  333.15,
+                  343.15,
+                  353.15
+                ],
                 "evaporator_environment_dry_bulb_temperature": [
                   248.14999999999998,
                   249.14999999999998,
@@ -60,18 +72,6 @@
                   311.15,
                   313.15,
                   373.15
-                ],
-                "heat_source_temperature": [
-                  278.15,
-                  282.15,
-                  290.15,
-                  297.15,
-                  302.15
-                ],
-                "outlet_temperature": [
-                  333.15,
-                  343.15,
-                  353.15
                 ]
               },
               "lookup_variables": {
@@ -1141,6 +1141,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "differential_temperature": 8.333333333333334,
+              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.08333333333333333,
@@ -1160,6 +1161,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "absolute_temperature": 316.4833333333333,
+              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.25,

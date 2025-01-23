@@ -392,20 +392,20 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
             minT = F_TO_C(evapTs_F.front());
         }
 
-        if (grid_variables.outlet_temperature_is_set)
+        if (grid_variables.condenser_leaving_temperature_is_set)
         {
             std::vector<double> outletTs_F = {};
-            outletTs_F.reserve(grid_variables.outlet_temperature.size());
-            for (auto& T : grid_variables.outlet_temperature)
+            outletTs_F.reserve(grid_variables.condenser_leaving_temperature.size());
+            for (auto& T : grid_variables.condenser_leaving_temperature)
                 outletTs_F.push_back(C_TO_F(K_TO_C(T)));
             perfGrid.push_back(outletTs_F);
         }
 
-        if (grid_variables.heat_source_temperature_is_set)
+        if (grid_variables.condenser_entering_temperature_is_set)
         {
             std::vector<double> heatSourceTs_F = {};
-            heatSourceTs_F.reserve(grid_variables.heat_source_temperature.size());
-            for (auto& T : grid_variables.heat_source_temperature)
+            heatSourceTs_F.reserve(grid_variables.condenser_entering_temperature.size());
+            for (auto& T : grid_variables.condenser_entering_temperature)
                 heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
             perfGrid.push_back(heatSourceTs_F);
         }
@@ -654,8 +654,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             {
                 outletTemps_K.push_back(C_TO_K(F_TO_C(T)));
             }
-            checkTo(
-                outletTemps_K, grid_vars.outlet_temperature_is_set, grid_vars.outlet_temperature);
+            checkTo(outletTemps_K,
+                    grid_vars.condenser_leaving_temperature_is_set,
+                    grid_vars.condenser_leaving_temperature);
 
             ++iElem;
             nVals *= outletTemps_K.size();
@@ -668,8 +669,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             }
 
             checkTo(heatSourceTemps_K,
-                    grid_vars.heat_source_temperature_is_set,
-                    grid_vars.heat_source_temperature);
+                    grid_vars.condenser_entering_temperature_is_set,
+                    grid_vars.condenser_entering_temperature);
             ++iElem;
             nVals *= heatSourceTemps_K.size();
         }
@@ -719,14 +720,15 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             ++iElem;
         }
         {
-            checkTo(
-                tempGrid[iElem], grid_vars.outlet_temperature_is_set, grid_vars.outlet_temperature);
+            checkTo(tempGrid[iElem],
+                    grid_vars.condenser_leaving_temperature_is_set,
+                    grid_vars.condenser_leaving_temperature);
             ++iElem;
         }
         {
             checkTo(tempGrid[iElem],
-                    grid_vars.heat_source_temperature_is_set,
-                    grid_vars.heat_source_temperature);
+                    grid_vars.condenser_entering_temperature_is_set,
+                    grid_vars.condenser_entering_temperature);
             ++iElem;
         }
 

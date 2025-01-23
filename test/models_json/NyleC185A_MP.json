@@ -27,14 +27,7 @@
             "maximum_refrigerant_temperature": 344.26111111111106,
             "performance_map": {
               "grid_variables": {
-                "evaporator_environment_dry_bulb_temperature": [
-                  277.59444444444443,
-                  288.7055555555555,
-                  299.81666666666666,
-                  305.3722222222222,
-                  327.59444444444443
-                ],
-                "heat_source_temperature": [
+                "condenser_entering_temperature": [
                   277.59444444444443,
                   288.7055555555555,
                   299.81666666666666,
@@ -42,8 +35,15 @@
                   327.59444444444443,
                   338.7055555555555
                 ],
-                "outlet_temperature": [
+                "condenser_leaving_temperature": [
                   330.3722222222222
+                ],
+                "evaporator_environment_dry_bulb_temperature": [
+                  277.59444444444443,
+                  288.7055555555555,
+                  299.81666666666666,
+                  305.3722222222222,
+                  327.59444444444443
                 ]
               },
               "lookup_variables": {
@@ -123,6 +123,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "differential_temperature": 0.0,
+              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.25,
@@ -144,6 +145,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 2.7777777777777777,
+              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.25,
@@ -163,6 +165,11 @@
       }
     ],
     "primary_heat_source_id": "compressor",
+    "secondary_heat_exchanger": {
+      "cold_side_temperature_offset": 6.95168393629355e-310,
+      "extra_pump_power": 1.24e-322,
+      "hot_side_temperature_offset": 2.2483389847e-314
+    },
     "tank": {
       "metadata": {
         "schema": "RSTANK"

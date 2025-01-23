@@ -24,6 +24,42 @@
             "maximum_refrigerant_temperature": 333.15,
             "performance_map": {
               "grid_variables": {
+                "condenser_entering_temperature": [
+                  273.15,
+                  275.15,
+                  277.15,
+                  279.15,
+                  281.15,
+                  283.15,
+                  285.15,
+                  287.15,
+                  289.15,
+                  291.15,
+                  293.15,
+                  295.15,
+                  297.15,
+                  299.15,
+                  301.15,
+                  303.15,
+                  305.15,
+                  307.15,
+                  309.15,
+                  311.15,
+                  313.15,
+                  315.15,
+                  317.15,
+                  319.15,
+                  321.15,
+                  323.15,
+                  325.15,
+                  327.15,
+                  329.15,
+                  331.15,
+                  333.15
+                ],
+                "condenser_leaving_temperature": [
+                  330.3722222222222
+                ],
                 "evaporator_environment_dry_bulb_temperature": [
                   253.14999999999998,
                   273.15,
@@ -61,42 +97,6 @@
                   288.65,
                   288.70555559999997,
                   373.15
-                ],
-                "heat_source_temperature": [
-                  273.15,
-                  275.15,
-                  277.15,
-                  279.15,
-                  281.15,
-                  283.15,
-                  285.15,
-                  287.15,
-                  289.15,
-                  291.15,
-                  293.15,
-                  295.15,
-                  297.15,
-                  299.15,
-                  301.15,
-                  303.15,
-                  305.15,
-                  307.15,
-                  309.15,
-                  311.15,
-                  313.15,
-                  315.15,
-                  317.15,
-                  319.15,
-                  321.15,
-                  323.15,
-                  325.15,
-                  327.15,
-                  329.15,
-                  331.15,
-                  333.15
-                ],
-                "outlet_temperature": [
-                  330.3722222222222
                 ]
               },
               "lookup_variables": {
@@ -2348,6 +2348,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "differential_temperature": 8.333333333333334,
+              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.08333333333333333,
@@ -2367,6 +2368,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 8.333333333333334,
+              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.25,
@@ -2386,6 +2388,11 @@
       }
     ],
     "primary_heat_source_id": "compressor",
+    "secondary_heat_exchanger": {
+      "cold_side_temperature_offset": 6.95168393629355e-310,
+      "extra_pump_power": 1.24e-322,
+      "hot_side_temperature_offset": 2.240244213e-314
+    },
     "tank": {
       "metadata": {
         "schema": "RSTANK"
