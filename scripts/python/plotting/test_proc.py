@@ -12,7 +12,7 @@ from scipy.optimize import least_squares
 import numpy as np
 import math
 
-def dash_proc(fig):
+def test_proc(fig):
 	
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -29,10 +29,10 @@ def dash_proc(fig):
 	    "tank volume (L)",
 	)
 
-	dash_proc.selected_t_minV = []
-	dash_proc.selected_tank_TV = []
-	dash_proc.selected_ambient_TV = []
-	dash_proc.variable_type = "";
+	test_proc.selected_t_minV = []
+	test_proc.selected_tank_TV = []
+	test_proc.selected_ambient_TV = []
+	test_proc.variable_type = "";
 
 	fig.update_layout(clickmode='event+select')
 		
@@ -103,22 +103,22 @@ def dash_proc(fig):
 					have_simulated = True
 					
 		if have_measured:
-			dash_proc.variable_type = "Measured"
+			test_proc.variable_type = "Measured"
 		elif have_simulated:
-			dash_proc.variable_type = "Simulated"
+			test_proc.variable_type = "Simulated"
 		else:
 			return True, True, "", fig
 			
 		found_avgT = False
 		for trace in fig["data"]:
 			if "name" in trace:
-				if trace["name"] == f"Storage Tank Average Temperature - {dash_proc.variable_type}":
+				if trace["name"] == f"Storage Tank Average Temperature - {test_proc.variable_type}":
 					measured_tank_T = trace
 					found_avgT = True
 		
 		found_ambientT = False		
 		for trace in fig["data"]:				
-			if trace["name"] == f"Ambient Temperature - {dash_proc.variable_type}":
+			if trace["name"] == f"Ambient Temperature - {test_proc.variable_type}":
 				if "name" in trace:
 					ambient_T = trace
 					found_ambientT = True
@@ -129,7 +129,7 @@ def dash_proc(fig):
 		new_fig = go.Figure(fig)
 		for i, trace in enumerate(fig["data"]):
 			if "name" in trace:	
-				if trace["name"] == f"temperature fit - {dash_proc.variable_type}":
+				if trace["name"] == f"temperature fit - {test_proc.variable_type}":
 					new_data = list(new_fig.data)
 					new_data.pop(i)
 					new_fig.data = new_data	
@@ -147,9 +147,9 @@ def dash_proc(fig):
 				selected_ambient_TL.append(ambient_T["y"][n])
 			n += 1	
 			
-		dash_proc.selected_t_minV = np.array(selected_t_minL)
-		dash_proc.selected_tank_TV = np.array(selected_tank_TL)
-		dash_proc.selected_ambient_TV = np.array(selected_ambient_TL)
+		test_proc.selected_t_minV = np.array(selected_t_minL)
+		test_proc.selected_tank_TV = np.array(selected_tank_TL)
+		test_proc.selected_ambient_TV = np.array(selected_ambient_TL)
 					
 		if n < 2:
 			return True, True, "", fig
@@ -173,14 +173,14 @@ def dash_proc(fig):
 					new_data.pop(i)
 					new_fig.data = new_data	
 		
-		t_min_i = dash_proc.selected_t_minV[0]	
-		t_min_f = dash_proc.selected_t_minV[-1]
+		t_min_i = test_proc.selected_t_minV[0]	
+		t_min_f = test_proc.selected_t_minV[-1]
 		
-		tank_T_i = dash_proc.selected_tank_TV[0]
-		tank_T_f = dash_proc.selected_tank_TV[-1]
+		tank_T_i = test_proc.selected_tank_TV[0]
+		tank_T_f = test_proc.selected_tank_TV[-1]
 
-		ambient_T_i = dash_proc.selected_ambient_TV[0]
-		ambient_T_f = dash_proc.selected_ambient_TV[-1]
+		ambient_T_i = test_proc.selected_ambient_TV[0]
+		ambient_T_f = test_proc.selected_ambient_TV[-1]
 		
 		rhoWater_kg_per_L = 0.995
 		sWater_kJ_per_kgC = 4.180
@@ -199,17 +199,17 @@ def dash_proc(fig):
 			return ambientT_avg + (tank_T_i - ambientT_avg) * np.exp(-(t_min - t_min_i) / params[0])
 
 		def diffT_t(params, t_min):
-			return T_t(params, t_min) - dash_proc.selected_tank_TV
+			return T_t(params, t_min) - test_proc.selected_tank_TV
 	
 		tau_min = tau_min0
-		res = least_squares(diffT_t, dash_proc.selected_t_minV, args=(tau_min, ))
+		res = least_squares(diffT_t, test_proc.selected_t_minV, args=(tau_min, ))
 		UA = cTank_kJ_per_C / (tau_min / 60)
 		
-		fit_tank_TV = dash_proc.selected_tank_TV
-		for i, t_min in enumerate(dash_proc.selected_t_minV):
+		fit_tank_TV = test_proc.selected_tank_TV
+		for i, t_min in enumerate(test_proc.selected_t_minV):
 			fit_tank_TV[i] = T_t([tau_min], t_min)
 		
-		trace = go.Scatter(name = f"temperature fit - {dash_proc.variable_type}", x=dash_proc.selected_t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
+		trace = go.Scatter(name = f"temperature fit - {test_proc.variable_type}", x=test_proc.selected_t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
 		new_fig = go.Figure(fig)	
 		new_fig.add_trace(trace)
 		new_fig.update_layout()		
