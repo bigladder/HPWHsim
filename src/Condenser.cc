@@ -1502,7 +1502,8 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
 
         if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
         {
-            tempGrid.push_back({C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)});
+            tempGrid.push_back(
+                {C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)});
         }
 
         // relate to reference values (from AOSmithPHPT60)
@@ -1535,7 +1536,6 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             }
         }
         tempGrid.push_back(heatSourceTemps_K);
-
 
         std::size_t nTotVals = envTemps_K.size() * heatSourceTemps_K.size();
         std::vector<double> inputPowers_W(nTotVals), heatingCapacities_W(nTotVals);
