@@ -625,11 +625,13 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
 
         //
         std::size_t nVals = 1;
-        int iElem = 0;
+        int iElem = 0; // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
         std::vector<double> envTemps_K = {};
+        std::vector<double> outletTemps_K = {};
+        std::vector<double> heatSourceTemps_K = {};
         {
-            envTemps_K.reserve(perfGrid[0].size());
-            for (auto T : perfGrid[0])
+            envTemps_K.reserve(perfGrid[iElem].size());
+            for (auto T : perfGrid[iElem])
             {
                 envTemps_K.push_back(C_TO_K(F_TO_C(T)));
             }
@@ -646,10 +648,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             ++iElem;
             nVals *= envTemps_K.size();
         }
-
-        //
-        std::vector<double> outletTemps_K = {};
-        { // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
+        {
             outletTemps_K.reserve(perfGrid[iElem].size());
             for (auto T : perfGrid[iElem])
             {
@@ -661,9 +660,6 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             ++iElem;
             nVals *= outletTemps_K.size();
         }
-
-        //
-        std::vector<double> heatSourceTemps_K = {};
         {
             heatSourceTemps_K.reserve(perfGrid[iElem].size());
             for (auto T : perfGrid[iElem])
@@ -679,7 +675,6 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         }
 
         std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
-
         std::size_t i = 0;
         for (auto& envTemp_K : envTemps_K)
             for (auto& outletTemp_K : outletTemps_K)
@@ -728,7 +723,6 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                 tempGrid[iElem], grid_vars.outlet_temperature_is_set, grid_vars.outlet_temperature);
             ++iElem;
         }
-
         {
             checkTo(tempGrid[iElem],
                     grid_vars.heat_source_temperature_is_set,

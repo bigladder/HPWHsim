@@ -11,7 +11,7 @@
 #include "HPWH.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
-#include "HPWHTank.hh"
+#include "Tank.hh"
 
 // public HPWH::HeatSource functions
 HPWH::HeatSource::HeatSource(

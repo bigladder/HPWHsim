@@ -5,7 +5,7 @@
 
 #include "HPWH.hh"
 #include "HPWHHeatSource.hh"
-#include "HPWHTank.hh"
+#include "Tank.hh"
 
 class HPWH::Condenser : public HPWH::HeatSource
 {
