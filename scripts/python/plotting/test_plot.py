@@ -13,10 +13,10 @@ import threading
 import plotly
 import time
 import psutil	
-import dash_proc
+from test_proc import test_proc
 
 # Runs a simulation and generates plot
-def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename):
+def test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename):
 
 	orig_dir = str(Path.cwd())
 	os.chdir(build_dir)
@@ -47,15 +47,15 @@ def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_file
 	plotter = plot(measured_path, simulated_path)
 	time.sleep(1)
 	
-	if dash_plot.proc != -1:
-		print("killing current dash...")
-		dash_plot.proc.kill()
+	if test_plot.proc != -1:
+		print("killing current dash for plotting tests...")
+		test_plot.proc.kill()
 		time.sleep(1)
 		
-	dash_plot.proc = mp.Process(target=dash_proc.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')
+	test_plot.proc = mp.Process(target=test_proc, args=(plotter.plot.figure, ), name='test-proc')
 	time.sleep(1)
-	print("launching dash...")
-	dash_plot.proc.start()
+	print("launching dash for plotting tests...")
+	test_plot.proc.start()
 	time.sleep(2)
 	   
 	test_results = {}
@@ -63,4 +63,4 @@ def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_file
 	test_results["port_num"] = 8050
 	return test_results
 
-dash_plot.proc = -1
+test_plot.proc = -1

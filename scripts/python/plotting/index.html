@@ -381,7 +381,7 @@ body {font-family: Arial;}
     fst += '&simulated_filename=' + simulated_filename;
     fst += '&measured_filename=' + measured_filename;
 
-	 	plot_results = await callPyServerJSON("plot", fst);
+	 	plot_results = await callPyServerJSON("test_plot", fst);
 		let energy_data = plot_results["energy_data"];
 		const dash_port = plot_results["port_num"];
 
