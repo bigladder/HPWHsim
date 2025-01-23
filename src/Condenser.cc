@@ -624,6 +624,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         auto& grid_vars = map.grid_variables;
 
         //
+        std::size_t nVals = 1;
         int iElem = 0;
         std::vector<double> envTemps_K = {};
         {
@@ -643,6 +644,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                     grid_vars.evaporator_environment_dry_bulb_temperature);
 
             ++iElem;
+            nVals *= envTemps_K.size();
         }
 
         //
@@ -655,7 +657,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             }
             checkTo(
                 outletTemps_K, grid_vars.outlet_temperature_is_set, grid_vars.outlet_temperature);
+
             ++iElem;
+            nVals *= outletTemps_K.size();
         }
 
         //
@@ -671,12 +675,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                     grid_vars.heat_source_temperature_is_set,
                     grid_vars.heat_source_temperature);
             ++iElem;
+            nVals *= heatSourceTemps_K.size();
         }
-        std::size_t nVals = 1;
-        for (auto& gridAxis: perfGrid)
-            nVals *= gridAxis.size();
-
-        auto& lookup_vars = map.lookup_variables;
 
         std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
 
@@ -685,19 +685,21 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             for (auto& outletTemp_K : outletTemps_K)
                 for (auto& heatSourceTemp_K : heatSourceTemps_K)
                 {
-                    std::vector target = {C_TO_F(K_TO_C(envTemp_K)),
-                                          C_TO_F(K_TO_C(outletTemp_K)),
-                                          C_TO_F(K_TO_C(heatSourceTemp_K))};
+                    std::vector<double> target = {C_TO_F(K_TO_C(envTemp_K)),
+                                                  C_TO_F(K_TO_C(outletTemp_K)),
+                                                  C_TO_F(K_TO_C(heatSourceTemp_K))};
                     std::vector<double> result = perfRGI->get_values_at_target(target);
 
                     if (isMultipass)
                         inputPowers_W[i] = 1000. * result[0]; // from KW
                     else
                         inputPowers_W[i] = 1000. * BTUperH_TO_KW(result[0]); // from Btu/h
+
                     heatingCapacities_W[i] = result[1] * inputPowers_W[i];
                     ++i;
                 }
 
+        auto& lookup_vars = map.lookup_variables;
         checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
         checkTo(
             heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
@@ -1457,7 +1459,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         tempGrid.push_back(heatSourceTemps_K);
 
         std::size_t nVals = 1;
-        for (auto& axis: tempGrid)
+        for (auto& axis : tempGrid)
             nVals *= axis.size();
         std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
         std::size_t i = 0;
@@ -1466,8 +1468,11 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             for (auto& outletTemp_K : outletTemps_K)
                 for (auto& heatSourceTemp_K : heatSourceTemps_K)
                 {
-                    getCapacityFromMap(
-                        K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), K_TO_C(outletTemp_K), input_BTUperHr, cop);
+                    getCapacityFromMap(K_TO_C(envTemp_K),
+                                       K_TO_C(heatSourceTemp_K),
+                                       K_TO_C(outletTemp_K),
+                                       input_BTUperHr,
+                                       cop);
                     inputPowers_W[i] = 1000. * BTUperH_TO_KW(input_BTUperHr);
                     heatingCapacities_W[i] = cop * inputPowers_W[i];
                     ++i;
