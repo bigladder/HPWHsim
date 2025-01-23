@@ -24,10 +24,12 @@
             "maximum_refrigerant_temperature": 360.92777777777775,
             "performance_map": {
               "grid_variables": {
-                "condenser_entering_temperature": [],
-                "condenser_leaving_temperature": [
+                "condenser_entering_temperature": [
                   273.15,
                   360.92777777777775
+                ],
+                "condenser_leaving_temperature": [
+                  338.15
                 ],
                 "evaporator_environment_dry_bulb_temperature": [
                   241.48333333333332,
@@ -143,7 +145,7 @@
     "secondary_heat_exchanger": {
       "cold_side_temperature_offset": 6.95168393629355e-310,
       "extra_pump_power": 1.24e-322,
-      "hot_side_temperature_offset": 2.19925229e-314
+      "hot_side_temperature_offset": 2.1448554253e-314
     },
     "tank": {
       "metadata": {

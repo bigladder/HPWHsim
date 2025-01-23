@@ -1,1 +1,1 @@
-{"model_id": "QAHV_N136TAU_HPB_SP", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Standard tests", "test_id": "standard24hr", "show_simulated": true, "show_measured": false, "draw_profile": "High"}
+{"model_id": "RheemHPHD60", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Standard tests", "test_id": "standard24hr", "show_simulated": true, "show_measured": false, "draw_profile": "High"}

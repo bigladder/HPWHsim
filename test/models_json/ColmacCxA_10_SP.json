@@ -4151,9 +4151,9 @@
     ],
     "primary_heat_source_id": "compressor",
     "secondary_heat_exchanger": {
-      "cold_side_temperature_offset": 5e-324,
+      "cold_side_temperature_offset": 6.95168393629355e-310,
       "extra_pump_power": 1.24e-322,
-      "hot_side_temperature_offset": 2.205954761e-314
+      "hot_side_temperature_offset": 2.252256854e-314
     },
     "tank": {
       "metadata": {

@@ -7267,7 +7267,7 @@
     "secondary_heat_exchanger": {
       "cold_side_temperature_offset": 6.95168393629355e-310,
       "extra_pump_power": 1.24e-322,
-      "hot_side_temperature_offset": 2.1238737775e-314
+      "hot_side_temperature_offset": 2.1558319355e-314
     },
     "tank": {
       "metadata": {
