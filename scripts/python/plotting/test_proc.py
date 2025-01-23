@@ -220,8 +220,9 @@ def test_proc(fig):
 		
 		return new_fig, " {:.4f} kJ/hC".format(UA)
 
-	app.run(debug=True, use_reloader=False)
-	
+	app.run(debug=True, use_reloader=False, port = test_proc.port_num)
+
+test_proc.port_num = 8050
 
 # Runs a simulation and generates plot
 def launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename):
@@ -268,7 +269,7 @@ def launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulat
 	   
 	test_results = {}
 	test_results["energy_data"] = plotter.energy_data
-	test_results["port_num"] = 8050
+	test_results["port_num"] = test_proc.port_num
 	return test_results
 
 launch_test_plot.proc = -1
