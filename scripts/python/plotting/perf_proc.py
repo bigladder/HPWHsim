@@ -18,6 +18,7 @@ from pathlib import Path
 
 def perf_proc(fig):
 	
+	
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -36,8 +37,10 @@ def perf_proc(fig):
 			
 	]
 	
-	app.run(debug=True, use_reloader=False)
-	
+	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
+
+perf_proc.port_num = 8051
+
 # Runs a simulation and generates plot
 def launch_perf_plot(model_name):
 
@@ -66,7 +69,7 @@ def launch_perf_plot(model_name):
 	time.sleep(2)
 	   
 	results = {}
-	results["port_num"] = 8050
+	results["port_num"] = perf_proc.port_num
 	return results
 
 launch_perf_plot.proc = -1
