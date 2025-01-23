@@ -332,7 +332,7 @@ body {font-family: Arial;}
 
 						if ("measured" in test)
 							for (let measured of test["measured"])
-								if (("id" in measured) && !measured["id"].localeCompare(prefs["model_name"]))
+								if (("id" in measured) && !measured["id"].localeCompare(prefs["model_id"]))
 									if ("filename" in measured)
 									{
 										measured_filename = measured["filename"];										
