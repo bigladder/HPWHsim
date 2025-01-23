@@ -33,7 +33,8 @@
                   308.15,
                   373.15
                 ],
-                "heat_source_temperature": [
+                "heat_source_temperature": [],
+                "outlet_temperature": [
                   273.15,
                   360.92777777777775
                 ]
