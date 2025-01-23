@@ -8,15 +8,14 @@ import http.server
 import socketserver
 import urllib.parse as urlparse
 from simulate import simulate
-from plot import plot
 from measure import measure
-from test_plot import test_plot
+from test_proc import launch_test_plot
 import json
 from json import dumps
 
 PORT = 8000
 
-test_plot.proc = -1
+launch_test_plot.proc = -1
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
 			
@@ -97,7 +96,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					show_types  = int(query_components.get('show_types', [None])[0])
 					simulated_filename  = query_components.get('simulated_filename', [None])[0]
 					measured_filename= query_components.get('measured_filename', [None])[0]
-					response = test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename)
+					response = launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename)
 
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")
