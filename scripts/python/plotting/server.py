@@ -10,6 +10,7 @@ import urllib.parse as urlparse
 from simulate import simulate
 from measure import measure
 from test_proc import launch_test_plot
+from perf_proc import launch_perf_plot
 import json
 from json import dumps
 
@@ -108,7 +109,19 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.wfile.write(dumps(response).encode('utf-8'))
 					return
 
+			elif self.path.startswith('/perf_plot'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				model_name = query_components.get('model_name', [None])[0]
 
+				response = launch_perf_plot(model_name)
+				print(dumps(response))
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(response))))
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				self.wfile.write(dumps(response).encode('utf-8'))
+				return
 			else:
 				super().do_GET()
 
