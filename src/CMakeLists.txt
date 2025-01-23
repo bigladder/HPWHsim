@@ -15,10 +15,10 @@ set(headers
         HPWHversion.in.hh
         HPWHsim.hh
         HPWH.hh
-        HPWHTank.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
 
+        Tank.hh
         Condenser.hh
         Resistance.hh
 
@@ -28,14 +28,15 @@ set(headers
 set(sources
         HPWHversion.cc
         HPWHUtils.cc
-        HPWHTank.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
         HPWH.cc
         HPWHpresets.cc
 
+        Tank.cc
         Condenser.cc
         Resistance.cc
+
         hpwh-data-model.cpp
         )
 

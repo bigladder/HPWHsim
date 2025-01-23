@@ -1,5 +1,5 @@
 ﻿#include "HPWH.hh"
-#include "HPWHTank.hh"
+#include "Tank.hh"
 
 HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Sender(tank_in) { *this = tank_in; }
 
