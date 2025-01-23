@@ -957,14 +957,15 @@ void HPWH::to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                 grid_vars.evaporator_environment_dry_bulb_temperature;
         }
 
-        if (grid_vars.heat_source_temperature_is_set)
+        if (grid_vars.condenser_entering_temperature_is_set)
         {
-            j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
+            j_grid_vars["condenser_entering_temperature"] =
+                grid_vars.condenser_entering_temperature;
         }
 
-        if (grid_vars.outlet_temperature_is_set)
+        if (grid_vars.condenser_leaving_temperature_is_set)
         {
-            j_grid_vars["outlet_temperature"] = grid_vars.outlet_temperature;
+            j_grid_vars["condenser_leaving_temperature"] = grid_vars.condenser_leaving_temperature;
         }
         j_perf_map["grid_variables"] = j_grid_vars;
 
