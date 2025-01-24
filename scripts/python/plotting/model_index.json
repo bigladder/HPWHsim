@@ -78,6 +78,11 @@
 		{"id": "Sanden120", "manufacturer": "Sanden", "specs": ["Preset", "JSON"], "type": "Central"},
 
 		{"id": "RheemHPHD60", "manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"},
-		{"id": "RheemHPHD135", "manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"}
+		{"id": "RheemHPHD135", "manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"},
+
+		{"id": "Scalable_MP", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "TamScalable_SP", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "TamScalable_SP_2X", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "TamScalable_SP_Half", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"}
   ]
 }

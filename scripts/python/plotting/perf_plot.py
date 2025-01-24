@@ -54,9 +54,8 @@ class PerfPlotter:
 			self.T2s = np.array(grid_vars["heat_source_temperature"])
 		
 		#to_C = lambda x: x - 273.15
-		#to_C(self.T1s)
-		#to_C(self.T2s)
-
+		self.T1s -= 273.15
+		self.T2s -= 273.15
 
 		#print(np.size(self.T2s))
 		vPins = np.array(lookup_vars["input_power"])
@@ -65,23 +64,23 @@ class PerfPlotter:
 		self.Pins = []
 		self.Pouts = []
 		i = 0
-		for T1 in self.T1s:
+		nT2s = np.size(self.T2s)
+		for T2 in self.T2s:
 			row1 = []
 			row2 = []
-			for T2 in self.T2s:
-				row1.append(vPins[i])
-				row2.append(vPouts[i])
-				i = i + 1
+			j = 0
+			for T1 in self.T1s:
+				row1.append(vPins[i + nT2s * j])
+				row2.append(vPouts[i + nT2s * j])
+				j = j + 1
+			i = i + 1
 			self.Pins.append(row1)
 			self.Pouts.append(row2)
-	
-									
+							
 		self.have_data = True
  							   
 	def draw(self):		
 		if self.have_data:
-			print(self.T1s)
-			print(self.T2s)
 			self.fig = go.Figure(data =
 											 go.Contour(z = self.Pins, x = self.T1s, y = self.T2s))
 		else:
