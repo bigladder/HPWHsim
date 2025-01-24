@@ -2,6 +2,7 @@ import os
 import pandas as pd  # type: ignore
 import numpy as np
 import json
+import math
 
 import plotly.graph_objects as go
 
@@ -50,12 +51,13 @@ class PerfPlotter:
 		self.T1s = np.array(grid_vars["evaporator_environment_dry_bulb_temperature"])
 		if self.is_central:
 			self.T2s = np.array(grid_vars["condenser_entering_temperature"])
+			self.T3s = np.array(grid_vars["condenser_leaving_temperature"])
 		else:
 			self.T2s = np.array(grid_vars["heat_source_temperature"])
 		
 		#to_C = lambda x: x - 273.15
-		self.T1s -= 273.15
-		self.T2s -= 273.15
+		#self.T1s -= 273.15
+		#self.T2s -= 273.15
 
 		#print(np.size(self.T2s))
 		vPins = np.array(lookup_vars["input_power"])
@@ -63,20 +65,22 @@ class PerfPlotter:
 
 		self.Pins = []
 		self.Pouts = []
+		
 		i = 0
+		nT1s = np.size(self.T1s)
 		nT2s = np.size(self.T2s)
-		for T2 in self.T2s:
+		nT3s = 1 if not self.is_central else np.size(self.T3s)
+
+		i3 = math.floor(nT3s / 2)
+		for i2y in range(nT2s):
 			row1 = []
 			row2 = []
-			j = 0
-			for T1 in self.T1s:
-				row1.append(vPins[i + nT2s * j])
-				row2.append(vPouts[i + nT2s * j])
-				j = j + 1
-			i = i + 1
+			for i1x in range(nT1s):
+				elem = nT2s * (nT3s * i1x + i3) + i2y
+				row1.append(vPins[elem])
+				row2.append(vPouts[elem])
 			self.Pins.append(row1)
-			self.Pouts.append(row2)
-							
+			self.Pouts.append(row2)						
 		self.have_data = True
  							   
 	def draw(self):		
