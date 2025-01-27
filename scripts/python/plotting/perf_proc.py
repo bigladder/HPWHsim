@@ -16,7 +16,7 @@ from perf_plot import PerfPlotter
 import multiprocessing as mp
 from pathlib import Path
 
-def perf_proc(plotter):
+def perf_proc(plotter, ivar):
 	
 	perf_proc.plotter = plotter
 	perf_proc.plotter.fig.update_layout(clickmode='event+select')
@@ -43,17 +43,21 @@ def perf_proc(plotter):
 
 	app.layout = [
 		
-		dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
+		html.Div(
+			[
+					html.Label("display variable", htmlFor="display-dropdown"),
+					dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
 												 		{'label': 'Heating Capacity (W)', 'value': 1},
 														{'label': 'COP', 'value': 2}],
-														value = 1, 
+														value = ivar, 
 														id='display-dropdown',
 														style={'width': '50%'},
-														clearable=False),
+														clearable=False)
+			]),
 	
 		html.Div(
 			[
-				html.Label("outlet temperature (\u00B0C)", htmlFor="outletT-dropdown"),
+				html.Label("condenser outlet temperature (\u00B0C)", htmlFor="outletT-dropdown"),
 				dcc.Dropdown(options = perf_proc.outletTs,
 																value = perf_proc.plotter.i3, 
 																id='outletT-dropdown',
@@ -75,8 +79,16 @@ def perf_proc(plotter):
 			prevent_initial_call=True
 		)
 	def select_value(value):
-		perf_proc.plotter.ivar = value
-		perf_proc.plotter.draw()
+		
+		perf_proc.plotter.draw(value)
+		perf_proc.ivar = value
+		try:
+			with open("contour_prefs.json", 'w') as json_file:
+				data = {'variable': value}
+				json.dump(data, json_file)			
+		except:
+			print("failed to write")
+			return
 		return perf_proc.plotter.fig
 	
 	@callback(
@@ -87,7 +99,7 @@ def perf_proc(plotter):
 	def select_outletT(value):
 		perf_proc.plotter.i3 = value
 		perf_proc.plotter.get_slice()
-		perf_proc.plotter.draw()
+		perf_proc.plotter.draw(perf_proc.ivar)
 		return perf_proc.plotter.fig
 
 	
@@ -107,6 +119,15 @@ def launch_perf_plot(model_name):
 	model_path = os.path.join(abs_repo_test_dir, "models_json", model_name + ".json") 
 	
 	print("creating plot...")
+		
+	try:
+			with open("contour_prefs.json", 'r') as json_data:
+				data = json.load(json_data)
+				ivar = data["variable"]
+	except:
+			print("failed to load")
+			return
+
 	plotter = PerfPlotter()
 	plotter.read_data(model_path)
 	
@@ -114,16 +135,15 @@ def launch_perf_plot(model_name):
 		print("killing current dash for plotting performance...")
 		launch_perf_plot.proc.kill()
 		time.sleep(1)
-	
-	plotter.draw()
+
+	plotter.draw(ivar)
 	time.sleep(1)
 	
-	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(plotter, ), name='perf-proc')
+	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(plotter, ivar), name='perf-proc')
 	print("launching dash for plotting performance...")
 	time.sleep(1)
 
 	launch_perf_plot.proc.start()
-	print(launch_perf_plot.proc)
 	time.sleep(2)
 	   
 	results = {}

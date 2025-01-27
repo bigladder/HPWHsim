@@ -21,7 +21,6 @@ class PerfPlotter:
 		self.have_data = False
 		self.is_central = False
 		self.i3 = 0
-		self.ivar = 1
 		
 		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
 		
@@ -96,10 +95,10 @@ class PerfPlotter:
 		self.get_slice()
 
  							   
-	def draw(self):	
-		if self.ivar == 0:
+	def draw(self, ivar):	
+		if ivar == 0:
 			zPlot = self.Pins
-		elif self.ivar == 1:
+		elif ivar == 1:
 			zPlot = self.Pouts
 		else:
 			zPlot = self.COPs	
