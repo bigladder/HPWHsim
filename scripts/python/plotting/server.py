@@ -114,7 +114,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				model_name = query_components.get('model_name', [None])[0]
 
 				response = launch_perf_plot(model_name)
-				print(dumps(response))
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))
