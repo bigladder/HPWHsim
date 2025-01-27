@@ -46,22 +46,15 @@ class PerfPlotter:
 			self.COPs.append(rowCOP)						
 		self.have_data = True
 	
-	def read_data(self, model_path):
-		try:
-			with open(model_path) as json_data:
-				self.data = json.load(json_data)
-		except:
-			print("failed to load")
-			return
+	def prepare(self, model_data):
 
-
-		if "integrated_system" in self.data:
+		if "integrated_system" in model_data:
 			self.is_central = False
-			wh = self.data["integrated_system"]
+			wh = model_data["integrated_system"]
 			perf = wh["performance"]
 		else:
 			self.is_central = True
-			perf = self.data["central_system"]			 
+			perf = model_data["central_system"]			 
 	
 		hscs = perf["heat_source_configurations"]
 		

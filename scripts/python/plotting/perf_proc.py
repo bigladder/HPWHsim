@@ -16,12 +16,15 @@ from perf_plot import PerfPlotter
 import multiprocessing as mp
 from pathlib import Path
 
-def perf_proc(plotter, ivar):
+def perf_proc(plotter, ivar, model_data):
 	
 	perf_proc.plotter = plotter
 	perf_proc.plotter.fig.update_layout(clickmode='event+select')
 	perf_proc.outletTs = []
 	perf_proc.show_outletTs = perf_proc.plotter.is_central
+	perf_proc.ivar = ivar
+	perf_proc.model_data = model_data
+	perf_proc.system_type = "integrated" if "integrated_system" in model_data else "central"
 	if perf_proc.show_outletTs:
 		i = 0
 		for outletT in perf_proc.plotter.T3s:
@@ -43,6 +46,12 @@ def perf_proc(plotter, ivar):
 
 	app.layout = [
 		
+		html.Div(
+			[
+				html.Label("system type", htmlFor="system-type"),
+				html.P(perf_proc.system_type, id='system-type', style = {'fontSize': 18, 'display': 'inline'})
+			]),
+						
 		html.Div(
 			[
 					html.Label("display variable", htmlFor="display-dropdown"),
@@ -69,8 +78,7 @@ def perf_proc(plotter, ivar):
 				hidden = not(perf_proc.show_outletTs)
 				),
 														
-		dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )
-			
+		dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )			
 	]
 
 	@callback(
@@ -119,7 +127,14 @@ def launch_perf_plot(model_name):
 	model_path = os.path.join(abs_repo_test_dir, "models_json", model_name + ".json") 
 	
 	print("creating plot...")
-		
+	
+	try:
+		with open(model_path) as json_data:
+			model_data = json.load(json_data)
+	except:
+		print("failed to load")
+		return
+	
 	try:
 			with open("contour_prefs.json", 'r') as json_data:
 				data = json.load(json_data)
@@ -129,7 +144,7 @@ def launch_perf_plot(model_name):
 			return
 
 	plotter = PerfPlotter()
-	plotter.read_data(model_path)
+	plotter.prepare(model_data)
 	
 	if launch_perf_plot.proc != -1:
 		print("killing current dash for plotting performance...")
@@ -139,7 +154,7 @@ def launch_perf_plot(model_name):
 	plotter.draw(ivar)
 	time.sleep(1)
 	
-	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(plotter, ivar), name='perf-proc')
+	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(plotter, ivar, model_data), name='perf-proc')
 	print("launching dash for plotting performance...")
 	time.sleep(1)
 
