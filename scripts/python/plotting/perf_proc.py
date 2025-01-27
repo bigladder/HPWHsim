@@ -16,9 +16,12 @@ from perf_plot import plot
 import multiprocessing as mp
 from pathlib import Path
 
-def perf_proc(fig):
+def perf_proc(plotter):
 	
+	perf_proc.plotter = plotter
 	
+	perf_proc.plotter.fig.update_layout(clickmode='event+select')
+		
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -29,13 +32,28 @@ def perf_proc(fig):
 			'overflowX': 'scroll'
 		}
 	}
-	fig.update_layout(clickmode='event+select')
-		
-	app.layout = [
 
-			dcc.Graph(id='test-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
+	app.layout = [
+		
+		dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
+												 		{'label': 'Heating Capacity (W)', 'value': 1},
+														{'label': 'COP', 'value': 2}],
+														value = 1, 
+														id='display-dropdown'),
+	
+		dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )
 			
 	]
+
+	@callback(
+			Output('perf-graph', 'figure'),
+			Input('display-dropdown', 'value'),
+			prevent_initial_call=True
+		)
+	def select_value(value):
+		perf_proc.plotter.variable = perf_proc.plotter.variables[value]
+		perf_proc.plotter.draw()
+		return perf_proc.plotter.fig
 	
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
 
@@ -62,7 +80,7 @@ def launch_perf_plot(model_name):
 		launch_perf_plot.proc.kill()
 		time.sleep(1)
 		
-	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(plotter.fig, ), name='perf-proc')
+	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(plotter, ), name='perf-proc')
 	time.sleep(1)
 	print("launching dash for plotting performance...")
 	launch_perf_plot.proc.start()
