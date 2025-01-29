@@ -13,9 +13,11 @@ from test_proc import launch_test_plot
 from perf_proc import launch_perf_plot
 import json
 from json import dumps
+import websockets
+import asyncio
 
 PORT = 8000
-
+		
 launch_test_plot.proc = -1
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
@@ -109,11 +111,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.wfile.write(dumps(response).encode('utf-8'))
 					return
 
-			elif self.path.startswith('/perf_plot'):
+			elif self.path.startswith('/launch_perf_plot'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				model_name = query_components.get('model_name', [None])[0]
-
-				response = launch_perf_plot(model_name)
+				#model_name = query_components.get('model_name', [None])[0]
+				response = launch_perf_plot()
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))
@@ -121,9 +122,23 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.end_headers()
 				self.wfile.write(dumps(response).encode('utf-8'))
 				return
+			
+			elif self.path.startswith('/update_perf_plot'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				model_name = query_components.get('model_name', [None])[0]
+				response = {}
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(response))))
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				#self.wfile.write(dumps(response).encode('utf-8'))
+				#print(response)
+				return
+
 			else:
 				super().do_GET()
-
+		
 def run():
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         print(f"Serving on port {PORT}")

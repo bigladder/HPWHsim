@@ -77,13 +77,13 @@ body {font-family: Arial;}
 		test_form.draw_profile.value = ("draw_profile" in prefs) ? prefs["draw_profile"] : "auto";
 	}
 
-	function get_menu_values()
+	async function get_menu_values()
 	{
 	  const model_form = document.getElementById('model_form');
 	  const build_form = document.getElementById('build_form');
 	  const test_form = document.getElementById('test_form');
-
-		prefs = {}
+	
+		prefs = await read_json_file("./prefs.json")
 		prefs["model_id"] = model_form.model_name.value;
 		prefs["model_spec"] = model_form.model_spec.value;
 		prefs["build_dir"] = build_form.build_dir.value;
@@ -117,8 +117,9 @@ body {font-family: Arial;}
 			}
 		}
 
-		if (!(model_names.includes(prefs["model_id"])))
-			model_names = [model_names, prefs["model_id"]];
+		var model_id = prefs["model_id"];
+		if (!(model_names.includes(model_id)))
+			model_names = [model_names, model_id];
 			
 		if (!(model_specs.includes(prefs["model_spec"])))
 			prefs["model_spec"] = model_specs[0];
@@ -270,7 +271,7 @@ body {font-family: Arial;}
 
 	async function change_menu_value()
 	{
-		prefs = get_menu_values();
+		prefs = await get_menu_values();
 		set_elements(prefs)
 	}
 
@@ -433,11 +434,33 @@ body {font-family: Arial;}
     const perf_form = document.getElementById('perf_form');
 
 	  fst = 'model_name=' + model_name;
-	  let perf_results = await callPyServerJSON("perf_plot", fst)
+	  let perf_results = await callPyServerJSON("launch_perf_plot", fst)
 		const dash_port = perf_results["port_num"];
 
     document.getElementById("perf_plot").src = "http://localhost:" + dash_port
     document.getElementById("perf_plot").style = "display:block;"
+
+    document.getElementById("perf_btn").disabled = false;
+  }
+	const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function set_perf() {
+
+    const build_form = document.getElementById('build_form');
+    const build_dir = build_form.build_dir.value;
+
+    const model_form = document.getElementById('model_form');
+    const model_spec = model_form.model_spec.value;
+    const model_name = model_form.model_name.value;
+
+    const perf_form = document.getElementById('perf_form');
+
+		const wss = await new WebSocket("ws://localhost:8765");
+		await sleep(1000);
+	  const fst = {model_name: model_name}
+		let msg = JSON.stringify(fst);
+		wss.send(msg);
+	  //fst = 'model_name=' + model_name;
+	 // await callPyServerJSON("update_perf_plot", fst)
 
     document.getElementById("perf_btn").disabled = false;
   }
