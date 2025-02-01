@@ -22,12 +22,12 @@ async def handler(websocket):
 				clients.append(websocket)
 
 			print
-			print("clients:")
-			print(clients)
+			#print("clients:")
+			#print(clients)
 			print
 			for client in clients:
 				await client.send(msg)
-				
+
 			await websocket.recv()
 		except ConnectionClosedOK:
 			break

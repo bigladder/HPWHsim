@@ -267,6 +267,12 @@ body {font-family: Arial;}
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
+
+		const wss = await new WebSocket("ws://localhost:8600");
+		await sleep(1000);
+	  const fst = {'source': 'index.html', 'model_name': prefs['model_id']}
+		let msg = JSON.stringify(fst);
+		wss.send(msg);
 	}
 
 	async function change_menu_value()
