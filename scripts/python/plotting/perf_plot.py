@@ -104,7 +104,7 @@ class PerfPlotter:
 					            labelfont = dict( # label font properties
 					                size = 14,
 					                color = 'black',
-            					)
+            					),
 											)))
 		
 		yaxis_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
@@ -113,7 +113,6 @@ class PerfPlotter:
     	"yaxis": {"title_text": yaxis_title, 'title_font': {"size": 14, "color": "black"}}
 			}
 			)
-
 		return self
 
 def write_plot(model_path):

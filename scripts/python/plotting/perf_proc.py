@@ -16,6 +16,7 @@ from perf_plot import PerfPlotter
 import multiprocessing as mp
 from pathlib import Path
 from dash_extensions import WebSocket
+from dash_extensions import EventListener
 import asyncio
 
 def read_file(filename):
@@ -84,6 +85,9 @@ def perf_proc():
 	}
 
 	app.layout = html.Div([
+		dcc.Input(id="input", autoComplete="off"),
+   	html.Div(id="message"),
+   	WebSocket(url="ws://localhost:8600", id="ws"),
 		
 		html.Div(
 			[
@@ -103,7 +107,7 @@ def perf_proc():
 						
 		html.Div(
 			[
-					html.Label("display variable", htmlFor="display-dropdown"),
+					html.Label("display variable", htmlFor="display-dropdown", style = {'display': 'inline'}),
 					dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
 												 		{'label': 'Heating Capacity (W)', 'value': 1},
 														{'label': 'COP', 'value': 2}],
@@ -115,7 +119,7 @@ def perf_proc():
 	
 		html.Div(
 			[
-				html.Label("condenser outlet temperature (\u00B0C)", htmlFor="outletT-dropdown"),
+				html.Label("condenser outlet temperature (\u00B0C)", htmlFor="outletT-dropdown", style = {'display': 'inline'}),
 				dcc.Dropdown(options = perf_proc.outletTs,
 																value = perf_proc.plotter.i3, 
 																id='outletT-dropdown',
@@ -126,8 +130,40 @@ def perf_proc():
 		html.Br(),
 		html.Br(),
 		html.Br(),
-				dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )	
+				dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
+					config={
+            'modeBarButtonsToAdd': [
+            "drawrect",
+            "eraseshape"
+            ]
+        }, )	
 	])
+	@app.callback(
+			Output("ws", "send"),
+			[Input("input", "value")]
+			)
+	def send(value):
+		print("sending")
+		return json.dumps({"value":  value, "source": "dash"})
+
+	@app.callback(
+			Output("message", "children"),
+			[Input("ws", "message")],
+			prevent_initial_call=True
+			)
+	def message(msg):
+		print("receiving")
+		print(msg)
+		if 'data' in msg:
+			data = json.loads(msg['data'])
+			if 'source' in data:
+				source = data['source']
+				print(source)
+				return source
+			else:
+				return "no source"
+		else:
+			return "no data"
 
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -181,9 +217,34 @@ def perf_proc():
 		perf_proc.plotter.get_slice()
 		perf_proc.plotter.draw(perf_proc.prefs['contour_variable'])
 		return perf_proc.plotter.fig
+	
+	@callback(
+			Output('perf-graph', 'figure'),
+			Input('perf-graph', 'relayoutData'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+		)
+	def select_range(clickData, fig):
+		if fig is None:
+			return dash.no_update
+		if 'shapes' in fig['layout']:
+			shp = fig['layout']['shapes'][0]
+			x0 = shp['x0']
+			x1 = shp['x1']
+			y0 = shp['y0']
+			y1 = shp['y1']
+			print(x0, y0, x1, y1)
+			fig.update_layout({
+				'modeBarButtonsToAdd': []})
+		else:
+			fig['layout']['modeBarButtonsToAdd'] = [
+            "drawrect",
+            "eraseshape"
+						]
+		return fig
 
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
-
+	
 perf_proc.port_num = 8051
 
 # Runs a simulation and generates plot
