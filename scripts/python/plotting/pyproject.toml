@@ -12,6 +12,7 @@ koozie = "*"
 dimes = { git = "https://github.com/bigladder/dimes" }
 dash-extensions = "^1.0.19"
 websockets = "^14.2"
+quart = "^0.20.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

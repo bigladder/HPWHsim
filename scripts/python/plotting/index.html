@@ -443,7 +443,7 @@ body {font-family: Arial;}
     document.getElementById("perf_btn").disabled = false;
   }
 	const sleep = ms => new Promise(r => setTimeout(r, ms));
-  async function set_perf() {
+  async function update_perf() {
 
     const build_form = document.getElementById('build_form');
     const build_dir = build_form.build_dir.value;
@@ -454,9 +454,9 @@ body {font-family: Arial;}
 
     const perf_form = document.getElementById('perf_form');
 
-		const wss = await new WebSocket("ws://localhost:8765");
+		const wss = await new WebSocket("ws://localhost:8600");
 		await sleep(1000);
-	  const fst = {model_name: model_name}
+	  const fst = {'source': 'index.html'}
 		let msg = JSON.stringify(fst);
 		wss.send(msg);
 	  //fst = 'model_name=' + model_name;
@@ -492,6 +492,7 @@ body {font-family: Arial;}
 <div class="content">
   <form id="perf_form">
     <button type="button" id="perf_btn" onclick="show_perf();">show</button>
+    <button type="button" id="update_btn" onclick="update_perf();">update</button>
   </form>
 
   <iframe title="perf_plot" src="" id="perf_plot" width=1200 height=1200 style="display:none;"></iframe>

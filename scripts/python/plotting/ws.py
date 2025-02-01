@@ -10,19 +10,31 @@ from json import dumps
 import websockets
 import asyncio
 from websockets.exceptions import ConnectionClosedOK
-		
+	
+clients =[]
+	
 async def handler(websocket):
 	while True:
 		try:
 			msg = await websocket.recv()
 			print(msg)
-			await websocket.send("server msg")
+			if not websocket in clients:
+				clients.append(websocket)
+
+			print
+			print("clients:")
+			print(clients)
+			print
+			for client in clients:
+				await client.send(msg)
+				
+			await websocket.recv()
 		except ConnectionClosedOK:
 			break
 
 		
 async def main():
-	async with websockets.serve(handler, "127.0.0.1", 8765):
+	async with websockets.serve(handler, "localhost", 8600):
 		await asyncio.Future()	
         
 asyncio.run(main())
