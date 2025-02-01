@@ -144,7 +144,7 @@ def perf_proc():
 			)
 	def send(value):
 		print("sending")
-		return json.dumps({"value":  value, "source": "dash"})
+		return json.dumps({"source": "dash"})
 
 	@app.callback(
 			Output("model-name-dropdown", "value"),
