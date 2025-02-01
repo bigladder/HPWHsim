@@ -147,7 +147,7 @@ def perf_proc():
 		return json.dumps({"value":  value, "source": "dash"})
 
 	@app.callback(
-			Output("message", "children"),
+			Output("model-name-dropdown", "value"),
 			[Input("ws", "message")],
 			prevent_initial_call=True
 			)
@@ -156,14 +156,18 @@ def perf_proc():
 		print(msg)
 		if 'data' in msg:
 			data = json.loads(msg['data'])
-			if 'source' in data:
-				source = data['source']
-				print(source)
-				return source
-			else:
-				return "no source"
-		else:
-			return "no data"
+			if 'model_name' in data:
+				model_id = data['model_name']
+				i = 0
+				for model in perf_proc.model_index["models"]:
+					if "id" in model:			
+						if model["id"] == model_id:
+							perf_proc.prefs["model_id"] = model_id
+							perf_proc.imodel = i
+							break
+						i = i + 1
+						
+		return perf_proc.imodel
 
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
