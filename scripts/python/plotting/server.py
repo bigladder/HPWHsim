@@ -47,7 +47,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				json_data = json.loads(json_str)
 				with open(filename, "w") as json_file:
 					#json_file.write(json_data)
-					json.dump(json_data, json_file)
+					json.dump(json_data, json_file, indent=2)
 					json_file.close()
 
 				self.send_response(200)

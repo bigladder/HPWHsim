@@ -88,18 +88,26 @@ class PerfPlotter:
 		self.get_slice()
 
  							   
-	def draw(self, ivar):	
-		if ivar == 0:
-			zPlot = self.Pins
-		elif ivar == 1:
-			zPlot = self.Pouts
+	def draw(self, prefs):
+		if 'contour_variable' in prefs:	
+			if prefs['contour_variable'] == 0:
+				zPlot = self.Pins
+			elif prefs['contour_variable']  == 1:
+				zPlot = self.Pouts
+			else:
+				zPlot = self.COPs	
 		else:
-			zPlot = self.COPs	
-		
+			zPlot = self.Pouts
+
+		coloring = 'lines'
+		if 'contour_coloring' in prefs:
+			if prefs['contour_coloring'] == 0:
+				coloring = 'heatmap'
+			
 		self.fig = go.Figure(data =
 										 go.Contour(z = zPlot, x = self.T1s, y = self.T2s,
 											contours=dict(
-					            coloring ='heatmap',
+					            coloring = coloring,
 					            showlabels = True, # show labels on contours
 					            labelfont = dict( # label font properties
 					                size = 14,

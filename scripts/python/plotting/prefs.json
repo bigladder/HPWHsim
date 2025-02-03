@@ -1,1 +1,12 @@
-{"model_id": "RheemHPHD135", "model_spec": "JSON", "build_dir": "../../../build", "test_list": "All tests", "test_id": "testLargeCompHot", "show_simulated": true, "show_measured": false, "draw_profile": "High", "contour_variable": 0}
+{
+  "model_id": "BradfordWhiteAeroThermRE2H65",
+  "model_spec": "JSON",
+  "build_dir": "../../../build",
+  "test_list": "All tests",
+  "test_id": "testLargeCompHot",
+  "show_simulated": true,
+  "show_measured": false,
+  "draw_profile": "High",
+  "contour_variable": 0,
+  "contour_coloring": 0
+}
