@@ -141,7 +141,7 @@ def perf_proc():
 			)
 	def send(value):
 		print("sending")
-		return json.dumps({"source": "dash"})
+		return json.dumps({"source": "dash-perf"})
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -242,8 +242,7 @@ def perf_proc():
 			y0 = shp['y0']
 			y1 = shp['y1']
 			print(x0, y0, x1, y1)
-			fig.update_layout({
-				'modeBarButtonsToAdd': []})
+			fig['layout']['modeBarButtonsToAdd'] = []
 		else:
 			fig['layout']['modeBarButtonsToAdd'] = [
             "drawrect",
