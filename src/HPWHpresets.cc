@@ -838,7 +838,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "lowest node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1291,7 +1291,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "lowest node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1505,6 +1505,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->isOn = false;
         compressor->isVIP = true;
+        compressor->isMultipass = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->extrapolationMethod = Condenser::EXTRAP_NEAREST;
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
@@ -1804,7 +1805,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "lowest node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor->depressesTemperature = false;
 
         // Performance grid: externalT_F, Tout_F, condenserTemp_F
@@ -2209,7 +2210,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpoint_C = MAXOUTLET_R744;
-
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         std::vector<NodeWeight> nodeWeightStandby;
@@ -4036,7 +4036,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "lowest node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Scale the resistance-element power

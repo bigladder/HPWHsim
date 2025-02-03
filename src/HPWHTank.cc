@@ -28,7 +28,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
 {
     auto& perf = rstank.performance;
-    setNumNodes(perf.number_of_nodes_is_set ? perf.number_of_nodes : 12);
+
     checkFrom(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
     checkFrom(UA_kJperHrC, perf.ua_is_set, 3600. * perf.ua / 1000., 0.);
     checkFrom(fittingsUA_kJperHrC, perf.fittings_ua_is_set, 3600. * perf.fittings_ua / 1000., 0.);
@@ -37,7 +37,6 @@ void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
               perf.bottom_fraction_of_tank_mixing_on_draw,
               0.);
     mixesOnDraw = (mixBelowFractionOnDraw > 0.);
-    checkFrom(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume, false);
 
     hasHeatExchanger = perf.heat_exchanger_effectiveness_is_set;
     if (hasHeatExchanger)
@@ -58,7 +57,6 @@ void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
         hpwh_data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
 
     auto& perf = rstank.performance;
-    checkTo(getNumNodes(), perf.number_of_nodes_is_set, perf.number_of_nodes);
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
     checkTo(1000. * UA_kJperHrC / 3600., perf.ua_is_set, perf.ua);
     checkTo(1000. * fittingsUA_kJperHrC / 3600., perf.fittings_ua_is_set, perf.fittings_ua);
@@ -66,7 +64,6 @@ void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
     checkTo(out_mixBelowFractionOnDraw,
             perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
             perf.bottom_fraction_of_tank_mixing_on_draw);
-    checkTo(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume);
 
     if (hasHeatExchanger)
         checkTo(heatExchangerEffectiveness,

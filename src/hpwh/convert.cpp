@@ -78,11 +78,11 @@ void convert(const std::string& sSpecType,
         hpwh.initFromJSON(sModelName);
     }
 
-    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-    hpwh.to(rswh);
+    hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi;
+    hpwh.to(hsi);
 
     nlohmann::json j;
-    HPWH::to_json(rswh, j);
+    HPWH::to_json(hsi, j);
 
     std::ofstream outputFile;
     if (sOutputFilename == "")
