@@ -11,26 +11,28 @@ import websockets
 import asyncio
 from websockets.exceptions import ConnectionClosedOK
 # Launch the server with "poetry run python ws.py".
-	
-clients =[]
+
 	
 async def handler(websocket):
 	while True:
 		try:
 			msg = await websocket.recv()
 			print(msg)
-			if not websocket in clients:
-				clients.append(websocket)
+			if handler.dash_perf_client == -1:
+				data = json.loads(msg)
+				if "source" in data:
+					if data['source'] == "dash-perf":
+						handler.dash_perf_client = websocket
 
-			print("clients:")
-			for client in clients:
-				print(client)
-				await client.send(msg)
-
+			if not handler.dash_perf_client == -1:
+				await handler.dash_perf_client.send(msg)
+				
 			await websocket.recv()
 		except ConnectionClosedOK:
 			break
 
+	
+handler.dash_perf_client = -1
 		
 async def main():
 	async with websockets.serve(handler, "localhost", 8600):
