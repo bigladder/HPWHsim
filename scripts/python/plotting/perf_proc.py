@@ -30,7 +30,7 @@ def read_file(filename):
 def write_file(filename, json_data):
 	try:
 			with open(filename, 'w') as json_file:
-				json.dump(json_data, json_file)			
+				json.dump(json_data, json_file, indent=2)			
 	except:
 			print(f"failed to write {filename}")
 			return
@@ -49,7 +49,7 @@ def perf_proc():
 	
 	perf_proc.plotter = PerfPlotter()
 	perf_proc.plotter.prepare(perf_proc.model_data)
-	perf_proc.plotter.draw(perf_proc.prefs["contour_variable"])
+	perf_proc.plotter.draw(perf_proc.prefs)
 	perf_proc.plotter.fig.update_layout(clickmode='event+select')
 	
 	perf_proc.outletTs = []
@@ -72,7 +72,7 @@ def perf_proc():
 			i = i + 1
 
 	perf_proc.system_type = "integrated" if "integrated_system" in perf_proc.model_data else "central"
-	
+	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -127,6 +127,17 @@ def perf_proc():
 																clearable=False)
 				
 			], hidden = not(perf_proc.show_outletTs), id = "outletT-div"),
+			
+		html.Div(
+			[
+					html.Label("coloring", htmlFor="coloring-dropdown", style = {'display': 'inline'}),
+					dcc.Dropdown(options = perf_proc.coloring_list,
+														value = perf_proc.prefs['contour_coloring'], 
+														id='coloring-dropdown',
+														style={'width': '50%', 'align': 'right'},
+														clearable=False, className="column")
+			]),
+			
 		html.Br(),
 		html.Br(),
 		html.Br(),
@@ -196,7 +207,7 @@ def perf_proc():
 				i = i + 1
 		else:
 			perf_proc.outletTs = [{'label': "none", 'value': 0}]
-		perf_proc.plotter.draw(perf_proc.prefs['contour_variable'])
+		perf_proc.plotter.draw(perf_proc.prefs)
 		write_file("prefs.json", perf_proc.prefs)
 		return perf_proc.plotter.fig, not(perf_proc.show_outletTs), perf_proc.outletTs
 	
@@ -206,8 +217,19 @@ def perf_proc():
 			prevent_initial_call=True
 		)
 	def select_variable(value):	
-		perf_proc.plotter.draw(value)
 		perf_proc.prefs['contour_variable'] = value
+		perf_proc.plotter.draw(perf_proc.prefs)
+		write_file("prefs.json", perf_proc.prefs)
+		return perf_proc.plotter.fig
+	
+	@callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('coloring-dropdown', 'value'),
+			prevent_initial_call=True
+		)
+	def select_coloring(value):	
+		perf_proc.prefs['contour_coloring'] = value
+		perf_proc.plotter.draw(perf_proc.prefs)
 		write_file("prefs.json", perf_proc.prefs)
 		return perf_proc.plotter.fig
 	
@@ -219,7 +241,7 @@ def perf_proc():
 	def select_outletT(value):
 		perf_proc.plotter.i3 = value
 		perf_proc.plotter.get_slice()
-		perf_proc.plotter.draw(perf_proc.prefs['contour_variable'])
+		perf_proc.plotter.draw(perf_proc.prefs)
 		return perf_proc.plotter.fig
 	
 	@callback(
