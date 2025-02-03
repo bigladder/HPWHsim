@@ -21,11 +21,9 @@ async def handler(websocket):
 			if not websocket in clients:
 				clients.append(websocket)
 
-			print
-			#print("clients:")
-			#print(clients)
-			print
+			print("clients:")
 			for client in clients:
+				print(client)
 				await client.send(msg)
 
 			await websocket.recv()
