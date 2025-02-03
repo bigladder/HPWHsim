@@ -1,5 +1,5 @@
 {
-  "model_id": "Rheem2020Prem65",
+  "model_id": "AquaThermAire",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
@@ -7,6 +7,6 @@
   "show_simulated": true,
   "show_measured": false,
   "draw_profile": "High",
-  "contour_variable": 2,
+  "contour_variable": 0,
   "contour_coloring": 1
 }

@@ -283,6 +283,7 @@ body {font-family: Arial;}
 
 	async function init_elements()
 	{
+		await callPyServer("launch_ws", "")
 		var prefs = await read_json_file("./prefs.json")
 		set_elements(prefs)
 	}

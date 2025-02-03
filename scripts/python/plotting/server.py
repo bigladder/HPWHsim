@@ -11,6 +11,7 @@ from simulate import simulate
 from measure import measure
 from test_proc import launch_test_plot
 from perf_proc import launch_perf_plot
+from ws import launch_ws
 import json
 from json import dumps
 import websockets
@@ -135,7 +136,18 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				#self.wfile.write(dumps(response).encode('utf-8'))
 				#print(response)
 				return
-
+			
+			elif self.path.startswith('/launch_ws'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				print("launch_ws")
+				launch_ws()
+				response = {}
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(response))))
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				return
 			else:
 				super().do_GET()
 		
