@@ -70,8 +70,7 @@ def perf_proc():
 			if model["id"] == perf_proc.prefs["model_id"]:
 				perf_proc.imodel = i
 			i = i + 1
-
-	perf_proc.system_type = "integrated" if "integrated_system" in perf_proc.model_data else "central"
+			
 	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -91,18 +90,8 @@ def perf_proc():
 		
 		html.Div(
 			[
-					html.Label("model name", htmlFor="model-name-dropdown", style = {'display': 'inline'}),
-					dcc.Dropdown(options = perf_proc.model_list,
-														value = perf_proc.imodel, 
-														id='model-name-dropdown',
-														style={'width': '50%', 'align': 'right'},
-														clearable=False, className="column")
-			]),
-
-		html.Div(
-			[
 					html.Label("system type: ", htmlFor="system-type", style = {'display': 'inline'}),
-					html.P(perf_proc.system_type, id='system-type', style = {'fontSize': 18, 'display': 'inline'})
+					html.P("central" if perf_proc.plotter.is_central else "integrated", id='system-type', style = {'fontSize': 18, 'display': 'inline'})
 			]),
 						
 		html.Div(
@@ -158,7 +147,9 @@ def perf_proc():
 		return json.dumps({"source": "dash"})
 
 	@app.callback(
-			Output("model-name-dropdown", "value"),
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Output('outletT-div', 'hidden'),
+			Output('outletT-dropdown', 'options'),
 			[Input("ws", "message")],
 			prevent_initial_call=True
 			)
@@ -178,26 +169,11 @@ def perf_proc():
 							break
 						i = i + 1
 						
-		return perf_proc.imodel
-
-	@callback(
-			Output('perf-graph', 'figure', allow_duplicate=True),
-			Output('outletT-div', 'hidden'),
-			Output('outletT-dropdown', 'options'),
-			Input('model-name-dropdown', 'value'),
-			prevent_initial_call=True
-		)
-	def select_model(value):
-		i = 0
-		for model in perf_proc.model_index["models"]:
-			if i == value:
-				perf_proc.prefs["model_id"] = model["id"]
-				model_path = os.path.join(abs_repo_test_dir, "models_json", model["id"] + ".json") 
-				perf_proc.model_data = read_file(model_path)
-				break
-			i = i + 1
+		perf_proc.model_index["models"] 
+		model = perf_proc.model_index["models"][perf_proc.imodel]
+		model_path = os.path.join(abs_repo_test_dir, "models_json", model["id"] + ".json") 
+		perf_proc.model_data = read_file(model_path)
 		perf_proc.plotter.prepare(perf_proc.model_data)
-		perf_proc.system_type = "integrated" if "integrated_system" in perf_proc.model_data else "central"
 		perf_proc.show_outletTs = perf_proc.plotter.is_central
 		perf_proc.outletTs = []
 		if perf_proc.show_outletTs:
@@ -239,7 +215,10 @@ def perf_proc():
 				prevent_initial_call=True
 			)
 	def select_outletT(value):
-		perf_proc.plotter.i3 = value
+		if perf_proc.plotter.is_central:
+			perf_proc.plotter.i3 = value
+		else:
+			perf_proc.plotter.i3 = 0
 		perf_proc.plotter.get_slice()
 		perf_proc.plotter.draw(perf_proc.prefs)
 		return perf_proc.plotter.fig
