@@ -10,12 +10,12 @@
 		{"id": "AOSmithHPTS65", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 		{"id": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 
-		{"id": "Rheem2020Prem45", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
+		{"id": "Rheem2020Prem40", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem50", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem65", "manufacturer": "Rheem", "series": "2020Prem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem80", "manufacturer": "Rheem", "series": "2020Prem", "specs": ["Preset", "File", "JSON"]},
 
-		{"id": "Rheem2020Build45", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
+		{"id": "Rheem2020Build40", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Build50", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Build65", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Build80", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
@@ -31,11 +31,11 @@
 		{"id": "ColmacCxV_5_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		{"id": "ColmacCxV_5_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 
-		{"id": "ColmacCxV_10_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
-		{"id": "ColmacCxV_10_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_10_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_10_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 
-		{"id": "ColmacCxV_15_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
-		{"id": "ColmacCxV_15_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_15_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_15_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 
 		{"id": "ColmacCxA_20_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		{"id": "ColmacCxA_20_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},

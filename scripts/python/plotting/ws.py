@@ -10,6 +10,7 @@ from json import dumps
 import websockets
 import asyncio
 from websockets.exceptions import ConnectionClosedOK
+# Launch the server with "poetry run python ws.py".
 	
 clients =[]
 	

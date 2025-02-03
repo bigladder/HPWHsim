@@ -87,56 +87,53 @@ def perf_proc():
 		dcc.Input(id="input", autoComplete="off"),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
+ 
+		html.Form(children=[
+      html.P("system type: " +  "central" if perf_proc.plotter.is_central else "integrated"),
+			
+      html.P(
+				children=["display variable: ",
+											 dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
+													 		{'label': 'Heating Capacity (W)', 'value': 1},
+															{'label': 'COP', 'value': 2}],
+															value = perf_proc.prefs['contour_variable'], 
+															id='display-dropdown',
+															style={'width': '50%'},
+															clearable=False)
+				]),
 		
-		html.Div(
-			[
-					html.Label("system type: ", htmlFor="system-type", style = {'display': 'inline'}),
-					html.P("central" if perf_proc.plotter.is_central else "integrated", id='system-type', style = {'fontSize': 18, 'display': 'inline'})
-			]),
+			html.Div(
+				[html.P(
+					children=["condenser outlet temperature (\u00B0C)",							
+						dcc.Dropdown(options = perf_proc.outletTs,
+																		value = perf_proc.plotter.i3, 
+																		id='outletT-dropdown',
+																		style={'width': '50%'},
+																		clearable=False)
 						
-		html.Div(
-			[
-					html.Label("display variable", htmlFor="display-dropdown", style = {'display': 'inline'}),
-					dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
-												 		{'label': 'Heating Capacity (W)', 'value': 1},
-														{'label': 'COP', 'value': 2}],
-														value = perf_proc.prefs['contour_variable'], 
-														id='display-dropdown',
-														style={'width': '50%', 'align': 'right'},
-														clearable=False, className="column")
-			]),
-	
-		html.Div(
-			[
-				html.Label("condenser outlet temperature (\u00B0C)", htmlFor="outletT-dropdown", style = {'display': 'inline'}),
-				dcc.Dropdown(options = perf_proc.outletTs,
-																value = perf_proc.plotter.i3, 
-																id='outletT-dropdown',
-																style={'width': '50%', 'align': 'right'},
-																clearable=False)
-				
-			], hidden = not(perf_proc.show_outletTs), id = "outletT-div"),
-			
-		html.Div(
-			[
-					html.Label("coloring", htmlFor="coloring-dropdown", style = {'display': 'inline'}),
-					dcc.Dropdown(options = perf_proc.coloring_list,
-														value = perf_proc.prefs['contour_coloring'], 
-														id='coloring-dropdown',
-														style={'width': '50%', 'align': 'right'},
-														clearable=False, className="column")
-			]),
-			
+					], hidden = not(perf_proc.show_outletTs), id = "outletT-div")]),
+					
+			html.P(
+				children=["coloring",
+						dcc.Dropdown(options = perf_proc.coloring_list,
+															value = perf_proc.prefs['contour_coloring'], 
+															id='coloring-dropdown',
+															style={'width': '50%'},
+															clearable=False)
+				])
+		], style={'width' : '100%', 'margin' : '0 auto'}, id="perf_form", hidden=False),
+		
+
 		html.Br(),
 		html.Br(),
 		html.Br(),
-				dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
-					config={
-            'modeBarButtonsToAdd': [
-            "drawrect",
-            "eraseshape"
-            ]
-        }, )	
+		dcc.Graph(id='perf-graph', figure=perf_proc.plotter.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
+			config={
+        'modeBarButtonsToAdd': [
+        "drawrect",
+        "eraseshape"
+        ]
+    }, )	
 	])
 	@app.callback(
 			Output("ws", "send"),
@@ -149,6 +146,7 @@ def perf_proc():
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Output('outletT-div', 'hidden'),
+			Output('outletT-dropdown', 'value'),
 			Output('outletT-dropdown', 'options'),
 			[Input("ws", "message")],
 			prevent_initial_call=True
@@ -185,7 +183,8 @@ def perf_proc():
 			perf_proc.outletTs = [{'label': "none", 'value': 0}]
 		perf_proc.plotter.draw(perf_proc.prefs)
 		write_file("prefs.json", perf_proc.prefs)
-		return perf_proc.plotter.fig, not(perf_proc.show_outletTs), perf_proc.outletTs
+		print("setting controls")
+		return perf_proc.plotter.fig, not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -215,10 +214,14 @@ def perf_proc():
 				prevent_initial_call=True
 			)
 	def select_outletT(value):
+		print(f"set outletT: {value}")
+		if value == None:
+			return perf_proc.plotter.fig
 		if perf_proc.plotter.is_central:
 			perf_proc.plotter.i3 = value
 		else:
 			perf_proc.plotter.i3 = 0
+		print(f"slice: {perf_proc.plotter.i3}")
 		perf_proc.plotter.get_slice()
 		perf_proc.plotter.draw(perf_proc.prefs)
 		return perf_proc.plotter.fig

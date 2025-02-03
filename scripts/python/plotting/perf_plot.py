@@ -28,7 +28,6 @@ class PerfPlotter:
 		self.Pins = []
 		self.Pouts = []
 		self.COPs= []
-		i = 0
 		nT1s = np.size(self.T1s)
 		nT2s = np.size(self.T2s)
 		nT3s = 1 if not self.is_central else np.size(self.T3s)
