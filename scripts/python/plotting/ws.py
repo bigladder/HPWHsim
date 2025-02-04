@@ -21,18 +21,23 @@ async def handler(websocket):
 			print(msg)
 			data = json.loads(msg)
 			if "source" in data:
+				
 				if data['source'] == "dash-perf":
 					handler.dash_perf_client = websocket
-
 			if not handler.dash_perf_client == -1:
 				await handler.dash_perf_client.send(msg)
+				
+			if data['source'] == "dash-test":
+					handler.dash_test_client = websocket
+			if not handler.dash_test_client == -1:
+				await handler.dash_test_client.send(msg)
 				
 			await websocket.recv()
 		except ConnectionClosedOK:
 			break
-
 	
 handler.dash_perf_client = -1
+handler.dash_test_client = -1
 		
 async def main():
 	async with websockets.serve(handler, "localhost", 8600):

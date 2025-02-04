@@ -124,19 +124,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.wfile.write(dumps(response).encode('utf-8'))
 				return
 			
-			elif self.path.startswith('/update_perf_plot'):
-				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				model_name = query_components.get('model_name', [None])[0]
-				response = {}
-				self.send_response(200)
-				self.send_header("Content-type", "application/json")
-				self.send_header("Content-Length", str(len(dumps(response))))
-				self.send_header("Access-Control-Allow-Origin", "*")
-				self.end_headers()
-				#self.wfile.write(dumps(response).encode('utf-8'))
-				#print(response)
-				return
-			
 			elif self.path.startswith('/launch_ws'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				print("launch_ws")
