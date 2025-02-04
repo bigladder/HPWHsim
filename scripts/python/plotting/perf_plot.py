@@ -28,6 +28,14 @@ class PerfPlotter:
 		self.Pins = []
 		self.Pouts = []
 		self.COPs= []
+		
+		self.xPoint = []
+		self.yPoint = []
+		
+		self.zPins = []
+		self.zPouts = []
+		self.zCOPs= []
+		
 		nT1s = np.size(self.T1s)
 		nT2s = np.size(self.T2s)
 		nT3s = 1 if not self.is_central else np.size(self.T3s)
@@ -37,13 +45,23 @@ class PerfPlotter:
 			rowCOP = []
 			for i1x in range(nT1s):
 				elem = nT2s * (nT3s * i1x + self.i3) + i2y
+				
+				self.xPoint.append(self.T1s[i1x])
+				self.yPoint.append(self.T2s[i2y])
+																
+				self.zPins.append(self.vPins[elem])
+				self.zPouts.append(self.vPouts[elem])
+				self.zCOPs.append(self.vCOPs[elem])
+				
 				rowPin.append(self.vPins[elem])
 				rowPout.append(self.vPouts[elem])
 				rowCOP.append(self.vCOPs[elem])
+
 			self.Pins.append(rowPin)
 			self.Pouts.append(rowPout)
 			self.COPs.append(rowCOP)						
 		self.have_data = True
+		
 	
 	def prepare(self, model_data):
 
@@ -91,12 +109,16 @@ class PerfPlotter:
 		if 'contour_variable' in prefs:	
 			if prefs['contour_variable'] == 0:
 				zPlot = self.Pins
+				zSizes = self.zPins
 			elif prefs['contour_variable']  == 1:
 				zPlot = self.Pouts
+				zSizes = self.zPouts
 			else:
 				zPlot = self.COPs	
+				zSizes = self.zCOPs
 		else:
 			zPlot = self.Pouts
+			zSizes = self.zPouts
 
 		coloring = 'lines'
 		if 'contour_coloring' in prefs:
@@ -114,7 +136,25 @@ class PerfPlotter:
             					),
 											)))
 		
+		xaxis_title = "environment temperature (\u00B0C)"
 		yaxis_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
+		
+		if True:#self.show_points:
+
+			self.fig = go.Figure(self.fig)
+
+			zMin = min(zSizes)
+			zMax = max(zSizes)
+			
+			normSize = []
+			for zSize in zSizes:
+				normSize.append(20 * (zSize - zMin) / (zMax - zMin))
+			
+
+			trace = go.Scatter(name = "points", x = self.xPoint, y = self.yPoint, marker_size=normSize, mode="markers")		
+			#self.fig.add_trace(data = data.frame(xV=self.T1s,yV=self.T2s,zv=4), x = ~xV, y = ~yV, size=12, type = "scatter")
+			self.fig.add_trace(trace)
+
 		self.fig.update_layout({
     	"xaxis": {"title_text": "environment temperature (\u00B0C)", 'title_font': {"size": 14, "color": "black"}},
     	"yaxis": {"title_text": yaxis_title, 'title_font': {"size": 14, "color": "black"}}

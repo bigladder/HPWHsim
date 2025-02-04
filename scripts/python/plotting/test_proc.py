@@ -38,38 +38,73 @@ def test_proc(fig):
 	test_proc.selected_ambient_TV = []
 	test_proc.variable_type = "";
 
+	test_proc.plotter = TestPlotter()
+	test_proc.plotter.read_measured(measured_path)
+	test_proc.plotter.read_simulated(simulated_path)
+	test_proc.plotter.draw()
+
 	fig.update_layout(clickmode='event+select')
 		
 	app.layout = [
+		dcc.Input(id="input", autoComplete="off"),
+   	html.Div(id="message"),
+   	WebSocket(url="ws://localhost:8600", id="ws"),
 
-			dcc.Graph(id='test-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
-			
-			html.Div(
-				[
-					dcc.Markdown("""
-						**find UA**
-									 
-						Select an area on the temperature plot.
-						"""),
-					
-					html.Label("tank volume (L)", htmlFor="tank-volume"),
-					dcc.Input(
-		          id = "tank-volume",
-							type = "text",
-		          value="189.271",
-		        )
-		        ,
+		dcc.Graph(id='test-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
+		
+		html.Div(
+			[
+				dcc.Markdown("""
+					**find UA**
+								 
+					Select an area on the temperature plot.
+					"""),
+				
+				html.Label("tank volume (L)", htmlFor="tank-volume"),
+				dcc.Input(
+	          id = "tank-volume",
+						type = "text",
+	          value="189.271",
+	        )
+	        ,
 
-					html.Button('Get UA', id='get-ua-btn', n_clicks=0, disabled = True),
+				html.Button('Get UA', id='get-ua-btn', n_clicks=0, disabled = True),
 
-					html.P(id='ua-p', style = {'fontSize': 18, 'display': 'inline'}), html.Br()
-				],
-				id = 'ua-div',
-				className='six columns',
-				hidden = True
-			)
+				html.P(id='ua-p', style = {'fontSize': 18, 'display': 'inline'}), html.Br()
+			],
+			id = 'ua-div',
+			className='six columns',
+			hidden = True
+		)
 	]
 	
+	@app.callback(
+			Output("ws", "send"),
+			[Input("input", "value")]
+			)
+	def send(value):
+		print("sending")
+		return json.dumps({"source": "dash-test"})
+
+	@app.callback(
+				Output('test-graph', 'figure', allow_duplicate=True),
+				Output('ua-div', 'hidden'),
+				[Input("ws", "message")],
+				prevent_initial_call=True
+			)
+	def message(msg):
+		print(f"received by dash-test: {msg}")
+		if 'data' in msg:
+			data = json.loads(msg['data'])
+			show_types = data['show_types'] if 'show_types' in data else 0
+			measured_path = data['measured_path'] if 'measured_path' in data else ""
+			simulated_path = data['simulated_path'] if 'simulated_path' in data['simulated_path'] else ""
+			 
+			self.plotter.read_measured(measured_path)
+			self.plotter.read_simulated(simulated_path)
+			self.plotter.draw()
+				return perf_proc.plotter.fig, not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
+		
 	@callback(
 		Output('get-ua-btn', 'disabled'),
 		Output('ua-div', 'hidden'),
@@ -253,7 +288,7 @@ def launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulat
 	print("creating plot...")
 	#print(f"measured_path: {measured_path}")
 	#print(f"simulated__path: {simulated_path}")
-	plotter = plot(measured_path, simulated_path)
+	test_proc.plotter = plot(measured_path, simulated_path)
 	time.sleep(1)
 	
 	if launch_test_plot.proc != -1:

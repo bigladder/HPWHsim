@@ -45,7 +45,7 @@ def retrieve_line_type(variable_type):
 	elif variable_type == "Simulated":
 		return "dot"
 
-class Plotter:
+class TestPlotter:
 	def __init__(self):
 		self.plot = {}
 		self.energy_data = {}
@@ -287,15 +287,15 @@ class Plotter:
 		self.plot.finalize_plot()
 		return self
 
-def plot(measured_path, simulated_path):
-	plotter = Plotter()
-	plotter.read_measured(measured_path)
-	plotter.read_simulated(simulated_path)
-	plotter.draw()
-	return plotter
+	def plot(self, measured_path, simulated_path):
+		self.plotter = TestPlotter()
+		self.plotter.read_measured(measured_path)
+		self.plotter.read_simulated(simulated_path)
+		self.plotter.draw()
+		return self.plotter
 
 def write_plot(measured_path, simulated_path, plot_path):
-	plotter = Plotter()
+	plotter = TestPlotter()
 	plotter.read_measured(measured_path)
 	plotter.read_simulated(simulated_path)
 	plotter.draw()

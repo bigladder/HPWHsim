@@ -268,11 +268,13 @@ body {font-family: Arial;}
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
 
-		const wss = await new WebSocket("ws://localhost:8600");
-		await sleep(1000);
-	  const fst = {'source': 'index.html', 'model_name': prefs['model_id']}
-		let msg = JSON.stringify(fst);
-		wss.send(msg);
+	  var fst = {'source': 'index.html', 'dest': 'dash-test', 'model_name': prefs['model_id']}
+		var msg = JSON.stringify(fst);
+		ws.connection.send(msg);
+
+	  fst = {'source': 'index.html', 'dest': 'dash-perf', 'model_name': prefs['model_id']}
+		msg = JSON.stringify(fst);
+		ws.connection.send(msg);
 	}
 
 	async function change_menu_value()
@@ -283,9 +285,14 @@ body {font-family: Arial;}
 
 	async function init_elements()
 	{
-		await callPyServer("launch_ws", "")
 		var prefs = await read_json_file("./prefs.json")
 		set_elements(prefs)
+	}
+
+	async function ws()
+	{
+		await callPyServer("launch_ws", "")
+		this.connection = await new WebSocket("ws://localhost:8600");
 	}
 </script>
 
@@ -449,30 +456,8 @@ body {font-family: Arial;}
 
     document.getElementById("perf_btn").disabled = false;
   }
-	const sleep = ms => new Promise(r => setTimeout(r, ms));
-  async function update_perf() {
 
-    const build_form = document.getElementById('build_form');
-    const build_dir = build_form.build_dir.value;
-
-    const model_form = document.getElementById('model_form');
-    const model_spec = model_form.model_spec.value;
-    const model_name = model_form.model_name.value;
-
-    const perf_form = document.getElementById('perf_form');
-
-		const wss = await new WebSocket("ws://localhost:8600");
-		await sleep(1000);
-	  const fst = {'source': 'index.html'}
-		let msg = JSON.stringify(fst);
-		wss.send(msg);
-	  //fst = 'model_name=' + model_name;
-	 // await callPyServerJSON("update_perf_plot", fst)
-
-    document.getElementById("perf_btn").disabled = false;
-  }
 </script>
-
 
 <!-- content -->
 <form id="model_form">
@@ -564,7 +549,7 @@ for (i = 0; i < coll.length; i++) {
       else if(this.id == "measure_tab")
         content.style.maxHeight = "320px";
       else if(this.id == "perf_tab")
-        content.style.maxHeight = "1100px";
+        content.style.maxHeight = "1400px";
     } 
   });
 }
@@ -573,7 +558,8 @@ for (i = 0; i < coll.length; i++) {
 </body>
 
 <script>
-init_elements().then({},{})
+	init_elements().then({},{})
+	ws()
 </script>
 
 </html>
