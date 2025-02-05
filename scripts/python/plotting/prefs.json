@@ -1,12 +1,12 @@
 {
-  "model_id": "Rheem2020Build80",
+  "model_id": "AquaThermAire",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
-  "test_id": "testLargeCompHot",
+  "test_id": "RE2H50_UEF50",
   "show_simulated": true,
   "show_measured": false,
   "draw_profile": "High",
-  "contour_variable": 2,
+  "contour_variable": 0,
   "contour_coloring": 1
 }

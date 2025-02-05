@@ -9,8 +9,8 @@ import socketserver
 import urllib.parse as urlparse
 from simulate import simulate
 from measure import measure
-from test_proc import launch_test_plot
-from perf_proc import launch_perf_plot
+from test_proc import launch_test_proc
+from perf_proc import launch_perf_proc
 from ws import launch_ws
 import json
 from json import dumps
@@ -19,7 +19,7 @@ import asyncio
 
 PORT = 8000
 		
-launch_test_plot.proc = -1
+launch_test_proc.proc = -1
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
 			
@@ -44,7 +44,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
 				json_str = query_components.get('json_data', [None])[0]
-				print(json_str)
 				json_data = json.loads(json_str)
 				with open(filename, "w") as json_file:
 					#json_file.write(json_data)
@@ -59,13 +58,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			
 			elif self.path.startswith('/simulate'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-
-				model_spec = query_components.get('model_spec', [None])[0]
-				model_name = query_components.get('model_name', [None])[0]
-				test_dir = query_components.get('test_dir', [None])[0]
-				build_dir = query_components.get('build_dir', [None])[0]
-
-				response = simulate(model_spec, model_name, test_dir, build_dir)
+				data_str = query_components.get('data', [None])[0]
+				data = json.loads(data_str)
+				response = simulate(data)
 
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
@@ -79,12 +74,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 			elif self.path.startswith('/measure'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				model_spec = query_components.get('model_spec', [None])[0]
-				model_name = query_components.get('model_name', [None])[0]
-				build_dir = query_components.get('build_dir', [None])[0]
-				draw_profile = query_components.get('draw_profile', [None])[0]
-
-				measure(model_spec, model_name, build_dir, draw_profile)
+				data_str = query_components.get('data', [None])[0]
+				data = json.loads(data_str)
+				measure(data)
 
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
@@ -93,14 +85,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.end_headers()
 				return
 							
-			elif self.path.startswith('/test_plot'):
+			elif self.path.startswith('/launch_test_proc'):
 					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-					test_dir = query_components.get('test_dir', [None])[0]
-					build_dir = query_components.get('build_dir', [None])[0]
-					show_types  = int(query_components.get('show_types', [None])[0])
-					simulated_filename  = query_components.get('simulated_filename', [None])[0]
-					measured_filename= query_components.get('measured_filename', [None])[0]
-					response = launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename)
+					data_str = query_components.get('data', [None])[0]	
+					data = json.loads(data_str)
+					print(data)
+					response = launch_test_proc(data)
 
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")
@@ -112,10 +102,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.wfile.write(dumps(response).encode('utf-8'))
 					return
 
-			elif self.path.startswith('/launch_perf_plot'):
+			elif self.path.startswith('/launch_perf_proc'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				#model_name = query_components.get('model_name', [None])[0]
-				response = launch_perf_plot()
+				response = launch_perf_proc()
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))
@@ -126,12 +115,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			
 			elif self.path.startswith('/launch_ws'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				print("launch_ws")
 				launch_ws()
-				response = {}
+				
 				self.send_response(200)
-				self.send_header("Content-type", "application/json")
-				self.send_header("Content-Length", str(len(dumps(response))))
+				self.send_header("Content-type", "text/html")
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				return

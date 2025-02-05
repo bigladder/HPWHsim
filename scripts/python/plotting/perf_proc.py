@@ -16,8 +16,6 @@ from perf_plot import PerfPlotter
 import multiprocessing as mp
 from pathlib import Path
 from dash_extensions import WebSocket
-from dash_extensions import EventListener
-import asyncio
 
 def read_file(filename):
 	try:
@@ -140,8 +138,8 @@ def perf_proc():
 			[Input("input", "value")]
 			)
 	def send(value):
-		print("sending")
-		return json.dumps({"source": "dash-perf"})
+		print("sent by perf-proc")
+		return json.dumps({"source": "perf-proc"})
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -152,12 +150,11 @@ def perf_proc():
 			prevent_initial_call=True
 			)
 	def message(msg):
-		print("receiving")
-		print(msg)
 		if 'data' in msg:
 			data = json.loads(msg['data'])
-			if 'model_name' in data:
-				model_id = data['model_name']
+			if 'dest' in data and data['dest'] == 'perf-proc':
+				print("received by perf-proc")				
+				model_id = data['model_name'] if 'model_name' in data else 0
 				i = 0
 				for model in perf_proc.model_index["models"]:
 					if "id" in model:			
@@ -183,7 +180,6 @@ def perf_proc():
 			perf_proc.outletTs = [{'label': "none", 'value': 0}]
 		perf_proc.plotter.draw(perf_proc.prefs)
 		write_file("prefs.json", perf_proc.prefs)
-		print("setting controls")
 		return perf_proc.plotter.fig, not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 	
 	@callback(
@@ -214,14 +210,12 @@ def perf_proc():
 				prevent_initial_call=True
 			)
 	def select_outletT(value):
-		print(f"set outletT: {value}")
 		if value == None:
 			return perf_proc.plotter.fig
 		if perf_proc.plotter.is_central:
 			perf_proc.plotter.i3 = value
 		else:
 			perf_proc.plotter.i3 = 0
-		print(f"slice: {perf_proc.plotter.i3}")
 		perf_proc.plotter.get_slice()
 		perf_proc.plotter.draw(perf_proc.prefs)
 		return perf_proc.plotter.fig
@@ -255,23 +249,23 @@ def perf_proc():
 perf_proc.port_num = 8051
 
 # Runs a simulation and generates plot
-def launch_perf_plot():
+def launch_perf_proc():
 
-	if launch_perf_plot.proc != -1:
+	if launch_perf_proc.proc != -1:
 		print("killing current dash for plotting performance...")
-		launch_perf_plot.proc.kill()
+		launch_perf_proc.proc.kill()
 		time.sleep(1)
 
-	launch_perf_plot.proc = mp.Process(target=perf_proc, args=(), name='perf-proc')
+	launch_perf_proc.proc = mp.Process(target=perf_proc, args=(), name='perf-proc')
 	print("launching dash for plotting performance...")
 	time.sleep(1)
 
-	launch_perf_plot.proc.start()
+	launch_perf_proc.proc.start()
 	time.sleep(2)
 	   
 	results = {}
 	results["port_num"] = perf_proc.port_num
 	return results
 
-launch_perf_plot.proc = -1
+launch_perf_proc.proc = -1
 

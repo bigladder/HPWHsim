@@ -2,10 +2,7 @@
 
 import socketserver
 import urllib.parse as urlparse
-from simulate import simulate
-from measure import measure
-from test_proc import launch_test_plot
-from perf_proc import launch_perf_plot
+
 import json
 from json import dumps
 import websockets
@@ -22,22 +19,22 @@ async def handler(websocket):
 			data = json.loads(msg)
 			if "source" in data:
 				
-				if data['source'] == "dash-perf":
-					handler.dash_perf_client = websocket
-			if not handler.dash_perf_client == -1:
-				await handler.dash_perf_client.send(msg)
+				if data['source'] == "perf-proc":
+					handler.perf_proc_client = websocket
+			if not handler.perf_proc_client == -1:
+				await handler.perf_proc_client.send(msg)
 				
-			if data['source'] == "dash-test":
-					handler.dash_test_client = websocket
-			if not handler.dash_test_client == -1:
-				await handler.dash_test_client.send(msg)
+			if data['source'] == "test-proc":
+					handler.test_proc_client = websocket
+			if not handler.test_proc_client == -1:
+				await handler.test_proc_client.send(msg)
 				
 			await websocket.recv()
 		except ConnectionClosedOK:
 			break
 	
-handler.dash_perf_client = -1
-handler.dash_test_client = -1
+handler.perf_proc_client = -1
+handler.test_proc_client = -1
 		
 async def main():
 	async with websockets.serve(handler, "localhost", 8600):
@@ -62,10 +59,5 @@ def launch_ws():
 
 	launch_ws.proc.start()
 	time.sleep(2)
-	
-	print("launched")
-	results = {}
-	#results["port_num"] = perf_proc.port_num
-	return results
 
 launch_ws.proc = -1

@@ -12,11 +12,12 @@ from scipy.optimize import least_squares
 import numpy as np
 import math
 import time
-from test_plot import plot
+from test_plot import TestPlotter, plot
 import multiprocessing as mp
 from pathlib import Path
+from dash_extensions import WebSocket
 
-def test_proc(fig):
+def test_proc(measured_filepath, simulated_filepath):
 	
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -36,21 +37,20 @@ def test_proc(fig):
 	test_proc.selected_t_minV = []
 	test_proc.selected_tank_TV = []
 	test_proc.selected_ambient_TV = []
-	test_proc.variable_type = "";
+	test_proc.variable_type = ""
+	test_proc.measured_filepath = measured_filepath
+	test_proc.simulated_filepath = simulated_filepath
 
 	test_proc.plotter = TestPlotter()
-	test_proc.plotter.read_measured(measured_path)
-	test_proc.plotter.read_simulated(simulated_path)
-	test_proc.plotter.draw()
-
-	fig.update_layout(clickmode='event+select')
+	test_proc.plotter = plot(measured_filepath, simulated_filepath)
+	test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
 		
 	app.layout = [
 		dcc.Input(id="input", autoComplete="off"),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
 
-		dcc.Graph(id='test-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
+		dcc.Graph(id='test-graph', figure=test_proc.plotter.plot.figure, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
 		
 		html.Div(
 			[
@@ -83,31 +83,34 @@ def test_proc(fig):
 			[Input("input", "value")]
 			)
 	def send(value):
-		print("sending")
-		return json.dumps({"source": "dash-test"})
+		print("sent by test-proc")
+		return json.dumps({
+			"source": "test-proc", "dest": "test-proc", 
+			'measured_filepath': test_proc.measured_filepath, 'simulated_filepath': test_proc.simulated_filepath}
+			)
 
 	@app.callback(
 				Output('test-graph', 'figure', allow_duplicate=True),
-				Output('ua-div', 'hidden'),
+				Output('ua-div', 'hidden', allow_duplicate=True),
 				[Input("ws", "message")],
 				prevent_initial_call=True
 			)
 	def message(msg):
-		print(f"received by dash-test: {msg}")
 		if 'data' in msg:
 			data = json.loads(msg['data'])
-			show_types = data['show_types'] if 'show_types' in data else 0
-			measured_path = data['measured_path'] if 'measured_path' in data else ""
-			simulated_path = data['simulated_path'] if 'simulated_path' in data['simulated_path'] else ""
-			 
-			self.plotter.read_measured(measured_path)
-			self.plotter.read_simulated(simulated_path)
-			self.plotter.draw()
-				return perf_proc.plotter.fig, not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
+			if 'dest' in data and data['dest'] == 'test-proc':
+				print(f"received by test-proc")
+				measured_filepath = "" if not 'measured_filepath' in data else data['measured_filepath']
+				simulated_filepath = "" if not 'simulated_filepath' in data else data['simulated_filepath']
+				print("replotting tests")
+				test_proc.plotter = plot(measured_filepath, simulated_filepath)
+				test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
+		return test_proc.plotter.plot.figure, True
+			
 		
 	@callback(
 		Output('get-ua-btn', 'disabled'),
-		Output('ua-div', 'hidden'),
+		Output('ua-div', 'hidden', allow_duplicate=True),
 		Output('ua-p', 'children', allow_duplicate=True),
 		Output('test-graph', 'figure', allow_duplicate=True),
 		Input('test-graph', 'selectedData'),
@@ -260,51 +263,26 @@ def test_proc(fig):
 test_proc.port_num = 8050
 
 # Runs a simulation and generates plot
-def launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename):
-
-	orig_dir = str(Path.cwd())
-	os.chdir(build_dir)
-	abs_build_dir = str(Path.cwd())
-	os.chdir(orig_dir)
-
-	os.chdir("../../../test")
-	abs_repo_test_dir = str(Path.cwd())
-	os.chdir(orig_dir)
-
-	output_dir = os.path.join(abs_build_dir, "test", "output") 
-	if not os.path.exists(output_dir):
-		os.mkdir(output_dir)
-	 
-	measured_path = ""
-	simulated_path = ""
-
-	if show_types & 1:
-		if test_dir != "none":
-			measured_path = os.path.join(abs_repo_test_dir, test_dir, measured_filename)  
-			 
-	if show_types & 2:
-		simulated_path = os.path.join(output_dir, simulated_filename)		 
+def launch_test_proc(data):
 
 	print("creating plot...")
-	#print(f"measured_path: {measured_path}")
-	#print(f"simulated__path: {simulated_path}")
-	test_proc.plotter = plot(measured_path, simulated_path)
-	time.sleep(1)
+	print(data)
+	measured_filepath = data['measured_filepath'] if 'measured_filepath' in data else ""
+	simulated_filepath = data['simulated_filepath'] if 'simulated_filepath' in data else ""
 	
-	if launch_test_plot.proc != -1:
+	if launch_test_proc.proc != -1:
 		print("killing current dash for plotting tests...")
-		launch_test_plot.proc.kill()
+		launch_test_proc.proc.kill()
 		time.sleep(1)
-		
-	launch_test_plot.proc = mp.Process(target=test_proc, args=(plotter.plot.figure, ), name='test-proc')
+	
+	launch_test_proc.proc = mp.Process(target=test_proc, args=(measured_filepath, simulated_filepath, ), name='test-proc')
 	time.sleep(1)
 	print("launching dash for plotting tests...")
-	launch_test_plot.proc.start()
+	launch_test_proc.proc.start()
 	time.sleep(2)
 	   
 	test_results = {}
-	test_results["energy_data"] = plotter.energy_data
 	test_results["port_num"] = test_proc.port_num
 	return test_results
 
-launch_test_plot.proc = -1
+launch_test_proc.proc = -1

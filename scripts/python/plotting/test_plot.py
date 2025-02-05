@@ -287,26 +287,25 @@ class TestPlotter:
 		self.plot.finalize_plot()
 		return self
 
-	def plot(self, measured_path, simulated_path):
-		self.plotter = TestPlotter()
-		self.plotter.read_measured(measured_path)
-		self.plotter.read_simulated(simulated_path)
-		self.plotter.draw()
-		return self.plotter
-
-def write_plot(measured_path, simulated_path, plot_path):
+def plot(measured_filepath, simulated_filepath):
 	plotter = TestPlotter()
-	plotter.read_measured(measured_path)
-	plotter.read_simulated(simulated_path)
+	plotter.read_measured(measured_filepath)
+	plotter.read_simulated(simulated_filepath)
 	plotter.draw()
-	plotter.plot.write_html_plot(plot_path)
+	return plotter
+
+def write_plot(measured_path, simulated_filepath, plot_filepath):
+	plotter = TestPlotter()
+	plotter.read_measured(measured_filepath)
+	plotter.read_simulated(simulated_filepath)
+	plotter.draw()
+	plotter.plot.write_html_plot(plot_filepath)
 	
 # main
 if __name__ == "__main__":
-    n_args = len(sys.argv) - 1
-
-    if n_args > 2:
-        measured_path = sys.argv[1]
-        simulated_path = sys.argv[2]
-        plot_path = sys.argv[3]
-        write_plot(measured_path, simulated_path, plot_path)
+	n_args = len(sys.argv) - 1
+	if n_args > 2:
+			measured_filepath = sys.argv[1]
+			simulated_filepath = sys.argv[2]
+			plot_filepath = sys.argv[3]
+			write_plot(measured_filepath, simulated_filepath, plot_filepath)
