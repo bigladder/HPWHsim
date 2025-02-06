@@ -3171,6 +3171,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_NyleC90A_C_SP;
     }
+    else if (modelName == "NyleC125A_C_SP")
+    {
+        model = HPWH::MODELS_NyleC125A_C_SP;
+    }
     else if (modelName == "NyleC185A_C_SP")
     {
         model = HPWH::MODELS_NyleC185A_C_SP;
