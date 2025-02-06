@@ -130,7 +130,7 @@ class PerfPlotter:
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
-		
+			
 		self.fig = go.Figure(data =
 										 go.Contour(z = zPlot, x = self.T1s, y = self.T2s,
 											contours=dict(

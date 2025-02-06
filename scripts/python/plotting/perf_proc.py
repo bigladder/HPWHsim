@@ -41,8 +41,10 @@ def perf_proc(data):
 
 	perf_proc.fig = {}
 	perf_proc.model_data = {}
-	if "model_data" in data:
-		perf_proc.model_data = data["model_data"]
+	perf_proc.model_data_filepath = ""
+	if "model_data_filepath" in data:
+		perf_proc.model_data_filepath = data["model_data_filepath"]
+		perf_proc.model_data = read_file(perf_proc.model_data_filepath)
 		
 	perf_proc.plotter = PerfPlotter()
 	perf_proc.plotter.prepare(perf_proc.model_data)
@@ -133,7 +135,7 @@ def perf_proc(data):
 			)
 	def send(value):
 		print("sent by perf-proc")
-		msg = {"source": "perf-proc", "dest": "perf-proc", "model_data": perf_proc.model_data}
+		msg = {"source": "perf-proc", "dest": "perf-proc", "model_data_filepath": perf_proc.model_data_filepath}
 		return json.dumps(msg)
 
 	@app.callback(
@@ -151,9 +153,10 @@ def perf_proc(data):
 			if 'dest' in data and data['dest'] == 'perf-proc':
 				print("received by perf-proc")	
 				perf_proc.model_data = {}
-				if 'model_data' in data:
-					model_data = data['model_data']
-					perf_proc.model_data = model_data
+				if 'model_data_filepath' in data:
+					perf_proc.model_data_filepath = data['model_data_filepath']			
+					perf_proc.model_data = read_file(perf_proc.model_data_filepath)
+					print(perf_proc.model_data)
 					perf_proc.plotter.prepare(perf_proc.model_data)
 					perf_proc.show_outletTs = False
 					perf_proc.outletTs = []
@@ -166,8 +169,8 @@ def perf_proc(data):
 								i = i + 1
 						else:
 							perf_proc.outletTs = [{'label': "none", 'value': 0}]
-						print(perf_proc.outletTs)
 						perf_proc.plotter.draw(perf_proc.prefs)
+						
 						
 		
 		return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs

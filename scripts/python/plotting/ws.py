@@ -34,7 +34,7 @@ async def handler(client):
 							await handler.test_proc_client.send(msg)
 				summary['dest'] = data['dest']
 				
-				print(summary)
+				#print(summary)
 		except ConnectionClosedOK:
 			break
 	
