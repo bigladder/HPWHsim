@@ -139,7 +139,7 @@ def perf_proc():
 			)
 	def send(value):
 		print("sent by perf-proc")
-		return json.dumps({"source": "perf-proc"})
+		return json.dumps({"source": "perf-proc", "dest": "perf-proc"})
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),

@@ -205,6 +205,7 @@
 				prefs["test_id"] = test_names[0];
 
 			var have_measured = false;
+			var measured_filename = "";
 			var test_dir = "";
 			for (let test of test_index["tests"]) {
 				var test_id = "";
@@ -221,6 +222,8 @@
 							if ("id" in measured)
 								if (measured["id"] == prefs["model_id"]) {
 									have_measured = true;
+									if ('filename' in measured)
+										measured_filename = measured['filename']
 									break;
 								}
 				}
@@ -279,48 +282,45 @@
 			set_menu_values(prefs);
 			await write_json_file("./prefs.json", prefs)
 
-			//measure or simulate
-			if (is_standard_test) {
-				const draw_profile = test_form.draw_profile.value;
-				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
-				await callPyServer("measure", "data=" + JSON.stringify(data))
-				simulated_filename = "test24hr_" + model_spec + "_" + model_name + ".csv";
-
-				document.getElementById("measure_results").style = "display:block;"
-				document.getElementById("measure_results").height = "1800px;"
-				document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
-			}
-			else {
-				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
-				await callPyServer("simulate", "data=" + JSON.stringify(data))
-				simulated_filename = prefs["test_id"] + "_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
+			{// send perf info
+				var msg = { 'source': 'index.html', 'dest': 'perf-proc', 'model_name': prefs['model_id'] };
+				await ws_connection.send(JSON.stringify(msg));
 			}
 
-			{ // send test info
-				var fst = {'source': 'index.html', 'dest': 'test-proc'};
+			if (have_test)
+			{ //measure or simulate
+				if (is_standard_test) {
+					const draw_profile = test_form.draw_profile.value;
+					let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
+					await callPyServer("measure", "data=" + JSON.stringify(data))
+					simulated_filename = "test24hr_" + model_spec + "_" + model_name + ".csv";
+
+					document.getElementById("measure_results").style = "display:block;"
+					document.getElementById("measure_results").height = "1800px;"
+					document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
+				}
+				else {
+					let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+					await callPyServer("simulate", "data=" + JSON.stringify(data))
+					simulated_filename = prefs["test_id"] + "_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
+				}
+
+			 // send test info
+				var msg = {'source': 'index.html', 'dest': 'test-proc'};
 				if (prefs["show_measured"])
 				{
 					measured_filepath = "../../../test"
 					if(test_dir != "")
 						measured_filepath += "/" + test_dir;
 					measured_filepath += "/" + measured_filename;
-					fst['measured_filepath'] = measured_filepath;
+					msg['measured_filepath'] = measured_filepath;
 				}
 				if (prefs["show_simulated"])
 				{
 					simulated_filepath = prefs['build_dir'] + "/test/output/" + simulated_filename;
-					fst['simulated_filepath'] = simulated_filepath;
+					msg['simulated_filepath'] = simulated_filepath;
 				}
-				const msg = JSON.stringify(fst);
-				ws_connection.send(msg);
-				await sleep(500);
-			}
-
-			{ // send perf info
-				const fst = { 'source': 'index.html', 'dest': 'perf-proc', 'model_name': prefs['model_id'] }
-				const msg = JSON.stringify(fst);
-				ws_connection.send(msg);
-				await sleep(500);
+				await ws_connection.send(JSON.stringify(msg));
 			}
 		}
 
@@ -420,7 +420,7 @@
 
 			plot_results = await callPyServerJSON("launch_test_proc", "data=" + JSON.stringify(data));
 			await sleep(2000)
-			const dash_port = plot_results["port_num"];
+			const dash_port = await plot_results["port_num"];
 
 			model_form.model_spec.value = model_spec;
 			model_form.model_name.value = model_name;

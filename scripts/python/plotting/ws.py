@@ -20,16 +20,18 @@ async def handler(websocket):
 			if "source" in data:
 				
 				if data['source'] == "perf-proc":
-					handler.perf_proc_client = websocket
-			if not handler.perf_proc_client == -1:
-				await handler.perf_proc_client.send(msg)
-				
-			if data['source'] == "test-proc":
-					handler.test_proc_client = websocket
-			if not handler.test_proc_client == -1:
-				await handler.test_proc_client.send(msg)
-				
-			await websocket.recv()
+					handler.perf_proc_client = websocket			
+				elif data['source'] == "test-proc":
+						handler.test_proc_client = websocket
+			
+			if "dest" in data:
+				if data['dest'] == "perf-proc":
+					if handler.perf_proc_client != -1:
+							await handler.perf_proc_client.send(msg)
+				elif data['dest'] == "test-proc":
+					if handler.test_proc_client != -1:
+							await handler.test_proc_client.send(msg)
+					
 		except ConnectionClosedOK:
 			break
 	
