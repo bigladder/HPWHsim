@@ -3133,7 +3133,6 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_ColmacCxA_30_MP;
     }
-
     else if (modelName == "RheemHPHD60")
     {
         model = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
@@ -3155,6 +3154,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_NyleC90A_SP;
     }
+    else if (modelName == "NyleC125A_SP")
+    {
+        model = HPWH::MODELS_NyleC125A_SP;
+    }
     else if (modelName == "NyleC185A_SP")
     {
         model = HPWH::MODELS_NyleC185A_SP;
@@ -3170,6 +3173,10 @@ void HPWH::checkInputs()
     else if (modelName == "NyleC90A_C_SP")
     {
         model = HPWH::MODELS_NyleC90A_C_SP;
+    }
+    else if (modelName == "NyleC125A_C_SP")
+    {
+        model = HPWH::MODELS_NyleC125A_C_SP;
     }
     else if (modelName == "NyleC185A_C_SP")
     {
