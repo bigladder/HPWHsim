@@ -123,7 +123,6 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "differential_temperature": 0.0,
-              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.25,
@@ -145,7 +144,6 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 2.7777777777777777,
-              "standby_temperature_location": "BOTTOM_OF_TANK",
               "temperature_weight_distribution": {
                 "normalized_height": [
                   0.25,
@@ -165,11 +163,6 @@
       }
     ],
     "primary_heat_source_id": "compressor",
-    "secondary_heat_exchanger": {
-      "cold_side_temperature_offset": 6.95167778386244e-310,
-      "extra_pump_power": 1.24e-322,
-      "hot_side_temperature_offset": 2.1531120923e-314
-    },
     "tank": {
       "metadata": {
         "schema": "RSTANK"
