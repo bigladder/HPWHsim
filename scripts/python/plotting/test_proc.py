@@ -17,7 +17,7 @@ import multiprocessing as mp
 from pathlib import Path
 from dash_extensions import WebSocket
 
-def test_proc(measured_filepath, simulated_filepath):
+def test_proc(plotter):
 	
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -38,13 +38,8 @@ def test_proc(measured_filepath, simulated_filepath):
 	test_proc.selected_tank_TV = []
 	test_proc.selected_ambient_TV = []
 	test_proc.variable_type = ""
-	test_proc.measured_filepath = measured_filepath
-	test_proc.simulated_filepath = simulated_filepath
+	test_proc.plotter = plotter
 
-	test_proc.plotter = TestPlotter()
-	test_proc.plotter = plot(measured_filepath, simulated_filepath)
-	test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
-		
 	app.layout = [
 		dcc.Input(id="input", autoComplete="off"),
    	html.Div(id="message"),
@@ -85,8 +80,7 @@ def test_proc(measured_filepath, simulated_filepath):
 	def send(value):
 		print("sent by test-proc")
 		return json.dumps({
-			"source": "test-proc", "dest": "test-proc", 
-			'measured_filepath': test_proc.measured_filepath, 'simulated_filepath': test_proc.simulated_filepath}
+			"source": "test-proc", "dest": "test-proc"}
 			)
 
 	@app.callback(
@@ -99,12 +93,13 @@ def test_proc(measured_filepath, simulated_filepath):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
-				print(f"received by test-proc")
+				print("received by test-proc")
 				measured_filepath = "" if not 'measured_filepath' in data else data['measured_filepath']
 				simulated_filepath = "" if not 'simulated_filepath' in data else data['simulated_filepath']
-				print("replotting tests")
-				test_proc.plotter = plot(measured_filepath, simulated_filepath)
-				test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
+				if measured_filepath != "" or simulated_filepath != "":
+					print("replotting.")
+					test_proc.plotter = plot(measured_filepath, simulated_filepath)
+					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
 		return test_proc.plotter.plot.figure, True
 			
 		
@@ -275,7 +270,9 @@ def launch_test_proc(data):
 		launch_test_proc.proc.kill()
 		time.sleep(1)
 	
-	launch_test_proc.proc = mp.Process(target=test_proc, args=(measured_filepath, simulated_filepath, ), name='test-proc')
+	test_proc.plotter = plot(measured_filepath, simulated_filepath)
+	
+	launch_test_proc.proc = mp.Process(target=test_proc, args=(test_proc.plotter, ), name='test-proc')
 	time.sleep(1)
 	print("launching dash for plotting tests...")
 	launch_test_proc.proc.start()

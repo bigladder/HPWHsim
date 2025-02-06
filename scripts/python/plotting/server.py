@@ -105,6 +105,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			elif self.path.startswith('/launch_perf_proc'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				response = launch_perf_proc()
+				
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))
