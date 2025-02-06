@@ -21,6 +21,9 @@ PORT = 8000
 		
 launch_test_proc.proc = -1
 class MyHandler(http.server.SimpleHTTPRequestHandler):
+	def log_message(self, format, *args):
+		pass
+	
 	def do_GET(self):
 			
 			if self.path.startswith('/read_json'):
@@ -89,7 +92,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 					data_str = query_components.get('data', [None])[0]	
 					data = json.loads(data_str)
-					print(data)
 					response = launch_test_proc(data)
 
 					self.send_response(200)
@@ -104,8 +106,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 			elif self.path.startswith('/launch_perf_proc'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				response = launch_perf_proc()
-				
+				data_str = query_components.get('data', [None])[0]	
+				data = json.loads(data_str)
+				response = launch_perf_proc(data)
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))

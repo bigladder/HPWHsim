@@ -5,7 +5,7 @@
 		{"id": "BradfordWhiteAeroThermRE2H65", "name": "AeroThermRE2H65", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "specs": ["Preset", "File", "JSON"]},
 		{"id": "BradfordWhiteAeroThermRE2H80", "name": "AeroThermRE2H80", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "specs": ["Preset", "File", "JSON"]},
 
-		{"id": "AOSmithHPTS45", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
+		{"id": "AOSmithHPTS40", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 		{"id": "AOSmithHPTS50", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 		{"id": "AOSmithHPTS65", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 		{"id": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},

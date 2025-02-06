@@ -13,7 +13,6 @@ styles = {
     }
 }
 
-
 class PerfPlotter:
 	def __init__(self):
 		self.fig = {}
@@ -61,51 +60,58 @@ class PerfPlotter:
 			self.Pouts.append(rowPout)
 			self.COPs.append(rowCOP)						
 		self.have_data = True
-		
-	
-	def prepare(self, model_data):
 
+	def get_perf_map(self, model_data):
 		if "integrated_system" in model_data:
-			self.is_central = False
 			wh = model_data["integrated_system"]
 			perf = wh["performance"]
 		else:
-			self.is_central = True
 			perf = model_data["central_system"]			 
 	
-		hscs = perf["heat_source_configurations"]
-		
+		hscs = perf["heat_source_configurations"]	
 		for hsc in hscs:
 			if "heat_source_type" in hsc:
 				if hsc["heat_source_type"] in {"CONDENSER", "AIRTOWATERHEATPUMP"}:
-					hs = hsc["heat_source"]				
-					self.perf_map = hs["performance"]["performance_map"]
-					break
+					hs = hsc["heat_source"]
+					hs_perf = hs["performance"]
+					perf_map = hs_perf["performance_map"]
+					return perf_map
+					break		
+		return {}
+
+	def prepare(self, model_data):
+		try:
+			self.is_central = "central_system" in model_data
+			self.perf_map = self.get_perf_map(model_data)
+		
+			grid_vars = self.perf_map["grid_variables"]
+			lookup_vars = self.perf_map["lookup_variables"]
+
+			self.T1s = np.array(grid_vars["evaporator_environment_dry_bulb_temperature"]) - 273.15
+			if self.is_central:
+				self.T2s = np.array(grid_vars["condenser_entering_temperature"]) - 273.15
+				self.T3s = np.array(grid_vars["condenser_leaving_temperature"]) - 273.15
+			else:
+				self.T2s = np.array(grid_vars["heat_source_temperature"]) - 273.15
+
+			self.vPins = np.array(lookup_vars["input_power"])
+			self.vPouts = np.array(lookup_vars["heating_capacity"])
+			self.vCOPs = np.zeros(np.size(self.vPins))
+			i = 0
+			for Pin in self.vPins:
+				self.vCOPs[i] = self.vPouts[i] / Pin
+				i = i + 1
 				
-		grid_vars = self.perf_map["grid_variables"]
-		lookup_vars = self.perf_map["lookup_variables"]
-	
-		self.T1s = np.array(grid_vars["evaporator_environment_dry_bulb_temperature"]) - 273.15
-		if self.is_central:
-			self.T2s = np.array(grid_vars["condenser_entering_temperature"]) - 273.15
-			self.T3s = np.array(grid_vars["condenser_leaving_temperature"]) - 273.15
-		else:
-			self.T2s = np.array(grid_vars["heat_source_temperature"]) - 273.15
-
-		self.vPins = np.array(lookup_vars["input_power"])
-		self.vPouts = np.array(lookup_vars["heating_capacity"])
-		self.vCOPs = np.zeros(np.size(self.vPins))
-		i = 0
-		for Pin in self.vPins:
-			self.vCOPs[i] = self.vPouts[i] / Pin
-			i = i + 1
-			
-		self.i3 = 0 if not self.is_central else math.floor(np.size(self.T3s) / 2)
-
-		self.get_slice()
-
+			self.i3 = 0 if not self.is_central else math.floor(np.size(self.T3s) / 2)
+			self.get_slice()
+		except:
+			self.have_data = False
  							   
 	def draw(self, prefs):
+		if not self.have_data:
+			self.fig = {}
+			return
+		
 		if 'contour_variable' in prefs:	
 			if prefs['contour_variable'] == 0:
 				zPlot = self.Pins
@@ -124,7 +130,7 @@ class PerfPlotter:
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
-			
+		
 		self.fig = go.Figure(data =
 										 go.Contour(z = zPlot, x = self.T1s, y = self.T2s,
 											contours=dict(
@@ -161,12 +167,7 @@ class PerfPlotter:
 			}
 			)
 		return self
-
-def write_plot(model_path):
-	plotter = PerfPlotter()
-	plotter.read_data(model_path)
-	#plotter.draw()
-	#plotter.plot.write_html_plot(plot_path)
+	
 	
 # main
 if __name__ == "__main__":

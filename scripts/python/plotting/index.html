@@ -283,7 +283,9 @@
 			await write_json_file("./prefs.json", prefs)
 
 			{// send perf info
-				var msg = { 'source': 'index.html', 'dest': 'perf-proc', 'model_name': prefs['model_id'] };
+				model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+				var model_data = await read_json_file(model_data_filepath)
+				var msg = { 'source': 'index.html', 'dest': 'perf-proc', 'model_data': model_data };
 				await ws_connection.send(JSON.stringify(msg));
 			}
 
@@ -448,17 +450,11 @@
 
 		async function launch_perf_proc() {
 
-			const build_form = document.getElementById('build_form');
-			const build_dir = build_form.build_dir.value;
-
-			const model_form = document.getElementById('model_form');
-			const model_spec = model_form.model_spec.value;
-			const model_name = model_form.model_name.value;
-
 			const perf_form = document.getElementById('perf_form');
 
-			fst = 'model_name=' + model_name;
-			let perf_results = await callPyServerJSON("launch_perf_proc", fst)
+			var model_data = await read_json_file(model_data_filepath)
+			data = {'model_data': model_data};
+			let perf_results = await callPyServerJSON("launch_perf_proc", "data=" + JSON.stringify(data))
 			const dash_port = perf_results["port_num"];
 
 			document.getElementById("perf_plot").src = "http://localhost:" + dash_port

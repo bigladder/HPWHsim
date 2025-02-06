@@ -11,19 +11,20 @@ from websockets.exceptions import ConnectionClosedOK
 import time
 import multiprocessing as mp
 	
-async def handler(websocket):
+async def handler(client):
 	while True:
 		try:
-			msg = await websocket.recv()
-			print(msg)
+			msg = await client.recv()
 			data = json.loads(msg)
+			summary = {}
 			if "source" in data:
 				
 				if data['source'] == "perf-proc":
-					handler.perf_proc_client = websocket			
+					handler.perf_proc_client = client			
 				elif data['source'] == "test-proc":
-						handler.test_proc_client = websocket
-			
+						handler.test_proc_client = client
+				summary['source'] = data['source']
+				
 			if "dest" in data:
 				if data['dest'] == "perf-proc":
 					if handler.perf_proc_client != -1:
@@ -31,7 +32,9 @@ async def handler(websocket):
 				elif data['dest'] == "test-proc":
 					if handler.test_proc_client != -1:
 							await handler.test_proc_client.send(msg)
-					
+				summary['dest'] = data['dest']
+				
+				print(summary)
 		except ConnectionClosedOK:
 			break
 	
@@ -52,7 +55,8 @@ def launch_ws():
 	if launch_ws.proc != -1:
 		print("killing current websocket...")
 		launch_ws.proc.kill()
-		handler.dash_perf_client = -1
+		handler.perf_proc_client = -1
+		handler.test_proc_client = -1
 		time.sleep(1)
 
 	launch_ws.proc = mp.Process(target=run_main, args=(), name='ws')
