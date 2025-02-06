@@ -97,7 +97,6 @@ def test_proc(plotter):
 				measured_filepath = "" if not 'measured_filepath' in data else data['measured_filepath']
 				simulated_filepath = "" if not 'simulated_filepath' in data else data['simulated_filepath']
 				if measured_filepath != "" or simulated_filepath != "":
-					print("replotting.")
 					test_proc.plotter = plot(measured_filepath, simulated_filepath)
 					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
 		return test_proc.plotter.plot.figure, True
@@ -261,9 +260,12 @@ test_proc.port_num = 8050
 def launch_test_proc(data):
 
 	print("creating plot...")
-	print(data)
-	measured_filepath = data['measured_filepath'] if 'measured_filepath' in data else ""
-	simulated_filepath = data['simulated_filepath'] if 'simulated_filepath' in data else ""
+	measured_filepath = ""
+	if 'measured_filepath' in data:
+		measured_filepath = data['measured_filepath']
+	simulated_filepath = ""
+	if 'simulated_filepath' in data:
+		simulated_filepath = data['simulated_filepath']
 	
 	if launch_test_proc.proc != -1:
 		print("killing current dash for plotting tests...")

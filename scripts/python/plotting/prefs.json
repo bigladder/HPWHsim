@@ -1,12 +1,14 @@
 {
-  "model_id": "AOSmithHPTS45",
-  "model_spec": "JSON",
+  "model_spec": "Preset",
+  "model_id": "NyleC250A_C_SP",
   "build_dir": "../../../build",
-  "test_list": "Tests with data",
-  "test_id": "",
-  "show_simulated": false,
+  "test_list": "All tests",
+  "test_id": "test70",
+  "show_simulated": true,
   "show_measured": false,
   "draw_profile": "High",
-  "contour_variable": 2,
-  "contour_coloring": 1
+  "performance_plots": {
+    "contour_variable": 0,
+    "contour_coloring": 1
+  }
 }
