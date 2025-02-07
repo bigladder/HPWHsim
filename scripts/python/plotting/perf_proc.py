@@ -85,36 +85,36 @@ def perf_proc(data):
 		html.Form(children=[
 			
       html.P(
-				children=["display variable: ",
-											 dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
-													 		{'label': 'Heating Capacity (W)', 'value': 1},
-															{'label': 'COP', 'value': 2}],
-															value = perf_proc.prefs['contour_variable'], 
-															id='display-dropdown',
-															style={'width': '50%'},
-															clearable=False)
-				]),
+				children=[
+					"display variable: ",
+					 dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
+							 		{'label': 'Heating Capacity (W)', 'value': 1},
+									{'label': 'COP', 'value': 2}],
+									value = perf_proc.prefs['contour_variable'], 
+									id='display-dropdown',
+									style={'width': '50%'},
+									clearable=False)]),
 		
-			html.Div(
-				[html.P(
-					children=["condenser outlet temperature (\u00B0C)",							
+			html.P(
+					children=[
+						"condenser outlet temperature (\u00B0C)",							
 						dcc.Dropdown(options = perf_proc.outletTs,
 																		value = perf_proc.plotter.i3, 
 																		id='outletT-dropdown',
 																		style={'width': '50%'},
-																		clearable=False)
-						
-					], hidden = not(perf_proc.show_outletTs), id = "outletT-div")]),
+																		clearable=False)],				
+					hidden = not(perf_proc.show_outletTs), id = "outletT-p"),
 					
 			html.P(
-				children=["coloring",
-						dcc.Dropdown(options = perf_proc.coloring_list,
-															value = perf_proc.prefs['contour_coloring'], 
-															id='coloring-dropdown',
-															style={'width': '50%'},
-															clearable=False)
-				])
-		], style={'width' : '100%', 'margin' : '0 auto'}, id="perf_form", hidden=False),
+				children=[
+					"coloring",
+					dcc.Dropdown(options = perf_proc.coloring_list,
+							value = perf_proc.prefs['contour_coloring'], 
+							id='coloring-dropdown',
+							style={'width': '50%'},
+							clearable=False)])],
+							
+					style={'width' : '100%', 'margin' : '0 auto'}, id="perf_form", hidden=False),
 		
 
 		html.Br(),
@@ -141,7 +141,7 @@ def perf_proc(data):
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Output('graph-div', 'hidden'),
-			Output('outletT-div', 'hidden'),
+			Output('outletT-p', 'hidden'),
 			Output('outletT-dropdown', 'value'),
 			Output('outletT-dropdown', 'options'),
 			[Input("ws", "message")],
@@ -156,7 +156,7 @@ def perf_proc(data):
 				if 'model_data_filepath' in data:
 					perf_proc.model_data_filepath = data['model_data_filepath']			
 					perf_proc.model_data = read_file(perf_proc.model_data_filepath)
-					print(perf_proc.model_data)
+					print(perf_proc.model_data_filepath )
 					perf_proc.plotter.prepare(perf_proc.model_data)
 					perf_proc.show_outletTs = False
 					perf_proc.outletTs = []
@@ -170,8 +170,6 @@ def perf_proc(data):
 						else:
 							perf_proc.outletTs = [{'label': "none", 'value': 0}]
 						perf_proc.plotter.draw(perf_proc.prefs)
-						
-						
 		
 		return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 	
@@ -218,9 +216,9 @@ def perf_proc(data):
 				perf_proc.plotter.i3 = value
 			else:
 				perf_proc.plotter.i3 = 0
-				perf_proc.plotter.get_slice()
-				perf_proc.plotter.draw(perf_proc.prefs)	
-				return perf_proc.plotter.fig
+			perf_proc.plotter.get_slice()
+			perf_proc.plotter.draw(perf_proc.prefs)	
+			return perf_proc.plotter.fig
 		return {}
 	
 	@callback(
