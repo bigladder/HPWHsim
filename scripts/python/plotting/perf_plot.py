@@ -38,6 +38,7 @@ class PerfPlotter:
 		nT1s = np.size(self.T1s)
 		nT2s = np.size(self.T2s)
 		nT3s = 1 if not self.is_central else np.size(self.T3s)
+		
 		for i2y in range(nT2s):
 			rowPin = []
 			rowPout = []
@@ -83,7 +84,6 @@ class PerfPlotter:
 		try:
 			self.is_central = "central_system" in model_data
 			self.perf_map = self.get_perf_map(model_data)
-		
 			grid_vars = self.perf_map["grid_variables"]
 			lookup_vars = self.perf_map["lookup_variables"]
 
@@ -94,6 +94,7 @@ class PerfPlotter:
 			else:
 				self.T2s = np.array(grid_vars["heat_source_temperature"]) - 273.15
 
+			
 			self.vPins = np.array(lookup_vars["input_power"])
 			self.vPouts = np.array(lookup_vars["heating_capacity"])
 			self.vCOPs = np.zeros(np.size(self.vPins))
@@ -110,6 +111,7 @@ class PerfPlotter:
 	def draw(self, prefs):
 		if not self.have_data:
 			self.fig = {}
+			print("no data")
 			return
 		
 		if 'contour_variable' in prefs:	
@@ -130,7 +132,7 @@ class PerfPlotter:
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
-			
+		
 		self.fig = go.Figure(data =
 										 go.Contour(z = zPlot, x = self.T1s, y = self.T2s,
 											contours=dict(

@@ -1,14 +1,14 @@
 {
-  "model_spec": "Preset",
-  "model_id": "NyleC125A_C_SP",
+  "model_id": "ColmacCxA_25_MP",
+  "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
-  "test_id": "test70",
+  "test_id": "RE2H50_UEF67",
   "show_simulated": true,
   "show_measured": false,
   "draw_profile": "High",
   "performance_plots": {
-    "contour_variable": 2,
+    "contour_variable": 1,
     "contour_coloring": 1
   }
 }

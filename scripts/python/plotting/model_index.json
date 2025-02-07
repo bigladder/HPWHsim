@@ -7,8 +7,8 @@
 
 		{"id": "AOSmithHPTS40", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 		{"id": "AOSmithHPTS50", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
-		{"id": "AOSmithHPTS65", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
-		{"id": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
+		{"id": "AOSmithHPTS66", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "JSON"]},
+		{"id": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "JSON"]},
 
 		{"id": "Rheem2020Prem40", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem50", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
