@@ -149,8 +149,7 @@ void measure(const std::string& sSpecType,
     HPWH::FirstHourRating firstHourRating;
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 
-
-    if ((sOutputDir != "")&&(sResultsFilename != ""))
+    if ((sOutputDir != "") && (sResultsFilename != ""))
     {
         std::ofstream resultsFile;
         std::string sFilepath = sOutputDir + "/" + sResultsFilename + ".json";
@@ -171,43 +170,36 @@ void measure(const std::string& sSpecType,
             std::cout << "\t\tDoes not qualify as consumer water heater.\n";
         }
 
-        std::cout
-            << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+        std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
 
         std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
-                                          << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+                  << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
 
         std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
-        std::cout
-            << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
+        std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
+                  << "\n";
 
-        std::cout
-            << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
+        std::cout << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
+                  << "\n";
 
-        std::cout
-            << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+        std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
 
         std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                                          << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
-                                          << "\n";
+                  << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
 
-        std::cout
-            << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-            << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+        std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
 
-        std::cout
-            << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-            << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+        std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
 
         std::cout << "\tAnnual Values:\n";
-        std::cout
-            << "\t\tAnnual Electrical Energy Consumption (kWh): "
-            << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+        std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
 
         std::cout << "\t\tAnnual Energy Consumption (kWh): "
-                                          << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
-                                          << "\n";
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
     }
 }
 } // namespace hpwh_cli
