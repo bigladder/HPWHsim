@@ -3,7 +3,7 @@ import sys
 
 import pandas as pd  # type: ignore
 import json
-from dash import Dash, dcc, html, Input, Output, State, callback, set_props
+from dash import Dash, dcc, html, Input, Output, State, callback, no_update
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -94,12 +94,11 @@ def test_proc(plotter):
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
 				print("received by test-proc")
-				measured_filepath = "" if not 'measured_filepath' in data else data['measured_filepath']
-				simulated_filepath = "" if not 'simulated_filepath' in data else data['simulated_filepath']
-				if measured_filepath != "" or simulated_filepath != "":
-					test_proc.plotter = plot(measured_filepath, simulated_filepath)
+				test_proc.plotter = plot(data)
+				if test_proc.plotter.have_fig:
 					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
-		return test_proc.plotter.plot.figure, True
+					return test_proc.plotter.plot.figure, True
+		return no_update, no_update
 			
 		
 	@callback(
@@ -260,19 +259,13 @@ test_proc.port_num = 8050
 def launch_test_proc(data):
 
 	print("creating plot...")
-	measured_filepath = ""
-	if 'measured_filepath' in data:
-		measured_filepath = data['measured_filepath']
-	simulated_filepath = ""
-	if 'simulated_filepath' in data:
-		simulated_filepath = data['simulated_filepath']
 	
 	if launch_test_proc.proc != -1:
 		print("killing current dash for plotting tests...")
 		launch_test_proc.proc.kill()
 		time.sleep(1)
 	
-	test_proc.plotter = plot(measured_filepath, simulated_filepath)
+	test_proc.plotter = plot(data)
 	
 	launch_test_proc.proc = mp.Process(target=test_proc, args=(test_proc.plotter, ), name='test-proc')
 	time.sleep(1)

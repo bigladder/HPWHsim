@@ -3,7 +3,7 @@ import sys
 
 import pandas as pd  # type: ignore
 import json
-from dash import Dash, dcc, html, Input, Output, State, callback, set_props
+from dash import Dash, dcc, html, Input, Output, State, callback, no_update
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -77,48 +77,42 @@ def perf_proc(data):
 		}
 	}
 
-	app.layout = html.Div([
+	app.layout = [
 		dcc.Input(id="input", autoComplete="off"),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
  
-		html.Form(children=[
-			
-      html.P(
-				children=[
-					"display variable: ",
-					 dcc.Dropdown(options = [	{'label': 'Input Power (W)', 'value': 0}, 
-							 		{'label': 'Heating Capacity (W)', 'value': 1},
-									{'label': 'COP', 'value': 2}],
-									value = perf_proc.prefs['contour_variable'], 
-									id='display-dropdown',
-									style={'width': '50%'},
-									clearable=False)]),
+		html.P("display variable: "),
+		dcc.Dropdown(
+					options = [
+						{'label': 'Input Power (W)', 'value': 0}, 
+				 		{'label': 'Heating Capacity (W)', 'value': 1},
+						{'label': 'COP', 'value': 2}],
+					value = perf_proc.prefs['contour_variable'], 
+					id='display-dropdown',
+					style={'width': '50%'},
+					clearable=False),
 		
-			html.P(
-					children=[
-						"condenser outlet temperature (\u00B0C)",							
-						dcc.Dropdown(options = perf_proc.outletTs,
-																		value = perf_proc.plotter.i3, 
-																		id='outletT-dropdown',
-																		style={'width': '50%'},
-																		clearable=False)],				
-					hidden = not(perf_proc.show_outletTs), id = "outletT-p"),
+		html.Div([
+			html.P("condenser outlet temperature (\u00B0C)"),							
+			dcc.Dropdown(
+					options = perf_proc.outletTs,
+					value = perf_proc.plotter.i3, 
+					id='outletT-dropdown',
+					style={'width': '50%'},
+					clearable=False)
+					], 
+					id="outletT-p", hidden = not(perf_proc.show_outletTs), 
+		),
 					
-			html.P(
-				children=[
-					"coloring",
-					dcc.Dropdown(options = perf_proc.coloring_list,
-							value = perf_proc.prefs['contour_coloring'], 
-							id='coloring-dropdown',
-							style={'width': '50%'},
-							clearable=False)])],
+		html.P("coloring"),
+		dcc.Dropdown(options = perf_proc.coloring_list,
+				value = perf_proc.prefs['contour_coloring'], 
+				id='coloring-dropdown',
+				style={'width': '50%'},
+				clearable=False),
 							
-					style={'width' : '100%', 'margin' : '0 auto'}, id="perf_form", hidden=False),
-		
-
-		html.Br(),
-		html.Br(),
+	
 		html.Br(),
 		html.Div(
 			dcc.Graph(id='perf-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
@@ -128,14 +122,16 @@ def perf_proc(data):
 	        "eraseshape"
 	        ]
 	    	}), id="graph-div", hidden = not(perf_proc.plotter.have_data))
-	])
+
+	]
+	
 	@app.callback(
 			Output("ws", "send"),
 			[Input("input", "value")]
 			)
 	def send(value):
 		print("sent by perf-proc")
-		msg = {"source": "perf-proc", "dest": "perf-proc", "model_data_filepath": perf_proc.model_data_filepath}
+		msg = {"source": "perf-proc", "dest": "perf-proc"}
 		return json.dumps(msg)
 
 	@app.callback(
@@ -174,8 +170,9 @@ def perf_proc(data):
 						prefs = read_file("prefs.json")
 						prefs["performance_plots"] = perf_proc.prefs
 						write_file("prefs.json", prefs)
+						return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 		
-		return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
+		return no_update, no_update, no_update, no_update, no_update
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),

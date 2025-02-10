@@ -249,7 +249,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 				const draw_profile = test_form.draw_profile.value;
 				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
 				await callPyServer("measure", "data=" + JSON.stringify(data))
-				simulated_filename = "test24hr_" + model_spec + "_" + model_name + ".csv";
+				simulated_filename = "test24hr_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
 
 				document.getElementById("measure_results").style = "display:block;"
 				document.getElementById("measure_results").height = "1800px;"
@@ -340,7 +340,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			const draw_profile = test_form.draw_profile.value;
 			let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
 			await callPyServer("measure", "data=" + JSON.stringify(data))
-			simulated_filename = "test24hr_" + model_spec + "_" + model_name + ".csv";
+			simulated_filename = "test24hr_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
 
 			document.getElementById("measure_results").style = "display:block;"
 			document.getElementById("measure_results").height = "1800px;"
