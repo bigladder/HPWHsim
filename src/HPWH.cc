@@ -5087,9 +5087,10 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     const std::string sFirstHourRatingDesig =
         HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
 
-    *testOptions.outputStream << "\tFirst-Hour Rating:\n";
-    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
-    *testOptions.outputStream << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
+    nlohmann::json j_fhr = {};
+    j_fhr["volume_drawn_L"] = firstHourRating.drawVolume_L;
+    j_fhr["designation"] = sFirstHourRatingDesig;
+    testOptions.j_results["first_hour_rating"] = j_fhr;
 }
 
 //-----------------------------------------------------------------------------
@@ -5628,55 +5629,47 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        *standardTestOptions.outputStream
-            << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+        standardTestOptions.j_results["designation"] = sFirstHourRatingDesig;
     }
 
     run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
 
-    *standardTestOptions.outputStream << "\t24-Hour Test Results:\n";
     if (!standardTestSummary.qualifies)
     {
-        *standardTestOptions.outputStream << "\t\tDoes not qualify as consumer water heater.\n";
+        standardTestOptions.j_results["alert"] = "Does not qualify as consumer water heater.";
     }
 
-    *standardTestOptions.outputStream
-        << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+    standardTestOptions.j_results["recovery_efficiency"] = standardTestSummary.recoveryEfficiency;
 
-    *standardTestOptions.outputStream << "\t\tStandby Loss Coefficient (kJ/h degC): "
-                                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+    standardTestOptions.j_results["standby_loss_coefficient_kJperhC"]
+                                      = standardTestSummary.standbyLossCoefficient_kJperhC;
 
-    *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+    standardTestOptions.j_results["UEF"] = standardTestSummary.UEF;
 
-    *standardTestOptions.outputStream
-        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
+    standardTestOptions.j_results["average_inlet_temperature_degC"] = standardTestSummary.avgInletT_C;
 
-    *standardTestOptions.outputStream
-        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
+    standardTestOptions.j_results["average_outlet_temperature_degC"] = standardTestSummary.avgOutletT_C;
 
-    *standardTestOptions.outputStream
-        << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+    standardTestOptions.j_results["total_volume_drawn_L"] = standardTestSummary.removedVolume_L;
 
-    *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
-                                      << "\n";
+    standardTestOptions.j_results["daily_water_heating_energy_consumption_kWh"]
+                                      = KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ);
 
-    *standardTestOptions.outputStream
-        << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+    standardTestOptions.j_results["adjusted_daily_water_heating_energy_consumption_kWh"]
+        = KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ);
 
-    *standardTestOptions.outputStream
-        << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+    standardTestOptions.j_results["modified_daily_water_heating_energy_consumption_kWh"]
+        = KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ);
 
-    *standardTestOptions.outputStream << "\tAnnual Values:\n";
-    *standardTestOptions.outputStream
-        << "\t\tAnnual Electrical Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
 
-    *standardTestOptions.outputStream << "\t\tAnnual Energy Consumption (kWh): "
-                                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
-                                      << "\n";
+    nlohmann::json j_annual_values = {};
+    j_annual_values["annual_electrical_energy_consumption_kWh"]
+        = KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ);
+
+    j_annual_values["annual_energy_consumption_kWh"]
+                                      = KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ);
+
+    standardTestOptions.j_results["annual_values"] = j_annual_values;
 
     if (standardTestOptions.saveOutput)
     {

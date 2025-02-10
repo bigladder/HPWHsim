@@ -251,9 +251,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 				await callPyServer("measure", "data=" + JSON.stringify(data))
 				simulated_filename = "test24hr_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
 
-				document.getElementById("measure_results").style = "display:block;"
-				document.getElementById("measure_results").height = "1800px;"
-				document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
+				let res_path = prefs['build_dir'] + "/test/output/results.json"
+			  var results = await read_json_file(res_path)
+				document.getElementById("measure_results").innerHTML = JSON.stringify(results);
 			}
 			else {
 				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
@@ -342,9 +342,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			await callPyServer("measure", "data=" + JSON.stringify(data))
 			simulated_filename = "test24hr_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
 
+			let res_path = build_dir + "/test/output/results.json"
+			var results = await read_json_file(res_path)
 			document.getElementById("measure_results").style = "display:block;"
 			document.getElementById("measure_results").height = "1800px;"
-			document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
+			document.getElementById("measure_results").innerHTML = JSON.stringify(results);
 		}
 		else {
 			let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
