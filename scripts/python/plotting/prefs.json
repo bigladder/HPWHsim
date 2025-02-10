@@ -1,14 +1,14 @@
 {
-  "model_id": "Sanden120",
+  "model_id": "Sanden80",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
-  "test_id": "standard24hr",
+  "test_id": "DOE2014_LGC50_24hr67",
   "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "Low",
+  "draw_profile": "Medium",
   "performance_plots": {
-    "contour_variable": 2,
+    "contour_variable": 0,
     "contour_coloring": 1
   }
 }

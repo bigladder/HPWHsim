@@ -41,7 +41,7 @@ def test_proc(plotter):
 	test_proc.plotter = plotter
 
 	app.layout = [
-		dcc.Input(id="input", autoComplete="off"),
+		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
 
@@ -94,6 +94,7 @@ def test_proc(plotter):
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
 				print("received by test-proc")
+				print(data)
 				test_proc.plotter = plot(data)
 				if test_proc.plotter.have_fig:
 					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
