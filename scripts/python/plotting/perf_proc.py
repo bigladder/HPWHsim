@@ -217,14 +217,22 @@ def perf_proc(data):
 		return {}
 	
 	@callback(
-			Output('perf-graph', 'figure'),
+			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('perf-graph', 'relayoutData'),
+			State('perf-graph', 'figure'),
 			prevent_initial_call=True
 		)
-	def select_range(clickData):
-		if perf_proc.plotter.have_data:
-			return perf_proc.plotter.fig
-		return {}
+	def select_range(clickData, fig):	
+		if 'layout' in fig:
+			if 'shapes' in fig['layout']:
+				shp = fig['layout']['shapes'][0]
+				x0 = shp['x0']
+				x1 = shp['x1']
+				y0 = shp['y0']
+				y1 = shp['y1']
+				print(x0, y0, x1, y1)
+				return fig
+		return no_update
 
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
 	

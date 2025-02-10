@@ -40,12 +40,22 @@ def test_proc(plotter):
 	test_proc.variable_type = ""
 	test_proc.plotter = plotter
 
+	measured_msg = ""
+	simulated_msg = ""
+	if 'measuredE_Wh' in test_proc.plotter.energy_data:
+		measured_msg = "Measured energy consumption (Wh): " + f"{test_proc.plotter.energy_data['measuredE_Wh']:.2f}"
+	if 'simulatedE_Wh' in test_proc.plotter.energy_data:
+		simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.energy_data['simulatedE_Wh']:.2f}"
+		
 	app.layout = [
 		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
 
 		dcc.Graph(id='test-graph', figure=test_proc.plotter.plot.figure, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
+		
+		html.P(measured_msg, id='energy_measured_p'),
+		html.P(simulated_msg, id='energy_simulated_p'),
 		
 		html.Div(
 			[
@@ -60,8 +70,7 @@ def test_proc(plotter):
 	          id = "tank-volume",
 						type = "text",
 	          value="189.271",
-	        )
-	        ,
+	        ),
 
 				html.Button('Get UA', id='get-ua-btn', n_clicks=0, disabled = True),
 
@@ -86,6 +95,8 @@ def test_proc(plotter):
 	@app.callback(
 				Output('test-graph', 'figure', allow_duplicate=True),
 				Output('ua-div', 'hidden', allow_duplicate=True),
+				Output('energy_measured_p', 'children'),
+				Output('energy_simulated_p', 'children'),
 				[Input("ws", "message")],
 				prevent_initial_call=True
 			)
@@ -98,8 +109,14 @@ def test_proc(plotter):
 				test_proc.plotter = plot(data)
 				if test_proc.plotter.have_fig:
 					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
-					return test_proc.plotter.plot.figure, True
-		return no_update, no_update
+					measured_msg = ""
+					simulated_msg = ""
+					if 'measuredE_Wh' in test_proc.plotter.energy_data:
+						measured_msg = "Measured energy consumption (Wh): " + f"{test_proc.plotter.energy_data['measuredE_Wh']:.2f}"
+					if 'simulatedE_Wh' in test_proc.plotter.energy_data:
+						simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.energy_data['simulatedE_Wh']:.2f}"
+					return test_proc.plotter.plot.figure, True, measured_msg, simulated_msg
+		return no_update, no_update, no_update, no_update
 			
 		
 	@callback(
