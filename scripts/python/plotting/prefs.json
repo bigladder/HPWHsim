@@ -1,12 +1,12 @@
 {
-  "model_id": "GE502014",
+  "model_id": "Sanden120",
   "model_spec": "JSON",
   "build_dir": "../../../build",
-  "test_list": "Standard tests",
+  "test_list": "All tests",
   "test_id": "standard24hr",
   "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "High",
+  "draw_profile": "Low",
   "performance_plots": {
     "contour_variable": 2,
     "contour_coloring": 1

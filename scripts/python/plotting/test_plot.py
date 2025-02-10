@@ -53,6 +53,7 @@ class TestPlotter:
 		self.df_simulated = {}
 		self.have_measured = False
 		self.have_simulated = False
+		self.have_fig = False
 
 		self.variables = {
 			"Y-Variables": {
@@ -179,6 +180,7 @@ class TestPlotter:
 		try:
 			self.df_measured = call_csv(measured_path, 0)
 		except:
+			self.df_measured = {}
 			return
 
 	  # remove rows from dataframes outside of inclusive range [1,1440]
@@ -266,11 +268,13 @@ class TestPlotter:
 				):
 					self.plot_graphs(variable_type, variable, value, row + 1)
 
-	def draw(self):		
+	def draw(self):
+		have_traces = False
 		if self.have_measured:
 			self.plot = dimes.TimeSeriesPlot(
 				self.df_measured[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
 			)
+			have_traces = True
 			self.draw_variable_type("Measured")
 			if self.have_simulated:
 				self.draw_variable_type("Simulated")
@@ -278,19 +282,25 @@ class TestPlotter:
 			self.plot = dimes.TimeSeriesPlot(
 				self.df_simulated[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]
 			)
+			have_traces = True
 			self.draw_variable_type("Simulated")
 			if self.have_measured:
 				self.draw_variable_type("Measured")
 		else:
 			return
 
-		self.plot.finalize_plot()
+		if have_traces:
+			self.plot.finalize_plot()
+			self.have_fig = True
 		return self
 
-def plot(measured_filepath, simulated_filepath):
+def plot(data):
 	plotter = TestPlotter()
-	plotter.read_measured(measured_filepath)
-	plotter.read_simulated(simulated_filepath)
+	
+	if "measured_filepath" in data:
+		plotter.read_measured(data["measured_filepath"])
+	if "simulated_filepath" in data:
+		plotter.read_simulated(data["simulated_filepath"])
 	plotter.draw()
 	return plotter
 
