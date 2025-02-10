@@ -78,7 +78,7 @@ def perf_proc(data):
 	}
 
 	app.layout = [
-		dcc.Input(id="input", autoComplete="off"),
+		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
  
