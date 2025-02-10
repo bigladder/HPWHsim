@@ -170,6 +170,10 @@ def perf_proc(data):
 						else:
 							perf_proc.outletTs = [{'label': "none", 'value': 0}]
 						perf_proc.plotter.draw(perf_proc.prefs)
+						
+						prefs = read_file("prefs.json")
+						prefs["performance_plots"] = perf_proc.prefs
+						write_file("prefs.json", prefs)
 		
 		return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 	
@@ -182,9 +186,6 @@ def perf_proc(data):
 		perf_proc.prefs['contour_variable'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
-			prefs = read_file("prefs.json")
-			prefs["performance_plots"] = perf_proc.prefs
-			write_file("prefs.json", prefs)
 			return perf_proc.plotter.fig
 		return {}
 	
@@ -197,9 +198,6 @@ def perf_proc(data):
 		perf_proc.prefs['contour_coloring'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
-			prefs = read_file("prefs.json")
-			prefs["performance_plots"] = perf_proc.prefs
-			write_file("prefs.json", prefs)
 			return perf_proc.plotter.fig
 		return {}
 	

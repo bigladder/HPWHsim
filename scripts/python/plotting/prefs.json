@@ -1,5 +1,5 @@
 {
-  "model_id": "AquaThermAire",
+  "model_id": "GE502014",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "Standard tests",
