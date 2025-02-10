@@ -1,14 +1,14 @@
 {
-  "model_id": "TamScalable_SP_2X",
+  "model_id": "LG_APHWC50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
-  "test_id": "RE2H80_UEF50",
+  "test_id": "standard24hr",
   "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "Medium",
+  "draw_profile": "Low",
   "performance_plots": {
-    "contour_variable": 2,
+    "contour_variable": 1,
     "contour_coloring": 1
   }
 }

@@ -1144,7 +1144,7 @@ class HPWH : public Courier::Sender
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
-        std::ostream* outputStream = &std::cout;
+        nlohmann::json j_results = {};
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;

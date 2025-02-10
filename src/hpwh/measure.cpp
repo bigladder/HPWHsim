@@ -60,7 +60,7 @@ void measure(const std::string& sSpecType,
     standardTestOptions.saveOutput = false;
     standardTestOptions.sOutputFilename = "";
     standardTestOptions.sOutputDirectory = "";
-    standardTestOptions.outputStream = &std::cout;
+    standardTestOptions.j_results = {};
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
@@ -78,23 +78,10 @@ void measure(const std::string& sSpecType,
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
 
-    bool useResultsFile = false;
     if (sOutputDir != "")
     {
         standardTestOptions.saveOutput = true;
         standardTestOptions.sOutputDirectory = sOutputDir;
-
-        if (sResultsFilename != "")
-        {
-            std::ostream* tempStream = new std::ofstream;
-            std::ofstream* resultsFile = static_cast<std::ofstream*>(tempStream);
-            resultsFile->open(sResultsFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
-            if (resultsFile->is_open())
-            {
-                standardTestOptions.outputStream = resultsFile;
-                useResultsFile = true;
-            }
-        }
     }
     standardTestOptions.saveOutput = !sSupressOutput;
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
@@ -154,17 +141,73 @@ void measure(const std::string& sSpecType,
         }
     }
 
-    *standardTestOptions.outputStream << "Spec type: " << sSpecType_mod << "\n";
-    *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
+    standardTestOptions.j_results["spec_type"] = sSpecType_mod;
+    standardTestOptions.j_results["model_name"] = sModelName;
 
     standardTestOptions.sOutputFilename = "test24hr_" + sSpecType_mod + "_" + sModelName + ".csv";
 
     HPWH::FirstHourRating firstHourRating;
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 
-    if (useResultsFile)
+
+    if ((sOutputDir != "")&&(sResultsFilename != ""))
     {
-        delete standardTestOptions.outputStream;
+        std::ofstream resultsFile;
+        std::string sFilepath = sOutputDir + "/" + sResultsFilename + ".json";
+        resultsFile.open(sFilepath.c_str(), std::ifstream::out | std::ofstream::trunc);
+        if (!resultsFile.is_open())
+        {
+            std::cout << "Could not open output file " << sResultsFilename << "\n";
+            exit(1);
+        }
+        resultsFile << standardTestOptions.j_results.dump(2);
+        resultsFile.close();
+    }
+    else
+    {
+        std::cout << "\t24-Hour Test Results:\n";
+        if (!standardTestSummary.qualifies)
+        {
+            std::cout << "\t\tDoes not qualify as consumer water heater.\n";
+        }
+
+        std::cout
+            << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+
+        std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+                                          << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+
+        std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+
+        std::cout
+            << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
+
+        std::cout
+            << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
+
+        std::cout
+            << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+
+        std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+                                          << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
+                                          << "\n";
+
+        std::cout
+            << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+            << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+
+        std::cout
+            << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+            << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\tAnnual Values:\n";
+        std::cout
+            << "\t\tAnnual Electrical Energy Consumption (kWh): "
+            << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+
+        std::cout << "\t\tAnnual Energy Consumption (kWh): "
+                                          << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
+                                          << "\n";
     }
 }
 } // namespace hpwh_cli
