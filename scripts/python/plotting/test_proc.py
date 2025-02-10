@@ -105,7 +105,6 @@ def test_proc(plotter):
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
 				print("received by test-proc")
-				print(data)
 				test_proc.plotter = plot(data)
 				if test_proc.plotter.have_fig:
 					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
