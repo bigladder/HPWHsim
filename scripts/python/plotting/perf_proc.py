@@ -39,13 +39,13 @@ def perf_proc(data):
 	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	perf_proc.fig = {}
+	fig = {}
 	perf_proc.model_data = {}
 	perf_proc.model_data_filepath = ""
 	if "model_data_filepath" in data:
 		perf_proc.model_data_filepath = data["model_data_filepath"]
 		perf_proc.model_data = read_file(perf_proc.model_data_filepath)
-		
+	
 	perf_proc.plotter = PerfPlotter()
 	perf_proc.plotter.prepare(perf_proc.model_data)
 	
@@ -64,7 +64,8 @@ def perf_proc(data):
 			for outletT in perf_proc.plotter.T3s:
 				perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
 				i = i + 1
-			
+		
+		fig = perf_proc.plotter.fig
 	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -115,7 +116,7 @@ def perf_proc(data):
 	
 		html.Br(),
 		html.Div(
-			dcc.Graph(id='perf-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
+			dcc.Graph(id='perf-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
 				config={
 	        'modeBarButtonsToAdd': [
 	        "drawrect",
@@ -152,7 +153,6 @@ def perf_proc(data):
 				if 'model_data_filepath' in data:
 					perf_proc.model_data_filepath = data['model_data_filepath']			
 					perf_proc.model_data = read_file(perf_proc.model_data_filepath)
-					print(perf_proc.model_data_filepath )
 					perf_proc.plotter.prepare(perf_proc.model_data)
 					perf_proc.show_outletTs = False
 					perf_proc.outletTs = []
