@@ -17,6 +17,8 @@ import multiprocessing as mp
 from pathlib import Path
 from dash_extensions import WebSocket
 
+from common import read_file, write_file
+
 def test_proc(plotter):
 	
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -38,20 +40,36 @@ def test_proc(plotter):
 	test_proc.selected_tank_TV = []
 	test_proc.selected_ambient_TV = []
 	test_proc.variable_type = ""
+	test_proc.prefs = read_file("prefs.json")
 	test_proc.plotter = plotter
+
 
 	measured_msg = ""
 	simulated_msg = ""
-	if 'measuredE_Wh' in test_proc.plotter.energy_data:
-		measured_msg = "Measured energy consumption (Wh): " + f"{test_proc.plotter.energy_data['measuredE_Wh']:.2f}"
-	if 'simulatedE_Wh' in test_proc.plotter.energy_data:
-		simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.energy_data['simulatedE_Wh']:.2f}"
+	if test_proc.plotter.measured.show_plot:
+		measured_msg = "Measured energy consumption (Wh): " + f"{test_proc.plotter.measured.energy_used_Wh:.2f}"
+	if test_proc.plotter.simulated.show_plot:
+		simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.simulated.energy_used_Wh:.2f}"
+
+	option_list = []
+	show_list = []
+	if plotter.measured.have_data:
+		option_list.append({'label': 'measured', 'value': 'measured'})
+		show_list.append('measured')
+	if plotter.simulated.have_data:
+		option_list.append({'label': 'simulated', 'value': 'simulated'})
+		show_list.append('simulated')
 		
 	app.layout = [
 		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
 
+		dcc.Checklist(
+		    options = option_list,
+				value = show_list,
+				id="show-check", inline=True
+		),
 		dcc.Graph(id='test-graph', figure=test_proc.plotter.plot.figure, style ={'width': '1200px', 'height': '800px', 'display': 'block'} ),
 		
 		html.P(measured_msg, id='energy_measured_p'),
@@ -94,6 +112,8 @@ def test_proc(plotter):
 
 	@app.callback(
 				Output('test-graph', 'figure', allow_duplicate=True),
+				Output('show-check', 'options'),
+				Output('show-check', 'value'),
 				Output('ua-div', 'hidden', allow_duplicate=True),
 				Output('energy_measured_p', 'children'),
 				Output('energy_simulated_p', 'children'),
@@ -105,19 +125,46 @@ def test_proc(plotter):
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
 				print("received by test-proc")
-				test_proc.plotter = plot(data)
-				if test_proc.plotter.have_fig:
-					test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
-					measured_msg = ""
-					simulated_msg = ""
-					if 'measuredE_Wh' in test_proc.plotter.energy_data:
-						measured_msg = "Measured energy consumption (Wh): " + f"{test_proc.plotter.energy_data['measuredE_Wh']:.2f}"
-					if 'simulatedE_Wh' in test_proc.plotter.energy_data:
-						simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.energy_data['simulatedE_Wh']:.2f}"
-					return test_proc.plotter.plot.figure, True, measured_msg, simulated_msg
-		return no_update, no_update, no_update, no_update
+				if 'cmd' in data:
+					if data['cmd'] == 'replot':
+						test_proc.plotter = plot(data)
+						if test_proc.plotter.have_fig:
+							test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
+							measured_msg = ""
+							simulated_msg = ""
+							if 'measuredE_Wh' in test_proc.plotter.energy_data:
+								measured_msg = "Measured energy consumption (Wh): " + f"{test_proc.plotter.energy_data['measuredE_Wh']:.2f}"
+							if 'simulatedE_Wh' in test_proc.plotter.energy_data:
+								simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.energy_data['simulatedE_Wh']:.2f}"
+																
+							option_list = []
+							value_list = []
+							if test_proc.plotter.measured.have_data:
+								option_list.append({'label': 'measured', 'value': 'measured'})
+								value_list.append('measured')
+							if test_proc.plotter.simulated.have_data:
+								option_list.append({'label': 'simulated', 'value': 'simulated'})
+								value_list.append('simulated')
+							return test_proc.plotter.plot.figure, option_list, value_list, True, measured_msg, simulated_msg
+		return no_update, no_update, no_update, no_update, no_update, no_update		
+
+	@callback(
+		Output('test-graph', 'figure', allow_duplicate=True),
+		Input('show-check', 'value'),
+		prevent_initial_call=True
+	)
+	def change_show(value):
+		data = {'show': 0}
+		if 'measured' in value:
+			test_proc.prefs["show_measured"] = True
+			data['show'] |= 1
+		if 'simulated' in value:
+			test_proc.prefs["show_simulated"] = True
+			data['show'] |= 2
+		test_proc.plotter.draw(data)
 			
-		
+		return test_proc.plotter.plot.figure
+			
 	@callback(
 		Output('get-ua-btn', 'disabled'),
 		Output('ua-div', 'hidden', allow_duplicate=True),
