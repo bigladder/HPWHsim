@@ -51,14 +51,17 @@ def test_proc(plotter):
 	if test_proc.plotter.simulated.show_plot:
 		simulated_msg = "Simulated energy consumption (Wh): " + f"{test_proc.plotter.simulated.energy_used_Wh:.2f}"
 
+	test_proc.prev_show = 0
 	option_list = []
 	show_list = []
 	if plotter.measured.have_data:
 		option_list.append({'label': 'measured', 'value': 'measured'})
 		show_list.append('measured')
+		test_proc.prev_show |= 1
 	if plotter.simulated.have_data:
 		option_list.append({'label': 'simulated', 'value': 'simulated'})
 		show_list.append('simulated')
+		test_proc.prev_show |= 2
 		
 	app.layout = [
 		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
@@ -150,10 +153,12 @@ def test_proc(plotter):
 
 	@callback(
 		Output('test-graph', 'figure', allow_duplicate=True),
+		Output('show-check', 'value', allow_duplicate=True),
 		Input('show-check', 'value'),
 		prevent_initial_call=True
 	)
 	def change_show(value):
+		
 		data = {'show': 0}
 		if 'measured' in value:
 			test_proc.prefs["show_measured"] = True
@@ -161,9 +166,20 @@ def test_proc(plotter):
 		if 'simulated' in value:
 			test_proc.prefs["show_simulated"] = True
 			data['show'] |= 2
+		
+		if data['show'] == 0:
+			data['show'] = test_proc.prev_show
+		
+		test_proc.prev_show = data['show']
 		test_proc.plotter.draw(data)
+		
+		value_list = []
+		if data['show'] & 1 == 1:
+			value_list.append('measured')
+		if data['show'] & 2 == 2:
+			value_list.append('simulated')	
 			
-		return test_proc.plotter.plot.figure
+		return test_proc.plotter.plot.figure, value_list
 			
 	@callback(
 		Output('get-ua-btn', 'disabled'),
