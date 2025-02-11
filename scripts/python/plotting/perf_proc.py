@@ -16,23 +16,8 @@ from perf_plot import PerfPlotter
 import multiprocessing as mp
 from pathlib import Path
 from dash_extensions import WebSocket
-
-def read_file(filename):
-	try:
-			with open(filename, 'r') as json_file:
-				return json.load(json_file)
-	except:
-			print(f"failed to load {filename}")
-			return
+from common import read_file, write_file
 	
-def write_file(filename, json_data):
-	try:
-			with open(filename, 'w') as json_file:
-				json.dump(json_data, json_file, indent=2)			
-	except:
-			print(f"failed to write {filename}")
-			return
-		
 def perf_proc(data):
 	orig_dir = str(Path.cwd())
 	os.chdir("../../../test")

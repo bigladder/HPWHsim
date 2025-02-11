@@ -45,14 +45,21 @@ def retrieve_line_type(variable_type):
 	elif variable_type == "Simulated":
 		return "dot"
 
+class DataSet:
+	def __init__(self, variable_type):
+		self.df = {}
+		self.have_data = False
+		self.show_plot = False
+		self.energy_use_Wh = 0
+		self.variable_type = variable_type
+		self.filepath = ""
+
 class TestPlotter:
 	def __init__(self):
 		self.plot = {}
 		self.energy_data = {}
-		self.df_measured = {}
-		self.df_simulated = {}
-		self.have_measured = False
-		self.have_simulated = False
+		self.measured = DataSet("Measured")
+		self.simulated = DataSet("Simulated")
 		self.have_fig = False
 
 		self.variables = {
@@ -150,86 +157,76 @@ class TestPlotter:
 			for index in range(len(OUTPUT_TEMPERATURE_DETAILS[key])):
 				self.variables["Y-Variables"]["Temperature"][key].insert(index, OUTPUT_TEMPERATURE_DETAILS[key][index])
 
-	def retrieve_dataframe(self, variable_type):
-		if variable_type == "Measured":
-			return self.df_measured
-		elif variable_type == "Simulated":
-			return self.df_simulated
+	def filter_dataframe_range(self, data_set):
+		column_time_name = self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]
+		return data_set.df[(data_set.df[column_time_name] > 0) & (data_set.df[column_time_name] <= 1440)].reset_index()
 
-	def filter_dataframe_range(self, df, variable_type):
-		column_time_name = self.variables["X-Variables"]["Time"]["Column Names"][variable_type]
-		return df[(df[column_time_name] > 0) & (df[column_time_name] <= 1440)].reset_index()
-
-	def organize_tank_temperatures(self, variable_type):
-		if variable_type == "Measured":
-			df = self.df_measured
-		elif variable_type == "Simulated":
-			df = self.df_simulated
-
-		df["Storage Tank Average Temperature"] = df[
-	        self.temperature_profile_vars[variable_type]
+	def organize_tank_temperatures(self, data_set):
+		data_set.df["Storage Tank Average Temperature"] = data_set.df[
+	        self.temperature_profile_vars[data_set.variable_type]
 	    ].mean(axis=1)
 
-		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]:
-				for index in range(len(df)):
-					df.loc[index, temperature_column] = 1.8 * df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
+		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type]:
+				for index in range(len(data_set.df)):
+					data_set.df.loc[index, temperature_column] = 1.8 * data_set.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
 
-		return df
+		return data_set
 
-	def read_measured(self, measured_path):
+	def read_measured(self, filepath):
 		try:
-			self.df_measured = call_csv(measured_path, 0)
+			self.measured.df = call_csv(filepath, 0)
+			self.measured.filepath = filepath
 		except:
-			self.df_measured = {}
+			self.measured.df = {}
 			return
 
 	  # remove rows from dataframes outside of inclusive range [1,1440]
-		self.df_measured = self.filter_dataframe_range(self.df_measured, "Measured")
-		self.df_measured[power_col_label_meas] = self.df_measured["PowerIn(W)"]
-		self.energy_data['measuredE_Wh'] = self.df_measured[power_col_label_meas].sum()/60
-		self.df_measured = self.organize_tank_temperatures("Measured")
-
-		self.have_measured = True
+		self.measured.df = self.filter_dataframe_range(self.measured)
+		self.measured.df[power_col_label_meas] = self.measured.df["PowerIn(W)"]
+		self.measured.energy_use_Wh = self.measured.df[power_col_label_meas].sum()/60
+		self.measured = self.organize_tank_temperatures(self.measured)
+		self.measured.have_data = True
 		
-	def read_simulated(self, simulated_path):
+	def read_simulated(self, filepath):
 		try:
-			self.df_simulated = call_csv(simulated_path, 0)
+			self.simulated.df = call_csv(filepath, 0)
+			self.simulated.filepath = filepath
 		except:
+			self.simulated.df = {}
 			return
 
 		# remove rows from dataframes outside of inclusive range [1,1440]
-		self.df_simulated = self.filter_dataframe_range(self.df_simulated, "Simulated")
+		self.simulated.df = self.filter_dataframe_range(self.simulated)
 
 		# sum sim power if multiple heat sources
 		i = 1
 		src_exists = True
 		while src_exists:
 			col_label = f"h_src{i}In (Wh)"
-			src_exists = self.df_simulated.columns.isin([col_label]).any()
+			src_exists = self.simulated.df.columns.isin([col_label]).any()
 			if src_exists:
 				if i == 1:
-					self.df_simulated[power_col_label_sim] = self.df_simulated[col_label]
+					self.simulated.df[power_col_label_sim] = self.simulated.df[col_label]
 				else:
-					self.df_simulated[power_col_label_sim] = self.df_simulated[power_col_label_sim] + self.df_simulated[col_label]
+					self.simulated.df[power_col_label_sim] = self.simulated.df[power_col_label_sim] + self.simulated.df[col_label]
 			i = i + 1
 
-		self.energy_data['simulatedE_Wh'] = self.df_simulated[power_col_label_sim].sum()
+		self.energy_use_Wh = self.simulated.df[power_col_label_sim].sum()
 
 		# convert simulated energy consumption (Wh) for every minute to power (W)
-		self.df_simulated[power_col_label_sim] = convert_values(self.df_simulated[power_col_label_sim], "Wh/min", "W")
-		self.df_simulated = self.organize_tank_temperatures("Simulated")
+		self.simulated.df[power_col_label_sim] = convert_values(self.simulated.df[power_col_label_sim], "Wh/min", "W")
+		self.simulated = self.organize_tank_temperatures(self.simulated)
 	
-		self.have_simulated = True
+		self.simulated.have_data = True
  					
-	def plot_graphs(self, variable_type, variable, value, row):
-		df = self.retrieve_dataframe(variable_type)
+	def plot_graphs(self, data_set, variable, value, row):
 
-		if (value in [1, 2]) and (variable_type == "Measured"):
+		if (value in [1, 2]) and (data_set.variable_type == "Measured"):
 			marker_symbol = "circle"
 			marker_size = 7
 			marker_fill_color = "white"
 			marker_line_color = self.variables["Y-Variables"][variable]["Colors"][value]
-		elif (value == 1) and (variable_type == "Simulated"):
+		elif (value == 1) and (data_set.variable_type == "Simulated"):
 			marker_symbol = "circle"
 			marker_size = 7
 			marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][value]
@@ -242,14 +239,14 @@ class TestPlotter:
 
 		self.plot.add_time_series(
 		    dimes.TimeSeriesData(
-		        df[
-		            self.variables["Y-Variables"][variable]["Column Names"][variable_type][value]
+		        data_set.df[
+		            self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]
 		        ],
-		        name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
+		        name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}",
 		        native_units=self.variables["Y-Variables"][variable]["Units"],
 		        line_properties=LineProperties(
 		            color=self.variables["Y-Variables"][variable]["Colors"][value],
-		            line_type=retrieve_line_type(variable_type),
+		            line_type=retrieve_line_type(data_set.variable_type),
 		            marker_symbol=marker_symbol,
 		            marker_size=marker_size,
 		            marker_line_color=marker_line_color,
@@ -261,54 +258,56 @@ class TestPlotter:
 		    axis_name=variable,
 	  )
 
-	def draw_variable_type(self, variable_type):
+	def draw_variable_type(self, data_set):
 			for row, variable in enumerate(self.variables["Y-Variables"].keys()):
 				for value in range(
-					len(self.variables["Y-Variables"][variable]["Column Names"][variable_type])
+					len(self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type])
 				):
-					self.plot_graphs(variable_type, variable, value, row + 1)
+					self.plot_graphs(data_set, variable, value, row + 1)
 
-	def draw(self):
+	def draw(self, data):
 		have_traces = False
-		if self.have_measured:
+		draw_meas = self.measured.have_data
+		draw_sim = self.simulated.have_data
+		if 'show' in data:
+			draw_meas = draw_meas and (data["show"] & 1 == 1)
+			draw_sim = draw_sim and (data["show"] & 2 == 2)
+				
+		if draw_meas:
 			self.plot = dimes.TimeSeriesPlot(
-				self.df_measured[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
+					self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
+				)
+			self.draw_variable_type(self.measured)
+			have_traces = True
+			if draw_sim:
+				self.draw_variable_type(self.simulated)
+		elif draw_sim:
+			self.plot = dimes.TimeSeriesPlot(
+				self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]
 			)
 			have_traces = True
-			self.draw_variable_type("Measured")
-			if self.have_simulated:
-				self.draw_variable_type("Simulated")
-		elif self.have_simulated:
-			self.plot = dimes.TimeSeriesPlot(
-				self.df_simulated[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]
-			)
-			have_traces = True
-			self.draw_variable_type("Simulated")
-			if self.have_measured:
-				self.draw_variable_type("Measured")
+			self.draw_variable_type(self.simulated)
 		else:
 			return
-
 		if have_traces:
 			self.plot.finalize_plot()
 			self.have_fig = True
 		return self
 
 def plot(data):
-	plotter = TestPlotter()
-	
+	plotter = TestPlotter()	
 	if "measured_filepath" in data:
 		plotter.read_measured(data["measured_filepath"])
 	if "simulated_filepath" in data:
 		plotter.read_simulated(data["simulated_filepath"])
-	plotter.draw()
+	plotter.draw({'show': 3})
 	return plotter
 
 def write_plot(measured_path, simulated_filepath, plot_filepath):
 	plotter = TestPlotter()
 	plotter.read_measured(measured_filepath)
 	plotter.read_simulated(simulated_filepath)
-	plotter.draw()
+	plotter.draw({'show': 3})
 	plotter.plot.write_html_plot(plot_filepath)
 	
 # main

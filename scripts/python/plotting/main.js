@@ -47,8 +47,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
 		test_form.test_list.value = ("test_list" in prefs) ? prefs["test_list"] : "All tests";
 		test_form.test_name.value = ("test_id" in prefs) ? prefs["test_id"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
-		test_form.show_simulated.value = ("show_simulated" in prefs) ? prefs["show_simulated"] : true;
-		test_form.show_measured.value = ("show_measured" in prefs) ? prefs["show_measured"] : true;
 		test_form.draw_profile.value = ("draw_profile" in prefs) ? prefs["draw_profile"] : "auto";
 	}
 
@@ -63,8 +61,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		prefs["build_dir"] = build_form.build_dir.value;
 		prefs["test_list"] = test_form.test_list.value;
 		prefs["test_id"] = test_form.test_name.value;
-		prefs["show_simulated"] = test_form.show_simulated.checked;
-		prefs["show_measured"] = test_form.show_measured.checked;
 		prefs["draw_profile"] = test_form.draw_profile.value;
 		return prefs;
 	}
@@ -197,10 +193,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		while (select_test.hasChildNodes())
 			select_test.removeChild(select_test.firstChild);
 
-		var show_simulated = prefs["show_simulated"] && have_test;
-		var show_measured = prefs["show_measured"] && have_measured;
-		show_simulated = show_simulated || (have_test && !show_measured);
-		show_measured = show_measured || (have_measured && !show_simulated);
+		prefs["show_simulated"] = have_test;
+		prefs["show_measured"] = have_measured;
 
 		if (!have_test) {
 			prefs["test_id"] = "";
@@ -220,15 +214,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			document.getElementById('test_btn').disabled = false;
 		}
 
-		// set select_show_type control
-		let show_measured_checkbox = document.getElementById('show_measured');
-		let show_simulated_checkbox = document.getElementById('show_simulated');
-
-		show_simulated_checkbox.checked = prefs["show_simulated"] = show_simulated;
-		show_simulated_checkbox.disabled = !have_test;
-		show_measured_checkbox.checked = prefs["show_measured"] = show_measured;
-		show_measured_checkbox.disabled = !have_measured;
-
 		// set draw_profile dropdown
 		let draw_profile_dropdown = document.getElementById('draw_profile');
 		draw_profile_dropdown.value = prefs["draw_profile"];
@@ -243,6 +228,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			await ws_connection.send(JSON.stringify(msg));
 		}
 
+		var simulated_filepath = ""
+		var measured_filepath = ""
 		if (have_test)
 		{ //measure or simulate
 			if (is_standard_test) {
@@ -262,7 +249,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			}
 
 		 // send test info
-			var msg = {'source': 'index.html', 'dest': 'test-proc'};
+			var msg = {'source': 'index.html', 'dest': 'test-proc', 'cmd': 'replot'};
 			if (prefs["show_measured"])
 			{
 				measured_filepath = "../../../test"
