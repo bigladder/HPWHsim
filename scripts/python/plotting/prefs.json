@@ -1,11 +1,11 @@
 {
-  "model_id": "AquaThermAire",
+  "model_id": "LG_APHWC50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
   "test_id": "villara_24hr67",
   "show_simulated": true,
-  "show_measured": true,
+  "show_measured": false,
   "draw_profile": "Low",
   "performance_plots": {
     "contour_variable": 1,

@@ -3,6 +3,7 @@ import pandas as pd  # type: ignore
 import numpy as np
 import json
 import math
+from scipy.interpolate import RegularGridInterpolator
 
 import plotly.graph_objects as go
 
@@ -127,14 +128,22 @@ class PerfPlotter:
 		else:
 			zPlot = self.Pouts
 			zSizes = self.zPouts
-
+	
+		zs = np.array(zPlot)
+		interp = RegularGridInterpolator((self.T1s, self.T2s), zs)
+		xg = np.linspace(self.T1s[0], self.T1s[-1], 40)
+		yg = np.linspace(self.T2s[0], self.T2s[-1], 40)
+		xy= np.array([xg, yg])
+		zg = interp(xy)	
+		
 		coloring = 'lines'
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
 		
+		
 		self.fig = go.Figure(data =
-										 go.Contour(z = zPlot, x = self.T1s, y = self.T2s,
+										 go.Contour(z = zPlot, x = xg, y = zg,
 											contours=dict(
 					            coloring = coloring,
 					            showlabels = True, # show labels on contours
