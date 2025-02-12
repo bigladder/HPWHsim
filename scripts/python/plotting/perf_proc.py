@@ -97,6 +97,12 @@ def perf_proc(data):
 				id='coloring-dropdown',
 				style={'width': '50%'},
 				clearable=False),
+				
+		dcc.Checklist(
+		    options = ['interpolate'],
+				value = [],
+				id="interp-check"
+		),
 							
 	
 		html.Br(),
@@ -119,6 +125,21 @@ def perf_proc(data):
 		print("sent by perf-proc")
 		msg = {"source": "perf-proc", "dest": "perf-proc"}
 		return json.dumps(msg)
+
+
+	@app.callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('interp-check', 'value'),
+			prevent_initial_call=True
+		)
+	def change_interp(value):
+		if 'interpolate' in value:
+			perf_proc.prefs["interpolate"] = 1
+		else:
+			perf_proc.prefs["interpolate"] = 0
+		perf_proc.plotter.draw(perf_proc.prefs)
+
+		return perf_proc.plotter.fig
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),

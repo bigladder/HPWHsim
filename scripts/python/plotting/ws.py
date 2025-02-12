@@ -60,10 +60,10 @@ def launch_ws():
 		time.sleep(1)
 
 	launch_ws.proc = mp.Process(target=run_main, args=(), name='ws')
-	print("launching websocket...")
 	time.sleep(1)
 
 	launch_ws.proc.start()
 	time.sleep(2)
+	print("launched websocket")
 
 launch_ws.proc = -1

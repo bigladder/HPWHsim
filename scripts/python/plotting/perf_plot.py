@@ -14,6 +14,9 @@ styles = {
     }
 }
 
+def ff(x, y):
+    	return x**2 + y**2
+
 class PerfPlotter:
 	def __init__(self):
 		self.fig = {}
@@ -129,21 +132,65 @@ class PerfPlotter:
 			zPlot = self.Pouts
 			zSizes = self.zPouts
 	
-		zs = np.array(zPlot)
-		interp = RegularGridInterpolator((self.T1s, self.T2s), zs)
-		xg = np.linspace(self.T1s[0], self.T1s[-1], 40)
-		yg = np.linspace(self.T2s[0], self.T2s[-1], 40)
-		xy= np.array([xg, yg])
-		zg = interp(xy)	
+
+		xc = self.T1s
+		yc = self.T2s
+		zc = zPlot
+
+			
+		xp = self.xPoint
+		yp = self.yPoint
+		sizeg = zSizes
 		
+		if 'interpolate' in prefs:
+			if prefs['interpolate'] == 1:
+
+				z0 = np.array(zPlot)
+				zs = z0.reshape(np.size(self.T1s), np.size(self.T2s))
+
+				interp = RegularGridInterpolator((self.T1s, self.T2s), zs, method='linear')
+				
+				nX = prefs['Nx']
+				nY = prefs['Ny']
+				#xc = np.linspace(self.T1s[0], self.T1s[-1], nX)
+				#yc = np.linspace(self.T2s[0], self.T2s[-1], nY)
+				xg, yg = np.meshgrid(xc, yc, indexing='ij', sparse=True)
+				zg = interp((xg, yg))
+				
+				xy = []
+				for x in xc:	
+					row = []
+					for y in yc:
+						row.append([x, y])
+					xy.append(row)
+					
+				print("xy")				
+				print(xy)
+			
+				zc = interp(xy)#.reshape(np.size(self.T2s), np.size(self.T1s))
+				zc = zc.reshape(np.size(self.T2s), np.size(self.T1s))
+				
+				# marker sizes
+				sizeg = zc.flatten()
+						
 		coloring = 'lines'
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
 		
+
+		print("x")				
+		print(xc)
+		
+		print("y")	
+		print(yc)
+		
+		print("z")	
+		print(zc)	
+				
 		
 		self.fig = go.Figure(data =
-										 go.Contour(z = zPlot, x = xg, y = zg,
+										 go.Contour(z = zc, x = xc, y = yc,
 											contours=dict(
 					            coloring = coloring,
 					            showlabels = True, # show labels on contours
@@ -158,17 +205,17 @@ class PerfPlotter:
 		
 		if True:#self.show_points:
 
+			fac = 0.5
+			normSize = []
+			zMin = min(sizeg)
+			zMax = max(sizeg)			
+			for zSize in sizeg:
+				normSize.append(20 * ((1 - fac) * (zSize - zMin) / (zMax - zMin) + fac))
+			
 			self.fig = go.Figure(self.fig)
 
-			zMin = min(zSizes)
-			zMax = max(zSizes)
-			
-			normSize = []
-			for zSize in zSizes:
-				normSize.append(20 * (zSize - zMin) / (zMax - zMin))
-			
-
-			trace = go.Scatter(name = "points", x = self.xPoint, y = self.yPoint, marker_size=normSize, mode="markers")		
+			trace = go.Scatter(name = "points", x = xp, y = yp, marker_size=normSize, mode="markers")		
+			#trace = go.Scatter(name = "points", x = xc, y = yc, marker_size=normSize, mode="markers")		
 			#self.fig.add_trace(data = data.frame(xV=self.T1s,yV=self.T2s,zv=4), x = ~xV, y = ~yV, size=12, type = "scatter")
 			self.fig.add_trace(trace)
 
