@@ -3308,7 +3308,7 @@ void HPWH::checkInputs()
     else
     {
         model = HPWH::MODELS_basicIntegrated;
-        cout << "Couldn't find model " << modelName << ".  Exiting...\n";
+        cout << "Couldn't find model " << modelName << "\n";
         return false;
     }
     return true;
