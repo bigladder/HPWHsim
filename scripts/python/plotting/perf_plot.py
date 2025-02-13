@@ -136,8 +136,7 @@ class PerfPlotter:
 		xc = self.T1s
 		yc = self.T2s
 		zc = zPlot
-
-			
+		
 		xp = self.xPoint
 		yp = self.yPoint
 		sizeg = zSizes
@@ -145,50 +144,34 @@ class PerfPlotter:
 		if 'interpolate' in prefs:
 			if prefs['interpolate'] == 1:
 
-				z0 = np.array(zPlot)
-				zs = z0.reshape(np.size(self.T1s), np.size(self.T2s))
+				zs = np.array(zPlot)
+				#zs = z0.reshape(np.size(self.T1s), np.size(self.T2s))
 
-				interp = RegularGridInterpolator((self.T1s, self.T2s), zs, method='linear')
+				interp = RegularGridInterpolator((self.T1s, self.T2s), zs.transpose(), method='linear')
 				
+				#interp				
 				nX = prefs['Nx']
 				nY = prefs['Ny']
-				#xc = np.linspace(self.T1s[0], self.T1s[-1], nX)
-				#yc = np.linspace(self.T2s[0], self.T2s[-1], nY)
-				xg, yg = np.meshgrid(xc, yc, indexing='ij', sparse=True)
+				xp = np.linspace(self.T1s[0], self.T1s[-1], nX)
+				yp = np.linspace(self.T2s[0], self.T2s[-1], nY)
+				xg, yg = np.meshgrid(xp, yp)
 				zg = interp((xg, yg))
-				
-				xy = []
-				for x in xc:	
-					row = []
-					for y in yc:
-						row.append([x, y])
-					xy.append(row)
-					
-				print("xy")				
-				print(xy)
+
+				xc = xp
+				yc = yp
+				zc = zg	
 			
-				zc = interp(xy)#.reshape(np.size(self.T2s), np.size(self.T1s))
-				zc = zc.reshape(np.size(self.T2s), np.size(self.T1s))
+				#zc = interp(xy)#.reshape(np.size(self.T2s), np.size(self.T1s))			
+				#zc = zc.reshape(nY, nX)
 				
-				# marker sizes
-				sizeg = zc.flatten()
+				# marker sizes				
+				sizeg = zc
 						
 		coloring = 'lines'
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
-		
-
-		print("x")				
-		print(xc)
-		
-		print("y")	
-		print(yc)
-		
-		print("z")	
-		print(zc)	
-				
-		
+					
 		self.fig = go.Figure(data =
 										 go.Contour(z = zc, x = xc, y = yc,
 											contours=dict(
@@ -203,7 +186,7 @@ class PerfPlotter:
 		xaxis_title = "environment temperature (\u00B0C)"
 		yaxis_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
 		
-		if True:#self.show_points:
+		if False:#self.show_points:
 
 			fac = 0.5
 			normSize = []
