@@ -139,7 +139,7 @@ class PerfPlotter:
 		
 		xp = self.xPoint
 		yp = self.yPoint
-		sizeg = zSizes
+		zp = zSizes
 		
 		if 'interpolate' in prefs:
 			if prefs['interpolate'] == 1:
@@ -152,20 +152,21 @@ class PerfPlotter:
 				#interp				
 				nX = prefs['Nx']
 				nY = prefs['Ny']
-				xp = np.linspace(self.T1s[0], self.T1s[-1], nX)
-				yp = np.linspace(self.T2s[0], self.T2s[-1], nY)
-				xg, yg = np.meshgrid(xp, yp)
-				zg = interp((xg, yg))
-
-				xc = xp
-				yc = yp
-				zc = zg	
+				xc = np.linspace(self.T1s[0], self.T1s[-1], nX)
+				yc = np.linspace(self.T2s[0], self.T2s[-1], nY)
+				xg, yg = np.meshgrid(xc, yc)
+				zc = interp((xg, yg))
 			
-				#zc = interp(xy)#.reshape(np.size(self.T2s), np.size(self.T1s))			
-				#zc = zc.reshape(nY, nX)
+				xp = []
+				yp = []
+				for y in yc:
+					for x in xc:				
+						xp.append(x)
+						yp.append(y)
 				
-				# marker sizes				
-				sizeg = zc
+				xp = np.array(xp)
+				yp = np.array(yp)		
+				zp = zc.flatten()
 						
 		coloring = 'lines'
 		if 'contour_coloring' in prefs:
@@ -186,20 +187,18 @@ class PerfPlotter:
 		xaxis_title = "environment temperature (\u00B0C)"
 		yaxis_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
 		
-		if False:#self.show_points:
+		if True:#self.show_points:
 
 			fac = 0.5
-			normSize = []
-			zMin = min(sizeg)
-			zMax = max(sizeg)			
-			for zSize in sizeg:
-				normSize.append(20 * ((1 - fac) * (zSize - zMin) / (zMax - zMin) + fac))
-			
+			markerSize = []
+			zMin = min(zp)
+			zMax = max(zp)			
+			for z in zp:
+				markerSize.append(20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac))
+
 			self.fig = go.Figure(self.fig)
 
-			trace = go.Scatter(name = "points", x = xp, y = yp, marker_size=normSize, mode="markers")		
-			#trace = go.Scatter(name = "points", x = xc, y = yc, marker_size=normSize, mode="markers")		
-			#self.fig.add_trace(data = data.frame(xV=self.T1s,yV=self.T2s,zv=4), x = ~xV, y = ~yV, size=12, type = "scatter")
+			trace = go.Scatter(name = "points", x = xp, y = yp, marker_size=markerSize, mode="markers")		
 			self.fig.add_trace(trace)
 
 		self.fig.update_layout({
@@ -208,7 +207,6 @@ class PerfPlotter:
 			}
 			)
 		return self
-	
 	
 # main
 if __name__ == "__main__":
