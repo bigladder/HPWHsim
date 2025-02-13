@@ -54,6 +54,10 @@ def perf_proc(data):
 	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+	interp_list = []
+	if perf_proc.prefs["interpolate"] == 1:
+		interp_list= ['interpolate']
+		
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 	styles = {
@@ -97,13 +101,16 @@ def perf_proc(data):
 				id='coloring-dropdown',
 				style={'width': '50%'},
 				clearable=False),
-				
+			
 		dcc.Checklist(
-		    options = ['interpolate'],
-				value = [],
-				id="interp-check"
-		),
-							
+			    options = [{'label': 'interpolate', 'value': 'interpolate'}],
+					value = interp_list,
+					id="interp-check"
+			),
+		html.Div(	[		
+			dcc.Input(id='Nx-input', type='number', value=perf_proc.prefs['Nx']),
+			dcc.Input(id='Ny-input', type='number', value=perf_proc.prefs['Ny'])
+		], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)),				
 	
 		html.Br(),
 		html.Div(
@@ -125,21 +132,6 @@ def perf_proc(data):
 		print("sent by perf-proc")
 		msg = {"source": "perf-proc", "dest": "perf-proc"}
 		return json.dumps(msg)
-
-
-	@app.callback(
-			Output('perf-graph', 'figure', allow_duplicate=True),
-			Input('interp-check', 'value'),
-			prevent_initial_call=True
-		)
-	def change_interp(value):
-		if 'interpolate' in value:
-			perf_proc.prefs["interpolate"] = 1
-		else:
-			perf_proc.prefs["interpolate"] = 0
-		perf_proc.plotter.draw(perf_proc.prefs)
-
-		return perf_proc.plotter.fig
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -179,6 +171,43 @@ def perf_proc(data):
 						return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 		
 		return no_update, no_update, no_update, no_update, no_update
+	
+
+	@app.callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Output('interp-sizes', 'hidden'),
+			Input('interp-check', 'value'),
+			prevent_initial_call=True
+		)
+	def change_interp(value):
+		if 'interpolate' in value:
+			perf_proc.prefs["interpolate"] = 1
+		else:
+			perf_proc.prefs["interpolate"] = 0
+		perf_proc.plotter.draw(perf_proc.prefs)
+
+		return perf_proc.plotter.fig, (perf_proc.prefs["interpolate"] == 0)
+	
+	@app.callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Output('Nx-input', 'value'),
+			Output('Ny-input', 'value'),
+			Input('Nx-input', 'value'),
+			Input('Ny-input', 'value'),
+			prevent_initial_call=True
+		)
+	def set_Nxy(Nx, Ny):
+		if Nx is not None:
+			Nx = int(Nx)
+			if Nx > 0:
+				perf_proc.prefs["Nx"] = Nx
+		if Ny is not None:
+			Ny = int(Ny)
+			if Ny > 0:
+				perf_proc.prefs["Ny"] = Ny				
+		perf_proc.plotter.draw(perf_proc.prefs)
+
+		return perf_proc.plotter.fig, perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
