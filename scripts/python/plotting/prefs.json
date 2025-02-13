@@ -1,5 +1,5 @@
 {
-  "model_id": "TamScalable_SP_2X",
+  "model_id": "NyleC90A_C_SP",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
@@ -8,10 +8,10 @@
   "show_measured": false,
   "draw_profile": "Low",
   "performance_plots": {
-    "contour_variable": 2,
+    "contour_variable": 1,
     "contour_coloring": 1,
     "interpolate": 1,
-    "Nx": 10,
-    "Ny": 8
+    "Nx": 17,
+    "Ny": 7
   }
 }
