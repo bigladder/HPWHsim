@@ -132,11 +132,12 @@ class PerfPlotter:
 			zPlot = self.Pouts
 			zSizes = self.zPouts
 	
-
+# original data as np.arrays referred to a regular grid
 		xc = self.T1s
 		yc = self.T2s
 		zc = zPlot
 		
+# original data as lists of point coordinates
 		xp = self.xPoint
 		yp = self.yPoint
 		zp = zSizes
@@ -144,19 +145,19 @@ class PerfPlotter:
 		if 'interpolate' in prefs:
 			if prefs['interpolate'] == 1:
 
-				zs = np.array(zPlot)
-				#zs = z0.reshape(np.size(self.T1s), np.size(self.T2s))
-
-				interp = RegularGridInterpolator((self.T1s, self.T2s), zs.transpose(), method='linear')
+				# define RGI
+				zs = np.array(zPlot).transpose()
+				interp = RegularGridInterpolator((xc, yc), zs, method='linear')
 				
-				#interp				
+				# generate mesh and interpolate	
 				nX = prefs['Nx']
 				nY = prefs['Ny']
-				xc = np.linspace(self.T1s[0], self.T1s[-1], nX)
-				yc = np.linspace(self.T2s[0], self.T2s[-1], nY)
+				xc = np.linspace(xc[0], xc[-1], nX)
+				yc = np.linspace(yc[0], yc[-1], nY)
 				xg, yg = np.meshgrid(xc, yc)
 				zc = interp((xg, yg))
 			
+				# modify xp, yp, zp
 				xp = []
 				yp = []
 				for y in yc:
@@ -183,29 +184,36 @@ class PerfPlotter:
 					                color = 'black',
             					),
 											)))
-		
-		xaxis_title = "environment temperature (\u00B0C)"
-		yaxis_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
-		
-		if True:#self.show_points:
+		markerSize = []
+		if 'show_points' in prefs:
+			if prefs['show_points'] == 1:
+				fac = 0.5
+				zMin = min(zp)
+				zMax = max(zp)			
+				for z in zp:
+					markerSize.append(20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac))
+			else:
+				for z in zp:
+					markerSize.append(1)
 
-			fac = 0.5
-			markerSize = []
-			zMin = min(zp)
-			zMax = max(zp)			
-			for z in zp:
-				markerSize.append(20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac))
-
+		if markerSize:
 			self.fig = go.Figure(self.fig)
-
 			trace = go.Scatter(name = "points", x = xp, y = yp, marker_size=markerSize, mode="markers")		
 			self.fig.add_trace(trace)
-
-		self.fig.update_layout({
-    	"xaxis": {"title_text": "environment temperature (\u00B0C)", 'title_font': {"size": 14, "color": "black"}},
-    	"yaxis": {"title_text": yaxis_title, 'title_font': {"size": 14, "color": "black"}}
-			}
-			)
+		
+		x_title = "environment temperature (\u00B0C)"
+		y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
+				
+		self.fig.update_layout(
+					xaxis_title = x_title,
+					yaxis_title = y_title
+					)
+		
+		# fix to data range
+		dX = 0.05 * (self.T1s[-1] - self.T1s[0])
+		dY = 0.05 * (self.T2s[-1] - self.T2s[0])
+		self.fig.update_xaxes(range=[self.T1s[0] - dX, self.T1s[-1] + dX])
+		self.fig.update_yaxes(range=[self.T2s[0] - dY, self.T2s[-1] + dY])
 		return self
 	
 # main
