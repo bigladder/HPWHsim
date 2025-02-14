@@ -24,40 +24,48 @@ def perf_proc(data):
 	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	fig = {}
-	perf_proc.model_data = {}
-	perf_proc.model_data_filepath = ""
-	if "model_data_filepath" in data:
-		perf_proc.model_data_filepath = data["model_data_filepath"]
-		perf_proc.model_data = read_file(perf_proc.model_data_filepath)
-	
-	perf_proc.plotter = PerfPlotter()
-	perf_proc.plotter.prepare(perf_proc.model_data)
-	
-	perf_proc.prefs = read_file("prefs.json")['performance_plots']
-	if perf_proc.plotter.have_data:
-		perf_proc.plotter.draw(perf_proc.prefs)
-	
-	perf_proc.show_outletTs = False
-	perf_proc.outletTs = [{'label': "none", 'value': 0}]
-	if perf_proc.plotter.have_data:
-		perf_proc.show_outletTs = perf_proc.plotter.is_central	
-		perf_proc.plotter.fig.update_layout(clickmode='event+select')
-
-		if perf_proc.show_outletTs:
-			i = 0
-			for outletT in perf_proc.plotter.T3s:
-				perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
-				i = i + 1
+	def load_data(data):
+		fig = {}
+		perf_proc.model_data = {}
+		perf_proc.model_data_filepath = ""
+		if "model_data_filepath" in data:
+			perf_proc.model_data_filepath = data["model_data_filepath"]
+			perf_proc.model_data = read_file(perf_proc.model_data_filepath)
 		
-		fig = perf_proc.plotter.fig
+			perf_proc.plotter = PerfPlotter()
+			perf_proc.plotter.prepare(perf_proc.model_data)
+			
+			perf_proc.prefs = read_file("prefs.json")['performance_plots']
+			if perf_proc.plotter.have_data:
+				perf_proc.plotter.draw(perf_proc.prefs)
+			
+			perf_proc.show_outletTs = False
+			perf_proc.outletTs = []
+			if perf_proc.plotter.have_data:
+				perf_proc.show_outletTs = perf_proc.plotter.is_central	
+				perf_proc.plotter.fig.update_layout(clickmode='event+select')
+
+				if perf_proc.show_outletTs:
+					i = 0
+					for outletT in perf_proc.plotter.T3s:
+						perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
+						i = i + 1
+			
+				fig = perf_proc.plotter.fig
+			return fig
+	
+	fig = load_data(data)
 	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 	interp_list = []
 	if perf_proc.prefs["interpolate"] == 1:
 		interp_list= ['interpolate']
-		
+
+	show_list = []
+	if perf_proc.prefs["show_points"] == 1:
+		show_list= ['points']
+				
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 	styles = {
@@ -101,6 +109,13 @@ def perf_proc(data):
 				id='coloring-dropdown',
 				style={'width': '50%'},
 				clearable=False),
+			
+		html.P("show"),
+		dcc.Checklist(
+			    options = [{'label': 'points', 'value': 'points'}],
+					value = show_list,
+					id="show-check"
+			),
 			
 		dcc.Checklist(
 			    options = [{'label': 'interpolate', 'value': 'interpolate'}],
@@ -147,28 +162,13 @@ def perf_proc(data):
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'perf-proc':
 				print("received by perf-proc")	
-				perf_proc.model_data = {}
-				if 'model_data_filepath' in data:
-					perf_proc.model_data_filepath = data['model_data_filepath']			
-					perf_proc.model_data = read_file(perf_proc.model_data_filepath)
-					perf_proc.plotter.prepare(perf_proc.model_data)
-					perf_proc.show_outletTs = False
-					perf_proc.outletTs = []
-					if perf_proc.plotter.have_data:
-						perf_proc.show_outletTs = perf_proc.plotter.is_central
-						if perf_proc.show_outletTs:
-							i = 0
-							for outletT in perf_proc.plotter.T3s:
-								perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
-								i = i + 1
-						else:
-							perf_proc.outletTs = [{'label': "none", 'value': 0}]
-						perf_proc.plotter.draw(perf_proc.prefs)
-						
-						prefs = read_file("prefs.json")
-						prefs["performance_plots"] = perf_proc.prefs
-						write_file("prefs.json", prefs)
-						return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
+				fig = load_data(data)
+				
+				prefs = read_file("prefs.json")
+				prefs["performance_plots"] = perf_proc.prefs
+				write_file("prefs.json", prefs)
+				
+				return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 		
 		return no_update, no_update, no_update, no_update, no_update
 	
@@ -187,6 +187,20 @@ def perf_proc(data):
 		perf_proc.plotter.draw(perf_proc.prefs)
 
 		return perf_proc.plotter.fig, (perf_proc.prefs["interpolate"] == 0)
+	
+	@app.callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('show-check', 'value'),
+			prevent_initial_call=True
+		)
+	def change_show(value):
+		if 'points' in value:
+			perf_proc.prefs["show_points"] = 1
+		else:
+			perf_proc.prefs["show_points"] = 0
+		perf_proc.plotter.draw(perf_proc.prefs)
+
+		return perf_proc.plotter.fig
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -253,20 +267,27 @@ def perf_proc(data):
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Input('perf-graph', 'relayoutData'),
-			State('perf-graph', 'figure'),
+			Input('perf-graph', 'selectedData'),
 			prevent_initial_call=True
 		)
-	def select_range(clickData, fig):	
-		if 'layout' in fig:
-			if 'shapes' in fig['layout']:
-				shp = fig['layout']['shapes'][0]
-				x0 = shp['x0']
-				x1 = shp['x1']
-				y0 = shp['y0']
-				y1 = shp['y1']
-				print(x0, y0, x1, y1)
-				return fig
+	def select_range(selectedData):	
+		if not selectedData:
+			return perf_proc.plotter.fig
+
+		if not "range" in selectedData:
+			return perf_proc.plotter.fig
+				
+		range = selectedData["range"]
+		print(range)
+		if not "y3" in range:
+			return perf_proc.plotter.fig
+		
+		x0 = range["x3"][0]
+		x1 = range["x3"][1]
+		y0= range["y3"][0]
+		y1 = range["y3"][1]
+		print(x0, y0, x1, y1)
+		
 		return no_update
 
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
