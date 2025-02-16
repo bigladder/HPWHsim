@@ -224,7 +224,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 		{// send perf info
 			model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-			var msg = { 'source': 'index.html', 'dest': 'perf-proc', 'model_data_filepath': model_data_filepath};
+			var msg = { 'source': 'index.html', 'dest': 'perf-proc', 'cmd': 'replot', 'model_data_filepath': model_data_filepath};
 			await ws_connection.send(JSON.stringify(msg));
 		}
 

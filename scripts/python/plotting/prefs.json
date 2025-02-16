@@ -1,16 +1,16 @@
 {
-  "model_id": "NyleC125A_C_MP",
+  "model_id": "AquaThermAire",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
   "test_id": "villara_24hr67",
   "show_simulated": true,
-  "show_measured": false,
+  "show_measured": true,
   "draw_profile": "Low",
   "performance_plots": {
     "contour_variable": 1,
     "contour_coloring": 1,
-    "interpolate": 0,
+    "interpolate": 1,
     "Nx": 17,
     "Ny": 7,
     "show_points": 1

@@ -25,45 +25,35 @@ class PerfPlotter:
 		self.is_central = False
 		self.i3 = 0
 		
-		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
+		# grid vars
+		self.T1s = []
+		self.T2s = []
+		self.T3s = []
 		
-	def get_slice(self):
+		# lookup vars
 		self.Pins = []
 		self.Pouts = []
 		self.COPs= []
 		
-		self.xPoint = []
-		self.yPoint = []
-		
-		self.zPins = []
-		self.zPouts = []
-		self.zCOPs= []
-		
-		nT1s = np.size(self.T1s)
-		nT2s = np.size(self.T2s)
-		nT3s = 1 if not self.is_central else np.size(self.T3s)
-		
-		for i2y in range(nT2s):
-			rowPin = []
-			rowPout = []
-			rowCOP = []
-			for i1x in range(nT1s):
-				elem = nT2s * (nT3s * i1x + self.i3) + i2y
-				
-				self.xPoint.append(self.T1s[i1x])
-				self.yPoint.append(self.T2s[i2y])
-																
-				self.zPins.append(self.vPins[elem])
-				self.zPouts.append(self.vPouts[elem])
-				self.zCOPs.append(self.vCOPs[elem])
-				
-				rowPin.append(self.vPins[elem])
-				rowPout.append(self.vPouts[elem])
-				rowCOP.append(self.vCOPs[elem])
+		# extended lists of grid vars
+		self.extT1s = []
+		self.extT2s = []
 
-			self.Pins.append(rowPin)
-			self.Pouts.append(rowPout)
-			self.COPs.append(rowCOP)						
+		self.zSelected= []
+				
+		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
+		
+	def get_slice(self):	
+		
+		nT1s = len(self.T1s)
+		nT2s = len(self.T2s)
+		nT3s = 1 if not self.is_central else len(self.T3s)
+		
+		# expand grid vars
+		for i2y in range(nT2s):
+			for i1x in range(nT1s):		
+				self.extT1s.append(self.T1s[i1x])
+				self.extT2s.append(self.T2s[i2y])		
 		self.have_data = True
 
 	def get_perf_map(self, model_data):
@@ -91,23 +81,36 @@ class PerfPlotter:
 			grid_vars = self.perf_map["grid_variables"]
 			lookup_vars = self.perf_map["lookup_variables"]
 
-			self.T1s = np.array(grid_vars["evaporator_environment_dry_bulb_temperature"]) - 273.15
+			self.T1s = [x - 273.15 for x in grid_vars["evaporator_environment_dry_bulb_temperature"]]
 			if self.is_central:
-				self.T2s = np.array(grid_vars["condenser_entering_temperature"]) - 273.15
-				self.T3s = np.array(grid_vars["condenser_leaving_temperature"]) - 273.15
+				self.T2s = [x - 273.15 for x in grid_vars["condenser_entering_temperature"]]
+				self.T3s = [x - 273.15 for x in grid_vars["condenser_leaving_temperature"]]
 			else:
-				self.T2s = np.array(grid_vars["heat_source_temperature"]) - 273.15
-
+				self.T2s = [x - 273.15 for x in grid_vars["heat_source_temperature"]]	
+		
+			nT1s = np.size(self.T1s)
+			nT2s = np.size(self.T2s)
+			nT3s = 1 if not self.is_central else np.size(self.T3s)
+		
+			zPins = lookup_vars["input_power"]
+			zPouts = lookup_vars["heating_capacity"]
+			zCOPs = []
+			for Pin, Pout in zip(zPins, zPouts):
+				zCOPs.append(Pout / Pin)
 			
-			self.vPins = np.array(lookup_vars["input_power"])
-			self.vPouts = np.array(lookup_vars["heating_capacity"])
-			self.vCOPs = np.zeros(np.size(self.vPins))
-			i = 0
-			for Pin in self.vPins:
-				self.vCOPs[i] = self.vPouts[i] / Pin
-				i = i + 1
+			self.Pins = []
+			self.Pouts = []
+			self.COPs = []
+			for i2y in range(nT2s):
+				for i1x in range(nT1s):
+					elem = nT2s * (nT3s * i1x + self.i3) + i2y
 				
-			self.i3 = 0 if not self.is_central else math.floor(np.size(self.T3s) / 2)
+					self.Pins.append(zPins[elem])
+					self.Pouts.append(zPouts[elem])
+					self.COPs.append(zCOPs[elem])							
+				
+
+			self.i3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
 			self.get_slice()
 		except:
 			self.have_data = False
@@ -115,38 +118,33 @@ class PerfPlotter:
 	def draw(self, prefs):
 		if not self.have_data:
 			self.fig = {}
-			print("no data")
 			return
 		
 		if 'contour_variable' in prefs:	
 			if prefs['contour_variable'] == 0:
-				zPlot = self.Pins
-				zSizes = self.zPins
-			elif prefs['contour_variable']  == 1:
-				zPlot = self.Pouts
-				zSizes = self.zPouts
+				plotVals = self.Pins
+			elif prefs['contour_variable'] == 1:
+				plotVals = self.Pouts
 			else:
-				zPlot = self.COPs	
-				zSizes = self.zCOPs
+				plotVals = self.COPs
 		else:
-			zPlot = self.Pouts
-			zSizes = self.zPouts
-	
+			plotVals = self.Pouts
+
 # original data as np.arrays referred to a regular grid
-		xc = self.T1s
-		yc = self.T2s
-		zc = zPlot
+		xc = np.array(self.T1s)
+		yc = np.array(self.T2s)
+		zc = np.array(plotVals).reshape(np.size(yc), np.size(xc))
 		
 # original data as lists of point coordinates
-		xp = self.xPoint
-		yp = self.yPoint
-		zp = zSizes
+		xp = self.extT1s
+		yp = self.extT2s
+		zp = plotVals
 		
 		if 'interpolate' in prefs:
 			if prefs['interpolate'] == 1:
 
 				# define RGI
-				zs = np.array(zPlot).transpose()
+				zs = np.array(zc).transpose()
 				interp = RegularGridInterpolator((xc, yc), zs, method='linear')
 				
 				# generate mesh and interpolate	
@@ -168,12 +166,13 @@ class PerfPlotter:
 				xp = np.array(xp)
 				yp = np.array(yp)		
 				zp = zc.flatten()
-						
+				
 		coloring = 'lines'
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
-					
+		
+
 		self.fig = go.Figure(data =
 										 go.Contour(z = zc, x = xc, y = yc,
 											contours=dict(
@@ -184,29 +183,30 @@ class PerfPlotter:
 					                color = 'black',
             					),
 											)))
-		markerSize = []
-		if 'show_points' in prefs:
-			if prefs['show_points'] == 1:
-				fac = 0.5
-				zMin = min(zp)
-				zMax = max(zp)			
-				for z in zp:
-					markerSize.append(20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac))
-			else:
-				for z in zp:
-					markerSize.append(1)
-
-		if markerSize:
-			self.fig = go.Figure(self.fig)
-			trace = go.Scatter(name = "points", x = xp, y = yp, marker_size=markerSize, mode="markers")		
-			self.fig.add_trace(trace)
-		
-		x_title = "environment temperature (\u00B0C)"
-		y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"
-				
-		self.fig.update_layout(
-					xaxis_title = x_title,
-					yaxis_title = y_title
+		if True:
+			markerSize = []
+			if 'show_points' in prefs:
+				if prefs['show_points'] == 1:
+					fac = 0.5
+					zMin = min(zp)
+					zMax = max(zp)			
+					for z in zp:
+						diam = 20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
+						markerSize.append(diam)
+				else:
+					for z in zp:
+						markerSize.append(1)
+						
+			if markerSize:
+				self.fig = go.Figure(self.fig)
+				trace = go.Scatter(name = "points", x = xp, y = yp, marker_size=markerSize, mode="markers")		
+				self.fig.add_trace(trace)
+			
+			x_title = "environment temperature (\u00B0C)"
+			y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
+			self.fig.update_layout(
+						xaxis_title = x_title,
+						yaxis_title = y_title
 					)
 		
 		# fix to data range

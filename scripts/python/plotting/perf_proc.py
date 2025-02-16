@@ -161,14 +161,17 @@ def perf_proc(data):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'perf-proc':
-				print("received by perf-proc")	
-				fig = load_data(data)
+				print("received by perf-proc")
+				if 'cmd' in data:
+					if data['cmd'] == 'replot':	
 				
-				prefs = read_file("prefs.json")
-				prefs["performance_plots"] = perf_proc.prefs
-				write_file("prefs.json", prefs)
+						prefs = read_file("prefs.json")
+						prefs["performance_plots"] = perf_proc.prefs
+						write_file("prefs.json", prefs)
+						
+						fig = load_data(data)
 				
-				return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
+						return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 		
 		return no_update, no_update, no_update, no_update, no_update
 	
@@ -233,7 +236,7 @@ def perf_proc(data):
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			return perf_proc.plotter.fig
-		return {}
+		return no_update
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -245,7 +248,7 @@ def perf_proc(data):
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			return perf_proc.plotter.fig
-		return {}
+		return no_update
 	
 	@callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
@@ -263,7 +266,7 @@ def perf_proc(data):
 			perf_proc.plotter.get_slice()
 			perf_proc.plotter.draw(perf_proc.prefs)	
 			return perf_proc.plotter.fig
-		return {}
+		return no_update
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -284,10 +287,9 @@ def perf_proc(data):
 		
 		x0 = range["x3"][0]
 		x1 = range["x3"][1]
-		y0= range["y3"][0]
+		y0 = range["y3"][0]
 		y1 = range["y3"][1]
-		print(x0, y0, x1, y1)
-		
+		#print(x0, y0, x1, y1)
 		return no_update
 
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
