@@ -136,20 +136,25 @@ class PerfPlotter:
 			self.fig = {}
 			return
 		
+		graph_title = ""
 		value_label = ""
 		if 'contour_variable' in prefs:	
 			if prefs['contour_variable'] == 0:
 				plotVals = self.Pins
 				value_label = "Pin (W)"
+				graph_title = "Input Power (W)"
 			elif prefs['contour_variable'] == 1:
 				plotVals = self.Pouts
 				value_label = "Pout (W)"
+				graph_title = "Heating Capacity (W)"
 			else:
 				plotVals = self.COPs
 				value_label = "COP"
+				graph_title = "COP"
 		else:
 			plotVals = self.Pouts
 			value_label = "Pout"
+			graph_title = "Heating Capacity (W)"
 
 # original data as np.arrays referred to a regular grid
 		xc = np.array(self.T1s)
@@ -204,47 +209,48 @@ class PerfPlotter:
 					                color = 'black',
             					),
 											)))
-		if True:
-			fac = 0.5
-			zMin = min(zp)
-			zMax = max(zp)	
-			markerSize = []
-			if 'show_points' in prefs:
-				if prefs['show_points'] == 1:
 		
-					for z in zp:
-						diam = 20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
-						markerSize.append(diam)
-				else:
-					for z in zp:
-						markerSize.append(1)
-
-			
-			x_label = f"Tenv (\u00B0C)"
-			y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
-			hover_labels = []
-			for z in zp:
-				hover_labels.append([x_label, y_label, value_label, z])			
+		# show points
+		fac = 0.5
+		zMin = min(zp)
+		zMax = max(zp)	
+		markerSize = []
+		if 'show_points' in prefs:
+			if prefs['show_points'] == 1:
 	
-			if markerSize:
-				self.fig = go.Figure(self.fig)
-				trace = go.Scatter(
-					name = "points", 
-					x = xp, 
-					y = yp, 
-					marker_size=markerSize,
-					mode="markers",			
-					showlegend = False,
-					customdata = hover_labels,			 
-					hovertemplate = 
-						"%{customdata[0]}: %{x}<br>" +
-						"%{customdata[1]}: %{y}<br>" +
-						"%{customdata[2]}: %{customdata[3]}" +
-            "<extra></extra>"
-				)	
-				
-				self.fig.add_trace(trace)
+				for z in zp:
+					diam = 20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
+					markerSize.append(diam)
+			else:
+				for z in zp:
+					markerSize.append(1)
+	
+		x_label = f"Tenv (\u00B0C)"
+		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
+		hover_labels = []
+		for z in zp:
+			hover_labels.append([x_label, y_label, value_label, z])			
+
+		if markerSize:
+			self.fig = go.Figure(self.fig)
+			trace = go.Scatter(
+				name = "points", 
+				x = xp, 
+				y = yp, 
+				marker_size=markerSize,
+				mode="markers",			
+				showlegend = False,
+				customdata = hover_labels,			 
+				hovertemplate = 
+					"%{customdata[0]}: %{x}<br>" +
+					"%{customdata[1]}: %{y}<br>" +
+					"%{customdata[2]}: %{customdata[3]}" +
+          "<extra></extra>"
+			)	
 			
+			self.fig.add_trace(trace)
+			
+			# show selected points
 			xsel = []
 			ysel = []
 			zsel = []
@@ -271,13 +277,17 @@ class PerfPlotter:
 					showlegend = False
 					)		
 				self.fig.add_trace(trace)
-									
+				
+							
 			x_title = "environment temperature (\u00B0C)"
 			y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
 			self.fig.update_layout(
 						xaxis_title = x_title,
-						yaxis_title = y_title
+						yaxis_title = y_title,
+						title = graph_title,
+						title_x=0.5
 					)
+		
 		
 		# fix to data range
 		dX = 0.05 * (self.T1s[-1] - self.T1s[0])

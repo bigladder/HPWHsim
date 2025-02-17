@@ -9,10 +9,10 @@
   "draw_profile": "Low",
   "performance_plots": {
     "contour_variable": 0,
-    "contour_coloring": 0,
+    "contour_coloring": 1,
     "interpolate": 0,
-    "Nx": 17,
-    "Ny": 5,
+    "Nx": 19,
+    "Ny": 10,
     "show_points": 1
   }
 }
