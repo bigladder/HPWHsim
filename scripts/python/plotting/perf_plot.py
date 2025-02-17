@@ -38,22 +38,14 @@ class PerfPlotter:
 		# extended lists of grid vars
 		self.extT1s = []
 		self.extT2s = []
-				
-		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
-		
-	def get_slice(self):	
-		
-		nT1s = len(self.T1s)
-		nT2s = len(self.T2s)
-		nT3s = 1 if not self.is_central else len(self.T3s)
-		
-		# expand grid vars
-		for i2y in range(nT2s):
-			for i1x in range(nT1s):		
-				self.extT1s.append(self.T1s[i1x])
-				self.extT2s.append(self.T2s[i2y])		
-		self.have_data = True
 
+		# extended lists of grid vars
+		self.extPins = []
+		self.extPouts = []
+		self.extCOPs = []
+						
+		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
+	
 	def get_perf_map(self, model_data):
 		if "integrated_system" in model_data:
 			wh = model_data["integrated_system"]
@@ -71,45 +63,60 @@ class PerfPlotter:
 					return perf_map
 					break		
 		return {}
+		
+	def get_slice(self):	
+					
+		nT1s = len(self.T1s)
+		nT2s = len(self.T2s)
+		nT3s = 1 if not self.is_central else len(self.T3s)
+		
+		self.extT1s = []
+		self.extT2s = []
+		self.Pins = []
+		self.Pouts = []
+		self.COPs = []
+	
+		lookup_vars = self.perf_map["lookup_variables"]
+		zPins = lookup_vars["input_power"]
+		zPouts = lookup_vars["heating_capacity"]
+		zCOPs = []
+		for Pin, Pout in zip(zPins, zPouts):
+			zCOPs.append(Pout / Pin)
+			
+		# extend grid vars
+		for i2y in range(nT2s):
+			for i1x in range(nT1s):		
+				self.extT1s.append(self.T1s[i1x])
+				self.extT2s.append(self.T2s[i2y])
+				
+				elem = nT2s * (nT3s * i1x + self.i3) + i2y																
+				self.Pins.append(zPins[elem])
+				self.Pouts.append(zPouts[elem])
+				self.COPs.append(zCOPs[elem])
+				
+		self.have_data = True
 
 	def prepare(self, model_data):
 		try:
 			self.is_central = "central_system" in model_data
 			self.perf_map = self.get_perf_map(model_data)
 			grid_vars = self.perf_map["grid_variables"]
-			lookup_vars = self.perf_map["lookup_variables"]
 
 			self.T1s = [x - 273.15 for x in grid_vars["evaporator_environment_dry_bulb_temperature"]]
 			if self.is_central:
 				self.T2s = [x - 273.15 for x in grid_vars["condenser_entering_temperature"]]
 				self.T3s = [x - 273.15 for x in grid_vars["condenser_leaving_temperature"]]
 			else:
-				self.T2s = [x - 273.15 for x in grid_vars["heat_source_temperature"]]	
-		
+				self.T2s = [x - 273.15 for x in grid_vars["heat_source_temperature"]]			
+
 			nT1s = len(self.T1s)
 			nT2s = len(self.T2s)
 			nT3s = 1 if not self.is_central else len(self.T3s)
-		
-			zPins = lookup_vars["input_power"]
-			zPouts = lookup_vars["heating_capacity"]
-			zCOPs = []
-			for Pin, Pout in zip(zPins, zPouts):
-				zCOPs.append(Pout / Pin)
-			
-			self.Pins = []
-			self.Pouts = []
-			self.COPs = []
-			for i2y in range(nT2s):
-				for i1x in range(nT1s):
-					elem = nT2s * i1x + i2y
-				
-					self.Pins.append(zPins[elem])
-					self.Pouts.append(zPouts[elem])
-					self.COPs.append(zCOPs[elem])							
-				
+										
 			self.selected = np.zeros((nT1s, nT2s, nT3s))
 			self.i3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
 			self.get_slice()
+			
 		except:
 			self.have_data = False
  	
