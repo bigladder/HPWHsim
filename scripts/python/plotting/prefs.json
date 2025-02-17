@@ -8,11 +8,11 @@
   "show_measured": true,
   "draw_profile": "Low",
   "performance_plots": {
-    "contour_variable": 1,
+    "contour_variable": 0,
     "contour_coloring": 1,
-    "interpolate": 1,
+    "interpolate": 0,
     "Nx": 17,
-    "Ny": 7,
+    "Ny": 5,
     "show_points": 1
   }
 }

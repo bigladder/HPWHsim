@@ -282,14 +282,16 @@ def perf_proc(data):
 				
 		range = selectedData["range"]
 		print(range)
-		if not "y3" in range:
+		if not "y" in range:
 			return perf_proc.plotter.fig
 		
-		x0 = range["x3"][0]
-		x1 = range["x3"][1]
-		y0 = range["y3"][0]
-		y1 = range["y3"][1]
+		x0 = range["x"][0]
+		x1 = range["x"][1]
+		y0 = range["y"][0]
+		y1 = range["y"][1]
 		#print(x0, y0, x1, y1)
+		perf_proc.plotter.select(x0, y0, x1, y1)
+		perf_proc.plotter.draw(perf_proc.prefs)
 		return no_update
 
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
