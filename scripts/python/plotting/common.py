@@ -16,3 +16,21 @@ def write_file(filename, json_data):
 	except:
 			print(f"failed to write {filename}")
 			return
+	
+def get_perf_map(model_data):
+	if "integrated_system" in model_data:
+		wh = model_data["integrated_system"]
+		perf = wh["performance"]
+	else:
+		perf = model_data["central_system"]			 
+
+	hscs = perf["heat_source_configurations"]	
+	for hsc in hscs:
+		if "heat_source_type" in hsc:
+			if hsc["heat_source_type"] in {"CONDENSER", "AIRTOWATERHEATPUMP"}:
+				hs = hsc["heat_source"]
+				hs_perf = hs["performance"]
+				perf_map = hs_perf["performance_map"]
+				return perf_map
+
+	return {}
