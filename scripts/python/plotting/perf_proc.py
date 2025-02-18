@@ -24,37 +24,43 @@ def perf_proc(data):
 	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	def load_data(data):
+	def create_plot(data):
 		fig = {}
 		perf_proc.model_data = {}
-		perf_proc.model_data_filepath = ""
+		perf_proc.model_data_filepath = ""					
+			
 		if "model_data_filepath" in data:
 			perf_proc.model_data_filepath = data["model_data_filepath"]
 			perf_proc.model_data = read_file(perf_proc.model_data_filepath)
+			data['model_data'] = perf_proc.model_data
+	
+		label = ""
+		if 'label' in data:
+			label = data['label']
+			
+		perf_proc.plotter = PerfPlotter(label)
+		perf_proc.plotter.prepare(data)
 		
-			perf_proc.plotter = PerfPlotter()
-			perf_proc.plotter.prepare(perf_proc.model_data)
-			
-			perf_proc.prefs = read_file("prefs.json")['performance_plots']
-			if perf_proc.plotter.have_data:
-				perf_proc.plotter.draw(perf_proc.prefs)
-			
-			perf_proc.show_outletTs = False
-			perf_proc.outletTs = []
-			if perf_proc.plotter.have_data:
-				perf_proc.show_outletTs = perf_proc.plotter.is_central	
-				perf_proc.plotter.fig.update_layout(clickmode='event+select')
+		perf_proc.prefs = read_file("prefs.json")['performance_plots']
+		if perf_proc.plotter.have_data:
+			perf_proc.plotter.draw(perf_proc.prefs)
+		
+		perf_proc.show_outletTs = False
+		perf_proc.outletTs = []
+		if perf_proc.plotter.have_data:
+			perf_proc.show_outletTs = perf_proc.plotter.is_central	
+			perf_proc.plotter.fig.update_layout(clickmode='event+select')
 
-				if perf_proc.show_outletTs:
-					i = 0
-					for outletT in perf_proc.plotter.T3s:
-						perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
-						i = i + 1
+			if perf_proc.show_outletTs:
+				i = 0
+				for outletT in perf_proc.plotter.T3s:
+					perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
+					i = i + 1
 			
 				fig = perf_proc.plotter.fig
 			return fig
 	
-	fig = load_data(data)
+	fig = create_plot(data)
 	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -169,7 +175,7 @@ def perf_proc(data):
 						prefs["performance_plots"] = perf_proc.prefs
 						write_file("prefs.json", prefs)
 						
-						fig = load_data(data)
+						fig = create_plot(data)
 				
 						return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 		

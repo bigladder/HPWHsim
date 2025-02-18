@@ -224,7 +224,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 		{// send perf info
 			model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-			var msg = { 'source': 'index.html', 'dest': 'perf-proc', 'cmd': 'replot', 'model_data_filepath': model_data_filepath};
+			var msg = {
+				'source': 'index.html',
+				'dest': 'perf-proc',
+				'cmd': 'replot',
+				'label': prefs['model_id'],
+				'model_data_filepath': model_data_filepath};
 			await ws_connection.send(JSON.stringify(msg));
 		}
 
@@ -393,8 +398,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		const perf_form = document.getElementById('perf_form');
 		var prefs = await read_json_file("./prefs.json")
 		var model_id = prefs["model_id"]
-		let model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-		data = {'model_data_filepath': model_data_filepath};
+		let model_data_filepath = "../../../test/models_json/" + model_id + ".json";
+		data = {
+			'label': model_id,
+			'model_data_filepath': model_data_filepath
+			};
 		let perf_results = await callPyServerJSON("launch_perf_proc", "data=" + JSON.stringify(data))
 		const dash_port = perf_results["port_num"];
 

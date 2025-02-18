@@ -6,6 +6,7 @@ import math
 from scipy.interpolate import RegularGridInterpolator
 
 import plotly.graph_objects as go
+from common import read_file, write_file, get_perf_map
 
 styles = {
     'pre': {
@@ -17,8 +18,8 @@ styles = {
 def ff(x, y):
     	return x**2 + y**2
 
-class PerfPlotter:
-	def __init__(self):
+class PerfPlotter():
+	def __init__(self, label):
 		self.fig = {}
 		self.data = {}
 		self.have_data = False
@@ -43,29 +44,12 @@ class PerfPlotter:
 		self.extPins = []
 		self.extPouts = []
 		self.extCOPs = []
+		
+		self.label = label
 						
 		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
-	
-	def get_perf_map(self, model_data):
-		if "integrated_system" in model_data:
-			wh = model_data["integrated_system"]
-			perf = wh["performance"]
-		else:
-			perf = model_data["central_system"]			 
-	
-		hscs = perf["heat_source_configurations"]	
-		for hsc in hscs:
-			if "heat_source_type" in hsc:
-				if hsc["heat_source_type"] in {"CONDENSER", "AIRTOWATERHEATPUMP"}:
-					hs = hsc["heat_source"]
-					hs_perf = hs["performance"]
-					perf_map = hs_perf["performance_map"]
-					return perf_map
-					break		
-		return {}
 		
-	def get_slice(self):	
-					
+	def get_slice(self):				
 		nT1s = len(self.T1s)
 		nT2s = len(self.T2s)
 		nT3s = 1 if not self.is_central else len(self.T3s)
@@ -96,10 +80,11 @@ class PerfPlotter:
 				
 		self.have_data = True
 
-	def prepare(self, model_data):
+	def prepare(self, data):
 		try:
+			model_data = data['model_data']
 			self.is_central = "central_system" in model_data
-			self.perf_map = self.get_perf_map(model_data)
+			self.perf_map = get_perf_map(model_data)
 			grid_vars = self.perf_map["grid_variables"]
 
 			self.T1s = [x - 273.15 for x in grid_vars["evaporator_environment_dry_bulb_temperature"]]
@@ -135,27 +120,31 @@ class PerfPlotter:
 		if not self.have_data:
 			self.fig = {}
 			return
-		
-		graph_title = ""
+			
+		graph_title = self.label
+			
 		value_label = ""
 		if 'contour_variable' in prefs:	
 			if prefs['contour_variable'] == 0:
 				plotVals = self.Pins
 				value_label = "Pin (W)"
-				graph_title = "Input Power (W)"
+				graph_title += " - Input Power (W)"
 			elif prefs['contour_variable'] == 1:
 				plotVals = self.Pouts
 				value_label = "Pout (W)"
-				graph_title = "Heating Capacity (W)"
+				graph_title += " - Heating Capacity (W)"
 			else:
 				plotVals = self.COPs
 				value_label = "COP"
-				graph_title = "COP"
+				graph_title += " - COP"
 		else:
 			plotVals = self.Pouts
 			value_label = "Pout"
-			graph_title = "Heating Capacity (W)"
+			graph_title += " - Heating Capacity (W)"
 
+		if self.is_central:
+			graph_title += f" - Toutlet (\u00B0C) = {self.T3s[self.i3]:8.2f}"
+			
 # original data as np.arrays referred to a regular grid
 		xc = np.array(self.T1s)
 		yc = np.array(self.T2s)
@@ -228,8 +217,12 @@ class PerfPlotter:
 		x_label = f"Tenv (\u00B0C)"
 		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
 		hover_labels = []
-		for z in zp:
-			hover_labels.append([x_label, y_label, value_label, z])			
+		if prefs['contour_variable'] == 2:
+			for z in zp:
+				hover_labels.append([x_label, y_label, value_label, f"{z:8.4f}"])
+		else:
+			for z in zp:
+				hover_labels.append([x_label, y_label, value_label, f"{z:8.2f}"])				
 
 		if markerSize:
 			self.fig = go.Figure(self.fig)
@@ -295,11 +288,28 @@ class PerfPlotter:
 		self.fig.update_xaxes(range=[self.T1s[0] - dX, self.T1s[-1] + dX])
 		self.fig.update_yaxes(range=[self.T2s[0] - dY, self.T2s[-1] + dY])
 		return self
-	
+
+
+def write_plot(prefs, model_data, plot_filepath):
+	plotter = PerfPlotter()
+	plotter.prepare(prefs, model_data)
+	if "iT3" in prefs:
+		plotter.i3 = prefs["iT3"]
+		plotter.get_slice()	
+		
+	if plotter.have_data:
+		plotter.draw(prefs)
+		plotter.fig.write_html(plot_filepath)
+		
 # main
 if __name__ == "__main__":
-    n_args = len(sys.argv) - 1
+	n_args = len(sys.argv) - 1
 
-    if n_args > 1:
-        model_path = sys.argv[1]
-        write_plot(model_path)
+	if n_args > 1:
+		model_id = sys.argv[1]
+		model_data_filepath = sys.argv[2]
+		variable = sys.argv[3]
+		plot_filepath = sys.argv[4]
+
+		model_data = read_file(model_data_filepath)
+		write_plot(model_id, model_data, {'contour_variable': variable}, plot_filepath)
