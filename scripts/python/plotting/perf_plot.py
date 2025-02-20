@@ -46,6 +46,8 @@ class PerfPlotter():
 		self.extCOPs = []
 		
 		self.label = label
+		
+		self.maxSize = 24
 						
 		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
 		
@@ -248,31 +250,32 @@ class PerfPlotter():
 				zMin = min(zp)
 				zMax = max(zp)	
 				for z in zp:
-					diam = 30 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
+					diam = self.maxSize * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
 					markerSizes.append(diam)
 			
-				# set marker symbols
-				markerSymbols = []
-				markerLineColors = []
-				markerLineWidths=[]
+				selectedMarkers = {}
+				selectedMarkers['x'] = []
+				selectedMarkers['y'] = []
+				selectedMarkers['size'] = []
+				
+				markedMarkers = {}
+				markedMarkers['x'] = []
+				markedMarkers['y'] = []
+				
+				i=0
 				for iT2, T2 in enumerate(self.T2s):
 					for iT1, T1 in enumerate(self.T1s):
-						symbol = 'circle-open'
-						line_color = 'black'
-						line_width = 0
+						
 						if self.selected[iT1, iT2]:
-							if self.marked[iT1, iT2, self.i3]:
-								symbol = "circle-x"
-								line_width = 2				
-							else:
-								symbol = "circle"
-								line_width = 1
-						elif self.marked[iT1, iT2, self.i3]:
-								symbol = "circle-x-open"
-								line_width = 0
-						markerSymbols.append(symbol)
-						markerLineColors.append(line_color)
-						markerLineWidths.append(line_width)									
+								selectedMarkers['x'].append(T1)
+								selectedMarkers['y'].append(T2)
+								selectedMarkers['size'].append(markerSizes[i] + 5)							
+											
+						if self.marked[iT1, iT2, self.i3]:
+							markedMarkers['x'].append(T1)
+							markedMarkers['y'].append(T2)
+						
+						i = i + 1									
 
 				x_label = f"Tenv (\u00B0C)"
 				y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
@@ -286,15 +289,18 @@ class PerfPlotter():
 
 				if markerSizes:
 					self.fig = go.Figure(self.fig)
-					trace = go.Scatter(
-						name = "points", 
+
+					trace_all = go.Scatter(
+						name = "all points", 
 						x = xp, 
-						y = yp, 
+						y = yp,
+						mode="markers", 
 						marker_size=markerSizes,
-						marker_symbol=markerSymbols,
-						marker_line_color= markerLineColors,
-						marker_line_width = markerLineWidths,
-						mode="markers",			
+						marker_symbol='circle',
+						marker_color='green',
+						marker_line_color= 'green',
+						marker_line_width = 0,
+							
 						showlegend = False,
 						customdata = hover_labels,
 						hoverinfo="skip",			 
@@ -303,10 +309,41 @@ class PerfPlotter():
 							"%{customdata[1]}: %{y}<br>" +
 							"%{customdata[2]}: %{customdata[3]}" +
 		          "<extra></extra>"
-					)	
+					)						
+					self.fig.add_trace(trace_all)			
 					
-					self.fig.add_trace(trace)				
-								
+					trace_selected = go.Scatter(
+						name = "selected points", 
+						x = selectedMarkers['x'], 
+						y = selectedMarkers['y'],
+						mode="markers", 
+						marker_size= selectedMarkers['size'],
+						marker_symbol='circle-open',
+						marker_color = 'black',
+						marker_line_color= 'black',
+						marker_line_width = 2,
+							
+						showlegend = False,
+						hoverinfo="skip",
+					)	
+					self.fig.add_trace(trace_selected)				
+
+					trace_marked = go.Scatter(
+						name = "marked points", 
+						x = markedMarkers['x'], 
+						y = markedMarkers['y'],
+						mode="markers", 
+						marker_size = 3,
+						marker_symbol='circle',
+						marker_color = 'black',
+						marker_line_color= 'black',
+						marker_line_width = 0,
+							
+						showlegend = False,
+						hoverinfo="skip"
+					)	
+					self.fig.add_trace(trace_marked)	
+												
 				x_title = "environment temperature (\u00B0C)"
 				y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
 				self.fig.update_layout(
