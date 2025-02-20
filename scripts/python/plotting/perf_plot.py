@@ -232,6 +232,7 @@ class PerfPlotter():
 
 		self.fig = go.Figure(data =
 										 go.Contour(z = zc, x = xc, y = yc,
+											hoverinfo="skip",
 											contours=dict(
 					            coloring = coloring,
 					            showlabels = True, # show labels on contours
