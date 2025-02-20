@@ -108,6 +108,7 @@ def perf_proc(data):
 					], 
 					id="outletT-p", hidden = not(perf_proc.show_outletTs), 
 		),
+
 					
 		html.P("coloring"),
 		dcc.Dropdown(options = perf_proc.coloring_list,
@@ -132,7 +133,16 @@ def perf_proc(data):
 			dcc.Input(id='Nx-input', type='number', value=perf_proc.prefs['Nx']),
 			dcc.Input(id='Ny-input', type='number', value=perf_proc.prefs['Ny'])
 		], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)),				
-	
+		
+		html.Div([
+					html.Button("mark", id='mark-selected', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("unmark", id='unmark-selected', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("clear", id='clear-selected', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'})						
+					],
+					id='select-div',
+					hidden = True
+				),
+					
 		html.Br(),
 		html.Div(
 			dcc.Graph(id='perf-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
@@ -166,6 +176,7 @@ def perf_proc(data):
 	def message(msg):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
+			print(data)
 			if 'dest' in data and data['dest'] == 'perf-proc':
 				print("received by perf-proc")
 				if 'cmd' in data:
@@ -175,10 +186,17 @@ def perf_proc(data):
 						prefs["performance_plots"] = perf_proc.prefs
 						write_file("prefs.json", prefs)
 						
-						fig = create_plot(data)
-				
+						fig = create_plot(data)				
 						return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 		
+					if data['cmd'] == 'key-pressed':
+						print(data)
+						if data['key'] == 'Escape':
+							print("clearing")
+							perf_proc.plotter.clear_selected()
+							perf_proc.plotter.draw(perf_proc.prefs)
+							return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
+						
 		return no_update, no_update, no_update, no_update, no_update
 	
 
@@ -276,30 +294,70 @@ def perf_proc(data):
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Input('perf-graph', 'selectedData'),
+			Output('select-div', 'hidden'),
+			Input('perf-graph', 'selectedData'),	
+			State('perf-graph', 'figure'),
 			prevent_initial_call=True
 		)
-	def select_range(selectedData):	
+	def select_data(selectedData, fig):
+		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not selectedData:
-			return perf_proc.plotter.fig
-
-		if not "range" in selectedData:
-			return perf_proc.plotter.fig
-				
-		range = selectedData["range"]
-		print(range)
-		if not "y" in range:
-			return perf_proc.plotter.fig
+			return no_update, hide_buttons
 		
-		x0 = range["x"][0]
-		x1 = range["x"][1]
-		y0 = range["y"][0]
-		y1 = range["y"][1]
-		#print(x0, y0, x1, y1)
-		perf_proc.plotter.select(x0, y0, x1, y1)
+		prev_layout = fig['layout']
+		perf_proc.plotter.select_data(selectedData)
+		#perf_proc.plotter.draw_markers(perf_proc.prefs)
 		perf_proc.plotter.draw(perf_proc.prefs)
-		return no_update
+		#perf_proc.plotter.fig.update_layout(dragmode='select')
+		if 'dragmode' in prev_layout:
+			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
 
+		return perf_proc.plotter.fig, hide_buttons
+	
+	@callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('mark-selected', 'n_clicks'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+	)
+	def add_selection(nclicks, fig):
+		prev_layout = fig['layout']
+		perf_proc.plotter.mark_selected()
+		perf_proc.plotter.draw(perf_proc.prefs)	
+		perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
+		return perf_proc.plotter.fig
+
+	@callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('unmark-selected', 'n_clicks'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+	)
+	def remove_selection(nclicks, fig):
+		prev_layout = fig['layout']
+		perf_proc.plotter.unmark_selected()
+		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])		
+		return perf_proc.plotter.fig
+	
+	@callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('clear-selected', 'n_clicks'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+	)
+	def remove_selection(nclicks, fig):
+		perf_proc.plotter.clear_selected()
+		perf_proc.plotter.draw(perf_proc.prefs)
+
+		prev_layout = fig['layout']
+		drag_mode = 'select'
+		if 'dragmode' in prev_layout:
+				drag_mode = prev_layout['dragmode']		
+		perf_proc.plotter.fig.update_layout(dragmode=drag_mode)		
+		
+		return perf_proc.plotter.fig
+	
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
 	
 perf_proc.port_num = 8051

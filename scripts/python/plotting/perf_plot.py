@@ -98,45 +98,85 @@ class PerfPlotter():
 			nT2s = len(self.T2s)
 			nT3s = 1 if not self.is_central else len(self.T3s)
 										
-			self.selected = np.zeros((nT1s, nT2s, nT3s))
+			self.selected = np.zeros((nT1s, nT2s))
+			self.marked = np.zeros((nT1s, nT2s, nT3s))
 			self.i3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
 			self.get_slice()
 			
 		except:
 			self.have_data = False
- 	
-	def select(self, x0, y0, x1, y1):
-			nT1s = np.size(self.T1s)
-			nT2s = np.size(self.T2s)
-			for i2y in range(nT2s):				
-				y = self.T2s[i2y]
-				if y >= y0 and y <= y1:
-					for i1x in range(nT1s):
-						x = self.T1s[i1x]
-						if x >= x0 and x <= x1:
-							self.selected[i1x, i2y, self.i3] = 1
-											   
+	
+	def select_data(self, selectedData):
+		if 'points' in selectedData:
+			if selectedData['points']:
+				self.clear_selected()
+				nT1s = len(self.T1s)
+				for point in selectedData['points']:
+					idx = point['pointIndex']
+					iT2 = int(idx / nT1s)
+					iT1 = idx % nT1s
+					#print(f"idx: {idx}, iT1: {iT1}, iT2: {iT2}")
+					self.selected[iT1, iT2] = 1
+	
+	def have_selected(self):			
+		for iT1, T1 in enumerate(self.T1s):
+			for iT2, T2 in enumerate(self.T2s):
+				if self.selected[iT1, iT2] == 1:
+					return True
+		return False
+	
+	def clear_selected(self):			
+		for iT1, T1 in enumerate(self.T1s):
+			for iT2, T2 in enumerate(self.T2s):
+				self.selected[iT1, iT2] = 0
+					 
+	def update_marks(self, value):
+		for iT1, T1 in enumerate(self.T1s):
+				for iT2, T2 in enumerate(self.T2s):
+					if self.selected[iT1, iT2]:
+						self.marked[iT1, iT2, self.i3] = value
+	
+	def mark_selected(self):
+		self.update_marks(1)
+		
+	def unmark_selected(self):
+		self.update_marks(0)
+
+	def reset_selected(self):
+			nT1s = len(self.T1s)
+			nT2s = len(self.T2s)
+			nT3s = 1 if not self.is_central else len(self.T3s)
+			self.selected = np.zeros((nT1s, nT2s, nT3s))
+	
+	def reset_marked(self):
+			nT1s = len(self.T1s)
+			nT2s = len(self.T2s)
+			self.selected = np.zeros((nT1s, nT2s))
+	
+						   
 	def draw(self, prefs):
 		if not self.have_data:
 			self.fig = {}
 			return
 			
 		graph_title = self.label
+		if graph_title != "":
+			graph_title += " - "
 			
 		value_label = ""
 		if 'contour_variable' in prefs:	
 			if prefs['contour_variable'] == 0:
 				plotVals = self.Pins
 				value_label = "Pin (W)"
-				graph_title += " - Input Power (W)"
+				graph_title += "Input Power (W)"
 			elif prefs['contour_variable'] == 1:
 				plotVals = self.Pouts
 				value_label = "Pout (W)"
-				graph_title += " - Heating Capacity (W)"
+				graph_title += "Heating Capacity (W)"
 			else:
 				plotVals = self.COPs
 				value_label = "COP"
-				graph_title += " - COP"
+				graph_title += "COP"
 		else:
 			plotVals = self.Pouts
 			value_label = "Pout"
@@ -196,93 +236,88 @@ class PerfPlotter():
 					            labelfont = dict( # label font properties
 					                size = 14,
 					                color = 'black',
-            					),
-											)))
+          						)))
+										)
 		
-		# show points
-		fac = 0.5
-		zMin = min(zp)
-		zMax = max(zp)	
-		markerSize = []
-		if 'show_points' in prefs:
-			if prefs['show_points'] == 1:
-	
-				for z in zp:
-					diam = 20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
-					markerSize.append(diam)
-			else:
-				for z in zp:
-					markerSize.append(1)
-	
-		x_label = f"Tenv (\u00B0C)"
-		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
-		hover_labels = []
-		if prefs['contour_variable'] == 2:
-			for z in zp:
-				hover_labels.append([x_label, y_label, value_label, f"{z:8.4f}"])
-		else:
-			for z in zp:
-				hover_labels.append([x_label, y_label, value_label, f"{z:8.2f}"])				
-
-		if markerSize:
-			self.fig = go.Figure(self.fig)
-			trace = go.Scatter(
-				name = "points", 
-				x = xp, 
-				y = yp, 
-				marker_size=markerSize,
-				mode="markers",			
-				showlegend = False,
-				customdata = hover_labels,			 
-				hovertemplate = 
-					"%{customdata[0]}: %{x}<br>" +
-					"%{customdata[1]}: %{y}<br>" +
-					"%{customdata[2]}: %{customdata[3]}" +
-          "<extra></extra>"
-			)	
-			
-			self.fig.add_trace(trace)
-			
-			# show selected points
-			xsel = []
-			ysel = []
-			zsel = []
-			nT1s = len(self.T1s)
-			nT2s = len(self.T2s)
-			for i2y in range(nT2s):
-				for i1x in range(nT1s):		
-					if self.selected[i1x, i2y, self.i3] == 1:
-						xsel.append(self.T1s[i1x])
-						ysel.append(self.T2s[i2y])
-						elem = nT1s * i2y + i1x
-						z =  plotVals[elem]
-						diam = 20 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac) + 2
-						zsel.append(diam)
-
-			if xsel and ysel and zsel:
-				self.fig = go.Figure(self.fig)
-				trace = go.Scatter(name = "points", x = xsel, y = ysel,
-					mode='markers',
-					marker=dict(
-            size=zsel,					
-						color="black", symbol="circle-open"
-            ),
-					showlegend = False
-					)		
-				self.fig.add_trace(trace)
+		if "show_points" in prefs:
+			if prefs["show_points"] == 1:
 				
-							
-			x_title = "environment temperature (\u00B0C)"
-			y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
-			self.fig.update_layout(
-						xaxis_title = x_title,
-						yaxis_title = y_title,
-						title = graph_title,
-						title_x=0.5
-					)
+				# set marker sizes
+				markerSizes = []
+				fac = 0.5
+				zMin = min(zp)
+				zMax = max(zp)	
+				for z in zp:
+					diam = 30 * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
+					markerSizes.append(diam)
+			
+				# set marker symbols
+				markerSymbols = []
+				markerLineColors = []
+				markerLineWidths=[]
+				for iT2, T2 in enumerate(self.T2s):
+					for iT1, T1 in enumerate(self.T1s):
+						symbol = 'circle-open'
+						line_color = 'black'
+						line_width = 0
+						if self.selected[iT1, iT2]:
+							if self.marked[iT1, iT2, self.i3]:
+								symbol = "circle-x"
+								line_width = 2				
+							else:
+								symbol = "circle"
+								line_width = 1
+						elif self.marked[iT1, iT2, self.i3]:
+								symbol = "circle-x-open"
+								line_width = 0
+						markerSymbols.append(symbol)
+						markerLineColors.append(line_color)
+						markerLineWidths.append(line_width)									
+
+				x_label = f"Tenv (\u00B0C)"
+				y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
+				hover_labels = []
+				if prefs['contour_variable'] == 2:
+					for z in zp:
+						hover_labels.append([x_label, y_label, value_label, f"{z:8.4f}"])
+				else:
+					for z in zp:
+						hover_labels.append([x_label, y_label, value_label, f"{z:8.2f}"])				
+
+				if markerSizes:
+					self.fig = go.Figure(self.fig)
+					trace = go.Scatter(
+						name = "points", 
+						x = xp, 
+						y = yp, 
+						marker_size=markerSizes,
+						marker_symbol=markerSymbols,
+						marker_line_color= markerLineColors,
+						marker_line_width = markerLineWidths,
+						mode="markers",			
+						showlegend = False,
+						customdata = hover_labels,
+						hoverinfo="skip",			 
+						hovertemplate = 
+							"%{customdata[0]}: %{x}<br>" +
+							"%{customdata[1]}: %{y}<br>" +
+							"%{customdata[2]}: %{customdata[3]}" +
+		          "<extra></extra>"
+					)	
+					
+					self.fig.add_trace(trace)				
+								
+				x_title = "environment temperature (\u00B0C)"
+				y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
+				self.fig.update_layout(
+							xaxis_title = x_title,
+							yaxis_title = y_title,
+							title = graph_title,
+							title_x=0.5
+						)
 		
 		
-		# fix to data range
+		# fix axes to data range
 		dX = 0.05 * (self.T1s[-1] - self.T1s[0])
 		dY = 0.05 * (self.T2s[-1] - self.T2s[0])
 		self.fig.update_xaxes(range=[self.T1s[0] - dX, self.T1s[-1] + dX])

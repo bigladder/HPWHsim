@@ -37,6 +37,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		ws_connection = await new WebSocket("ws://localhost:8600");
 	}
 
+
 	function set_menu_values(prefs) {
 		const model_form = document.getElementById('model_form');
 		const build_form = document.getElementById('build_form');
@@ -277,9 +278,20 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		set_elements(prefs)
 	}
 
+	async function do_keydown(e)
+	{
+		// send test info
+			console.log(e.key)
+			var msg = {'source': 'index.html', 'dest': 'perf-proc', 'cmd': 'key-pressed', 'key': e.key};
+			console.log(msg)
+			await ws_connection.send(JSON.stringify(msg));
+	}
+
 	async function init_elements() {
 		var prefs = await read_json_file("./prefs.json")
 		set_elements(prefs)
+
+		document.addEventListener("keydown", do_keydown)
 	}
 
 	async function launch_test_proc() {
