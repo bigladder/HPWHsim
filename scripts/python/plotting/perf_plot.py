@@ -127,14 +127,21 @@ class PerfPlotter():
 					return True
 		return False
 	
-	def clear_selected(self):			
-		for iT1, T1 in enumerate(self.T1s):
-			for iT2, T2 in enumerate(self.T2s):
-				self.selected[iT1, iT2] = 0
-					 
+	def clear_selected(self):
+		nT1s = len(self.T1s)
+		nT2s = len(self.T2s)			
+		self.selected = np.zeros((nT1s, nT2s))
+	
+	def clear_marked(self):	
+		nT1s = len(self.T1s)
+		nT2s = len(self.T2s)
+		nT3s = 1 if not self.is_central else len(self.T3s)	
+		self.marked = np.zeros((nT1s, nT2s, nT3s))
+								 
 	def update_marks(self, value):
 		for iT1, T1 in enumerate(self.T1s):
 				for iT2, T2 in enumerate(self.T2s):
+						
 					if self.selected[iT1, iT2]:
 						self.marked[iT1, iT2, self.i3] = value
 	
@@ -149,12 +156,7 @@ class PerfPlotter():
 			nT2s = len(self.T2s)
 			nT3s = 1 if not self.is_central else len(self.T3s)
 			self.selected = np.zeros((nT1s, nT2s, nT3s))
-	
-	def reset_marked(self):
-			nT1s = len(self.T1s)
-			nT2s = len(self.T2s)
-			self.selected = np.zeros((nT1s, nT2s))
-	
+
 						   
 	def draw(self, prefs):
 		if not self.have_data:
@@ -225,21 +227,30 @@ class PerfPlotter():
 				zp = zc.flatten()
 				
 		coloring = 'lines'
+		
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
-		
 
 		self.fig = go.Figure(data =
-										 go.Contour(z = zc, x = xc, y = yc,
+										go.Contour(
+											z = zc,
+											x = xc,
+											y = yc,
 											hoverinfo="skip",
 											contours=dict(
-					            coloring = coloring,
-					            showlabels = True, # show labels on contours
-					            labelfont = dict( # label font properties
-					                size = 14,
-					                color = 'black',
-          						)))
+						            coloring = coloring,
+						            showlabels = True, # show labels on contours
+						            labelfont = dict( # label font properties
+						                size = 14,
+						                color = 'black',
+	          							)
+																					
+											),
+											line_width = 2,
+											line_color = 'black',
+											showlegend = False
+											)
 										)
 		
 		if "show_points" in prefs:

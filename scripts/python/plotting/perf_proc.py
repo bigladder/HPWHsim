@@ -86,36 +86,39 @@ def perf_proc(data):
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
  
-		html.P("display variable: "),
-		dcc.Dropdown(
-					options = [
-						{'label': 'Input Power (W)', 'value': 0}, 
-				 		{'label': 'Heating Capacity (W)', 'value': 1},
-						{'label': 'COP', 'value': 2}],
-					value = perf_proc.prefs['contour_variable'], 
-					id='display-dropdown',
-					style={'width': '50%'},
-					clearable=False),
-		
 		html.Div([
-			html.P("condenser outlet temperature (\u00B0C)"),							
+			html.P("display variable:", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
+			dcc.Dropdown(
+						options = [
+							{'label': 'Input Power (W)', 'value': 0}, 
+					 		{'label': 'Heating Capacity (W)', 'value': 1},
+							{'label': 'COP', 'value': 2}],
+						value = perf_proc.prefs['contour_variable'], 
+						id='display-dropdown',
+						style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'},
+						clearable=False)
+			]),
+						
+		html.Div([
+			html.P("condenser outlet temperature (\u00B0C)", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),							
 			dcc.Dropdown(
 					options = perf_proc.outletTs,
 					value = perf_proc.plotter.i3, 
 					id='outletT-dropdown',
-					style={'width': '50%'},
+					style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'},
 					clearable=False)
 					], 
 					id="outletT-p", hidden = not(perf_proc.show_outletTs), 
 		),
-
 					
-		html.P("coloring"),
-		dcc.Dropdown(options = perf_proc.coloring_list,
+		html.Div([
+			html.P("coloring", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
+			dcc.Dropdown(options = perf_proc.coloring_list,
 				value = perf_proc.prefs['contour_coloring'], 
 				id='coloring-dropdown',
-				style={'width': '50%'},
-				clearable=False),
+				style= {'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'},
+				clearable=False)
+				]),
 			
 		html.P("show"),
 		dcc.Checklist(
@@ -130,14 +133,16 @@ def perf_proc(data):
 					id="interp-check"
 			),
 		html.Div(	[		
-			dcc.Input(id='Nx-input', type='number', value=perf_proc.prefs['Nx']),
-			dcc.Input(id='Ny-input', type='number', value=perf_proc.prefs['Ny'])
-		], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)),				
+				dcc.Input(id='Nx-input', type='number', value=perf_proc.prefs['Nx']),
+				dcc.Input(id='Ny-input', type='number', value=perf_proc.prefs['Ny'])
+			], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)
+		),				
 		
 		html.Div([
-					html.Button("mark", id='mark-selected', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.Button("unmark", id='unmark-selected', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.Button("clear", id='clear-selected', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'})						
+					html.P("marked:", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
+					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("clear", id='clear-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),					
 					],
 					id='select-div',
 					hidden = True
@@ -316,48 +321,65 @@ def perf_proc(data):
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Input('mark-selected', 'n_clicks'),
+			Input('add-selected-to-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
 			prevent_initial_call=True
 	)
-	def add_selection(nclicks, fig):
+	def add_selected_to_marked(nclicks, fig):
 		prev_layout = fig['layout']
 		perf_proc.plotter.mark_selected()
-		perf_proc.plotter.draw(perf_proc.prefs)	
-		perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
+		perf_proc.plotter.draw(perf_proc.prefs)
+		if 'dragmode' in prev_layout:
+			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
 		return perf_proc.plotter.fig
 
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Input('unmark-selected', 'n_clicks'),
+			Input('remove-selected-from-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
 			prevent_initial_call=True
 	)
-	def remove_selection(nclicks, fig):
+	def remove_selected_from_marked(nclicks, fig):
 		prev_layout = fig['layout']
 		perf_proc.plotter.unmark_selected()
 		perf_proc.plotter.draw(perf_proc.prefs)
-		perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])		
+		if 'dragmode' in prev_layout:
+			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])		
 		return perf_proc.plotter.fig
 	
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Input('clear-selected', 'n_clicks'),
+			Input('clear-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
 			prevent_initial_call=True
 	)
-	def remove_selection(nclicks, fig):
-		perf_proc.plotter.clear_selected()
+	def clear_marked(nclicks, fig):
+		perf_proc.plotter.clear_marked()		
 		perf_proc.plotter.draw(perf_proc.prefs)
-
 		prev_layout = fig['layout']
-		drag_mode = 'select'
-		if 'dragmode' in prev_layout:
-				drag_mode = prev_layout['dragmode']		
-		perf_proc.plotter.fig.update_layout(dragmode=drag_mode)		
+		if 'dragmode' in prev_layout:		
+			perf_proc.plotter.fig.update_layout(dragmode=prev_layout['dragmode'])		
 		
 		return perf_proc.plotter.fig
 	
+	@callback(
+	    Output('perf-graph', 'figure', allow_duplicate=True),
+	    Input('perf-graph', 'relayoutData'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+	)
+	def relayout_event(relayoutData, fig):
+		if 'dragmode' in relayoutData:
+			perf_proc.plotter.clear_selected()		
+			perf_proc.plotter.draw(perf_proc.prefs)
+			perf_proc.plotter.fig.update_layout(dragmode=relayoutData['dragmode'])	
+			
+		prev_layout = fig['layout']
+		if 'dragmode' in prev_layout:		
+			perf_proc.plotter.fig.update_layout(dragmode=prev_layout['dragmode'])	
+	
+		return 	perf_proc.plotter.fig
+
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
 	
 perf_proc.port_num = 8051
