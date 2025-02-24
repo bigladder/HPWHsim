@@ -140,6 +140,7 @@ def perf_proc(data):
 		),				
 		
 		html.Div([
+					html.Button("x", id='make-dependent', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
 					html.P("marked:", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
 					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
 					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
@@ -221,7 +222,7 @@ def perf_proc(data):
 			perf_proc.prefs["interpolate"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
-		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
 		return perf_proc.plotter.fig, (perf_proc.prefs["interpolate"] == 0)
@@ -238,7 +239,7 @@ def perf_proc(data):
 			perf_proc.prefs["show_points"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
-		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
 		
@@ -263,7 +264,7 @@ def perf_proc(data):
 				perf_proc.prefs["Ny"] = Ny				
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
-		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		return perf_proc.plotter.fig, perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
@@ -278,7 +279,7 @@ def perf_proc(data):
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
-			perf_proc.plotter.update_selected()
+			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
 			return perf_proc.plotter.fig
@@ -294,7 +295,7 @@ def perf_proc(data):
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
-			perf_proc.plotter.update_selected()
+			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
 			return perf_proc.plotter.fig
@@ -316,7 +317,7 @@ def perf_proc(data):
 			perf_proc.plotter.get_slice()
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
-			perf_proc.plotter.update_selected()
+			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)	
 			return perf_proc.plotter.fig
@@ -338,7 +339,7 @@ def perf_proc(data):
 				return no_update, hide_buttons
 		prev_layout = fig['layout']
 		perf_proc.plotter.select_data(selectedData)
-		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_selected(perf_proc.prefs)
 		if 'range' in prev_layout:
 			perf_proc.plotter.fig.update_layout(range = prev_layout['range'])
 		if 'dragmode' in prev_layout:
@@ -361,6 +362,20 @@ def perf_proc(data):
 
 	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('make-dependent', 'n_clicks'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+	)
+	def make_selected_dependent(nclicks, fig):
+		prev_layout = fig['layout']
+		perf_proc.plotter.make_selected_dependent(perf_proc.prefs)
+		perf_proc.plotter.update_dependent(perf_proc.prefs)
+		if 'dragmode' in prev_layout:
+			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
+		return perf_proc.plotter.fig
+	
+	@callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('remove-selected-from-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
 			prevent_initial_call=True
@@ -370,8 +385,7 @@ def perf_proc(data):
 		perf_proc.plotter.unmark_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		if 'dragmode' in prev_layout:
-			perf_proc.plotter.fig.upda
-			te_layout(dragmode = prev_layout['dragmode'])		
+			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])		
 		return perf_proc.plotter.fig
 	
 	@callback(
@@ -399,7 +413,7 @@ def perf_proc(data):
 		if 'dragmode' in relayoutData:
 			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
 				perf_proc.plotter.clear_selected()		
-				perf_proc.plotter.update_selected()
+				perf_proc.plotter.update_selected(perf_proc.prefs)
 				return 	perf_proc.plotter.fig
 		elif 'range' in fig:
 			perf_proc.plotter.fig.update_layout(range = fig['range'])
