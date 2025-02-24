@@ -44,6 +44,7 @@ def perf_proc(data):
 		perf_proc.prefs = read_file("prefs.json")['performance_plots']
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
+			perf_proc.plotter.update_markers(perf_proc.prefs)
 		
 		perf_proc.show_outletTs = False
 		perf_proc.outletTs = []
@@ -200,6 +201,7 @@ def perf_proc(data):
 							print("clearing")
 							perf_proc.plotter.clear_selected()
 							perf_proc.plotter.draw(perf_proc.prefs)
+							perf_proc.plotter.update_markers(perf_proc.prefs)
 							perf_proc.plotter.update_dependent(perf_proc.prefs)
 							return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.i3, perf_proc.outletTs
 						
@@ -218,6 +220,7 @@ def perf_proc(data):
 		else:
 			perf_proc.prefs["interpolate"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected()
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
@@ -234,6 +237,7 @@ def perf_proc(data):
 		else:
 			perf_proc.prefs["show_points"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected()
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
@@ -258,6 +262,7 @@ def perf_proc(data):
 			if Ny > 0:
 				perf_proc.prefs["Ny"] = Ny				
 		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected()
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
@@ -272,6 +277,7 @@ def perf_proc(data):
 		perf_proc.prefs['contour_variable'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
+			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_selected()
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
@@ -287,6 +293,7 @@ def perf_proc(data):
 		perf_proc.prefs['contour_coloring'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
+			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_selected()
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
@@ -308,6 +315,7 @@ def perf_proc(data):
 				perf_proc.plotter.i3 = 0
 			perf_proc.plotter.get_slice()
 			perf_proc.plotter.draw(perf_proc.prefs)
+			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_selected()
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)	
@@ -388,7 +396,6 @@ def perf_proc(data):
 			prevent_initial_call=True
 	)
 	def relayout_event(relayoutData, fig):
-		print(relayoutData)
 		if 'dragmode' in relayoutData:
 			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
 				perf_proc.plotter.clear_selected()		
