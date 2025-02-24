@@ -49,7 +49,7 @@ class PerfPlotter():
 		
 		self.maxSize = 24
 						
-		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
+		self.variables = ['Input Power (W)', 'HeatingCapacity (W)', 'COP']
 		self.variable = 0
 		self.dependent = []
 		
@@ -256,139 +256,81 @@ class PerfPlotter():
 											)
 										)									
 		
-		# scatter plots	
-		
-		# show points (data or interpolated)
-		markers = {}
-		markers['x'] = []
-		markers['y'] = []
-		markers['size'] = []
-		
-		i = 0
-		self.points = []
-		for T1 in self.vals[1]:
-			for T0 in self.vals[0]:
-				point = [T0, T1, self.vals[2][i]]
-				self.points.append(point)
-				i = i + 1
-
-		fac = 0.5
-		zMin = min(self.vals[2])
-		zMax = max(self.vals[2])	
-						
-		# create markers
-		for point in self.points:
-			markers['x'].append(point[0])
-			markers['y'].append(point[1])
-			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
-			markers['size'].append(diam)
-			i = i + 1	
-			   	
-		points_visible = ('show_points' in prefs) and 	(prefs["show_points"] == 1)						
-		
-		# hover labels
-		x_label = f"Tenv (\u00B0C)"
-		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
-		markers['hover_labels'] = []
-		if prefs['contour_variable'] == 2:
-			for z in self.vals[2]:
-				markers['hover_labels'].append([x_label, y_label, value_label, f"{z:8.4f}"])
-		else:
-			for z in self.vals[2]:
-				markers['hover_labels'].append([x_label, y_label, value_label, f"{z:8.2f}"])				
-
-		if markers['size']:
-
-			trace_all = go.Scatter(
-				name = "all points", 
-				x = markers['x'], 
-				y = markers['y'],
+		points_visible = ('show_points' in prefs) and 	(prefs["show_points"] == 1)
+								
+		# create point trace (data or interpolated) (initially empty)
+		trace_all = go.Scatter(
+			name = "all points", 
+			x = [], 
+			y = [],
+			mode="markers", 
+			marker_size=[],
+			marker_symbol='circle',
+			marker_color='green',
+			marker_line_color= 'green',
+			marker_line_width = 0,
+				
+			showlegend = False,
+			hoverinfo="skip",			 
+			hovertemplate = "<extra></extra>",
+			visible = points_visible
+				
+		)						
+		self.fig.add_trace(trace_all)			
+	
+		# create selected trace (empty)
+		trace_selected = go.Scatter(
+				name = "selected points", 
+				x = [], 
+				y = [],
 				mode="markers", 
-				marker_size=markers['size'],
-				marker_symbol='circle',
-				marker_color='green',
-				marker_line_color= 'green',
-				marker_line_width = 0,
+				marker_size= [],
+				marker_symbol='circle-open',
+				marker_color = 'black',
+				marker_line_color= 'black',
+				marker_line_width = 2,
 					
 				showlegend = False,
-				customdata = markers['hover_labels'],
-				hoverinfo="skip",			 
-				hovertemplate = 
-					"%{customdata[0]}: %{x}<br>" +
-					"%{customdata[1]}: %{y}<br>" +
-					"%{customdata[2]}: %{customdata[3]}" +
-	        "<extra></extra>",
-					visible = points_visible
-					
-			)						
-			self.fig.add_trace(trace_all)			
+				hoverinfo="skip",
+				visible = points_visible
+			)	
+		self.fig.add_trace(trace_selected)				
 		
-			# show selected (empty)
-			selectedMarkers = {}
-			selectedMarkers['x'] = []
-			selectedMarkers['y'] = []
-			selectedMarkers['size'] = []
-
-			trace_selected = go.Scatter(
-					name = "selected points", 
-					x = selectedMarkers['x'], 
-					y = selectedMarkers['y'],
-					mode="markers", 
-					marker_size= selectedMarkers['size'],
-					marker_symbol='circle-open',
-					marker_color = 'black',
-					marker_line_color= 'black',
-					marker_line_width = 2,
-						
-					showlegend = False,
-					hoverinfo="skip",
-					visible = points_visible
-				)	
-			self.fig.add_trace(trace_selected)				
+		# create dependent trace (empty)				
+		trace_dependent = go.Scatter(
+			name = "dependent points", 
+			x = [], 
+			y = [],
+			mode="markers", 
+			marker_size = 6,
+			marker_symbol='x-thin',
+			marker_color = 'black',
+			marker_line_color= 'black',
+			marker_line_width = 1,
+				
+			showlegend = False,
+			hoverinfo="skip",
+			visible = points_visible
+		)	
+		self.fig.add_trace(trace_dependent)
 			
-			# show depends(empty)
-			dependentMarkers = {}
-			dependentMarkers['x'] = []
-			dependentMarkers['y'] = []
+		# show marked (empty)
+		trace_marked = go.Scatter(
+			name = "marked points", 
+			x = [], 
+			y = [],
+			mode="markers", 
+			marker_size = 3,
+			marker_symbol='circle',
+			marker_color = 'black',
+			marker_line_color= 'black',
+			marker_line_width = 0,
 				
-			trace_dependent = go.Scatter(
-				name = "dependent points", 
-				x = dependentMarkers['x'], 
-				y = dependentMarkers['y'],
-				mode="markers", 
-				marker_size = 6,
-				marker_symbol='x-thin',
-				marker_color = 'black',
-				marker_line_color= 'black',
-				marker_line_width = 1,
-					
-				showlegend = False,
-				hoverinfo="skip",
-				visible = points_visible
-			)	
-			self.fig.add_trace(trace_dependent)
-				
-			# show marked (empty)
-			markedMarkers = {}
-			markedMarkers['x'] = []
-			markedMarkers['y'] = []
-				
-			trace_marked = go.Scatter(
-				name = "marked points", 
-				x = markedMarkers['x'], 
-				y = markedMarkers['y'],
-				mode="markers", 
-				marker_size = 3,
-				marker_symbol='circle',
-				marker_color = 'black',
-				marker_line_color= 'black',
-				marker_line_width = 0,
-					
-				showlegend = False,
-				hoverinfo="skip",
-				visible = points_visible
-			)	
-			self.fig.add_trace(trace_marked)	
+			showlegend = False,
+			hoverinfo="skip",
+			visible = points_visible
+		)	
+		self.fig.add_trace(trace_marked)	
 
 		# axis labels
 		x_title = "environment temperature (\u00B0C)"
@@ -408,6 +350,55 @@ class PerfPlotter():
 														
 		return self
 
+	# show points (data or interpolated)
+	def update_markers(self, prefs):
+		markers = {}
+		markers['x'] = []
+		markers['y'] = []
+		markers['size'] = []
+		markers['hover_labels'] = []
+		
+		i = 0
+		self.points = []
+		for T1 in self.vals[1]:
+			for T0 in self.vals[0]:
+				point = [T0, T1, self.vals[2][i]]
+				self.points.append(point)
+				i = i + 1
+
+		fac = 0.5
+		zMin = min(self.vals[2])
+		zMax = max(self.vals[2])	
+						
+		x_label = f"Tenv (\u00B0C)"
+		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
+		value_label = self.variables[prefs['contour_variable']]
+		
+		# create markers
+		for point in self.points:
+			markers['x'].append(point[0])
+			markers['y'].append(point[1])
+			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
+			markers['size'].append(diam)
+			if prefs['contour_variable'] == 2:
+				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.4f}"])
+			else:
+				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
+			i = i + 1	
+			   	
+		points_visible = ('show_points' in prefs) and 	(prefs["show_points"] == 1)
+							
+		self.fig.update_traces(
+			x = markers['x'],
+			y = markers['y'],
+			marker_size = markers['size'],
+			customdata = markers['hover_labels'],
+			hovertemplate = "%{customdata[0]}: %{x}<br>" +
+					"%{customdata[1]}: %{y}<br>" +
+					"%{customdata[2]}: %{customdata[3]}" +
+	        "<extra></extra>",
+			selector = dict(name="all points")
+			)
 #
 	def update_selected(self):
 		selectedMarkers = {}
