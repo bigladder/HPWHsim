@@ -24,7 +24,7 @@ class PerfPlotter():
 		self.data = {}
 		self.have_data = False
 		self.is_central = False
-		self.i3 = 0
+		self.iT3 = 0
 		
 		# grid vars
 		self.T1s = []
@@ -45,13 +45,13 @@ class PerfPlotter():
 		self.extPouts = []
 		self.extCOPs = []
 		
-		self.markerSizes = []
-		
 		self.label = label
 		
 		self.maxSize = 24
 						
 		self.variables = ['InputPower', 'HeatingCapacity', 'COP']
+		self.variable = 0
+		self.dependent = []
 		
 	def get_slice(self):				
 		nT1s = len(self.T1s)
@@ -102,8 +102,9 @@ class PerfPlotter():
 			nT2s = len(self.T2s)
 			nT3s = 1 if not self.is_central else len(self.T3s)
 										
-			self.selected = np.zeros((nT1s, nT2s))
-			self.marked = np.zeros((nT1s, nT2s, nT3s))
+			self.selected = np.zeros((nT1s, nT2s), dtype=np.uint32)
+			self.marked = np.zeros((nT1s, nT2s, nT3s), dtype=np.uint32)
+			self.dependent = np.full((nT1s, nT2s, nT3s), 2, dtype=np.uint32)
 			self.i3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
 			self.get_slice()
 			
@@ -138,20 +139,22 @@ class PerfPlotter():
 		nT1s = len(self.T1s)
 		nT2s = len(self.T2s)
 		nT3s = 1 if not self.is_central else len(self.T3s)	
-		self.marked = np.zeros((nT1s, nT2s, nT3s))
+		self.marked = np.zeros((nT1s, nT2s, nT3s), dtype=np.uint32)
 								 
-	def update_marks(self, value):
+	def update_marks(self, value, prefs):
 		for iT1, T1 in enumerate(self.T1s):
 				for iT2, T2 in enumerate(self.T2s):
-						
-					if self.selected[iT1, iT2]:
-						self.marked[iT1, iT2, self.i3] = value
-	
-	def mark_selected(self):
-		self.update_marks(1)
+					this_mark = self.marked[iT1, iT2, self.i3] & (1 << prefs['contour_variable'])
+					other_marks = self.marked[iT1, iT2, self.i3] & (~this_mark)
+					if self.selected[iT1, iT2] and not self.dependent[iT1, iT2, self.iT3] == prefs['contour_variable']:
+						this_mark = value * (1 << prefs['contour_variable'])						
+					self.marked[iT1, iT2, self.i3] = other_marks | this_mark
+					
+	def mark_selected(self, prefs):
+		self.update_marks(1, prefs)
 		
-	def unmark_selected(self):
-		self.update_marks(0)
+	def unmark_selected(self, prefs):
+		self.update_marks(0, prefs)
 
 	def reset_selected(self):
 			nT1s = len(self.T1s)
@@ -238,6 +241,7 @@ class PerfPlotter():
 											y = self.coords[1],
 											z = self.coords[2],									
 											hoverinfo="skip",
+											showscale = False,
 											contours=dict(
 						            coloring = coloring,
 						            showlabels = True, # show labels on contours
@@ -248,7 +252,7 @@ class PerfPlotter():
 											),
 											line_width = 2,
 											line_color = 'black',
-											showlegend = False
+											showlegend = False,
 											)
 										)									
 		
@@ -342,6 +346,28 @@ class PerfPlotter():
 				)	
 			self.fig.add_trace(trace_selected)				
 			
+			# show depends(empty)
+			dependentMarkers = {}
+			dependentMarkers['x'] = []
+			dependentMarkers['y'] = []
+				
+			trace_dependent = go.Scatter(
+				name = "dependent points", 
+				x = dependentMarkers['x'], 
+				y = dependentMarkers['y'],
+				mode="markers", 
+				marker_size = 6,
+				marker_symbol='x-thin',
+				marker_color = 'black',
+				marker_line_color= 'black',
+				marker_line_width = 1,
+					
+				showlegend = False,
+				hoverinfo="skip",
+				visible = points_visible
+			)	
+			self.fig.add_trace(trace_dependent)
+				
 			# show marked (empty)
 			markedMarkers = {}
 			markedMarkers['x'] = []
@@ -390,19 +416,19 @@ class PerfPlotter():
 		selectedMarkers['size'] = []
 		
 		i = 0
-		self.selected_points = []								
+		selected_points = []								
 		for iT2, T2 in enumerate(self.refs[1]):
 			for iT1, T1 in enumerate(self.refs[0]):					
 				if self.selected[iT1, iT2]:
 					point = [T1, T2, self.vals[2][i]]
-					self.selected_points.append(point)
+					selected_points.append(point)
 				i = i + 1
 			
 		fac = 0.5
 		zMin = min(self.refs[2])
 		zMax = max(self.refs[2])				
 
-		for point in self.selected_points:
+		for point in selected_points:
 			selectedMarkers['x'].append(point[0])
 			selectedMarkers['y'].append(point[1])					
 			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac) + 5
@@ -414,26 +440,64 @@ class PerfPlotter():
 			marker_size = selectedMarkers['size'],
 			selector = dict(name="selected points")
 			)
-		print("updated selected")
 
 #
-	def update_marked(self):
+	def update_dependent(self, prefs):
+		dependMarkers = {}
+		dependMarkers['x'] = []
+		dependMarkers['y'] = []
+		dependMarkers['size'] = []
+		
+		fac = 0.5
+		zMin = min(self.refs[2])
+		zMax = max(self.refs[2])	
+		
+		i = 0
+		dependent_points = []								
+		for iT2, T2 in enumerate(self.refs[1]):
+			for iT1, T1 in enumerate(self.refs[0]):
+				depends = self.dependent[iT1, iT2, self.i3]	
+				if depends == prefs['contour_variable']:			
+					point = [T1, T2, self.vals[2][i]]
+					dependent_points.append(point)
+				i = i + 1
+			
+		for point in dependent_points:
+			dependMarkers['x'].append(point[0])
+			dependMarkers['y'].append(point[1])
+			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
+			dependMarkers['size'].append(diam)
+		
+		self.fig.update_traces(
+			x = dependMarkers['x'],
+			y = dependMarkers['y'],
+			marker_size = dependMarkers['size'],
+			selector = dict(name="dependent points"))			
+		
+#
+	def update_marked(self, prefs):
 		markedMarkers = {}
 		markedMarkers['x'] = []
 		markedMarkers['y'] = []
+		markedMarkers['color'] = []
 		
 		for iT2, T2 in enumerate(self.refs[1]):
-			for iT1, T1 in enumerate(self.refs[0]):				
-				if self.marked[iT1, iT2, self.i3]:
-					markedMarkers['x'].append(T1)
-					markedMarkers['y'].append(T2)
+			for iT1, T1 in enumerate(self.refs[0]):
+
+					marks = self.marked[iT1, iT2, self.i3]
+					if  marks > 0:
+						markedMarkers['x'].append(T1)
+						markedMarkers['y'].append(T2)
+						if (marks & (1 << prefs['contour_variable'])) > 0:
+							markedMarkers['color'].append('black')
+						else:
+							markedMarkers['color'].append('white')
 		
 		self.fig.update_traces(
 			x = markedMarkers['x'],
 			y = markedMarkers['y'],
+			marker_color = markedMarkers['color'],
 			selector = dict(name="marked points"))	
-		
-		print("updated marked")	
 
 def write_plot(prefs, model_data, plot_filepath):
 	plotter = PerfPlotter()
