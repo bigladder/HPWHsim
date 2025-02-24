@@ -120,7 +120,6 @@ class PerfPlotter():
 					idx = point['pointIndex']
 					iT2 = int(idx / nT1s)
 					iT1 = idx % nT1s
-					#print(f"idx: {idx}, iT1: {iT1}, iT2: {iT2}")
 					self.selected[iT1, iT2] = 1
 	
 	def have_selected(self):			
@@ -162,6 +161,12 @@ class PerfPlotter():
 			nT3s = 1 if not self.is_central else len(self.T3s)
 			self.selected = np.zeros((nT1s, nT2s, nT3s))
 
+	def make_selected_dependent(self, prefs):
+		for iT1, T1 in enumerate(self.T1s):
+			for iT2, T2 in enumerate(self.T2s):
+				if self.selected[iT1, iT2]:
+					self.dependent[iT1, iT2, self.iT3] = prefs['contour_variable']
+			
 	def interpolate(self, refs, prefs):
 		# define RGI
 		xr = np.array(refs[0])
@@ -400,7 +405,7 @@ class PerfPlotter():
 			selector = dict(name="all points")
 			)
 #
-	def update_selected(self):
+	def update_selected(self, prefs):
 		selectedMarkers = {}
 		selectedMarkers['x'] = []
 		selectedMarkers['y'] = []
@@ -434,6 +439,7 @@ class PerfPlotter():
 
 #
 	def update_dependent(self, prefs):
+
 		dependMarkers = {}
 		dependMarkers['x'] = []
 		dependMarkers['y'] = []
@@ -447,16 +453,16 @@ class PerfPlotter():
 		dependent_points = []								
 		for iT2, T2 in enumerate(self.refs[1]):
 			for iT1, T1 in enumerate(self.refs[0]):
-				depends = self.dependent[iT1, iT2, self.i3]	
+				depends = self.dependent[iT1, iT2, self.i3]
 				if depends == prefs['contour_variable']:			
-					point = [T1, T2, self.vals[2][i]]
+					point = [T1, T2, self.refs[2][i]]
 					dependent_points.append(point)
 				i = i + 1
 			
 		for point in dependent_points:
 			dependMarkers['x'].append(point[0])
 			dependMarkers['y'].append(point[1])
-			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
+			diam = 0.8 * self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
 			dependMarkers['size'].append(diam)
 		
 		self.fig.update_traces(
