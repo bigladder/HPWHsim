@@ -217,7 +217,8 @@ def perf_proc(data):
 		else:
 			perf_proc.prefs["interpolate"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
-
+		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_marked()
 		return perf_proc.plotter.fig, (perf_proc.prefs["interpolate"] == 0)
 	
 	@app.callback(
@@ -231,7 +232,9 @@ def perf_proc(data):
 		else:
 			perf_proc.prefs["show_points"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
-
+		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_marked()
+		
 		return perf_proc.plotter.fig
 	
 	@app.callback(
@@ -252,7 +255,9 @@ def perf_proc(data):
 			if Ny > 0:
 				perf_proc.prefs["Ny"] = Ny				
 		perf_proc.plotter.draw(perf_proc.prefs)
-
+		perf_proc.plotter.update_selected()
+		perf_proc.plotter.update_marked()
+		
 		return perf_proc.plotter.fig, perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
 	
 	@callback(
@@ -308,12 +313,12 @@ def perf_proc(data):
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not selectedData:
 			return no_update, hide_buttons
-		
+		if 'interpolate' in perf_proc.prefs:
+			if perf_proc.prefs["interpolate"] == 1:
+				return no_update, hide_buttons
 		prev_layout = fig['layout']
 		perf_proc.plotter.select_data(selectedData)
-		#perf_proc.plotter.draw_markers(perf_proc.prefs)
-		perf_proc.plotter.draw(perf_proc.prefs)
-		#perf_proc.plotter.fig.update_layout(dragmode='select')
+		perf_proc.plotter.update_selected()
 		if 'dragmode' in prev_layout:
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
 
@@ -328,7 +333,8 @@ def perf_proc(data):
 	def add_selected_to_marked(nclicks, fig):
 		prev_layout = fig['layout']
 		perf_proc.plotter.mark_selected()
-		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.update_marked()
+		#perf_proc.plotter.draw(perf_proc.prefs)
 		if 'dragmode' in prev_layout:
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
 		return perf_proc.plotter.fig
@@ -342,7 +348,8 @@ def perf_proc(data):
 	def remove_selected_from_marked(nclicks, fig):
 		prev_layout = fig['layout']
 		perf_proc.plotter.unmark_selected()
-		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.update_marked()
+		#perf_proc.plotter.draw(perf_proc.prefs)
 		if 'dragmode' in prev_layout:
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])		
 		return perf_proc.plotter.fig
@@ -354,8 +361,9 @@ def perf_proc(data):
 			prevent_initial_call=True
 	)
 	def clear_marked(nclicks, fig):
-		perf_proc.plotter.clear_marked()		
-		perf_proc.plotter.draw(perf_proc.prefs)
+		perf_proc.plotter.clear_marked()	
+		perf_proc.plotter.update_marked()	
+		#perf_proc.plotter.draw(perf_proc.prefs)
 		prev_layout = fig['layout']
 		if 'dragmode' in prev_layout:		
 			perf_proc.plotter.fig.update_layout(dragmode=prev_layout['dragmode'])		
@@ -370,13 +378,16 @@ def perf_proc(data):
 	)
 	def relayout_event(relayoutData, fig):
 		if 'dragmode' in relayoutData:
+			perf_proc.plotter.fig = go.Figure(fig)	
 			perf_proc.plotter.clear_selected()		
-			perf_proc.plotter.draw(perf_proc.prefs)
-			perf_proc.plotter.fig.update_layout(dragmode=relayoutData['dragmode'])	
-			
-		prev_layout = fig['layout']
-		if 'dragmode' in prev_layout:		
-			perf_proc.plotter.fig.update_layout(dragmode=prev_layout['dragmode'])	
+			perf_proc.plotter.update_selected()
+			if 'layout' in perf_proc.plotter.fig:
+				perf_proc.plotter.fig.update_layout(dragmode=relayoutData['dragmode'])
+		else:		
+			prev_layout = fig['layout']
+			if 'dragmode' in prev_layout:	
+				if 'layout' in perf_proc.plotter.fig:	
+					perf_proc.plotter.fig.update_layout(dragmode=prev_layout['dragmode'])	
 	
 		return 	perf_proc.plotter.fig
 

@@ -45,6 +45,8 @@ class PerfPlotter():
 		self.extPouts = []
 		self.extCOPs = []
 		
+		self.markerSizes = []
+		
 		self.label = label
 		
 		self.maxSize = 24
@@ -157,12 +159,31 @@ class PerfPlotter():
 			nT3s = 1 if not self.is_central else len(self.T3s)
 			self.selected = np.zeros((nT1s, nT2s, nT3s))
 
-						   
+	def interpolate(self, refs, prefs):
+		# define RGI
+		xr = np.array(refs[0])
+		yr = np.array(refs[1])
+		zr = np.array(refs[2]).reshape(np.size(yr), np.size(xr))
+		zr = np.array(zr).transpose()
+		rgi = RegularGridInterpolator((xr, yr), zr, method='linear')
+		
+		# generate mesh and interpolate	
+		nX = prefs['Nx']
+		nY = prefs['Ny']
+		
+		xp = np.linspace(xr[0], xr[-1], nX)
+		yp = np.linspace(yr[0], yr[-1], nY)
+		xg, yg = np.meshgrid(xp, yp)
+		zp = rgi((xg, yg))
+	
+		results = [xp.flatten(), yp.flatten(), zp.flatten()]
+		return results
+			
 	def draw(self, prefs):
 		if not self.have_data:
 			self.fig = {}
 			return
-			
+				
 		graph_title = self.label
 		if graph_title != "":
 			graph_title += " - "
@@ -187,56 +208,35 @@ class PerfPlotter():
 			graph_title += " - Heating Capacity (W)"
 
 		if self.is_central:
-			graph_title += f" - Toutlet (\u00B0C) = {self.T3s[self.i3]:8.2f}"
-			
-# original data as np.arrays referred to a regular grid
-		xc = np.array(self.T1s)
-		yc = np.array(self.T2s)
-		zc = np.array(plotVals).reshape(np.size(yc), np.size(xc))
-		
-# original data as lists of point coordinates
-		xp = self.extT1s
-		yp = self.extT2s
-		zp = plotVals
-		
-		if 'interpolate' in prefs:
-			if prefs['interpolate'] == 1:
+			graph_title += f" - Toutlet (\u00B0C) = {self.T3s[self.i3]:8.2f}"	
+	
 
-				# define RGI
-				zs = np.array(zc).transpose()
-				interp = RegularGridInterpolator((xc, yc), zs, method='linear')
-				
-				# generate mesh and interpolate	
-				nX = prefs['Nx']
-				nY = prefs['Ny']
-				xc = np.linspace(xc[0], xc[-1], nX)
-				yc = np.linspace(yc[0], yc[-1], nY)
-				xg, yg = np.meshgrid(xc, yc)
-				zc = interp((xg, yg))
-			
-				# modify xp, yp, zp
-				xp = []
-				yp = []
-				for y in yc:
-					for x in xc:				
-						xp.append(x)
-						yp.append(y)
-				
-				xp = np.array(xp)
-				yp = np.array(yp)		
-				zp = zc.flatten()
-				
-		coloring = 'lines'
+		self.refs = [self.T1s, self.T2s, plotVals] 
+		self.vals = self.refs	
+					
+		# data as lists of point coordinates	
+		is_interp = ('interpolate' in prefs) and (prefs['interpolate'] == 1)
+		if is_interp:
+			self.vals = self.interpolate(self.refs, prefs)
+		#print(f"refs:\n{self.refs}\n\nvals:\n{self.vals}")
+	
 		
+# original data as np.arrays referred to a regular grid
+		xc = np.array(self.vals[0])
+		yc = np.array(self.vals[1])
+		zc = np.array(self.vals[2]).reshape(np.size(self.vals[1]), np.size(self.vals[0]))	
+		self.coords = [xc, yc, zc]
+								
+		coloring = 'lines'	
 		if 'contour_coloring' in prefs:
 			if prefs['contour_coloring'] == 0:
 				coloring = 'heatmap'
 
 		self.fig = go.Figure(data =
 										go.Contour(
-											z = zc,
-											x = xc,
-											y = yc,
+											x = self.coords[0],
+											y = self.coords[1],
+											z = self.coords[2],									
 											hoverinfo="skip",
 											contours=dict(
 						            coloring = coloring,
@@ -244,135 +244,196 @@ class PerfPlotter():
 						            labelfont = dict( # label font properties
 						                size = 14,
 						                color = 'black',
-	          							)
-																					
+	          							)																					
 											),
 											line_width = 2,
 											line_color = 'black',
 											showlegend = False
 											)
-										)
+										)									
 		
-		if "show_points" in prefs:
-			if prefs["show_points"] == 1:
-				
-				# set marker sizes
-				markerSizes = []
-				fac = 0.5
-				zMin = min(zp)
-				zMax = max(zp)	
-				for z in zp:
-					diam = self.maxSize * ((1 - fac) * (z - zMin) / (zMax - zMin) + fac)
-					markerSizes.append(diam)
-			
-				selectedMarkers = {}
-				selectedMarkers['x'] = []
-				selectedMarkers['y'] = []
-				selectedMarkers['size'] = []
-				
-				markedMarkers = {}
-				markedMarkers['x'] = []
-				markedMarkers['y'] = []
-				
-				i=0
-				for iT2, T2 in enumerate(self.T2s):
-					for iT1, T1 in enumerate(self.T1s):
+		# scatter plots	
+		
+		# show points (data or interpolated)
+		markers = {}
+		markers['x'] = []
+		markers['y'] = []
+		markers['size'] = []
+		
+		i = 0
+		self.points = []
+		for T1 in self.vals[1]:
+			for T0 in self.vals[0]:
+				point = [T0, T1, self.vals[2][i]]
+				self.points.append(point)
+				i = i + 1
+
+		fac = 0.5
+		zMin = min(self.vals[2])
+		zMax = max(self.vals[2])	
 						
-						if self.selected[iT1, iT2]:
-								selectedMarkers['x'].append(T1)
-								selectedMarkers['y'].append(T2)
-								selectedMarkers['size'].append(markerSizes[i] + 5)							
-											
-						if self.marked[iT1, iT2, self.i3]:
-							markedMarkers['x'].append(T1)
-							markedMarkers['y'].append(T2)
-						
-						i = i + 1									
+		# create markers
+		for point in self.points:
+			markers['x'].append(point[0])
+			markers['y'].append(point[1])
+			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
+			markers['size'].append(diam)
+			i = i + 1	
+			   	
+		points_visible = ('show_points' in prefs) and 	(prefs["show_points"] == 1)						
+		
+		# hover labels
+		x_label = f"Tenv (\u00B0C)"
+		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
+		markers['hover_labels'] = []
+		if prefs['contour_variable'] == 2:
+			for z in self.vals[2]:
+				markers['hover_labels'].append([x_label, y_label, value_label, f"{z:8.4f}"])
+		else:
+			for z in self.vals[2]:
+				markers['hover_labels'].append([x_label, y_label, value_label, f"{z:8.2f}"])				
 
-				x_label = f"Tenv (\u00B0C)"
-				y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
-				hover_labels = []
-				if prefs['contour_variable'] == 2:
-					for z in zp:
-						hover_labels.append([x_label, y_label, value_label, f"{z:8.4f}"])
-				else:
-					for z in zp:
-						hover_labels.append([x_label, y_label, value_label, f"{z:8.2f}"])				
+		if markers['size']:
 
-				if markerSizes:
-					self.fig = go.Figure(self.fig)
-
-					trace_all = go.Scatter(
-						name = "all points", 
-						x = xp, 
-						y = yp,
-						mode="markers", 
-						marker_size=markerSizes,
-						marker_symbol='circle',
-						marker_color='green',
-						marker_line_color= 'green',
-						marker_line_width = 0,
-							
-						showlegend = False,
-						customdata = hover_labels,
-						hoverinfo="skip",			 
-						hovertemplate = 
-							"%{customdata[0]}: %{x}<br>" +
-							"%{customdata[1]}: %{y}<br>" +
-							"%{customdata[2]}: %{customdata[3]}" +
-		          "<extra></extra>"
-					)						
-					self.fig.add_trace(trace_all)			
+			trace_all = go.Scatter(
+				name = "all points", 
+				x = markers['x'], 
+				y = markers['y'],
+				mode="markers", 
+				marker_size=markers['size'],
+				marker_symbol='circle',
+				marker_color='green',
+				marker_line_color= 'green',
+				marker_line_width = 0,
 					
-					trace_selected = go.Scatter(
-						name = "selected points", 
-						x = selectedMarkers['x'], 
-						y = selectedMarkers['y'],
-						mode="markers", 
-						marker_size= selectedMarkers['size'],
-						marker_symbol='circle-open',
-						marker_color = 'black',
-						marker_line_color= 'black',
-						marker_line_width = 2,
-							
-						showlegend = False,
-						hoverinfo="skip",
-					)	
-					self.fig.add_trace(trace_selected)				
+				showlegend = False,
+				customdata = markers['hover_labels'],
+				hoverinfo="skip",			 
+				hovertemplate = 
+					"%{customdata[0]}: %{x}<br>" +
+					"%{customdata[1]}: %{y}<br>" +
+					"%{customdata[2]}: %{customdata[3]}" +
+	        "<extra></extra>",
+					visible = points_visible
+					
+			)						
+			self.fig.add_trace(trace_all)			
+		
+			# show selected (empty)
+			selectedMarkers = {}
+			selectedMarkers['x'] = []
+			selectedMarkers['y'] = []
+			selectedMarkers['size'] = []
 
-					trace_marked = go.Scatter(
-						name = "marked points", 
-						x = markedMarkers['x'], 
-						y = markedMarkers['y'],
-						mode="markers", 
-						marker_size = 3,
-						marker_symbol='circle',
-						marker_color = 'black',
-						marker_line_color= 'black',
-						marker_line_width = 0,
-							
-						showlegend = False,
-						hoverinfo="skip"
-					)	
-					self.fig.add_trace(trace_marked)	
-												
-				x_title = "environment temperature (\u00B0C)"
-				y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
-				self.fig.update_layout(
-							xaxis_title = x_title,
-							yaxis_title = y_title,
-							title = graph_title,
-							title_x=0.5
-						)
-		
-		
-		# fix axes to data range
-		dX = 0.05 * (self.T1s[-1] - self.T1s[0])
-		dY = 0.05 * (self.T2s[-1] - self.T2s[0])
-		self.fig.update_xaxes(range=[self.T1s[0] - dX, self.T1s[-1] + dX])
-		self.fig.update_yaxes(range=[self.T2s[0] - dY, self.T2s[-1] + dY])
+			trace_selected = go.Scatter(
+					name = "selected points", 
+					x = selectedMarkers['x'], 
+					y = selectedMarkers['y'],
+					mode="markers", 
+					marker_size= selectedMarkers['size'],
+					marker_symbol='circle-open',
+					marker_color = 'black',
+					marker_line_color= 'black',
+					marker_line_width = 2,
+						
+					showlegend = False,
+					hoverinfo="skip",
+					visible = points_visible
+				)	
+			self.fig.add_trace(trace_selected)				
+			
+			# show marked (empty)
+			markedMarkers = {}
+			markedMarkers['x'] = []
+			markedMarkers['y'] = []
+				
+			trace_marked = go.Scatter(
+				name = "marked points", 
+				x = markedMarkers['x'], 
+				y = markedMarkers['y'],
+				mode="markers", 
+				marker_size = 3,
+				marker_symbol='circle',
+				marker_color = 'black',
+				marker_line_color= 'black',
+				marker_line_width = 0,
+					
+				showlegend = False,
+				hoverinfo="skip",
+				visible = points_visible
+			)	
+			self.fig.add_trace(trace_marked)	
+
+		# axis labels
+		x_title = "environment temperature (\u00B0C)"
+		y_title = "condenser inlet temperature (\u00B0C)" if self.is_central else "condenser temperature (C)"		
+		self.fig.update_layout(
+					xaxis_title = x_title,
+					yaxis_title = y_title,
+					title = graph_title,
+					title_x=0.5
+				)
+			
+		# init axes to data range
+		dX = 0.05 * (self.vals[0][-1] - self.vals[0][0])
+		dY = 0.05 * (self.vals[1][-1] - self.vals[1][0])
+		self.fig.update_xaxes(range=[self.vals[0][0] - dX, self.vals[0][-1] + dX])
+		self.fig.update_yaxes(range=[self.vals[1][0] - dY, self.vals[1][-1] + dY])
+														
 		return self
 
+#
+	def update_selected(self):
+		selectedMarkers = {}
+		selectedMarkers['x'] = []
+		selectedMarkers['y'] = []
+		selectedMarkers['size'] = []
+		
+		i = 0
+		self.selected_points = []								
+		for iT2, T2 in enumerate(self.refs[1]):
+			for iT1, T1 in enumerate(self.refs[0]):					
+				if self.selected[iT1, iT2]:
+					point = [T1, T2, self.vals[2][i]]
+					self.selected_points.append(point)
+				i = i + 1
+			
+		fac = 0.5
+		zMin = min(self.refs[2])
+		zMax = max(self.refs[2])				
+
+		for point in self.selected_points:
+			selectedMarkers['x'].append(point[0])
+			selectedMarkers['y'].append(point[1])					
+			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac) + 5
+			selectedMarkers['size'].append(diam)	
+					
+		self.fig.update_traces(
+			x = selectedMarkers['x'],
+			y = selectedMarkers['y'],
+			marker_size = selectedMarkers['size'],
+			selector = dict(name="selected points")
+			)
+		print("updated selected")
+
+#
+	def update_marked(self):
+		markedMarkers = {}
+		markedMarkers['x'] = []
+		markedMarkers['y'] = []
+		
+		for iT2, T2 in enumerate(self.refs[1]):
+			for iT1, T1 in enumerate(self.refs[0]):				
+				if self.marked[iT1, iT2, self.i3]:
+					markedMarkers['x'].append(T1)
+					markedMarkers['y'].append(T2)
+		
+		self.fig.update_traces(
+			x = markedMarkers['x'],
+			y = markedMarkers['y'],
+			selector = dict(name="marked points"))	
+		
+		print("updated marked")	
 
 def write_plot(prefs, model_data, plot_filepath):
 	plotter = PerfPlotter()
