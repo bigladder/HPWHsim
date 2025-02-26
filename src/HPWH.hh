@@ -870,7 +870,8 @@ class HPWH : public Courier::Sender
       moving heat from the water to the space is the positive direction
       negative should occur seldom */
 
-    double getTankVolume_L() const {return tankVolume_L;}
+    double getTankVolume_L() const { return tankVolume_L; }
+    /**< get the tank volume (L) */
 
     double getTankHeatContent_kJ() const;
     /**< get the heat content of the tank, relative to zero celsius
