@@ -1,0 +1,114 @@
+{
+  "parameters": [
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC185A_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        3,
+        0
+      ]
+    }
+  ]
+}

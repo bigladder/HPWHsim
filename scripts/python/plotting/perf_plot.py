@@ -50,6 +50,7 @@ class PerfPlotter():
 		self.maxSize = 24
 						
 		self.variables = ['Input Power (W)', 'HeatingCapacity (W)', 'COP']
+		self.variables_names = ['Pin', 'Pout', 'COP']
 		self.variable = 0
 		self.dependent = []
 		
@@ -494,28 +495,34 @@ class PerfPlotter():
 			x = markedMarkers['x'],
 			y = markedMarkers['y'],
 			marker_color = markedMarkers['color'],
-			selector = dict(name="marked points"))	
-
-def write_plot(prefs, model_data, plot_filepath):
-	plotter = PerfPlotter()
-	plotter.prepare(prefs, model_data)
-	if "iT3" in prefs:
-		plotter.i3 = prefs["iT3"]
-		plotter.get_slice()	
+			selector = dict(name="marked points"))
 		
-	if plotter.have_data:
-		plotter.draw(prefs)
-		plotter.fig.write_html(plot_filepath)
-		
-# main
-if __name__ == "__main__":
-	n_args = len(sys.argv) - 1
 
-	if n_args > 1:
-		model_id = sys.argv[1]
-		model_data_filepath = sys.argv[2]
-		variable = sys.argv[3]
-		plot_filepath = sys.argv[4]
-
-		model_data = read_file(model_data_filepath)
-		write_plot(model_id, model_data, {'contour_variable': variable}, plot_filepath)
+	def get_marked_list(self):
+		nT3s = 1 if not self.is_central else len(self.T3s)
+		marked_list = []
+		if self.is_central:
+				for iT2, T2 in enumerate(self.refs[1]):
+					for iT1, T1 in enumerate(self.refs[0]):
+						for i in range(3):
+							if self.marked[iT1, iT2, self.iT3] & (1 << i) > 0:
+								entry = {'type': 'perf point'}
+								entry['model'] = self.label
+								entry['variable'] = self.variables_names[i]
+								entry['dependent'] = self.variables_names[self.dependent[iT1, iT2, self.iT3]]						
+								entry['coords'] = [iT1, iT2, self.iT3]
+								marked_list.append(entry)
+								
+		else:
+			for iT2, T2 in enumerate(self.refs[1]):
+				for iT1, T1 in enumerate(self.refs[0]):
+					for i in range(3):
+						if self.marked[iT1, iT2, self.iT3] & (1 << i) > 0:
+							entry = {'type': 'perf-point'}
+							entry['model'] = self.label
+							entry['variable'] = self.variables_names[i]
+							entry['dependent'] = self.variables_names[self.dependent[iT1, iT2, self.iT3]]
+							entry['coords'] = [iT1, iT2]
+							marked_list.append(entry)
+							
+		return marked_list

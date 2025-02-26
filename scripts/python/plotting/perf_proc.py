@@ -88,7 +88,7 @@ def perf_proc(data):
    	WebSocket(url="ws://localhost:8600", id="ws"),
  
 		html.Div([
-			html.P("display variable:", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
+			html.P("display variable:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 			dcc.Dropdown(
 						options = [
 							{'label': 'Input Power (W)', 'value': 0}, 
@@ -96,28 +96,28 @@ def perf_proc(data):
 							{'label': 'COP', 'value': 2}],
 						value = perf_proc.prefs['contour_variable'], 
 						id='display-dropdown',
-						style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'},
+						style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 						clearable=False)
 			]),
 						
 		html.Div([
-			html.P("condenser outlet temperature (\u00B0C)", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),							
+			html.P("condenser outlet temperature (\u00B0C)", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),							
 			dcc.Dropdown(
 					options = perf_proc.outletTs,
 					value = perf_proc.plotter.i3, 
 					id='outletT-dropdown',
-					style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'},
+					style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 					clearable=False)
 					], 
 					id="outletT-p", hidden = not(perf_proc.show_outletTs), 
 		),
 					
 		html.Div([
-			html.P("coloring", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
+			html.P("coloring", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 			dcc.Dropdown(options = perf_proc.coloring_list,
 				value = perf_proc.prefs['contour_coloring'], 
 				id='coloring-dropdown',
-				style= {'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'},
+				style= {'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 				clearable=False)
 				]),
 			
@@ -140,11 +140,13 @@ def perf_proc(data):
 		),				
 		
 		html.Div([
-					html.Button("x", id='make-dependent', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.P("marked:", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
-					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.Button("clear", id='clear-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),					
+					html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
+					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("clear", id='clear-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
+					html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+					html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
 					],
 					id='select-div',
 					hidden = True
@@ -163,8 +165,9 @@ def perf_proc(data):
 	]
 	
 	@app.callback(
-			Output("ws", "send"),
-			[Input("input", "value")]
+			Output("ws", "send", allow_duplicate=True),
+			[Input("input", "value")],
+			prevent_initial_call=True
 			)
 	def send(value):
 		print("sent by perf-proc")
@@ -402,7 +405,78 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(dragmode=prev_layout['dragmode'])		
 		
 		return perf_proc.plotter.fig
-	
+
+	@callback(
+			Output("ws", "send", allow_duplicate=True),
+			Input('vary-marked', 'n_clicks'),
+			prevent_initial_call=True
+	)
+	def vary_marked(nclicks):
+
+		fit_points = perf_proc.plotter.get_marked_list()
+		fit_list = read_file("fit_list.json")
+		param_list =  fit_list['parameters']
+		for point in fit_points:
+			for param in param_list:
+				if param['type'] != point['type']:
+					break
+				if 'variable' not in param or param['variable'] != point['variable']:
+					break
+				if 'model' not in param or param['model'] != point['model']:
+					break
+					
+				if 'coords' not in param:
+					break
+				
+				coords = param['coords']
+				if coords[0] != point['coords'][0]:
+						break
+				if coords[1] != point['coords'][1]:
+						break
+		
+			param_list.append(point)
+			
+		fit_list['parameters'] = param_list				
+		write_file("fit_list.json", fit_list)
+
+		msg = {"source": "perf-proc", "dest": "index", "cmd": "refresh"}
+		return json.dumps(msg)
+
+	@callback(
+			Output('perf-graph', 'figure', allow_duplicate=True),
+			Input('hold-marked', 'n_clicks'),
+			prevent_initial_call=True
+	)
+	def hold_marked(nclicks):
+		fit_points = perf_proc.plotter.get_marked_list()
+		fit_list = read_file("fit_list.json")
+		param_list =  fit_list['parameters']
+		i = 0
+		for point in fit_points:
+			for param in param_list:
+				if param['type'] != point['type']:
+					break
+				if 'variable' not in param or param['variable'] != point['variable']:
+					break
+				if 'model' not in param or param['model'] != point['model']:
+					break
+					
+				if 'coords' not in param:
+					break
+				
+				coords = param['coords']
+				if coords[0] != point['coords'][0]:
+						break
+				if coords[1] != point['coords'][1]:
+						break
+				
+				del param_list[i]
+				i = i + 1
+						
+		fit_list['parameters'] = param_list				
+		write_file("fit_list.json", fit_list)
+		return perf_proc.plotter.fig
+			
 	@callback(
 	    Output('perf-graph', 'figure', allow_duplicate=True),
 	    Input('perf-graph', 'relayoutData'),
@@ -414,6 +488,7 @@ def perf_proc(data):
 			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
 				perf_proc.plotter.clear_selected()		
 				perf_proc.plotter.update_selected(perf_proc.prefs)
+				perf_proc.plotter.fig.update_layout(dragmode= relayoutData['dragmode'])
 				return 	perf_proc.plotter.fig
 		elif 'range' in fig:
 			perf_proc.plotter.fig.update_layout(range = fig['range'])
