@@ -2864,9 +2864,8 @@ void HPWH::updateTankTemps(double drawVolume_L,
         double drawVolume_N = drawVolume_L / nodeVolume_L;
         double drawCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
 
-        // heat-exchange models
         if (hasHeatExchanger)
-        {
+        {   // heat-exchange models
             outletTemp_C = inletT_C;
             for (auto& nodeT_C : tankTemps_C)
             {
@@ -2878,7 +2877,10 @@ void HPWH::updateTankTemps(double drawVolume_L,
             }
         }
         else
-        {
+        {   // non-heat-exchange models
+            // Large draw-volume case formerly handled separately,
+            // without inversion mixing, which could lead to
+            // different outcomes when inversions occur (PA - 2/26/25)
             double remainingDrawVolume_N = drawVolume_N;
             double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
