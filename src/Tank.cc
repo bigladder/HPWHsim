@@ -453,61 +453,62 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
             double remainingDrawVolume_N = drawVolume_N;
             if (drawVolume_L > volume_L)
             {
+                double inlet2Ratio = inletVol2_L / drawVolume_L;
+                double finalT_C = inletT_C * (1. - inlet2Ratio) + inletT2_C * inlet2Ratio;
                 for (int i = 0; i < getNumNodes(); i++)
                 {
                     outletT_C += nodeTs_C[i];
-                    nodeTs_C[i] =
-                        (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) /
-                        drawVolume_L;
+                    nodeTs_C[i] = finalT_C;
                 }
-                outletT_C = (outletT_C / getNumNodes() * volume_L +
-                             nodeTs_C[0] * (drawVolume_L - volume_L)) /
-                            drawVolume_L * remainingDrawVolume_N;
-
+                outletT_C /= getNumNodes();
+                double ratio = volume_L / drawVolume_L;
+                outletT_C = outletT_C * ratio + nodeTs_C[0] * (1. - ratio);
                 remainingDrawVolume_N = 0.;
             }
-
-            double totalExpelledHeat_kJ = 0.;
-            while (remainingDrawVolume_N > 0.)
+            else
             {
-
-                // draw no more than one node at a time
-                double incrementalDrawVolume_N =
-                    remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
-
-                double outputHeat_kJ = nodeCp_kJperC * incrementalDrawVolume_N * nodeTs_C.back();
-                totalExpelledHeat_kJ += outputHeat_kJ;
-                nodeTs_C.back() -= outputHeat_kJ / nodeCp_kJperC;
-
-                for (int i = getNumNodes() - 1; i >= 0; --i)
+                double totalExpelledHeat_kJ = 0.;
+                while (remainingDrawVolume_N > 0.)
                 {
-                    // combine all inlet contributions at this node
-                    double inletFraction = 0.;
-                    if (i == highInletNodeIndex)
+                    // draw no more than one node at a time
+                    double incrementalDrawVolume_N =
+                        remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
+
+                    double outputHeat_kJ =
+                        nodeCp_kJperC * incrementalDrawVolume_N * nodeTs_C.back();
+                    totalExpelledHeat_kJ += outputHeat_kJ;
+                    nodeTs_C.back() -= outputHeat_kJ / nodeCp_kJperC;
+
+                    for (int i = getNumNodes() - 1; i >= 0; --i)
                     {
-                        inletFraction += highInletFraction;
-                        nodeTs_C[i] += incrementalDrawVolume_N * highInletFraction * highInletT_C;
-                    }
-                    if (i == lowInletNodeIndex)
-                    {
-                        inletFraction += lowInletFraction;
-                        nodeTs_C[i] += incrementalDrawVolume_N * lowInletFraction * lowInletT_C;
+                        // combine all inlet contributions at this node
+                        double inletFraction = 0.;
+                        if (i == highInletNodeIndex)
+                        {
+                            inletFraction += highInletFraction;
+                            nodeTs_C[i] +=
+                                incrementalDrawVolume_N * highInletFraction * highInletT_C;
+                        }
+                        if (i == lowInletNodeIndex)
+                        {
+                            inletFraction += lowInletFraction;
+                            nodeTs_C[i] += incrementalDrawVolume_N * lowInletFraction * lowInletT_C;
+                        }
+
+                        if (i > 0)
+                        {
+                            double transferT_C =
+                                incrementalDrawVolume_N * (1. - inletFraction) * nodeTs_C[i - 1];
+                            nodeTs_C[i] += transferT_C;
+                            nodeTs_C[i - 1] -= transferT_C;
+                        }
                     }
 
-                    if (i > 0)
-                    {
-                        double transferT_C =
-                            incrementalDrawVolume_N * (1. - inletFraction) * nodeTs_C[i - 1];
-                        nodeTs_C[i] += transferT_C;
-                        nodeTs_C[i - 1] -= transferT_C;
-                    }
+                    remainingDrawVolume_N -= incrementalDrawVolume_N;
+                    mixInversions();
                 }
-
-                remainingDrawVolume_N -= incrementalDrawVolume_N;
-                mixInversions();
+                outletT_C = totalExpelledHeat_kJ / drawCp_kJperC;
             }
-
-            outletT_C = totalExpelledHeat_kJ / drawCp_kJperC;
         }
 
         // account for mixing at the bottom of the tank
