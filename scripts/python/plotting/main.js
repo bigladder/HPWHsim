@@ -31,12 +31,38 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		return data;
 	}
 
+	async function init_elements() {
+		var prefs = await read_json_file("./prefs.json")
+		set_elements(prefs)
+
+		params_table = document.getElementById('params_table');
+		var rowCount = params_table.rows.length;
+		for (var x=rowCount-1; x>0; x--) {
+		   params_table.deleteRow(x);
+		}
+
+		document.addEventListener("keydown", do_keydown)
+	}
+
 	let ws_connection = null;
 	async function init_websocket() {
 		await callPyServer("launch_ws", "")
 		ws_connection = await new WebSocket("ws://localhost:8600");
-	}
 
+		ws_connection.addEventListener("message", (msg) => {
+				if ('data' in msg)
+				{
+					const data = JSON.parse(msg['data']);
+					if ('dest' in data)
+						if(data['dest'] == "index")
+							if ('cmd' in data)
+							{
+								FillFitTables()
+							}
+				
+				}
+			});
+	}
 
 	function set_menu_values(prefs) {
 		const model_form = document.getElementById('model_form');
@@ -226,7 +252,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		{// send perf info
 			model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 			var msg = {
-				'source': 'index.html',
+				'source': 'index',
 				'dest': 'perf-proc',
 				'cmd': 'replot',
 				'label': prefs['model_id'],
@@ -255,7 +281,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			}
 
 		 // send test info
-			var msg = {'source': 'index.html', 'dest': 'test-proc', 'cmd': 'replot'};
+			var msg = {'source': 'index', 'dest': 'test-proc', 'cmd': 'replot'};
 			if (prefs["show_measured"])
 			{
 				measured_filepath = "../../../test"
@@ -285,13 +311,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			var msg = {'source': 'index.html', 'dest': 'perf-proc', 'cmd': 'key-pressed', 'key': e.key};
 			console.log(msg)
 			await ws_connection.send(JSON.stringify(msg));
-	}
-
-	async function init_elements() {
-		var prefs = await read_json_file("./prefs.json")
-		set_elements(prefs)
-
-		document.addEventListener("keydown", do_keydown)
 	}
 
 	async function launch_test_proc() {
@@ -422,4 +441,24 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		document.getElementById("perf_plot").style = "display:block;"
 
 		document.getElementById("perf_btn").disabled = false;
+	}
+
+	async function FillFitTables() {
+		var fit_list = await read_json_file("./fit_list.json")
+		params_table = document.getElementById('params_table');
+		while (params_table.hasChildNodes()) {
+  		params_table.removeChild(params_table.lastChild);
+		}
+		if ('parameters' in fit_list)
+		{
+			let param_list = fit_list['parameters']
+			param_list.forEach(param =>{
+				var row = params_table.insertRow(-1)
+				for(let prop in param){
+					var cell = row.insertCell();
+					cell.innerHTML = param[prop];
+				};
+			});
+		}
+
 	}

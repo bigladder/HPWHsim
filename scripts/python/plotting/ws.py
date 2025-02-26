@@ -16,6 +16,7 @@ async def handler(client):
 		try:
 			msg = await client.recv()
 			data = json.loads(msg)
+			print(data)
 			summary = {}
 			if "source" in data:
 				
@@ -23,6 +24,8 @@ async def handler(client):
 					handler.perf_proc_client = client			
 				elif data['source'] == "test-proc":
 						handler.test_proc_client = client
+				elif data['source'] == "index":
+						handler.index_client = client
 				summary['source'] = data['source']
 				
 			if "dest" in data:
@@ -32,6 +35,9 @@ async def handler(client):
 				elif data['dest'] == "test-proc":
 					if handler.test_proc_client != -1:
 							await handler.test_proc_client.send(msg)
+				elif data['dest'] == "index":
+					if handler.index_client != -1:
+							await handler.index_client.send(msg)
 				summary['dest'] = data['dest']
 				
 				#print(summary)
@@ -40,6 +46,7 @@ async def handler(client):
 	
 handler.perf_proc_client = -1
 handler.test_proc_client = -1
+handler.index_client = -1
 		
 async def main():
 	async with websockets.serve(handler, "localhost", 8600):
