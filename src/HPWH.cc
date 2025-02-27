@@ -2897,12 +2897,11 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
-                // expel heat from top node
-                double expelledT_C = incrementalDrawVolume_N * tankTemps_C.back();
-                totalExpelledHeat_kJ += nodeCp_kJperC * expelledT_C;
-                tankTemps_C.back() -= expelledT_C;
+                double outputHeat_kJ = nodeCp_kJperC * incrementalDrawVolume_N * tankTemps_C.back();
+                totalExpelledHeat_kJ += outputHeat_kJ;
+                tankTemps_C.back() -= outputHeat_kJ / nodeCp_kJperC;
 
-                for (int i = getNumNodes() - 1; i >= lowInletNodeIndex; --i)
+                for (int i = getNumNodes() - 1; i >= 0; --i)
                 {
                     // combine all inlet contributions at this node
                     double inletFraction = 0.;
