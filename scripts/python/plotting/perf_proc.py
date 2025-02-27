@@ -139,7 +139,10 @@ def perf_proc(data):
 			], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)
 		),				
 		
+		html.Button("send", id='send-test', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+		
 		html.Div([
+<<<<<<< Updated upstream
 					html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
 					html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
@@ -148,6 +151,15 @@ def perf_proc(data):
 					html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
 					html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
 					],
+=======
+					html.Button("x", id='make-dependent', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.P("marked:", style={'font-size': '12px', 'margin': '4px', 'display': 'inline-block'}),
+					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),
+					html.Button("clear", id='clear-marked', n_clicks=0, style={'font-size': '12px', 'margin': '1px', 'display': 'inline-block'}),					
+										
+			],
+>>>>>>> Stashed changes
 					id='select-div',
 					hidden = True
 				),
@@ -173,6 +185,16 @@ def perf_proc(data):
 		print("sent by perf-proc")
 		msg = {"source": "perf-proc", "dest": "perf-proc"}
 		return json.dumps(msg)
+	
+	@app.callback(
+			Output("input", "value"),
+			[Input("send-test", 'n_clicks')],
+			prevent_initial_call=True
+			)
+	def send_test(value):
+		print("send test by perf-proc")
+		msg = {"source": "perf-proc", "dest": "perf-proc"}
+		return json.dumps(msg)
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -186,9 +208,8 @@ def perf_proc(data):
 	def message(msg):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
-			print(data)
 			if 'dest' in data and data['dest'] == 'perf-proc':
-				print("received by perf-proc")
+				print(f"received by perf-proc: {data}")
 				if 'cmd' in data:
 					if data['cmd'] == 'replot':	
 				

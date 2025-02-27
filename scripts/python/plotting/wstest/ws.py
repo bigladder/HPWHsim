@@ -1,4 +1,4 @@
-# Launch the server with "poetry run python ws.py".
+# From containing folder launch with "poetry run python wstest/ws.py".
 
 import socketserver
 import urllib.parse as urlparse
@@ -16,34 +16,9 @@ async def handler(client):
 		try:
 			print(f"client: {client}")
 			msg = await client.recv()
-			data = json.loads(msg)
-<<<<<<< Updated upstream
-			print(data)
-=======
-			print(f"received by ws: {data}\n")
->>>>>>> Stashed changes
-			summary = {}
-			if "source" in data:
-				
-				if data['source'] == "perf-proc":
-					handler.perf_proc_client = client			
-				elif data['source'] == "test-proc":
-						handler.test_proc_client = client
-				elif data['source'] == "index":
-						handler.index_client = client
-				summary['source'] = data['source']
-				
-			if "dest" in data:
-				if data['dest'] == "perf-proc":
-					if handler.perf_proc_client != -1:
-							await handler.perf_proc_client.send(msg)
-				elif data['dest'] == "test-proc":
-					if handler.test_proc_client != -1:
-							await handler.test_proc_client.send(msg)
-				elif data['dest'] == "index":
-					if handler.index_client != -1:
-							await handler.index_client.send(msg)
-				summary['dest'] = data['dest']
+		
+			print(f"received by ws: {msg}\n")
+			await client.send(msg)
 				
 				#print(summary)
 		except ConnectionClosedOK:
@@ -52,7 +27,6 @@ async def handler(client):
 	
 handler.perf_proc_client = -1
 handler.test_proc_client = -1
-handler.index_client = -1
 		
 async def main():
 	async with websockets.serve(handler, "localhost", 8600):
