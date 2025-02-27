@@ -2883,6 +2883,12 @@ void HPWH::updateTankTemps(double drawVolume_L,
             // different outcomes when inversions occur. Inversions
             // may be expected using two inlets with T_high < T_low,
             // or when either inlet T is less than the tank T below that inlet.
+            //
+            // Inversions during draws occur often for CWHS models,
+            // and for several IHPWH models at high Tinlet or low Tambient:
+            // testSandenCombi - high Tinlet (26C)
+            // testREGoesTo93CCold - high Tinlet (30C)
+            // testDr_LO - low Tambient (-20C)
             double remainingDrawVolume_N = drawVolume_N;
             double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
