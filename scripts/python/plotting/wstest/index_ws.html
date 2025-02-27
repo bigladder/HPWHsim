@@ -1,0 +1,76 @@
+<!doctype html>
+
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>HPWH analysis</title>
+
+	<style>
+		body {
+			font-family: Arial;
+		}
+
+		.collapsible {
+			background-color: #777;
+			color: white;
+			cursor: pointer;
+			padding: 18px;
+			width: 100%;
+			border: none;
+			text-align: left;
+			outline: none;
+			font-size: 15px;
+		}
+
+		.active,
+		.collapsible:hover {
+			background-color: #555;
+		}
+
+		.content {
+			padding: 0 18px;
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.2s ease-out;
+			background-color: #f1f1f1;
+		}
+	</style>
+
+</head>
+
+<script>
+	let ws_connection = null;
+	async function init_websocket() {
+		ws_connection = await new WebSocket("ws://localhost:8600");
+
+		ws_connection.addEventListener("message", (msg) => {
+				if ('data' in msg)
+				{
+					console.log(msg['data'])
+				
+				}
+			});
+	}
+
+async function send_msg()
+{
+	await ws_connection.send("from index.html");
+}
+
+
+</script>
+
+<body>
+	<!-- content -->
+		<button type="button" id="test_btn" onclick="send_msg();">test</button>
+
+</body>
+
+<script>
+	init_websocket().then({}, {})
+</script>
+
+</html>
