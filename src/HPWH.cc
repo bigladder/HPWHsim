@@ -2880,7 +2880,9 @@ void HPWH::updateTankTemps(double drawVolume_L,
         { // non-heat-exchange models
             // Large draw-volume case formerly handled separately,
             // without inversion mixing, which could lead to
-            // different outcomes when inversions occur (PA - 2/26/25)
+            // different outcomes when inversions occur. Inversions
+            // may be expected using two inlets with T_high < T_low,
+            // or when either inlet T is less than the tank T below that inlet.
             double remainingDrawVolume_N = drawVolume_N;
             double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
