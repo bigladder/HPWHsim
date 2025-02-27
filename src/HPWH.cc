@@ -2901,7 +2901,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 totalExpelledHeat_kJ += outputHeat_kJ;
                 tankTemps_C.back() -= outputHeat_kJ / nodeCp_kJperC;
 
-                for (int i = getNumNodes() - 1; i >= 0; --i)
+                for (int i = getNumNodes() - 1; i >= lowInletNodeIndex; --i)
                 {
                     // combine all inlet contributions at this node
                     double inletFraction = 0.;
