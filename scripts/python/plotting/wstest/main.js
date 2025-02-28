@@ -48,6 +48,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	async function init_websocket() {
 		await callPyServer("launch_ws", "")
 		ws_connection = await new WebSocket("ws://localhost:8600");
+
 		ws_connection.addEventListener("message", (msg) => {
 				if ('data' in msg)
 				{
