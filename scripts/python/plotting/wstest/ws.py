@@ -17,8 +17,9 @@ async def handler(client):
 			print(f"sent by client: {client}")
 			new_client = True
 			for c in handler.clients:
-				if c == client:
-					new_client = False
+				if c:
+					if c == client:
+						new_client = False
 			
 			if new_client:
 				handler.clients.append(client)

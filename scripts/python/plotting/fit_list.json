@@ -109,6 +109,160 @@
         3,
         0
       ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        4,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        4,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        4,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        4,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "type": "perf point",
+      "model": "NyleC90A_C_MP",
+      "variable": "Pout",
+      "dependent": "COP",
+      "coords": [
+        4,
+        4,
+        0
+      ]
     }
   ]
 }
