@@ -14,45 +14,30 @@ import multiprocessing as mp
 async def handler(client):
 	while True:
 		try:
-			print(f"client: {client}")
-			msg = await client.recv()
-			data = json.loads(msg)
-<<<<<<< Updated upstream
-			print(data)
-=======
-			print(f"received by ws: {data}\n")
->>>>>>> Stashed changes
-			summary = {}
-			if "source" in data:
+			print(f"sent by client: {client}")
+			new_client = True
+			for c in handler.clients:
+				if c == client:
+					new_client = False
+			
+			if new_client:
+				if client != -1:
+					handler.clients.append(client)
 				
-				if data['source'] == "perf-proc":
-					handler.perf_proc_client = client			
-				elif data['source'] == "test-proc":
-						handler.test_proc_client = client
-				elif data['source'] == "index":
-						handler.index_client = client
-				summary['source'] = data['source']
-				
-			if "dest" in data:
-				if data['dest'] == "perf-proc":
-					if handler.perf_proc_client != -1:
-							await handler.perf_proc_client.send(msg)
-				elif data['dest'] == "test-proc":
-					if handler.test_proc_client != -1:
-							await handler.test_proc_client.send(msg)
-				elif data['dest'] == "index":
-					if handler.index_client != -1:
-							await handler.index_client.send(msg)
-				summary['dest'] = data['dest']
+			if client != -1:
+				msg = await client.recv()	
+				print(f"received by ws: {msg}\n")
+			
+			for c in handler.clients:
+				print(f"send to client: {c}")
+				await c.send(msg)
 				
 				#print(summary)
 		except ConnectionClosedOK:
 			print("connection closed.")
 			break
 	
-handler.perf_proc_client = -1
-handler.test_proc_client = -1
-handler.index_client = -1
+handler.clients = []
 		
 async def main():
 	async with websockets.serve(handler, "localhost", 8600):
@@ -68,8 +53,6 @@ def launch_ws():
 	if launch_ws.proc != -1:
 		print("killing current websocket...")
 		launch_ws.proc.kill()
-		handler.perf_proc_client = -1
-		handler.test_proc_client = -1
 		time.sleep(1)
 
 	launch_ws.proc = mp.Process(target=run_main, args=(), name='ws')
