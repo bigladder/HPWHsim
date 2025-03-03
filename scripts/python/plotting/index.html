@@ -332,7 +332,7 @@ body {font-family: Arial;}
 
 						if ("measured" in test)
 							for (let measured of test["measured"])
-								if (("id" in measured) && !measured["id"].localeCompare(prefs["model_name"]))
+								if (("id" in measured) && !measured["id"].localeCompare(prefs["model_id"]))
 									if ("filename" in measured)
 									{
 										measured_filename = measured["filename"];										
@@ -381,7 +381,7 @@ body {font-family: Arial;}
     fst += '&simulated_filename=' + simulated_filename;
     fst += '&measured_filename=' + measured_filename;
 
-	 	plot_results = await callPyServerJSON("plot", fst);
+	 	plot_results = await callPyServerJSON("test_plot", fst);
 		let energy_data = plot_results["energy_data"];
 		const dash_port = plot_results["port_num"];
 
@@ -420,6 +420,27 @@ body {font-family: Arial;}
 
     document.getElementById("test_btn").disabled = false;
   }
+
+  async function show_perf() {
+
+    const build_form = document.getElementById('build_form');
+    const build_dir = build_form.build_dir.value;
+
+    const model_form = document.getElementById('model_form');
+    const model_spec = model_form.model_spec.value;
+    const model_name = model_form.model_name.value;
+
+    const perf_form = document.getElementById('perf_form');
+
+	  fst = 'model_name=' + model_name;
+	  let perf_results = await callPyServerJSON("perf_plot", fst)
+		const dash_port = perf_results["port_num"];
+
+    document.getElementById("perf_plot").src = "http://localhost:" + dash_port
+    document.getElementById("perf_plot").style = "display:block;"
+
+    document.getElementById("perf_btn").disabled = false;
+  }
 </script>
 
 
@@ -447,10 +468,10 @@ body {font-family: Arial;}
 <button id="perf_tab" class="collapsible">Performance</button>
 <div class="content">
   <form id="perf_form">
-    <button type="button" id="perf_btn" onclick="show_performance();">performance</button>
+    <button type="button" id="perf_btn" onclick="show_perf();">show</button>
   </form>
 
-  <iframe title="perf_plot" src="" id="perf_plot" width=600 height=600 style="display:none;"></iframe>
+  <iframe title="perf_plot" src="" id="perf_plot" width=1200 height=1200 style="display:none;"></iframe>
 </div>
 
 <!-- content -->
@@ -512,6 +533,8 @@ for (i = 0; i < coll.length; i++) {
         content.style.maxHeight = "2200px";
       else if(this.id == "measure_tab")
         content.style.maxHeight = "320px";
+      else if(this.id == "perf_tab")
+        content.style.maxHeight = "800px";
     } 
   });
 }

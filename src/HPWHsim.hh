@@ -2,7 +2,7 @@
 #define HPWHSIM_hh
 
 #include "HPWH.hh"
-#include "HPWHTank.hh"
+#include "Tank.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
 #include "Condenser.hh"

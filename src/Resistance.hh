@@ -19,8 +19,10 @@ class HPWH::Resistance : public HPWH::HeatSource
     Resistance& operator=(const Resistance& r_in);
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return HPWH::TYPE_resistance; }
-    void from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr) override;
-    void to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const override;
+    void
+    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) override;
+    void
+    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const override;
     // void calcHeatDist(std::vector<double>& heatDistribution) override;
 
     void setup(int node, double Watts, int condensitySize = CONDENSITY_SIZE);

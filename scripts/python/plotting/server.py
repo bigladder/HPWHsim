@@ -8,15 +8,15 @@ import http.server
 import socketserver
 import urllib.parse as urlparse
 from simulate import simulate
-from plot import plot
 from measure import measure
-from dash_plot import dash_plot
+from test_proc import launch_test_plot
+from perf_proc import launch_perf_plot
 import json
 from json import dumps
 
 PORT = 8000
 
-dash_plot.proc = -1
+launch_test_plot.proc = -1
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
 			
@@ -90,14 +90,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.end_headers()
 				return
 							
-			elif self.path.startswith('/plot'):
+			elif self.path.startswith('/test_plot'):
 					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 					test_dir = query_components.get('test_dir', [None])[0]
 					build_dir = query_components.get('build_dir', [None])[0]
 					show_types  = int(query_components.get('show_types', [None])[0])
 					simulated_filename  = query_components.get('simulated_filename', [None])[0]
 					measured_filename= query_components.get('measured_filename', [None])[0]
-					response = dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename)
+					response = launch_test_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename)
 
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")
@@ -109,7 +109,19 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.wfile.write(dumps(response).encode('utf-8'))
 					return
 
+			elif self.path.startswith('/perf_plot'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				model_name = query_components.get('model_name', [None])[0]
 
+				response = launch_perf_plot(model_name)
+				print(dumps(response))
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(response))))
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				self.wfile.write(dumps(response).encode('utf-8'))
+				return
 			else:
 				super().do_GET()
 

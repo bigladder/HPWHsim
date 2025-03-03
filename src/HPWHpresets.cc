@@ -1545,7 +1545,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         // Nyle MP models are all on the same grid axes
         compressor->perfGrid.push_back({40., 60., 80., 90.});              // Grid Axis 1 Tair (F)
-        compressor->perfGrid.push_back({40., 60., 80., 100., 130., 150.}); // Grid Axis 2 Tin (F)
+        compressor->perfGrid.push_back({C_TO_F(setpoint_C)});              // Grid Axis 2 Tout (F)
+        compressor->perfGrid.push_back({40., 60., 80., 100., 130., 150.}); // Grid Axis 3 Tin (F)
 
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
