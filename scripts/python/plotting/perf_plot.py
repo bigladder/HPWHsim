@@ -78,7 +78,7 @@ class PerfPlotter():
 				self.extT1s.append(self.T1s[i1x])
 				self.extT2s.append(self.T2s[i2y])
 				
-				elem = nT2s * (nT3s * i1x + self.i3) + i2y																
+				elem = nT2s * (nT3s * i1x + self.iT3) + i2y																
 				self.Pins.append(zPins[elem])
 				self.Pouts.append(zPouts[elem])
 				self.COPs.append(zCOPs[elem])
@@ -106,7 +106,7 @@ class PerfPlotter():
 			self.selected = np.zeros((nT1s, nT2s), dtype=np.uint32)
 			self.marked = np.zeros((nT1s, nT2s, nT3s), dtype=np.uint32)
 			self.dependent = np.full((nT1s, nT2s, nT3s), 2, dtype=np.uint32)
-			self.i3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
+			self.iT3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
 			self.get_slice()
 			
 		except:
@@ -144,11 +144,11 @@ class PerfPlotter():
 	def update_marks(self, value, prefs):
 		for iT1, T1 in enumerate(self.T1s):
 				for iT2, T2 in enumerate(self.T2s):
-					this_mark = self.marked[iT1, iT2, self.i3] & (1 << prefs['contour_variable'])
-					other_marks = self.marked[iT1, iT2, self.i3] & (~this_mark)
+					this_mark = self.marked[iT1, iT2, self.iT3] & (1 << prefs['contour_variable'])
+					other_marks = self.marked[iT1, iT2, self.iT3] & (~this_mark)
 					if self.selected[iT1, iT2] and not self.dependent[iT1, iT2, self.iT3] == prefs['contour_variable']:
 						this_mark = value * (1 << prefs['contour_variable'])						
-					self.marked[iT1, iT2, self.i3] = other_marks | this_mark
+					self.marked[iT1, iT2, self.iT3] = other_marks | this_mark
 					
 	def mark_selected(self, prefs):
 		self.update_marks(1, prefs)
@@ -217,7 +217,7 @@ class PerfPlotter():
 			graph_title += " - Heating Capacity (W)"
 
 		if self.is_central:
-			graph_title += f" - Toutlet (\u00B0C) = {self.T3s[self.i3]:8.2f}"	
+			graph_title += f" - Toutlet (\u00B0C) = {self.T3s[self.iT3]:8.2f}"	
 	
 
 		self.refs = [self.T1s, self.T2s, plotVals] 
@@ -454,7 +454,7 @@ class PerfPlotter():
 		dependent_points = []								
 		for iT2, T2 in enumerate(self.refs[1]):
 			for iT1, T1 in enumerate(self.refs[0]):
-				depends = self.dependent[iT1, iT2, self.i3]
+				depends = self.dependent[iT1, iT2, self.iT3]
 				if depends == prefs['contour_variable']:			
 					point = [T1, T2, self.refs[2][i]]
 					dependent_points.append(point)
@@ -482,7 +482,7 @@ class PerfPlotter():
 		for iT2, T2 in enumerate(self.refs[1]):
 			for iT1, T1 in enumerate(self.refs[0]):
 
-					marks = self.marked[iT1, iT2, self.i3]
+					marks = self.marked[iT1, iT2, self.iT3]
 					if  marks > 0:
 						markedMarkers['x'].append(T1)
 						markedMarkers['y'].append(T2)

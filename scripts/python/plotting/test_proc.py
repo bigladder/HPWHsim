@@ -127,7 +127,7 @@ def test_proc(plotter):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
-				print("received by test-proc")
+				#print("received by test-proc")
 				if 'cmd' in data:
 					if data['cmd'] == 'replot':
 						test_proc.plotter = plot(data)

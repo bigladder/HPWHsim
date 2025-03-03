@@ -58,7 +58,7 @@ def perf_proc(data):
 					perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
 					i = i + 1
 			
-				fig = perf_proc.plotter.fig
+			fig = perf_proc.plotter.fig
 			return fig
 	
 	fig = create_plot(data)
@@ -199,7 +199,7 @@ def perf_proc(data):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'perf-proc':
-				print(f"received by perf-proc: {data}")
+				print(f"received by perf-proc:\n{data}")
 				if 'cmd' in data:
 					if data['cmd'] == 'replot':				
 						prefs = read_file("prefs.json")

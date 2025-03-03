@@ -14,7 +14,7 @@ import multiprocessing as mp
 async def handler(client):
 	while True:
 		try:
-			print(f"sent by client: {client}")
+			#print(f"sent by client: {client}")
 			new_client = True
 			for c in handler.clients:
 				if c == client:
@@ -26,10 +26,10 @@ async def handler(client):
 				
 			if client != -1:
 				msg = await client.recv()	
-				print(f"received by ws: {msg}\n")
+				#print(f"received by ws: {msg}\n")
 			
 			for c in handler.clients:
-				print(f"send to client: {c}")
+				#print(f"send to client: {c}")
 				await c.send(msg)
 				
 				#print(summary)
