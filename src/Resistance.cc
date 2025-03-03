@@ -27,26 +27,26 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
     return *this;
 }
 
-void HPWH::Resistance::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
+void HPWH::Resistance::from(
+    const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr)
 {
     auto res_ptr = reinterpret_cast<
-        hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-        rshs_ptr.get());
+        hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(rshs_ptr.get());
 
     auto& perf = res_ptr->performance;
     power_kW = perf.input_power / 1000.;
 }
 
-void HPWH::Resistance::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
+void HPWH::Resistance::to(
+    std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const
 {
     auto res_ptr = reinterpret_cast<
-        hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-        rshs_ptr.get());
+        hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(rshs_ptr.get());
 
     auto& metadata = res_ptr->metadata;
-    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSRESISTANCEWATERHEATSOURCE,
-            metadata.schema_is_set,
-            metadata.schema);
+    checkTo(std::string("RSRESISTANCEWATERHEATSOURCE"),
+            metadata.schema_name_is_set,
+            metadata.schema_name);
 
     auto& perf = res_ptr->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);

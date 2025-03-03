@@ -45,10 +45,10 @@ struct HPWH::HeatingLogic
     bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
     static std::shared_ptr<HeatingLogic>
-    make(const hpwh_data_model::heat_source_configuration_ns::HeatingLogic& logic, HPWH* hpwh);
+    make(const hpwh_data_model::heat_source_configuration::HeatingLogic& logic, HPWH* hpwh);
 
     virtual void
-    to(hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heatingLogic) const = 0;
+    to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const = 0;
 
     bool checksStandby() { return checkStandby; }
 
@@ -87,9 +87,8 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setConstantMainsTemperature(double mains_C);
 
-    // void to(hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& heating_logic);
-    void
-    to(hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heatingLogic) const override;
+    // void to(hpwh_data_model::rsintegratedwaterheater::SoCBasedHeatingLogic& heating_logic);
+    void to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
 
   private:
     double tempMinUseful_C;
@@ -136,8 +135,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setDecisionPoint(double value, bool absolute);
 
-    void
-    to(hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heatingLogic) const override;
+    void to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
 
     bool isAbsolute;
     Distribution dist;

@@ -1,7 +1,9 @@
 {
   "central_system": {
+    "control_type": "FIXED_FLOW_RATE",
     "external_inlet_height": 0.2916666666666667,
     "external_outlet_height": 0.0,
+    "fixed_flow_rate": 0.0021999541116666664,
     "heat_source_configurations": [
       {
         "heat_distribution": {
@@ -18,40 +20,14 @@
         },
         "heat_source": {
           "metadata": {
-            "schema": "RSCONDENSERWATERHEATSOURCE"
+            "schema": "RSAIRTOWATERHEATPUMP"
           },
           "performance": {
-            "coil_configuration": "EXTERNAL",
             "compressor_lockout_temperature_hysteresis": 0.0,
             "maximum_refrigerant_temperature": 344.26111111111106,
-            "maximum_temperature": 316.4833333333333,
-            "minimum_temperature": 280.3722222222222,
             "performance_map": {
               "grid_variables": {
-                "evaporator_environment_dry_bulb_temperature": [
-                  280.3722222222222,
-                  280.3723,
-                  280.65,
-                  281.15,
-                  281.65,
-                  282.15,
-                  282.65,
-                  283.15,
-                  283.65,
-                  284.15,
-                  284.65,
-                  285.15,
-                  285.65,
-                  286.15,
-                  286.65,
-                  287.15,
-                  287.65,
-                  288.15,
-                  288.65,
-                  288.70555559999997,
-                  316.4833333333333
-                ],
-                "heat_source_temperature": [
+                "condenser_entering_temperature": [
                   273.15,
                   275.12530864197527,
                   277.1006172839506,
@@ -89,6 +65,32 @@
                   340.3104938271605,
                   342.2858024691358,
                   344.26111111111106
+                ],
+                "condenser_leaving_temperature": [
+                  330.3722222222222
+                ],
+                "evaporator_environment_dry_bulb_temperature": [
+                  280.3722222222222,
+                  280.3723,
+                  280.65,
+                  281.15,
+                  281.65,
+                  282.15,
+                  282.65,
+                  283.15,
+                  283.65,
+                  284.15,
+                  284.65,
+                  285.15,
+                  285.65,
+                  286.15,
+                  286.65,
+                  287.15,
+                  287.65,
+                  288.15,
+                  288.65,
+                  288.70555559999997,
+                  316.4833333333333
                 ]
               },
               "lookup_variables": {
@@ -1655,7 +1657,7 @@
             "use_defrost_map": true
           }
         },
-        "heat_source_type": "CONDENSER",
+        "heat_source_type": "AIRTOWATERHEATPUMP",
         "id": "compressor",
         "shut_off_logic": [
           {
@@ -1701,7 +1703,6 @@
         ]
       }
     ],
-    "multipass_flow_rate": 0.0021999541116666664,
     "primary_heat_source_id": "compressor",
     "tank": {
       "metadata": {

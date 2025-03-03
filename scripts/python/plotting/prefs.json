@@ -1,1 +1,1 @@
-{"model_id": "BradfordWhiteAeroThermRE2H80", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Tests with data", "test_id": "RE2H80_UEF50", "show_simulated": true, "show_measured": false, "draw_profile": "High"}
+{"model_id": "AOSmithHPTS80", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "All tests", "test_id": "test95", "show_simulated": true, "show_measured": false, "draw_profile": "High"}

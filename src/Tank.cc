@@ -1,5 +1,5 @@
 ﻿#include "HPWH.hh"
-#include "HPWHTank.hh"
+#include "Tank.hh"
 
 HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Sender(tank_in) { *this = tank_in; }
 
@@ -25,7 +25,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
-void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
+void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
     auto& perf = rstank.performance;
 
@@ -50,11 +50,10 @@ void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
     // bool diameter_is_set;
 }
 
-void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
+void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
 {
     auto& metadata = rstank.metadata;
-    checkTo(
-        hpwh_data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
+    checkTo(std::string("RSTANK"), metadata.schema_name_is_set, metadata.schema_name);
 
     auto& perf = rstank.performance;
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
