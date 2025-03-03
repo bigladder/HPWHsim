@@ -2864,9 +2864,8 @@ void HPWH::updateTankTemps(double drawVolume_L,
         double drawVolume_N = drawVolume_L / nodeVolume_L;
         double drawCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
 
-        // heat-exchange models
         if (hasHeatExchanger)
-        {
+        { // heat-exchange models
             outletTemp_C = inletT_C;
             for (auto& nodeT_C : tankTemps_C)
             {
@@ -2878,28 +2877,22 @@ void HPWH::updateTankTemps(double drawVolume_L,
             }
         }
         else
-        {
+        { // non-heat-exchange models
+            // Large draw-volume case formerly handled separately,
+            // without inversion mixing, which could lead to
+            // different outcomes when inversions occur. Inversions
+            // may be expected using two inlets with T_high < T_low,
+            // or when either inlet T is less than the tank T below that inlet.
+            //
+            // Inversions during draws occur often for CWHS models,
+            // and for several IHPWH models at high Tinlet or low Tambient:
+            // testSandenCombi - high Tinlet (26C)
+            // testREGoesTo93CCold - high Tinlet (30C)
+            // testDr_LO - low Tambient (-20C)
             double remainingDrawVolume_N = drawVolume_N;
-            if (drawVolume_L > tankVolume_L)
-            {
-                for (int i = 0; i < getNumNodes(); i++)
-                {
-                    outletTemp_C += tankTemps_C[i];
-                    tankTemps_C[i] =
-                        (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) /
-                        drawVolume_L;
-                }
-                outletTemp_C = (outletTemp_C / getNumNodes() * tankVolume_L +
-                                tankTemps_C[0] * (drawVolume_L - tankVolume_L)) /
-                               drawVolume_L * remainingDrawVolume_N;
-
-                remainingDrawVolume_N = 0.;
-            }
-
             double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
             {
-
                 // draw no more than one node at a time
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
@@ -3492,7 +3485,6 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     {
         qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
     }
-
     double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
     double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
