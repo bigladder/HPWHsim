@@ -90,4 +90,38 @@ TEST(EnergyBalanceTest, energyBalance)
 
         EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
     }
+
+    /* high draw */
+    {
+        // get preset model
+        HPWH hpwh;
+        const std::string sModelName = "AOSmithHPTS50";
+        hpwh.initPreset(sModelName);
+
+        hpwh.setInletT(5.);
+        const double ambientT_C = 20.;
+        const double externalT_C = 20.;
+
+        bool result = true;
+
+        //
+        hpwh.setTankToTemperature(20.);
+        double drawVol_L = 1.01 * hpwh.getTankVolume_L(); // > tank volume
+        double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
+
+        EXPECT_NO_THROW(hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW))
+            << "Failure in hpwh.runOneStep.";
+        result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
+
+        //
+        hpwh.setTankToTemperature(20.);
+        drawVol_L = 2. * hpwh.getTankVolume_L(); // > tank volume
+        prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
+
+        EXPECT_NO_THROW(hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW))
+            << "Failure in hpwh.runOneStep.";
+        result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
+
+        EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
+    }
 }
