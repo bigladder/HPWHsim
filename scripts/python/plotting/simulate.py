@@ -8,7 +8,6 @@ from pathlib import Path
 #
 def simulate(data):
 
-	print(data)
 	model_spec = data['model_spec']
 	model_name = data['model_name']
 	build_dir = data['build_dir']

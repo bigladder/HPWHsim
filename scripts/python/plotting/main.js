@@ -41,7 +41,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		   params_table.deleteRow(x);
 		}
 
-		document.addEventListener("keydown", do_keydown)
+		//document.addEventListener("keydown", do_keydown)
 	}
 
 	let ws_connection = null;

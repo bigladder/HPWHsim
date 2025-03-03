@@ -14,7 +14,7 @@ import multiprocessing as mp
 async def handler(client):
 	while True:
 		try:
-			print(f"sent by client: {client}")
+			#print(f"\nsent by client: {client}")
 			new_client = True
 			for c in handler.clients:
 				if c:
@@ -25,15 +25,15 @@ async def handler(client):
 				handler.clients.append(client)
 					
 			msg = await client.recv()	
-			print(f"received by ws: {msg}\n")
+			#print(f"\nreceived by ws: {msg}\n")
 			
 			for c in handler.clients:
-				print(f"send to client: {c}")
+				print(f"\nsend to client: {c}")
 				await c.send(msg)
 				
 				#print(summary)
 		except ConnectionClosedOK:
-			print("connection closed.")
+			print("\nconnection closed.")
 			break
 	
 handler.clients = []
