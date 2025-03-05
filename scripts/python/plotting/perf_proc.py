@@ -1,24 +1,20 @@
-import os
-import sys
-
-import pandas as pd  # type: ignore
-import json
-from dash import Dash, dcc, html, Input, Output, State, callback, no_update
-import plotly.express as px
-import plotly.graph_objects as go
-
-import plotly.io as io
-from scipy.optimize import least_squares
-import numpy as np
-import math
-import time
-from perf_plot import PerfPlotter
+from dash import Dash, html, dcc, Input, Output, State, no_update
+from dash_extensions import WebSocket
 import multiprocessing as mp
 from pathlib import Path
-from dash_extensions import WebSocket
+import os
+import json
+import time
 from common import read_file, write_file
-	
+from perf_plot import PerfPlotter
+
+# Global variable to store the WebSocket
 def perf_proc(data):
+
+	perf_proc.ws = None
+
+	perf_proc.i_send = 0
+
 	orig_dir = str(Path.cwd())
 	os.chdir("../../../test")
 	abs_repo_test_dir = str(Path.cwd())
@@ -37,27 +33,30 @@ def perf_proc(data):
 		label = ""
 		if 'label' in data:
 			label = data['label']
-		
+			
 		perf_proc.plotter = PerfPlotter(label)
 		perf_proc.plotter.prepare(data)
 		
-		perf_proc.show_outletTs = False
-		perf_proc.outletTs = []
 		perf_proc.prefs = read_file("prefs.json")['performance_plots']
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
+			perf_proc.plotter.update_dependent(perf_proc.prefs)
 		
+		perf_proc.show_outletTs = False
+		perf_proc.outletTs = []
+		if perf_proc.plotter.have_data:
 			perf_proc.show_outletTs = perf_proc.plotter.is_central	
 			perf_proc.plotter.fig.update_layout(clickmode='event+select')
-		
+
 			if perf_proc.show_outletTs:
 				i = 0
 				for outletT in perf_proc.plotter.T3s:
 					perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
 					i = i + 1
+			
 			fig = perf_proc.plotter.fig
-		return fig
+			return fig
 	
 	fig = create_plot(data)
 	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
@@ -81,7 +80,7 @@ def perf_proc(data):
 	}
 
 	app.layout = [
-		html.Div(dcc.Input(id="input", type="text"), hidden=True),
+		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
    	html.Div(id="message"),
    	WebSocket(url="ws://localhost:8600", id="ws"),
  
@@ -163,31 +162,23 @@ def perf_proc(data):
 	    	}), id="graph-div", hidden = not(perf_proc.plotter.have_data))
 
 	]
-	
+
 	@app.callback(
-			Output("ws", "send", allow_duplicate=True),
-			Input("input", "value"),
-			prevent_initial_call = True
-			)
-	def send(msg):
-		print("sent by perf-proc")
-		res = json.loads(msg)
-		return json.dumps(res)
-	
+		Output("ws", "send"),
+		Input("send-btn", "n_clicks"),
+		prevent_initial_call=True
+	)
+	def send_message(n_clicks):
+		perf_proc.i_send = perf_proc.i_send + 1
+		message = json.dumps({"source": "perf-proc", "dest": "perf-proc", "index": perf_proc.i_send})
+		return message
+
 	@app.callback(
-			Output("input", "value"),
-			Input("send-btn", "n_clicks"))
-	def send_btn(n_clicks):
-		print("sent by perf-proc btn")
-		msg = {'source': "perf-proc", 'dest': "perf-proc", 'cmd': "nothing"}
-		return json.dumps(msg)
-	
-	@callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			#Output('graph-div', 'hidden'),
-			#Output('outletT-p', 'hidden'),
-			#Output('outletT-dropdown', 'value'),
-			#Output('outletT-dropdown', 'options'),
+			Output('graph-div', 'hidden'),
+			Output('outletT-p', 'hidden'),
+			Output('outletT-dropdown', 'value'),
+			Output('outletT-dropdown', 'options'),
 			[Input("ws", "message")],
 			prevent_initial_call=True
 			)
@@ -195,21 +186,19 @@ def perf_proc(data):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
 			if 'dest' in data:
-				if data['dest'] == "perf-proc":
-					print(f"\nreceived by perf-proc: {data}")
+				if data['dest'] == 'perf-proc':
+					print(f"received by perf-proc:\n{data}")
 					if 'cmd' in data:
-						if data['cmd'] == 'replot':	
+						if data['cmd'] == 'replot':				
 							prefs = read_file("prefs.json")
 							prefs["performance_plots"] = perf_proc.prefs
 							write_file("prefs.json", prefs)
-							perf_proc.plotter.draw(perf_proc.prefs)
-							fig = perf_proc.plotter.fig
-							#fig = create_plot(data)
-							print("replotted")											
-							return perf_proc.plotter.fig#, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.iT3, perf_proc.	outletTs
-						
-		return no_update#, no_update, no_update, no_update, no_update
-	
+							
+							fig = create_plot(data)				
+							return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.iT3, perf_proc.outletTs
+								
+		return no_update, no_update, no_update, no_update, no_update
+
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Output('interp-sizes', 'hidden'),
@@ -270,7 +259,7 @@ def perf_proc(data):
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		return perf_proc.plotter.fig, perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
 	
-	@callback(
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('display-dropdown', 'value'),
 			prevent_initial_call=True
@@ -286,7 +275,7 @@ def perf_proc(data):
 			return perf_proc.plotter.fig
 		return no_update
 	
-	@callback(
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('coloring-dropdown', 'value'),
 			prevent_initial_call=True
@@ -302,7 +291,7 @@ def perf_proc(data):
 			return perf_proc.plotter.fig
 		return no_update
 	
-	@callback(
+	@app.callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
 				Input('outletT-dropdown', 'value'),
 				prevent_initial_call=True
@@ -323,8 +312,8 @@ def perf_proc(data):
 			perf_proc.plotter.update_marked(perf_proc.prefs)	
 			return perf_proc.plotter.fig
 		return no_update
-	
-	@callback(
+
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Output('select-div', 'hidden'),
 			Input('perf-graph', 'selectedData'),	
@@ -347,7 +336,7 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
 		return perf_proc.plotter.fig, hide_buttons
 	
-	@callback(
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('add-selected-to-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
@@ -361,7 +350,7 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
 		return perf_proc.plotter.fig
 
-	@callback(
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('make-dependent', 'n_clicks'),
 			State('perf-graph', 'figure'),
@@ -375,7 +364,7 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
 		return perf_proc.plotter.fig
 	
-	@callback(
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('remove-selected-from-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
@@ -389,7 +378,7 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])		
 		return perf_proc.plotter.fig
 	
-	@callback(
+	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('clear-marked', 'n_clicks'),
 			State('perf-graph', 'figure'),
@@ -404,16 +393,22 @@ def perf_proc(data):
 		
 		return perf_proc.plotter.fig
 
-	@callback(
-			Output("input", "value", allow_duplicate=True),
+	@app.callback(
+			Output("ws", "send", allow_duplicate=True),
 			Input('vary-marked', 'n_clicks'),
 			prevent_initial_call=True
 	)
 	def vary_marked(nclicks):
-		fit_points = perf_proc.plotter.get_marked_list()
+		fit_points = perf_proc.plotter.get_marked_list(perf_proc.prefs)
+		print(f"points: {fit_points}")
 		fit_list = read_file("fit_list.json")
+		if not 'parameters' in fit_list:
+			fit_list['parameters'] = []
 		param_list =  fit_list['parameters']
+		print(f"params: {param_list}")
+		new_param_list = param_list
 		for point in fit_points:
+			print(point)
 			for param in param_list:
 				if param['type'] != point['type']:
 					break
@@ -424,29 +419,32 @@ def perf_proc(data):
 					
 				if 'coords' not in param:
 					break
-				
+
 				coords = param['coords']
 				if coords[0] != point['coords'][0]:
 						break
 				if coords[1] != point['coords'][1]:
 						break
 		
-			param_list.append(point)
+			print(point)
+			new_param_list.append(point)
 			
-		fit_list['parameters'] = param_list				
+		fit_list['parameters'] = new_param_list				
 		write_file("fit_list.json", fit_list)
+		perf_proc.i_send = perf_proc.i_send + 1
+		msg = {"source": "perf-proc", "dest": "index", "cmd": "vary", "index": perf_proc.i_send}
+		return json.dumps(msg)
 
-		msg = {"source": "perf-proc", "dest": "index", "cmd": "vary"}
-		return [json.dumps(msg)]
-
-	@callback(
-			Output('input', 'value', allow_duplicate=True),
+	@app.callback(
+			Output('ws', 'send', allow_duplicate=True),
 			Input('hold-marked', 'n_clicks'),
 			prevent_initial_call=True
 	)
 	def hold_marked(nclicks):
 		fit_points = perf_proc.plotter.get_marked_list()
 		fit_list = read_file("fit_list.json")
+		if not 'parameters' in fit_list:
+			fit_list['parameters'] = {}
 		param_list =  fit_list['parameters']
 		i = 0
 		for point in fit_points:
@@ -472,30 +470,13 @@ def perf_proc(data):
 						
 		fit_list['parameters'] = param_list				
 		write_file("fit_list.json", fit_list)
-		msg = {"source": "perf-proc", "dest": "index", "cmd": "hold"}
-		return [json.dumps(msg)]
+		perf_proc.i_send = perf_proc.i_send + 1
+		msg = {"source": "perf-proc", "dest": "index", "cmd": "hold", "index": perf_proc.i_send}
+		return json.dumps(msg)
 			
-	@callback(
-	    Output('perf-graph', 'figure', allow_duplicate=True),
-	    Input('perf-graph', 'relayoutData'),
-			State('perf-graph', 'figure'),
-			prevent_initial_call=True
-	)
-	def relayout_event(relayoutData, fig):
-		if 'dragmode' in relayoutData:
-			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
-				perf_proc.plotter.clear_selected()		
-				perf_proc.plotter.update_selected(perf_proc.prefs)
-				perf_proc.plotter.fig.update_layout(dragmode= relayoutData['dragmode'])
-				return 	perf_proc.plotter.fig
-		elif 'range' in fig:
-			perf_proc.plotter.fig.update_layout(range = fig['range'])
-			return 	perf_proc.plotter.fig
-		return fig
-
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
-	
-perf_proc.port_num = 8051
+
+perf_proc.port_num = 8051	
 
 # Runs a simulation and generates plot
 def launch_perf_proc(data):
@@ -509,12 +490,14 @@ def launch_perf_proc(data):
 	print("launching dash for plotting performance...")
 	time.sleep(1)
 
+	print("starting dash")
 	launch_perf_proc.proc.start()
 	time.sleep(2)
-	   
+	print("launched dash")
+	
 	results = {}
 	results["port_num"] = perf_proc.port_num
 	return results
+	   
 
 launch_perf_proc.proc = -1
-

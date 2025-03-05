@@ -1,4 +1,4 @@
-# From enclosing folder launch with "poetry run python wstest/server_ws.py".
+# launch with "poetry run python server.py".
 
 import http.server
 import socketserver
@@ -56,8 +56,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]	
 				data = json.loads(data_str)
-				response = launch_perf_proc(data)
 
+				launch_perf_proc(data)
+			
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
 				self.send_header("Access-Control-Allow-Origin", "*")
