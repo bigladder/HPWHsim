@@ -69,13 +69,12 @@ if (${PROJECT_NAME}_USE_DATA_MODEL_GENERATION)
         execute_process(
             COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_SUBMOD_RESULT
 
             COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${srcCodeDir}"
             WORKING_DIRECTORY "${pythonScriptDir}"
             RESULT_VARIABLE build_data_model_result)
 
-        if (GIT_SUBMOD_RESULT EQUAL 0 AND build_data_model_result EQUAL 0)
+        if (build_data_model_result EQUAL 0)
             set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
             message(STATUS "Data-model source-code generation succeeded")
         else()
