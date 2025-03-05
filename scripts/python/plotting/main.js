@@ -443,7 +443,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	}
 
 	async function clear_params() {
-
 			var fit_list = await read_json_file("./fit_list.json")
 			fit_list['parameters'] = []
 			await write_json_file("./fit_list.json", fit_list)
@@ -451,21 +450,42 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		}
 
 	async function FillFitTables() {
-		var fit_list = await read_json_file("./fit_list.json")
-		params_table = document.getElementById('params_table');
-		while (params_table.hasChildNodes()) {
-  		params_table.removeChild(params_table.lastChild);
-		}
+		params_table = document.getElementById('params_table');		
+		let tableHTML = ''
+
+		var fit_list = await read_json_file("./fit_list.json");
+		have_point = false;
 		if ('parameters' in fit_list)
-		{
-			let param_list = fit_list['parameters']
-			param_list.forEach(param =>{
-				var row = params_table.insertRow(-1)
-				for(let prop in param){
-					var cell = row.insertCell();
-					cell.innerHTML = param[prop];
-				};
-			});
+		{		
+			let params = fit_list['parameters']
+			if(params.length > 0)
+				params.forEach(param =>
+				{
+					if ('type' in param)
+						if(!param['type'].localeCompare('perf-point'))
+						{
+							const tableHeaders = Object.keys(param);
+							if (!have_point)
+							{
+								tableHTML = '<table><thead><tr>';
+								tableHeaders.forEach(header => {
+								    tableHTML += `<th>${header}</th>`;
+								  });
+								tableHTML += '</tr></thead><tbody>';
+								have_point = true;	
+							}
+							
+					    tableHTML += '<tr>';
+					    tableHeaders.forEach(header => {
+					      tableHTML += `<td>${param[header] || ''}</td>`; 
+					    });
+					    tableHTML += '</tr>';
+					  
+						}
+				});
 		}
+		if (!have_point)
+			tableHTML = '<div>No parameters.</div>'
+		document.getElementById('params_table').innerHTML = tableHTML;
 
 	}
