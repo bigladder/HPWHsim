@@ -69,15 +69,15 @@
 
 	async function send_to_ws()
 	{
-		await ws_connection.send("from index.html");
+		const msg = {'source': "index", 'dest': "perf-proc", 'cmd': "replot"};
+		await ws_connection.send(JSON.stringify(msg));
 	}
 
 	async function launch_dash() {
-
-			data = {
-			'label': 'none'
+		data = {
+			'label': "none"
 			};
-		await callPyServer("launch_perf_proc",  "data=" + JSON.stringify(data))
+		await callPyServer("launch_perf_proc", "data=" + JSON.stringify(data))
 
 		document.getElementById("perf_plot").src = "http://localhost:8051"
 		document.getElementById("perf_plot").style = "display:block;"
@@ -99,6 +99,7 @@
 
 <script>
 	init_websocket().then({}, {})
+	launch_dash().then({}, {})
 </script>
 
 </html>

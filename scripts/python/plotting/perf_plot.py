@@ -498,15 +498,15 @@ class PerfPlotter():
 			selector = dict(name="marked points"))
 		
 
-	def get_marked_list(self):
+	def get_marked_list(self, prefs):
 		nT3s = 1 if not self.is_central else len(self.T3s)
 		marked_list = []
 		if self.is_central:
 				for iT2, T2 in enumerate(self.refs[1]):
 					for iT1, T1 in enumerate(self.refs[0]):
 						for i in range(3):
-							if self.marked[iT1, iT2, self.iT3] & (1 << i) > 0:
-								entry = {'type': 'perf point'}
+							if (self.marked[iT1, iT2, self.iT3] & (1 << i)) & (1 << prefs['contour_variable']) > 0:
+								entry = {'type': 'perf-point'}
 								entry['model'] = self.label
 								entry['variable'] = self.variables_names[i]
 								entry['dependent'] = self.variables_names[self.dependent[iT1, iT2, self.iT3]]						
@@ -517,7 +517,7 @@ class PerfPlotter():
 			for iT2, T2 in enumerate(self.refs[1]):
 				for iT1, T1 in enumerate(self.refs[0]):
 					for i in range(3):
-						if self.marked[iT1, iT2, self.iT3] & (1 << i) > 0:
+						if self.marked[iT1, iT2, self.iT3] & (1 << i) & (1 << prefs['contour_variable']) > 0:
 							entry = {'type': 'perf-point'}
 							entry['model'] = self.label
 							entry['variable'] = self.variables_names[i]

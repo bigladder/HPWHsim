@@ -14,27 +14,34 @@ import multiprocessing as mp
 async def handler(client):
 	while True:
 		try:
-			#print(f"\nsent by client: {client}")
-			new_client = True
-			for c in handler.clients:
-				if c:
-					if c == client:
-						new_client = False
-			
-			if new_client:
-				handler.clients.append(client)
-					
 			msg = await client.recv()	
-			#print(f"\nreceived by ws: {msg}\n")
-			
-			for c in handler.clients:
-				print(f"\nsend to client: {c}")
-				await c.send(msg)
-				
-				#print(summary)
 		except ConnectionClosedOK:
-			print("\nconnection closed.")
+			print("connection closed.")
 			break
+		
+		print(f"\nsent by client: {client}")
+		print(f"received by ws: {msg}")			
+		new_client = True
+		for c in handler.clients:
+			if c:
+				if c == client:
+					new_client = False
+		
+		if new_client:
+			print(f"added client: {client}")
+			handler.clients.append(client)
+		
+		new_clients = []
+		for c in handler.clients:
+			try:
+				print(f"send to client: {c}")
+				await c.send(msg)
+				new_clients.append(c)
+				await asyncio.sleep(0.1)
+			except:
+				print(f"removing client: {c}")
+				
+		handler.clients = new_clients
 	
 handler.clients = []
 		

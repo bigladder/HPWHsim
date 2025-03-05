@@ -1,4 +1,4 @@
-# Launch the server with "poetry run python ws.py".
+# From enclosing folder launch with "poetry run python wstest/ws.py".
 
 import socketserver
 import urllib.parse as urlparse
@@ -14,28 +14,34 @@ import multiprocessing as mp
 async def handler(client):
 	while True:
 		try:
-			#print(f"sent by client: {client}")
-			new_client = True
-			for c in handler.clients:
-				if c == client:
-					new_client = False
-			
-			if new_client:
-				if client != -1:
-					handler.clients.append(client)
-				
-			if client != -1:
-				msg = await client.recv()	
-				#print(f"received by ws: {msg}\n")
-			
-			for c in handler.clients:
-				#print(f"send to client: {c}")
-				await c.send(msg)
-				
-				#print(summary)
+			msg = await client.recv()	
 		except ConnectionClosedOK:
 			print("connection closed.")
 			break
+		
+		print(f"\nsent by client: {client}")
+		print(f"received by ws: {msg}")			
+		new_client = True
+		for c in handler.clients:
+			if c:
+				if c == client:
+					new_client = False
+		
+		if new_client:
+			print(f"added client: {client}")
+			handler.clients.append(client)
+		
+		new_clients = []
+		for c in handler.clients:
+			try:
+				print(f"send to client: {c}")
+				await c.send(msg)
+				new_clients.append(c)
+				await asyncio.sleep(0.1)
+			except:
+				print(f"removing client: {c}")
+				
+		handler.clients = new_clients
 	
 handler.clients = []
 		
@@ -53,8 +59,9 @@ def launch_ws():
 	if launch_ws.proc != -1:
 		print("killing current websocket...")
 		launch_ws.proc.kill()
+		
 		time.sleep(1)
-
+	handler.clients = []
 	launch_ws.proc = mp.Process(target=run_main, args=(), name='ws')
 	time.sleep(1)
 
