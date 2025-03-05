@@ -399,18 +399,19 @@ def perf_proc(data):
 			prevent_initial_call=True
 	)
 	def vary_marked(nclicks):
-		fit_points = perf_proc.plotter.get_marked_list(perf_proc.prefs)
-		print(f"points: {fit_points}")
+		add_points = perf_proc.plotter.get_marked_list(perf_proc.prefs)
+		
 		fit_list = read_file("fit_list.json")
-		if not 'parameters' in fit_list:
-			fit_list['parameters'] = []
+		if 'parameters' in fit_list:
+			params = fit_list['parameters']
+		else:
+			params = {}			
 
-		param_list = fit_list['parameters']
-		new_param_list = param_list
-		for point in fit_points:
+		new_params = params
+		for point in add_points:
 			found_point = False
-			for param in param_list:
-				if param['type'] != point['type']:
+			for param in params:
+				if 'type' not in param or param['type'] != 'perf-point':
 					continue
 				if 'variable' not in param or param['variable'] != point['variable']:
 					continue
@@ -432,9 +433,9 @@ def perf_proc(data):
 				break
 			
 			if not found_point:
-				new_param_list.append(point)
-			
-		fit_list['parameters'] = new_param_list				
+				new_params.append(point)
+		
+		fit_list['parameters'] = new_params			
 		write_file("fit_list.json", fit_list)
 		perf_proc.i_send = perf_proc.i_send + 1
 		msg = {"source": "perf-proc", "dest": "index", "cmd": "vary", "index": perf_proc.i_send}
@@ -446,14 +447,18 @@ def perf_proc(data):
 			prevent_initial_call=True
 	)
 	def hold_marked(nclicks):
-		fit_points = perf_proc.plotter.get_marked_list(perf_proc.prefs)
+		remove_points = perf_proc.plotter.get_marked_list(perf_proc.prefs)
+		
 		fit_list = read_file("fit_list.json")
-		if not 'parameters' in fit_list:
-			fit_list['parameters'] = {}
-		param_list =  fit_list['parameters']
-		for point in fit_points:
-			for index, param in reversed(list(enumerate(fit_list['parameters']))):
-				if param['type'] != point['type']:
+		if 'parameters' in fit_list:
+			params = fit_list['parameters']
+		else:
+			params = {}			
+
+		new_params = params
+		for point in remove_points:
+			for index, param in reversed(list(enumerate(params))):
+				if 'type' not in param or param['type'] != 'perf-point':
 					continue
 				if 'variable' not in param or param['variable'] != point['variable']:
 					continue
@@ -471,9 +476,9 @@ def perf_proc(data):
 				if coords[2] != point['coords'][2]:
 						continue
 								
-				del param_list[index]
-						
-		fit_list['parameters'] = param_list				
+				del new_params[index]
+		
+		fit_list['parameters'] = new_params				
 		write_file("fit_list.json", fit_list)
 		perf_proc.i_send = perf_proc.i_send + 1
 		msg = {"source": "perf-proc", "dest": "index", "cmd": "hold", "index": perf_proc.i_send}

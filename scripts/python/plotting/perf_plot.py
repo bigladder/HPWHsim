@@ -507,8 +507,8 @@ class PerfPlotter():
 					for iT1, T1 in enumerate(self.refs[0]):
 						for i in range(3):
 							if (self.marked[iT1, iT2, self.iT3] & (1 << i)) & (1 << prefs['contour_variable']) > 0:
-								entry = {'type': 'perf-point'}
-								entry['model'] = self.label
+								entry = {'type': "perf-point"}
+								entry ['model'] = self.label
 								entry['variable'] = self.variables_names[i]
 								entry['dependent'] = self.variables_names[self.dependent[iT1, iT2, self.iT3]]						
 								entry['coords'] = [iT1, iT2, self.iT3]
@@ -519,8 +519,8 @@ class PerfPlotter():
 				for iT1, T1 in enumerate(self.refs[0]):
 					for i in range(3):
 						if self.marked[iT1, iT2, self.iT3] & (1 << i) & (1 << prefs['contour_variable']) > 0:
-							entry = {'type': 'perf-point'}
-							entry['model'] = self.label
+							entry = {'type': "perf-point"}
+							entry ['model'] = self.label
 							entry['variable'] = self.variables_names[i]
 							entry['dependent'] = self.variables_names[self.dependent[iT1, iT2, self.iT3]]
 							entry['coords'] = [iT1, iT2]

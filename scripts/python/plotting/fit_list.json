@@ -1,3 +1,15 @@
 {
-  "parameters": []
+  "parameters": [
+    {
+      "type": "perf-point",
+      "model": "NyleC90A_MP",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        3,
+        3,
+        0
+      ]
+    }
+  ]
 }
