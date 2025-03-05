@@ -1,5 +1,5 @@
 ﻿#include "HPWH.hh"
-#include "HPWHTank.hh"
+#include "Tank.hh"
 
 HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Sender(tank_in) { *this = tank_in; }
 
@@ -25,7 +25,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
-void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
+void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
     auto& perf = rstank.performance;
 
@@ -50,11 +50,10 @@ void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
     // bool diameter_is_set;
 }
 
-void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
+void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
 {
     auto& metadata = rstank.metadata;
-    checkTo(
-        hpwh_data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
+    checkTo(std::string("RSTANK"), metadata.schema_name_is_set, metadata.schema_name);
 
     auto& perf = rstank.performance;
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
@@ -226,34 +225,67 @@ double HPWH::Tank::getAverageNodeT_C(const std::vector<double>& dist) const
     return tankT_C;
 }
 
-double HPWH::Tank::getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
+double HPWH::Tank::getAverageNodeT_C(const WeightedDistribution& wdist) const
 {
+    const int numNodes = hpwh->getNumNodes();
     double sum = 0;
     double totWeight = 0;
-
-    std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    HPWH::resample(resampledTankTemps, nodeTs_C);
-
-    for (auto& nodeWeight : nodeWeights)
+    auto distPoint = wdist.begin();
+    for (int i = 0; i < numNodes; ++i)
     {
-        if (nodeWeight.nodeNum == 0)
-        { // bottom node only
-            sum += nodeTs_C.front() * nodeWeight.weight;
-            totWeight += nodeWeight.weight;
+        double norm_node_height = static_cast<double>(i) / numNodes;
+        double norm_dist_height = distPoint->height / wdist.heightRange();
+
+        double next_norm_node_height = static_cast<double>(i + 1) / numNodes;
+        double nodeT_C = hpwh->tank->nodeTs_C[i];
+        double norm_height = norm_node_height;
+        while (norm_dist_height < next_norm_node_height)
+        {
+            double weight = distPoint->weight * (norm_dist_height - norm_height);
+            if (weight > 0.)
+            {
+                sum += weight * nodeT_C;
+                totWeight += weight;
+            }
+
+            ++distPoint;
+            if (distPoint == wdist.end())
+                break;
+
+            norm_height = norm_dist_height;
+            norm_dist_height = distPoint->height / wdist.heightRange();
         }
-        else if (nodeWeight.nodeNum > LOGIC_SIZE)
-        { // top node only
-            sum += nodeTs_C.back() * nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-        else
-        { // general case; sum over all weighted nodes
-            sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
-                   nodeWeight.weight;
-            totWeight += nodeWeight.weight;
+        double weight = distPoint->weight * (next_norm_node_height - norm_height);
+        if (weight > 0.)
+        {
+            sum += weight * nodeT_C;
+            totWeight += weight;
         }
     }
     return sum / totWeight;
+}
+
+double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
+{
+
+    switch (dist.distribType)
+    {
+    case DistributionType::BottomOfTank:
+    {
+        return hpwh->tank->nodeTs_C.front();
+    }
+
+    case DistributionType::TopOfTank:
+    {
+        return hpwh->tank->nodeTs_C.back();
+    }
+
+    case DistributionType::Weighted:
+    {
+        return hpwh->tank->getAverageNodeT_C(dist.weightedDist);
+    }
+    }
+    return 0;
 }
 
 // returns tank heat content relative to 0 C using kJ
@@ -742,7 +774,7 @@ void HPWH::Tank::modifyHeatDistribution(std::vector<double>& heatDistribution_W,
     for (auto& heatDist_W : heatDistribution_W)
         heatDist_W /= totalHeat_W;
 
-    double shrinkageT_C = findShrinkageT_C(heatDistribution_W);
+    double shrinkageT_C = findShrinkageT_C(heatDistribution_W, getNumNodes());
     int lowestNode = findLowestNode(heatDistribution_W, getNumNodes());
 
     std::vector<double> modHeatDistribution_W;

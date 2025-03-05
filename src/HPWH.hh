@@ -92,50 +92,50 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
-    void from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi);
-    void to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const;
+    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
+    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
 
-    void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
-    void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
+    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
+    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
 
-    void from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs);
-    void
-    to(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs) const;
+    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
+    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
 
-    static void to_json(const hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi,
+    static void to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi,
                         nlohmann::json& j);
 
     static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+    to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
             nlohmann::json& j);
 
     static void
-    to_json(const hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs,
+    to_json(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs,
             nlohmann::json& j);
 
-    static void to_json(const hpwh_data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
+    static void to_json(const hpwh_data_model::rstank::RSTANK& rshs, nlohmann::json& j);
 
     static void
-    to_json(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
+    to_json(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs,
+            nlohmann::json& j);
+
+    static void to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs,
+                        nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE& rshs,
+            nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic,
             nlohmann::json& j);
 
     static void to_json(
-        const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+        const hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic& soclogic,
         nlohmann::json& j);
 
-    static void
-    to_json(const hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heating_logic,
-            nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::heat_source_configuration_ns::StateOfChargeBasedHeatingLogic&
-                soclogic,
-            nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::heat_source_configuration_ns::TemperatureBasedHeatingLogic&
-                templogic,
-            nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic& templogic,
+        nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -376,6 +376,142 @@ class HPWH : public Courier::Sender
         CSVOPT_NONE = 0,
         CSVOPT_IPUNITS = 1 << 0,
         CSVOPT_IS_DRAWING = 1 << 1
+    };
+
+    struct DistributionPoint
+    {
+        double height, weight;
+    };
+    struct WeightedDistribution : public std::vector<DistributionPoint>
+    {
+      public:
+        WeightedDistribution(std::vector<double> heights = {}, std::vector<double> weights = {})
+        {
+            clear();
+            reserve(heights.size());
+            auto weight = weights.begin();
+            for (auto& height : heights)
+                if (weight != weights.end())
+                {
+                    push_back({height, *weight});
+                    ++weight;
+                }
+        }
+        double heightRange() const { return back().height; }
+        double totalWeight() const
+        {
+            double total = 0.;
+            double prevHeight = 0.;
+            for (auto distPoint : (*this))
+            {
+                double& height = distPoint.height;
+                double& weight = distPoint.weight;
+                total += weight * (height - prevHeight);
+                prevHeight = height;
+            }
+            return total / prevHeight;
+        }
+        double maxWeight() const
+        {
+            double res = 0.;
+            for (auto distPoint : (*this))
+                res = std::max(distPoint.weight, res);
+            return res;
+        }
+        double normHeight(std::size_t i) const { return (*this)[i].height / heightRange(); }
+        double normWeight(std::size_t i) const { return (*this)[i].weight / totalWeight(); }
+        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maxWeight(); }
+        bool isValid() const
+        {
+            bool isNotEmpty = (size() > 0);
+            bool hasWeight = false;
+            bool isSorted = true;
+            double prevHeight = 0.;
+            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
+            {
+                if (distPoint->height <= prevHeight)
+                    isSorted = false;
+                if (distPoint->weight > 0.)
+                    hasWeight = true;
+            }
+            return isNotEmpty && hasWeight && isSorted;
+        }
+        double normWeight(double beginFrac, double endFrac) const
+        {
+            double res = 0.;
+            double prevFrac = beginFrac;
+            for (auto distPoint : (*this))
+            {
+                double frac = distPoint.height / heightRange();
+                if (frac < beginFrac)
+                    continue;
+                if (frac > prevFrac)
+                {
+                    if (frac > endFrac)
+                    {
+                        res += distPoint.weight * (endFrac - prevFrac);
+                        break;
+                    }
+                    else
+                        res += distPoint.weight * (frac - prevFrac);
+                }
+                prevFrac = frac;
+            }
+            return res / totalWeight();
+        }
+        double lowestNormHeight() const
+        {
+            double prev_height = 0.;
+            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
+            {
+                if (distPoint->weight > 0.)
+                    return prev_height / heightRange();
+                prev_height = distPoint->height;
+            }
+
+            return 0.;
+        }
+        double highestNormHeight() const
+        {
+            double height = 0.;
+            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
+            {
+                if (distPoint->weight > 0.)
+                    height = distPoint->height;
+            }
+            return height / heightRange();
+        }
+    };
+    enum class DistributionType
+    {
+        Weighted,
+        TopOfTank,
+        BottomOfTank
+    };
+
+    struct Distribution
+    {
+      public:
+        DistributionType distribType;
+        WeightedDistribution weightedDist;
+        Distribution(DistributionType distribType_in = DistributionType::Weighted,
+                     WeightedDistribution weightedDist_in = {{}, {}})
+            : distribType(distribType_in), weightedDist(weightedDist_in)
+        {
+        }
+        bool isValid() const
+        {
+            switch (distribType)
+            {
+            case DistributionType::TopOfTank:
+            case DistributionType::BottomOfTank:
+                return true;
+
+            case DistributionType::Weighted:
+                return weightedDist.isValid();
+            }
+            return false;
+        }
     };
 
     struct NodeWeight
@@ -821,6 +957,9 @@ class HPWH : public Courier::Sender
     /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass
     int isCompressorExternalMultipass() const;
 
+    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass
+    int isCompressorExternal() const;
+
     bool hasACompressor() const;
     /// Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
 
@@ -876,12 +1015,14 @@ class HPWH : public Courier::Sender
 
     /// returns the tank temperature averaged uniformly
     double getAverageTankTemp_C() const;
-
     /// returns the tank temperature averaged over a distribution
     double getAverageTankTemp_C(const std::vector<double>& dist) const;
 
     /// returns the tank temperature averaged using weighted logic nodes
-    double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+    double getAverageTankTemp_C(const Distribution& dist) const;
+
+    /// returns the tank temperature averaged using weighted logic nodes
+    double getAverageTankTemp_C(const WeightedDistribution& wdist) const;
 
     void setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
@@ -1206,8 +1347,8 @@ class HPWH : public Courier::Sender
     /**< A map from index of an resistance element in heatSources to position in the tank, its
     is sorted by height from lowest to highest*/
 
-    /// Generates a vector of logical nodes
-    std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction, double topFraction);
+    /// Generates a top-hat distribution
+    Distribution getRangeDistribution(double bottomFraction, double topFraction);
 
   public:
     static double getResampledValue(const std::vector<double>& sampleValues,
@@ -1223,8 +1364,8 @@ class HPWH : public Courier::Sender
     }
     static double expitFunc(double x, double offset);
     static void normalize(std::vector<double>& distribution);
-    static int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes);
-    static double findShrinkageT_C(const std::vector<double>& nodeDist);
+    static int findLowestNode(const WeightedDistribution& wdist, const int numTankNodes);
+    static double findShrinkageT_C(const WeightedDistribution& wDist, const int numTankNodes);
     static void calcThermalDist(std::vector<double>& thermalDist,
                                 const double shrinkageT_C,
                                 const int lowestNode,

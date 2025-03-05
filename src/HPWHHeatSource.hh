@@ -19,12 +19,14 @@ class HPWH::HeatSource : public Sender
     virtual ~HeatSource() = default;
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void to(hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& config) const;
-    void from(const hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& config);
+    void to(hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& config) const;
+    void from(const hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& config);
 
     virtual HEATSOURCE_TYPE typeOfHeatSource() const = 0;
-    virtual void to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const = 0;
-    virtual void from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr) = 0;
+    virtual void
+    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const = 0;
+    virtual void
+    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) = 0;
 
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 
@@ -73,8 +75,6 @@ class HPWH::HeatSource : public Sender
     /// resampled to preserve a condensity vector of size CONDENSITY_SIZE.
     void setCondensity(const std::vector<double>& condensity_in);
 
-    int getCondensitySize() const;
-
   private:
     /** the creator of the heat source, necessary to access HPWH variables */
     HPWH* hpwh;
@@ -110,7 +110,8 @@ class HPWH::HeatSource : public Sender
     //  It is conceptually linked to the way condenser coils are wrapped around
     //  (or within) the tank, however a resistance heat source can also be simulated
     //  by specifying the entire condensity in one node. */
-    std::vector<double> condensity;
+    // std::vector<double> condensity;
+    WeightedDistribution heatDist;
 
     double Tshrinkage_C;
     /**< Tshrinkage_C is a derived from the condentropy (conditional entropy),

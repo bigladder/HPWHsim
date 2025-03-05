@@ -85,7 +85,7 @@ class Plotter:
 			        },
 			        "Labels": [
 			            f"Storage Tank Temperature {number}"
-			            for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+			            for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
 			        ],
 			        "Units": f"{DEGREE_SIGN}F",
 			        "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
@@ -108,7 +108,7 @@ class Plotter:
         ],
         "Simulated": [
             f"tcouple{number} (C)"
-            for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
+            for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
         ], 
 		}
 
@@ -169,9 +169,7 @@ class Plotter:
 	        self.temperature_profile_vars[variable_type]
 	    ].mean(axis=1)
 
-		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][
-	        variable_type
-	    ]:
+		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]:
 				for index in range(len(df)):
 					df.loc[index, temperature_column] = 1.8 * df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
 

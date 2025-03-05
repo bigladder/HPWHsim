@@ -1,17 +1,16 @@
 #ifndef HPWH_DATA_MODEL_H_
 #define HPWH_DATA_MODEL_H_
 
-#include <ashrae205.h>
+#include <ASHRAE205.h>
 #include <load-object.h>
-#include <hpwhsiminput.h>
-#include <heat-source-template.h>
-#include <heating-logic-template.h>
-#include <heatsourceconfiguration.h>
-#include <rsresistancewaterheatsource.h>
-#include <rscondenserwaterheatsource.h>
-#include <rsintegratedwaterheater.h>
-#include <centralwaterheatingsystem.h>
-#include <rstank.h>
+#include <HPWHSimInput.h>
+#include <HeatSourceConfiguration.h>
+#include <RSRESISTANCEWATERHEATSOURCE.h>
+#include <RSCONDENSERWATERHEATSOURCE.h>
+#include <RSINTEGRATEDWATERHEATER.h>
+#include <RSAIRTOWATERHEATPUMP.h>
+#include <CentralWaterHeatingSystem.h>
+#include <RSTANK.h>
 
 #define JSON_HAS_CPP_17
 

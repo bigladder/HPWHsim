@@ -1485,154 +1485,139 @@ std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc,
                                                   std::greater<double>());
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Builds a vector of logic node weights referred to a fixed number of
-/// nodes given by LOGIC_SIZE.
-/// @param[in]	bottomFraction	Lower bounding fraction (0 to 1)
-///	@param[in]	topFraction		Upper bounding fraction (0 to 1)
-/// @return	vector of node weights
-//-----------------------------------------------------------------------------
-std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, double topFraction)
+HPWH::Distribution HPWH::getRangeDistribution(double bottomFraction, double topFraction)
 {
-    std::vector<NodeWeight> nodeWeights;
-    if (topFraction < bottomFraction)
-        std::swap(bottomFraction, topFraction);
-    auto bottomIndex = static_cast<std::size_t>(bottomFraction * LOGIC_SIZE);
-    auto topIndex = static_cast<std::size_t>(topFraction * LOGIC_SIZE);
-    for (auto index = bottomIndex; index < topIndex; ++index)
+    std::vector<double> heights = {}, weights = {};
+    if (bottomFraction > 0.)
     {
-        nodeWeights.emplace_back(static_cast<int>(index) + 1);
+        heights.push_back(bottomFraction);
+        weights.push_back(0.);
     }
-    return nodeWeights;
+    heights.push_back(topFraction);
+    weights.push_back(1.);
+    if (topFraction < 1.)
+    {
+        heights.push_back(1.);
+        weights.push_back(0.);
+    }
+    return {DistributionType::Weighted, {heights, weights}};
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,
                                                              const UNITS units /* = UNITS_C */,
                                                              const bool absolute /* = false */)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1.);
+    auto dist = getRangeDistribution(0., 1.);
     double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "whole tank", nodeWeights, decisionPoint_C, this, absolute);
+        "whole tank", dist, decisionPoint_C, this, absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top third", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(2. / 3., 1.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("top third", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
+    auto dist = getRangeDistribution(2. / 3., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top third absolute", nodeWeights, decisionPoint, this, true);
+        "top third absolute", dist, decisionPoint, this, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,
                                                                const UNITS units /* = UNITS_C */,
                                                                const bool absolute /* = false */)
 {
-    auto nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
+    auto dist = getRangeDistribution(1. / 3., 2. / 3.);
     double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second third", nodeWeights, decisionPoint_C, this, absolute);
+        "second third", dist, decisionPoint_C, this, absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 3.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom third", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(0., 1. / 3.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom third", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom sixth", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(0., 1. / 6.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom sixth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth_absolute(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
+    auto dist = getRangeDistribution(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom sixth absolute", nodeWeights, decisionPoint, this, true);
+        "bottom sixth absolute", dist, decisionPoint, this, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second sixth", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(1. / 6., 2. / 6.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("second sixth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::thirdSixth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(2. / 6., 3. / 6.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "third sixth", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(2. / 6., 3. / 6.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("third sixth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fourthSixth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(3. / 6., 4. / 6.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "fourth sixth", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(3. / 6., 4. / 6.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("fourth sixth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "fifth sixth", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(4. / 6., 5. / 6.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("fifth sixth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(5. / 6., 1.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top sixth", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(5. / 6., 1.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 2.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom half", nodeWeights, decisionPoint, this);
+    auto dist = getRangeDistribution(0., 1. / 2.);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom half", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 12.);
+    auto dist = getRangeDistribution(0., 1. / 12.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom twelfth", nodeWeights, decisionPoint, this);
+        "bottom twelfth", dist, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
+    HPWH::Distribution dist = {DistributionType::TopOfTank, {{}, {}}};
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "standby", nodeWeights, decisionPoint, this);
+        "standby", dist, decisionPoint, this, false, std::less<double>(), false, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
+    HPWH::Distribution dist = {DistributionType::TopOfTank, {{}, {}}};
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top node", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top of tank", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic>
 HPWH::bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff /*=false*/)
 {
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(0); // uses very bottom computation node
-    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node",
-                                                         nodeWeights,
+    HPWH::Distribution dist = {DistributionType::BottomOfTank, {{}, {}}};
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom of tank",
+                                                         dist,
                                                          decisionPoint,
                                                          this,
                                                          true,
@@ -1642,58 +1627,58 @@ HPWH::bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutof
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfthMaxTemp(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 12.);
+    auto dist = getRangeDistribution(0., 1. / 12.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom twelfth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "bottom twelfth", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThirdMaxTemp(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
+    auto dist = getRangeDistribution(2. / 3., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top third", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top third", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixthMaxTemp(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
+    auto dist = getRangeDistribution(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "bottom sixth", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixthMaxTemp(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
+    auto dist = getRangeDistribution(1. / 6., 2. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "second sixth", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixthMaxTemp(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
+    auto dist = getRangeDistribution(4. / 6., 5. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top sixth", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixthMaxTemp(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(5. / 6., 1.);
+    auto dist = getRangeDistribution(5. / 6., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top sixth", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 4.);
+    auto dist = getRangeDistribution(0., 1. / 4.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "large draw", nodeWeights, decisionPoint, this, true);
+        "large draw", dist, decisionPoint, this, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double decisionPoint)
 {
-    auto nodeWeights = getNodeWeightRange(0., 1. / 2.);
+    auto dist = getRangeDistribution(0., 1. / 2.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "larger draw", nodeWeights, decisionPoint, this, true);
+        "larger draw", dist, decisionPoint, this, true);
 }
 
 void HPWH::setNumNodes(const std::size_t num_nodes) { tank->setNumNodes(num_nodes); }
@@ -2062,19 +2047,14 @@ double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
     return tank->getAverageNodeT_C(dist);
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Evaluates the average tank temperature based on weighted logic nodes.
-/// @note	Logic nodes must be normalizable and are referred to the fixed size LOGIC_NODE_SIZE.
-///         Node indices as associated with tank nodes as follows:
-///         node # 0: bottom tank node only;
-///         node # LOGIC_NODE_SIZE + 1: top node only;
-///         nodes # 1..LOGIC_NODE_SIZE: resampled tank nodes.
-/// @param[in]	nodeWeights	Discrete set of weighted nodes
-/// @return	Tank temperature (C)
-//-----------------------------------------------------------------------------
-double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
+double HPWH::getAverageTankTemp_C(const WeightedDistribution& wdist) const
 {
-    return tank->getAverageNodeT_C(nodeWeights);
+    return tank->getAverageNodeT_C(wdist);
+}
+
+double HPWH::getAverageTankTemp_C(const Distribution& dist) const
+{
+    return tank->getAverageNodeT_C(dist);
 }
 
 void HPWH::setTankToTemperature(double temp_C) { tank->setNodeT_C(temp_C); }
@@ -2111,6 +2091,16 @@ int HPWH::isCompressorExternalMultipass() const
     }
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
     return static_cast<int>(cond_ptr->isExternalMultipass());
+}
+
+int HPWH::isCompressorExternal() const
+{
+    if (!hasACompressor())
+    {
+        send_error("Current model does not have a compressor.");
+    }
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return static_cast<int>(cond_ptr->isExternal());
 }
 
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
@@ -2416,22 +2406,8 @@ int HPWH::getResistancePosition(int elementIndex) const
     {
         send_error("This index is not a resistance element.");
     }
-    bool foundPosition = false;
-    int position = -1;
-    for (int i = 0; i < heatSources[elementIndex]->getCondensitySize(); i++)
-    {
-        if (heatSources[elementIndex]->condensity[i] > 0.)
-        { // res elements have a condensity
-            position = i;
-            foundPosition = true;
-            break;
-        }
-    }
-    if (!foundPosition)
-    {
-        send_error("Invalid resistance heat source.");
-    }
-    return position;
+    return static_cast<int>(HeatSource::CONDENSITY_SIZE *
+                            heatSources[elementIndex]->heatDist.lowestNormHeight());
 }
 
 void HPWH::updateSoCIfNecessary()
@@ -2548,14 +2524,14 @@ void HPWH::calcDerivedHeatingValues()
     // find condentropy/shrinkage
     for (int i = 0; i < getNumHeatSources(); ++i)
     {
-        heatSources[i]->Tshrinkage_C = findShrinkageT_C(heatSources[i]->condensity);
+        heatSources[i]->Tshrinkage_C =
+            findShrinkageT_C(heatSources[i]->heatDist, tank->getNumNodes());
     }
 
     // find lowest node
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i]->lowestNode =
-            findLowestNode(heatSources[i]->condensity, tank->getNumNodes());
+        heatSources[i]->lowestNode = findLowestNode(heatSources[i]->heatDist, tank->getNumNodes());
     }
 
     // define condenser index and lowest resistance element index
@@ -2586,20 +2562,17 @@ void HPWH::calcDerivedHeatingValues()
                     send_warning("More than one resistance element is assigned to VIP.");
                 }
             }
-            int condensitySize = heatSources[i]->getCondensitySize();
-            for (int j = 0; j < condensitySize; ++j)
+            double pos = heatSources[i]->heatDist.lowestNormHeight();
+            if (pos < lowestPos)
             {
-                double pos = static_cast<double>(j) / condensitySize;
-                if ((heatSources[i]->condensity[j] > 0.) && (pos < lowestPos))
-                {
-                    lowestElementIndex = i;
-                    lowestPos = pos;
-                }
-                if ((heatSources[i]->condensity[j] > 0.) && (pos >= highestPos))
-                {
-                    highestElementIndex = i;
-                    highestPos = pos;
-                }
+                lowestElementIndex = i;
+                lowestPos = pos;
+            }
+            pos = heatSources[i]->heatDist.lowestNormHeight();
+            if (pos >= highestPos)
+            {
+                highestElementIndex = i;
+                highestPos = pos;
             }
         }
     }
@@ -2716,7 +2689,6 @@ void HPWH::checkInputs()
         error_msgs.push("You must have at least one HeatSource.");
     }
 
-    double condensitySum;
     // loop through all heat sources to check each for malconfigurations
     for (int i = 0; i < getNumHeatSources(); i++)
     {
@@ -2752,18 +2724,11 @@ void HPWH::checkInputs()
                 error_msgs.push(fmt::format("Off logic at index {:d} is invalid.", i));
             }
         }
-
-        // check is condensity sums to 1
-        condensitySum = 0;
-
-        for (int j = 0; j < heatSources[i]->getCondensitySize(); j++)
-            condensitySum += heatSources[i]->condensity[j];
-        if (fabs(condensitySum - 1.0) > 1e-6)
+        // check is distribution is valid
+        if (!heatSources[i]->heatDist.isValid())
         {
-            error_msgs.push(fmt::format("The condensity for heatsource {:d} does not sum to 1. "
-                                        "It sums to {:g}.",
-                                        i,
-                                        condensitySum));
+            error_msgs.push(
+                fmt::format("The heat distribution for heatsource {:d} is invalid.", i));
         }
         // check that air flows are all set properly
         if (heatSources[i]->airflowFreedom > 1.0 || heatSources[i]->airflowFreedom <= 0.0)
@@ -3168,7 +3133,6 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_ColmacCxA_30_MP;
     }
-
     else if (modelName == "RheemHPHD60")
     {
         model = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
@@ -3190,6 +3154,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_NyleC90A_SP;
     }
+    else if (modelName == "NyleC125A_SP")
+    {
+        model = HPWH::MODELS_NyleC125A_SP;
+    }
     else if (modelName == "NyleC185A_SP")
     {
         model = HPWH::MODELS_NyleC185A_SP;
@@ -3205,6 +3173,10 @@ void HPWH::checkInputs()
     else if (modelName == "NyleC90A_C_SP")
     {
         model = HPWH::MODELS_NyleC90A_C_SP;
+    }
+    else if (modelName == "NyleC125A_C_SP")
+    {
+        model = HPWH::MODELS_NyleC125A_C_SP;
     }
     else if (modelName == "NyleC185A_C_SP")
     {
@@ -3696,6 +3668,30 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                     std::shared_ptr<HPWH::TempBasedHeatingLogic> logic =
                         std::make_shared<HPWH::TempBasedHeatingLogic>(
                             "custom", nodeWeights, tempDouble, this, absolute, compare);
+
+                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    {
+                        j_logic["distribution_type"] = "top of tank";
+                    }
+                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    {
+                        j_logic["distribution_type"] = "bottom of tank";
+                    }
+                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    {
+                        std::vector<double> distHeights = {}, distWeights = {};
+                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        {
+                            distHeights.push_back(logic->dist.weightedDist[i].height);
+                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                        }
+                        nlohmann::json j_weighted_dist;
+                        j_weighted_dist["normalized_height"] = distHeights;
+                        j_weighted_dist["weight"] = distWeights;
+                        j_logic["weighted_distribution"] = j_weighted_dist;
+                        j_logic["distribution_type"] = "weighted";
+                    }
+
                     if (token == "onlogic")
                     {
                         j_heatsourceconfigs[heatsource]["turn_on_logic"].push_back(j_logic);
@@ -3814,10 +3810,29 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    for (auto& node : logic->nodeWeights)
+                    if (logic->dist.distribType == DistributionType::TopOfTank)
                     {
-                        j_logic["node_weights"].push_back({node.nodeNum, node.weight});
+                        j_logic["distribution_type"] = "top of tank";
                     }
+                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    {
+                        j_logic["distribution_type"] = "bottom of tank";
+                    }
+                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    {
+                        std::vector<double> distHeights = {}, distWeights = {};
+                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        {
+                            distHeights.push_back(logic->dist.weightedDist[i].height);
+                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                        }
+                        nlohmann::json j_weighted_dist;
+                        j_weighted_dist["normalized_height"] = distHeights;
+                        j_weighted_dist["weight"] = distWeights;
+                        j_logic["weighted_distribution"] = j_weighted_dist;
+                        j_logic["distribution_type"] = "weighted";
+                    }
+
                     if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else
@@ -3872,10 +3887,30 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                         send_error(fmt::format(
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
-                    for (auto& node : logic->nodeWeights)
+
+                    if (logic->dist.distribType == DistributionType::TopOfTank)
                     {
-                        j_logic["node_weights"].push_back({node.nodeNum, node.weight});
+                        j_logic["distribution_type"] = "top of tank";
                     }
+                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    {
+                        j_logic["distribution_type"] = "bottom of tank";
+                    }
+                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    {
+                        std::vector<double> distHeights = {}, distWeights = {};
+                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        {
+                            distHeights.push_back(logic->dist.weightedDist[i].height);
+                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                        }
+                        nlohmann::json j_weighted_dist;
+                        j_weighted_dist["normalized_height"] = distHeights;
+                        j_weighted_dist["weight"] = distWeights;
+                        j_logic["weighted_distribution"] = j_weighted_dist;
+                        j_logic["distribution_type"] = "weighted";
+                    }
+
                     if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else
@@ -4212,10 +4247,29 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
         for (auto& j_logic : j_heatsourceconfig["turn_on_logic"])
         {
-            std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight : j_logic["node_weights"])
+            std::string desc;
+            checkFrom(desc, j_logic, "description", std::string("none"));
+
+            std::string distType;
+            checkFrom(distType, j_logic, "distribution_type", std::string("weighted"));
+
+            bool checkStandby = false;
+            Distribution dist;
+            if (distType == "top of tank")
             {
-                nodeWeights.emplace_back(node_weight[0], node_weight[1]);
+                dist = {DistributionType::TopOfTank, {{}, {}}};
+                checkStandby = true;
+            }
+
+            else if (distType == "bottom of tank")
+                dist = {DistributionType::BottomOfTank, {{}, {}}};
+
+            else if (distType == "weighted")
+            {
+                auto& j_dist = j_logic["weighted_distribution"];
+                auto& distHeights = j_dist["normalized_height"];
+                auto& distWeights = j_dist["weight"];
+                dist = {DistributionType::Weighted, {distHeights, distWeights}};
             }
 
             bool is_absolute = false;
@@ -4228,25 +4282,38 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
             else
                 checkFrom(temp, j_logic, "differential_temperature_dC", 0.);
 
-            std::string desc;
-            checkFrom(desc, j_logic, "description", std::string("none"));
             std::function<bool(double, double)> compare = std::less<>();
             if (j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc, nodeWeights, temp, this, is_absolute, compare);
+                desc, dist, temp, this, is_absolute, compare, false, checkStandby);
 
             element->addTurnOnLogic(heatingLogic);
         }
 
         for (auto& j_logic : j_heatsourceconfig["shut_off_logic"])
         {
-            std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight : j_logic["node_weights"])
+            std::string desc;
+            checkFrom(desc, j_logic, "description", std::string("none"));
+
+            std::string distType;
+            checkFrom(distType, j_logic, "distribution_type", std::string("weighted"));
+
+            Distribution dist;
+            if (distType == "top of tank")
+                dist = {DistributionType::TopOfTank, {{}, {}}};
+
+            else if (distType == "bottom of tank")
+                dist = {DistributionType::BottomOfTank, {{}, {}}};
+
+            else if (distType == "weighted")
             {
-                nodeWeights.emplace_back(node_weight[0], node_weight[1]);
+                auto& j_dist = j_logic["weighted_distribution"];
+                auto& distHeights = j_dist["normalized_height"];
+                auto& distWeights = j_dist["weight"];
+                dist = {DistributionType::Weighted, {distHeights, distWeights}};
             }
 
             bool is_absolute = false;
@@ -4259,15 +4326,13 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
             else
                 checkFrom(temp, j_logic, "differential_temperature_dC", 0.);
 
-            std::string desc;
-            checkFrom(desc, j_logic, "description", std::string("none"));
             std::function<bool(double, double)> compare = std::less<>();
             if (j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc, nodeWeights, temp, this, is_absolute, compare);
+                desc, dist, temp, this, is_absolute, compare);
 
             element->addShutOffLogic(heatingLogic);
         }
@@ -4275,10 +4340,23 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
         if (j_heatsourceconfig.contains("standby_logic"))
         {
             auto& j_logic = j_heatsourceconfig["standby_logic"];
-            std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight : j_logic["node_weights"])
+            // std::vector<NodeWeight> nodeWeights = {};
+            std::string distType;
+            checkFrom(distType, j_logic, "distribution_type", std::string("weighted"));
+
+            Distribution dist;
+            if (distType == "top of tank")
+                dist = {DistributionType::TopOfTank, {{}, {}}};
+
+            else if (distType == "bottom of tank")
+                dist = {DistributionType::BottomOfTank, {{}, {}}};
+
+            else if (distType == "weighted")
             {
-                nodeWeights.emplace_back(node_weight[0], node_weight[1]);
+                auto& j_dist = j_logic["weighted_distribution"];
+                auto& distHeights = j_dist["normalized_height"];
+                auto& distWeights = j_dist["weight"];
+                dist = {DistributionType::Weighted, {distHeights, distWeights}};
             }
 
             bool is_absolute = false;
@@ -4297,7 +4375,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                "name", nodeWeights, temp, this, is_absolute, compare);
+                "name", dist, temp, this, is_absolute, compare);
 
             element->standbyLogic = heatingLogic;
         }
@@ -4360,14 +4438,14 @@ void HPWH::initFromJSON(string sModelName)
 
     mapNameToPreset(sModelName, model);
 
-    hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi;
-    hpwh_data_model::hpwh_sim_input_ns::from_json(j, hsi);
+    hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
+    hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     from(hsi);
 }
 
 #endif
 
-void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
+void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
     checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
 
@@ -4380,13 +4458,14 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
     if (hsi.system_type_is_set)
         switch (hsi.system_type)
         {
-        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED:
+        case hpwh_data_model::hpwh_sim_input::HPWHSystemType::INTEGRATED:
         {
             if (hsi.integrated_system_is_set)
                 from(hsi.integrated_system);
+
             break;
         }
-        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL:
+        case hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL:
         {
             if (hsi.central_system_is_set)
             {
@@ -4397,24 +4476,26 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
                     hsi.central_system.external_inlet_height * hsi.number_of_nodes);
                 compressor->externalOutletHeight = static_cast<int>(
                     hsi.central_system.external_outlet_height * hsi.number_of_nodes);
-                if (hsi.central_system.multipass_flow_rate_is_set)
+                if (hsi.central_system.fixed_flow_rate_is_set)
                 {
                     compressor->isMultipass = true;
-                    compressor->mpFlowRate_LPS = 1000. * hsi.central_system.multipass_flow_rate;
+                    compressor->mpFlowRate_LPS = 1000. * hsi.central_system.fixed_flow_rate;
                 }
                 else
                     compressor->isMultipass = false;
+
+                compressor->configuration = Condenser::COIL_CONFIG::CONFIG_EXTERNAL;
             }
             break;
         }
-        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::UNKNOWN:
+        case hpwh_data_model::hpwh_sim_input::HPWHSystemType::UNKNOWN:
             return;
         }
 
     checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
 }
 
-void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
 
@@ -4436,13 +4517,18 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER:
         {
-            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.id));
-            heatSources[iHeatSource]->from(config.heat_source);
+            auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
+            heatSources.push_back(condenser);
+
+            auto cond_ptr = reinterpret_cast<
+                hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(
+                config.heat_source.get());
+            condenser->from(*cond_ptr);
             break;
         }
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
         {
             heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
@@ -4505,7 +4591,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     }
 }
 
-void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);
@@ -4525,7 +4611,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::AIRTOWATERHEATPUMP:
         {
             auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
             heatSources.push_back(condenser);
@@ -4537,18 +4623,28 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
             checkFrom(ratio, cwhs.external_outlet_height_is_set, cwhs.external_outlet_height, 1.);
             condenser->externalOutletHeight = static_cast<int>(ratio * (tank->getNumNodes() - 1));
 
-            if (cwhs.multipass_flow_rate_is_set)
+            if (cwhs.fixed_flow_rate_is_set)
             {
                 condenser->isMultipass = true;
-                condenser->mpFlowRate_LPS = 1000. * cwhs.multipass_flow_rate;
+                condenser->mpFlowRate_LPS = 1000. * cwhs.fixed_flow_rate;
             }
             else
                 condenser->isMultipass = false;
-            condenser->from(config.heat_source);
 
+            if (cwhs.secondary_heat_exchanger_is_set)
+            {
+                auto& shs = cwhs.secondary_heat_exchanger;
+                condenser->secondaryHeatExchanger = {shs.cold_side_temperature_offset,
+                                                     shs.hot_side_temperature_offset,
+                                                     shs.extra_pump_power};
+            }
+            auto ptr =
+                reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
+                    config.heat_source.get());
+            condenser->from(*ptr);
             break;
         }
-        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
+        case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
         {
             heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
@@ -4615,7 +4711,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
     }
 }
 
-void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
+void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 {
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
@@ -4627,7 +4723,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
 
     if (hasACompressor() && (getCompressorCoilConfig() == Condenser::COIL_CONFIG::CONFIG_EXTERNAL))
     {
-        checkTo(hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL,
+        checkTo(hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL,
                 hsi.system_type_is_set,
                 hsi.system_type);
         to(hsi.central_system);
@@ -4636,7 +4732,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
     }
     else
     {
-        checkTo(hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED,
+        checkTo(hpwh_data_model::hpwh_sim_input::HPWHSystemType::INTEGRATED,
                 hsi.system_type_is_set,
                 hsi.system_type);
         to(hsi.integrated_system);
@@ -4645,12 +4741,11 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
     }
 }
 
-void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
+void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
-    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
-            metadata.schema_is_set,
-            metadata.schema);
+    checkTo(
+        std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
 
     auto& performance = rswh.performance;
 
@@ -4678,8 +4773,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEAT
             hasPrimaryHeatSource);
 }
 
-void HPWH::to(
-    hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs) const
+void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const
 {
     tank->to(cwhs.tank);
 
@@ -4691,6 +4785,7 @@ void HPWH::to(
     for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
+
         heatSources[iHeatSource]->to(configuration);
         if (heatSources[iHeatSource]->isVIP)
         {
@@ -4713,10 +4808,34 @@ void HPWH::to(
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 
+    hpwh_data_model::central_water_heating_system::ControlType ct =
+        (condenser->isMultipass)
+            ? hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE
+            : hpwh_data_model::central_water_heating_system::ControlType::FIXED_OUTLET_TEMPERATURE;
+
+    checkTo(ct, cwhs.control_type_is_set, cwhs.control_type);
+
+    condenser->isMultipass =
+        (ct == hpwh_data_model::central_water_heating_system::ControlType::FIXED_FLOW_RATE);
     checkTo(condenser->mpFlowRate_LPS / 1000.,
-            cwhs.multipass_flow_rate_is_set,
-            cwhs.multipass_flow_rate,
+            cwhs.fixed_flow_rate_is_set,
+            cwhs.fixed_flow_rate,
             condenser->isMultipass);
+
+    if (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)
+    {
+        auto& shs = cwhs.secondary_heat_exchanger;
+        checkTo(condenser->secondaryHeatExchanger.coldSideTemperatureOffset_dC,
+                shs.cold_side_temperature_offset_is_set,
+                shs.cold_side_temperature_offset);
+        checkTo(condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                shs.hot_side_temperature_offset_is_set,
+                shs.hot_side_temperature_offset);
+        checkTo(condenser->secondaryHeatExchanger.extraPumpPower_W,
+                shs.extra_pump_power_is_set,
+                shs.extra_pump_power);
+        cwhs.secondary_heat_exchanger_is_set = true;
+    }
 }
 
 // convert to grid

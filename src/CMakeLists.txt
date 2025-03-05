@@ -15,10 +15,10 @@ set(headers
         HPWHversion.in.hh
         HPWHsim.hh
         HPWH.hh
-        HPWHTank.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
 
+        Tank.hh
         Condenser.hh
         Resistance.hh
 
@@ -28,14 +28,15 @@ set(headers
 set(sources
         HPWHversion.cc
         HPWHUtils.cc
-        HPWHTank.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
         HPWH.cc
         HPWHpresets.cc
 
+        Tank.cc
         Condenser.cc
         Resistance.cc
+
         hpwh-data-model.cpp
         )
 
@@ -65,7 +66,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header wait_for_data_model)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})

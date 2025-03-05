@@ -8,6 +8,7 @@ set(source_files
         )
 
 add_executable(hpwh ${source_files})
+add_dependencies(hpwh wait_for_data_model)
 
 target_include_directories(hpwh
         PRIVATE "${PROJECT_SOURCE_DIR}/vendor/CLI11")

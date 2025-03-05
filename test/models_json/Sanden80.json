@@ -1,35 +1,36 @@
 {
   "central_system": {
+    "control_type": "FIXED_OUTLET_TEMPERATURE",
     "external_inlet_height": 0.9895833333333334,
     "external_outlet_height": 0.0,
     "heat_source_configurations": [
       {
-        "heat_distribution": [
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
+        "heat_distribution": {
+          "normalized_height": [
+            0.08333333333333333,
+            1.0
+          ],
+          "weight": [
+            1.0,
+            0.0
+          ]
+        },
         "heat_source": {
           "metadata": {
-            "schema": "RSCONDENSERWATERHEATSOURCE"
+            "schema": "RSAIRTOWATERHEATPUMP"
           },
           "performance": {
-            "coil_configuration": "EXTERNAL",
             "compressor_lockout_temperature_hysteresis": 4.0,
             "maximum_refrigerant_temperature": 360.92777777777775,
-            "maximum_temperature": 373.15,
-            "minimum_temperature": 241.48333333333332,
             "performance_map": {
               "grid_variables": {
+                "condenser_entering_temperature": [
+                  273.15,
+                  360.92777777777775
+                ],
+                "condenser_leaving_temperature": [
+                  338.15
+                ],
                 "evaporator_environment_dry_bulb_temperature": [
                   241.48333333333332,
                   264.81666666666666,
@@ -38,10 +39,6 @@
                   292.59444444444443,
                   308.15,
                   373.15
-                ],
-                "heat_source_temperature": [
-                  273.15,
-                  360.92777777777775
                 ]
               },
               "lookup_variables": {
@@ -82,27 +79,23 @@
             "use_defrost_map": false
           }
         },
-        "heat_source_type": "CONDENSER",
+        "heat_source_type": "AIRTOWATERHEATPUMP",
         "id": "compressor",
         "shut_off_logic": [
           {
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "absolute_temperature": 330.3722222222222,
-              "temperature_weight_distribution": [
-                1.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0
-              ]
+              "temperature_weight_distribution": {
+                "normalized_height": [
+                  0.08333333333333333,
+                  1.0
+                ],
+                "weight": [
+                  1.0,
+                  0.0
+                ]
+              }
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           }
@@ -111,21 +104,7 @@
           "comparison_type": "GREATER_THAN",
           "heating_logic": {
             "absolute_temperature": 318.15,
-            "standby_temperature_location": "TOP_OF_TANK",
-            "temperature_weight_distribution": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
+            "standby_temperature_location": "BOTTOM_OF_TANK"
           },
           "heating_logic_type": "TEMPERATURE_BASED"
         },
@@ -134,20 +113,18 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "absolute_temperature": 318.15,
-              "temperature_weight_distribution": [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0
-              ]
+              "temperature_weight_distribution": {
+                "normalized_height": [
+                  0.5833333333333334,
+                  0.6666666666666666,
+                  1.0
+                ],
+                "weight": [
+                  0.0,
+                  1.0,
+                  0.0
+                ]
+              }
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           },

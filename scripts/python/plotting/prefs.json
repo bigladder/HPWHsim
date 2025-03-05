@@ -1,1 +1,1 @@
-{"model_name": "ColmacCxA_20_SP", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "All tests", "test_name": "testLargeComp45", "show_simulated": true, "show_measured": false, "draw_profile": "auto"}
+{"model_id": "AOSmithHPTS80", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "All tests", "test_id": "test95", "show_simulated": true, "show_measured": false, "draw_profile": "High"}

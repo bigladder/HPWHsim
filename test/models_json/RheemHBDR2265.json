@@ -10,20 +10,18 @@
         {
           "companion_heat_source_id": "compressor",
           "followed_by_heat_source_id": "resistiveElementBottom",
-          "heat_distribution": [
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.6666666666666666,
+              0.75,
+              1.0
+            ],
+            "weight": [
+              0.0,
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -39,14 +37,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "absolute_temperature": 313.7055555555555,
-                "temperature_weight_distribution": [
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  1.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.8333333333333334,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    1.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -55,20 +55,16 @@
         {
           "backup_heat_source_id": "compressor",
           "followed_by_heat_source_id": "compressor",
-          "heat_distribution": [
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.08333333333333333,
+              1.0
+            ],
+            "weight": [
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSRESISTANCEWATERHEATSOURCE"
@@ -84,20 +80,16 @@
               "comparison_type": "GREATER_THAN",
               "heating_logic": {
                 "absolute_temperature": 310.92777777777775,
-                "temperature_weight_distribution": [
-                  1.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.08333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    1.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -105,11 +97,16 @@
         },
         {
           "backup_heat_source_id": "resistiveElementBottom",
-          "heat_distribution": [
-            1.0,
-            0.0,
-            0.0
-          ],
+          "heat_distribution": {
+            "normalized_height": [
+              0.3333333333333333,
+              1.0
+            ],
+            "weight": [
+              1.0,
+              0.0
+            ]
+          },
           "heat_source": {
             "metadata": {
               "schema": "RSCONDENSERWATERHEATSOURCE"
@@ -118,8 +115,6 @@
               "coil_configuration": "WRAPPED",
               "compressor_lockout_temperature_hysteresis": 1.1111111111111112,
               "maximum_refrigerant_temperature": 344.26111111111106,
-              "maximum_temperature": 322.0388888888889,
-              "minimum_temperature": 278.7055555555555,
               "performance_map": {
                 "grid_variables": {
                   "evaporator_environment_dry_bulb_temperature": [
@@ -170,11 +165,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 19.444444444444443,
-                "temperature_weight_distribution": [
-                  1.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.3333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    1.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             },

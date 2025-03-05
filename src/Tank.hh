@@ -27,8 +27,8 @@ class HPWH::Tank : public Sender
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    void from(hpwh_data_model::rstank_ns::RSTANK& rstank);
-    void to(hpwh_data_model::rstank_ns::RSTANK& rstank) const;
+    void from(hpwh_data_model::rstank::RSTANK& rstank);
+    void to(hpwh_data_model::rstank::RSTANK& rstank) const;
 
     void setAllDefaults();
 
@@ -144,7 +144,9 @@ class HPWH::Tank : public Sender
 
     double getAverageNodeT_C(const std::vector<double>& dist) const;
 
-    double getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const;
+    double getAverageNodeT_C(const WeightedDistribution& wdist) const;
+
+    double getAverageNodeT_C(const Distribution& dist) const;
 
     double getHeatContent_kJ() const;
 
