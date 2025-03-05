@@ -117,11 +117,13 @@ class PerfPlotter():
 			if selectedData['points']:
 				self.clear_selected()
 				nT1s = len(self.T1s)
+				print(selectedData['points'])
 				for point in selectedData['points']:
-					idx = point['pointIndex']
-					iT2 = int(idx / nT1s)
-					iT1 = idx % nT1s
-					self.selected[iT1, iT2] = 1
+					if point['curveNumber'] == 1:
+						idx = point['pointIndex']
+						iT2 = int(idx / nT1s)
+						iT1 = idx % nT1s
+						self.selected[iT1, iT2] = 1
 	
 	def have_selected(self):			
 		for iT1, T1 in enumerate(self.T1s):
@@ -440,7 +442,6 @@ class PerfPlotter():
 
 #
 	def update_dependent(self, prefs):
-
 		dependMarkers = {}
 		dependMarkers['x'] = []
 		dependMarkers['y'] = []

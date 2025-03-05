@@ -442,6 +442,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		document.getElementById("perf_btn").disabled = false;
 	}
 
+	async function clear_params() {
+
+			var fit_list = await read_json_file("./fit_list.json")
+			fit_list['parameters'] = []
+			await write_json_file("./fit_list.json", fit_list)
+			FillFitTables()
+		}
+
 	async function FillFitTables() {
 		var fit_list = await read_json_file("./fit_list.json")
 		params_table = document.getElementById('params_table');
