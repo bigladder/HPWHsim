@@ -165,8 +165,7 @@ def perf_proc(data):
 
 	@app.callback(
 		Output("ws", "send"),
-		Input("send-btn", "n_clicks"),
-		prevent_initial_call=True
+		Input("send-btn", "n_clicks")
 	)
 	def send_message(n_clicks):
 		perf_proc.i_send = perf_proc.i_send + 1
@@ -194,8 +193,9 @@ def perf_proc(data):
 							prefs["performance_plots"] = perf_proc.prefs
 							write_file("prefs.json", prefs)
 							
-							fig = create_plot(data)				
-							return fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.iT3, perf_proc.outletTs
+							create_plot(data)
+							perf_proc.plotter.update_dependent(perf_proc.prefs)			
+							return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.iT3, perf_proc.outletTs
 								
 		return no_update, no_update, no_update, no_update, no_update
 
@@ -404,30 +404,35 @@ def perf_proc(data):
 		fit_list = read_file("fit_list.json")
 		if not 'parameters' in fit_list:
 			fit_list['parameters'] = []
-		param_list =  fit_list['parameters']
-		print(f"params: {param_list}")
+
+		param_list = fit_list['parameters']
 		new_param_list = param_list
 		for point in fit_points:
-			print(point)
+			found_point = False
 			for param in param_list:
 				if param['type'] != point['type']:
-					break
+					continue
 				if 'variable' not in param or param['variable'] != point['variable']:
-					break
+					continue
 				if 'model' not in param or param['model'] != point['model']:
-					break
+					continue
 					
 				if 'coords' not in param:
-					break
+					continue
 
 				coords = param['coords']
 				if coords[0] != point['coords'][0]:
-						break
+						continue
 				if coords[1] != point['coords'][1]:
-						break
+						continue
+				if coords[2] != point['coords'][2]:
+						continue
 		
-			print(point)
-			new_param_list.append(point)
+				found_point = True
+				break
+			
+			if not found_point:
+				new_param_list.append(point)
 			
 		fit_list['parameters'] = new_param_list				
 		write_file("fit_list.json", fit_list)
@@ -441,38 +446,56 @@ def perf_proc(data):
 			prevent_initial_call=True
 	)
 	def hold_marked(nclicks):
-		fit_points = perf_proc.plotter.get_marked_list()
+		fit_points = perf_proc.plotter.get_marked_list(perf_proc.prefs)
 		fit_list = read_file("fit_list.json")
 		if not 'parameters' in fit_list:
 			fit_list['parameters'] = {}
 		param_list =  fit_list['parameters']
-		i = 0
 		for point in fit_points:
-			for param in param_list:
+			for index, param in reversed(list(enumerate(fit_list['parameters']))):
 				if param['type'] != point['type']:
-					break
+					continue
 				if 'variable' not in param or param['variable'] != point['variable']:
-					break
+					continue
 				if 'model' not in param or param['model'] != point['model']:
-					break
+					continue
 					
 				if 'coords' not in param:
-					break
+					continue
 				
 				coords = param['coords']
 				if coords[0] != point['coords'][0]:
-						break
+						continue
 				if coords[1] != point['coords'][1]:
-						break
-				
-				del param_list[i]
-				i = i + 1
+						continue
+				if coords[2] != point['coords'][2]:
+						continue
+								
+				del param_list[index]
 						
 		fit_list['parameters'] = param_list				
 		write_file("fit_list.json", fit_list)
 		perf_proc.i_send = perf_proc.i_send + 1
 		msg = {"source": "perf-proc", "dest": "index", "cmd": "hold", "index": perf_proc.i_send}
 		return json.dumps(msg)
+
+	@app.callback(
+	    Output('perf-graph', 'figure', allow_duplicate=True),
+	    Input('perf-graph', 'relayoutData'),
+			State('perf-graph', 'figure'),
+			prevent_initial_call=True
+	)
+	def relayout_event(relayoutData, fig):
+		if 'dragmode' in relayoutData:
+			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
+				perf_proc.plotter.clear_selected()		
+				perf_proc.plotter.update_selected(perf_proc.prefs)
+				perf_proc.plotter.fig.update_layout(dragmode= relayoutData['dragmode'])
+				return 	perf_proc.plotter.fig
+		elif 'range' in fig:
+			perf_proc.plotter.fig.update_layout(range = fig['range'])
+			return 	perf_proc.plotter.fig
+		return fig
 			
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
 
