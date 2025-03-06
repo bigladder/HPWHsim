@@ -1,12 +1,12 @@
 {
-  "model_id": "NyleC90A_MP",
+  "model_id": "Rheem2020Build50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
-  "test_id": "DOE2014_LGC50_24hr95",
+  "test_id": "standard24hr",
   "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "Low",
+  "draw_profile": "High",
   "performance_plots": {
     "contour_variable": 0,
     "contour_coloring": 1,

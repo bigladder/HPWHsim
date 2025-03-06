@@ -80,8 +80,7 @@ def perf_proc(data):
 	}
 
 	app.layout = [
-		html.Div(dcc.Input(id="input", autoComplete="off"), hidden=True),
-   	html.Div(id="message"),
+		html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
    	WebSocket(url="ws://localhost:8600", id="ws"),
  
 		html.Div([
@@ -136,7 +135,6 @@ def perf_proc(data):
 			], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)
 		),				
 		
-		html.Button("send", id='send-btn', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
 		
 		html.Div([
 					html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
@@ -438,7 +436,7 @@ def perf_proc(data):
 		fit_list['parameters'] = new_params			
 		write_file("fit_list.json", fit_list)
 		perf_proc.i_send = perf_proc.i_send + 1
-		msg = {"source": "perf-proc", "dest": "index", "cmd": "vary", "index": perf_proc.i_send}
+		msg = {"source": "perf-proc", "dest": "index", "cmd": "refresh-fit-params", "index": perf_proc.i_send}
 		return json.dumps(msg)
 
 	@app.callback(
@@ -453,7 +451,7 @@ def perf_proc(data):
 		if 'parameters' in fit_list:
 			params = fit_list['parameters']
 		else:
-			params = {}			
+			params = []			
 
 		new_params = params
 		for point in remove_points:
@@ -481,7 +479,7 @@ def perf_proc(data):
 		fit_list['parameters'] = new_params				
 		write_file("fit_list.json", fit_list)
 		perf_proc.i_send = perf_proc.i_send + 1
-		msg = {"source": "perf-proc", "dest": "index", "cmd": "hold", "index": perf_proc.i_send}
+		msg = {"source": "perf-proc", "dest": "index", "cmd": "refresh-fit", "index": perf_proc.i_send}
 		return json.dumps(msg)
 
 	@app.callback(
@@ -517,11 +515,9 @@ def launch_perf_proc(data):
 	launch_perf_proc.proc = mp.Process(target=perf_proc, args=(data, ), name='perf-proc')
 	print("launching dash for plotting performance...")
 	time.sleep(1)
-
-	print("starting dash")
+	
 	launch_perf_proc.proc.start()
-	time.sleep(2)
-	print("launched dash")
+	time.sleep(1)
 	
 	results = {}
 	results["port_num"] = perf_proc.port_num
