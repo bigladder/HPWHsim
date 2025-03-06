@@ -37,6 +37,17 @@
 			transition: max-height 0.2s ease-out;
 			background-color: #f1f1f1;
 		}
+
+		table, th, td {
+		  border: 1px solid black;
+		  border-collapse: collapse;
+		}
+		th, td {
+		  padding-top: 10px;
+		  padding-bottom: 10px;
+		  padding-left: 10px;
+		  padding-right: 10px;
+		}
 	</style>
 
 </head>
@@ -67,11 +78,19 @@
 	<!-- content -->
 	<button id="fit_tab" class="collapsible">Fitting</button>
 	<div class="content">
-		<table id="params_table"></table>
-		<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
-		<br>
-		<table id="data_table"></table>
-		<button type="button" id="clear_data_btn" onclick="clear_data();">clear data</button>
+		<table>
+		<tr>
+			<td>
+				<table id="params_table"></table>
+				<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
+			</td>
+
+			<td padding="30px">
+				<table id="data_table"></table>
+				<button type="button" id="clear_data_btn" onclick="clear_data();">clear data</button>
+			</td>
+		</tr>
+		</table>
 	</div>
 
 	<!-- content -->
