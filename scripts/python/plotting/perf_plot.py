@@ -523,7 +523,7 @@ class PerfPlotter():
 							entry ['model'] = self.label
 							entry['variable'] = self.variables_names[i]
 							entry['dependent'] = self.variables_names[self.dependent[iT1, iT2, self.iT3]]
-							entry['coords'] = [iT1, iT2]
+							entry['coords'] = [iT1, iT2, 0]
 							marked_list.append(entry)
 							
 		return marked_list

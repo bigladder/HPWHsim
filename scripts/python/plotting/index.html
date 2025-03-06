@@ -69,7 +69,7 @@
 	<div class="content">
 		<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
 		<table id="params_table"></table>
-		<div id=data_table"></div>
+		<table id="data_table"></table>
 	</div>
 
 	<!-- content -->
@@ -111,7 +111,7 @@
 			<button type="button" id="test_btn" onclick="launch_test_proc();">test</button>
 		</form>
 
-		<iframe title="plots" src="" id="plots" width=1200 height=1000 style="display:none;"></iframe>
+		<iframe title="plots" src="" id="test-plots" width=1200 height=1000 style="display:none;"></iframe>
 
 		<p "" id="measure_results" width=800 height=1800 style="display:none;"></object>
 
@@ -142,8 +142,8 @@
 </body>
 
 <script>
-	init_elements().then({}, {})
 	init_websocket().then({}, {})
+	init_elements().then({}, {})
 	FillFitTables().then({}, {})
 </script>
 

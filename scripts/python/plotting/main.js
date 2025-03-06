@@ -48,7 +48,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	async function init_websocket() {
 		await callPyServer("launch_ws", "")
 		ws_connection = await new WebSocket("ws://localhost:8600");
-		ws_connection.addEventListener("message", (msg) => {
+		ws_connection.addEventListener("message", async (msg) => {
 				if ('data' in msg)
 				{
 					const data = JSON.parse(msg['data']);
@@ -56,7 +56,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 						if(data['dest'] == "index")
 							if ('cmd' in data)
 							{
-								FillFitTables()
+								if(data['cmd'].localeCompare("init-test-proc"))									
+								{
+									prefs = await get_menu_values();
+									await set_elements(prefs);
+									document.getElementById("test-plots").style = "display:block;"
+								}
+								if(data['cmd'].localeCompare("refresh-fit"))
+									FillFitTables()
 							}
 				
 				}
@@ -280,7 +287,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			}
 
 		 // send test info
-			var msg = {'source': 'index', 'dest': 'test-proc', 'cmd': 'replot'};
+			var msg = {
+				'source': 'index',
+				'dest': 'test-proc',
+				'cmd': 'replot',
+				'build_dir': prefs['build_dir']};
 			if (prefs["show_measured"])
 			{
 				measured_filepath = "../../../test"
@@ -294,6 +305,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 				simulated_filepath = prefs['build_dir'] + "/test/output/" + simulated_filename;
 				msg['simulated_filepath'] = simulated_filepath;
 			}
+			msg['is_standard_test'] = (is_standard_test ? 1 : 0);
+
 			await ws_connection.send(JSON.stringify(msg));
 		}
 	}
@@ -314,112 +327,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 	async function launch_test_proc() {
 
-		const build_form = document.getElementById('build_form');
-		const build_dir = build_form.build_dir.value;
-
-		const model_form = document.getElementById('model_form');
-		const model_spec = model_form.model_spec.value;
-		const model_name = model_form.model_name.value;
-
-		const test_form = document.getElementById('test_form');
-
-		var measured_filename = "none";
-
-		var prefs = await read_json_file("./prefs.json")
-
-		// get test path
-		const test_index = await read_json_file("./test_index.json")
-		var test_dir = ""
-		var test_name = prefs["test_id"];
-
-		// get test list from model_index
-		var is_standard_test = false;
-		for (let test of test_index["tests"]) {
-			if (("id" in test) && (!test["id"].localeCompare(test_name))) {
-				if (("group" in test) && !test["group"].localeCompare("Standard tests")) {
-					is_standard_test = true;
-					test_dir = "none";
-				}
-				else
-					test_dir = test_name;
-				if ("path" in test)
-					test_dir = test["path"] + "/" + test_name;
-
-				if ("measured" in test)
-					for (let measured of test["measured"])
-						if (("id" in measured) && !measured["id"].localeCompare(prefs["model_id"]))
-							if ("filename" in measured) {
-								measured_filename = measured["filename"];
-								break;
-							}
-			}
-		}
-
 		document.getElementById("test_btn").disabled = true;
-
-		//measure or simulate
-		if (is_standard_test) {
-			const draw_profile = test_form.draw_profile.value;
-			let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
-			await callPyServer("measure", "data=" + JSON.stringify(data))
-			simulated_filename = "test24hr_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
-
-			let res_path = build_dir + "/test/output/results.json"
-			var results = await read_json_file(res_path)
-			document.getElementById("measure_results").style = "display:block;"
-			document.getElementById("measure_results").height = "1800px;"
-			document.getElementById("measure_results").innerHTML = JSON.stringify(results);
-		}
-		else {
-			let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
-			await callPyServer("simulate", "data=" + JSON.stringify(data))
-			simulated_filename = prefs["test_id"] + "_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
-		}
-	
-		document.getElementById("plots").src = "";
-
 		var data = {};
-		data['test_dir'] = test_dir;
-		data['build_dir'] = build_dir;
-		if (prefs["show_measured"])
-		{
-			measured_filepath = "../../../test"
-			if(test_dir != "")
-				measured_filepath += "/" + test_dir;
-			measured_filepath += "/" + measured_filename;
-			data['measured_filepath'] = measured_filepath;
-		}
-		if (prefs["show_simulated"])
-		{
-			simulated_filepath = prefs['build_dir'] + "/test/output/" + simulated_filename;
-			data['simulated_filepath'] = simulated_filepath;
-		}
-
 		plot_results = await callPyServerJSON("launch_test_proc", "data=" + JSON.stringify(data));
-		await sleep(2000)
+		//await sleep(2000)
 		const dash_port = await plot_results["port_num"];
 
-		model_form.model_spec.value = model_spec;
-		model_form.model_name.value = model_name;
-
-		document.getElementById("model_spec").value = model_spec;
-		document.getElementById("model_name").value = model_name;
-		document.getElementById("test_name").value = test_name;
-		document.getElementById("build_dir").value = build_dir;
-
-		document.getElementById("model_spec").defaultValue = model_spec;
-		document.getElementById("model_name").defaultValue = model_name;
-		document.getElementById("test_name").defaultValue = test_name;
-		document.getElementById("build_dir").defaultValue = build_dir;
-
-		localStorage.setItem("model_spec", model_spec);
-		localStorage.setItem("model_name", model_name);
-		localStorage.setItem("build_dir", build_dir);
-		localStorage.setItem("test_name", test_name);
-
-		document.getElementById("plots").src = "http://localhost:" + dash_port
-		document.getElementById("plots").style = "display:block;"
-
+		document.getElementById("test-plots").src = "http://localhost:" + dash_port
 		document.getElementById("test_btn").disabled = false;
 	}
 
@@ -430,9 +344,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		var model_id = prefs["model_id"]
 		let model_data_filepath = "../../../test/models_json/" + model_id + ".json";
 		data = {
-			'label': model_id,
-			'model_data_filepath': model_data_filepath
-			};
+		'label': model_id,
+		'model_data_filepath': model_data_filepath
+		};
+			
 		let perf_results = await callPyServerJSON("launch_perf_proc", "data=" + JSON.stringify(data))
 		const dash_port = perf_results["port_num"];
 
@@ -446,46 +361,78 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			var fit_list = await read_json_file("./fit_list.json")
 			fit_list['parameters'] = []
 			await write_json_file("./fit_list.json", fit_list)
-			FillFitTables()
+			await FillFitTables()
 		}
 
-	async function FillFitTables() {
+	async function FillParamsTable(fit_list) {
 		params_table = document.getElementById('params_table');		
 		let tableHTML = ''
 
-		var fit_list = await read_json_file("./fit_list.json");
 		have_point = false;
 		if ('parameters' in fit_list)
 		{		
 			let params = fit_list['parameters']
-			if(params.length > 0)
-				params.forEach(param =>
-				{
-					if ('type' in param)
-						if(!param['type'].localeCompare('perf-point'))
+			params.forEach(param =>
+			{
+				if ('type' in param)
+					if(!param['type'].localeCompare('perf-point'))
+					{
+						const tableHeaders = Object.keys(param);
+						if (!have_point)
 						{
-							const tableHeaders = Object.keys(param);
-							if (!have_point)
-							{
-								tableHTML = '<table><thead><tr>';
-								tableHeaders.forEach(header => {
-								    tableHTML += `<th>${header}</th>`;
-								  });
-								tableHTML += '</tr></thead><tbody>';
-								have_point = true;	
-							}
-							
-					    tableHTML += '<tr>';
-					    tableHeaders.forEach(header => {
-					      tableHTML += `<td>${param[header] || ''}</td>`; 
-					    });
-					    tableHTML += '</tr>';
-					  
+							tableHTML = '<table><thead><tr>';
+							tableHeaders.forEach(header => {
+							    tableHTML += `<th>${header}</th>`;
+							  });
+							tableHTML += '</tr></thead><tbody>';
+							have_point = true;	
 						}
-				});
+						
+				    tableHTML += '<tr>';
+				    tableHeaders.forEach(header => {
+				      tableHTML += `<td>${param[header] || ''}</td>`; 
+				    });
+				    tableHTML += '</tr>';
+				  
+					}
+			});
 		}
 		if (!have_point)
 			tableHTML = '<div>No parameters.</div>'
 		document.getElementById('params_table').innerHTML = tableHTML;
+	}
 
+	async function FillDataTable(fit_list) {
+		params_table = document.getElementById('data_table');		
+		let tableHTML = ''
+
+		have_point = false;
+		if ('data' in fit_list)
+		{		
+			let data = fit_list['data']
+			data.forEach(datum =>
+			{		
+				if ('type' in datum)
+				{
+					const tableHeaders = ['type', 'model', 'value'];
+					tableHTML = '<table>';						
+				   tableHTML += '<tr>';
+				    tableHeaders.forEach(header => {
+				      tableHTML += `<td>${param[header] || ''}</td>`; 
+				    });
+				    tableHTML += '</tr>';
+				  
+					}
+			});
+		}
+		if (!have_point)
+			tableHTML = '<div>No parameters.</div>'
+		document.getElementById('params_table').innerHTML = tableHTML;
+	}
+
+	async function FillFitTables() {
+
+		var fit_list = await read_json_file("./fit_list.json");
+
+		await FillParamsTable(fit_list)
 	}

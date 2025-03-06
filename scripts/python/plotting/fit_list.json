@@ -2,14 +2,32 @@
   "parameters": [
     {
       "type": "perf-point",
-      "model": "NyleC90A_MP",
+      "model": "Rheem2020Build65",
       "variable": "Pin",
       "dependent": "COP",
       "coords": [
-        3,
-        3,
+        1,
+        4,
         0
       ]
+    },
+    {
+      "type": "perf-point",
+      "model": "Rheem2020Build65",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        2,
+        4,
+        0
+      ]
+    }
+  ],
+  "data": [
+    {
+      "type": "UEF",
+      "model": "NyleC90A_MP",
+      "value": 3.2
     }
   ]
 }
