@@ -19,8 +19,8 @@ async def handler(client):
 			print("connection closed.")
 			break
 		
-		print(f"\nsent by client: {client}")
-		print(f"received by ws: {msg}")			
+		#print(f"\nsent by client: {client}")
+		#print(f"received by ws: {msg}")			
 		new_client = True
 		for c in handler.clients:
 			if c:
@@ -28,13 +28,13 @@ async def handler(client):
 					new_client = False
 		
 		if new_client:
-			print(f"added client: {client}")
+			print(f"adding client: {client}")
 			handler.clients.append(client)
 		
 		new_clients = []
 		for c in handler.clients:
 			try:
-				print(f"send to client: {c}")
+				#print(f"send to client: {c}")
 				await c.send(msg)
 				new_clients.append(c)
 				await asyncio.sleep(0.1)

@@ -117,7 +117,6 @@ class PerfPlotter():
 			if selectedData['points']:
 				self.clear_selected()
 				nT1s = len(self.T1s)
-				print(selectedData['points'])
 				for point in selectedData['points']:
 					if point['curveNumber'] == 1:
 						idx = point['pointIndex']
@@ -229,8 +228,6 @@ class PerfPlotter():
 		is_interp = ('interpolate' in prefs) and (prefs['interpolate'] == 1)
 		if is_interp:
 			self.vals = self.interpolate(self.refs, prefs)
-		#print(f"refs:\n{self.refs}\n\nvals:\n{self.vals}")
-	
 		
 # original data as np.arrays referred to a regular grid
 		xc = np.array(self.vals[0])
