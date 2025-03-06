@@ -20,8 +20,7 @@ def perf_proc(data):
 	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	def create_plot(data):
-		fig = {}
+	def replot(data):
 		perf_proc.model_data = {}
 		perf_proc.model_data_filepath = ""					
 			
@@ -43,33 +42,29 @@ def perf_proc(data):
 			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 		
-		perf_proc.show_outletTs = False
-		perf_proc.outletTs = []
-		if perf_proc.plotter.have_data:
-			perf_proc.show_outletTs = perf_proc.plotter.is_central	
 			perf_proc.plotter.fig.update_layout(clickmode='event+select')
 
-			if perf_proc.show_outletTs:
+			show_outletTs = perf_proc.plotter.is_central
+			outletTs = []
+			if show_outletTs:
 				i = 0
 				for outletT in perf_proc.plotter.T3s:
-					perf_proc.outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
+					outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
 					i = i + 1
-			
-			fig = perf_proc.plotter.fig
-			return fig
-	
-	fig = create_plot(data)
-	perf_proc.coloring_list = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}]
-	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-	interp_list = []
-	if perf_proc.prefs["interpolate"] == 1:
-		interp_list= ['interpolate']
-
-	show_list = []
-	if perf_proc.prefs["show_points"] == 1:
-		show_list= ['points']
 				
+			show_list = []
+			if perf_proc.prefs["show_points"] == 1:
+				show_list= ['points']
+				
+			interp_list = []
+			if perf_proc.prefs["interpolate"] == 1:
+				interp_list= ['interpolate']
+
+			return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(show_outletTs), perf_proc.plotter.iT3, outletTs, show_list, interp_list, perf_proc.prefs['contour_variable'], perf_proc.prefs['contour_coloring'], perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
+
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+	
+	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']		
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 	styles = {
@@ -80,9 +75,9 @@ def perf_proc(data):
 	}
 
 	app.layout = [
-		html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
    	WebSocket(url="ws://localhost:8600", id="ws"),
- 
+ 		html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
+		 
 		html.Div([
 			html.P("display variable:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 			dcc.Dropdown(
@@ -90,7 +85,6 @@ def perf_proc(data):
 							{'label': 'Input Power (W)', 'value': 0}, 
 					 		{'label': 'Heating Capacity (W)', 'value': 1},
 							{'label': 'COP', 'value': 2}],
-						value = perf_proc.prefs['contour_variable'], 
 						id='display-dropdown',
 						style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 						clearable=False)
@@ -99,19 +93,17 @@ def perf_proc(data):
 		html.Div([
 			html.P("condenser outlet temperature (\u00B0C)", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),							
 			dcc.Dropdown(
-					options = perf_proc.outletTs,
-					value = perf_proc.plotter.iT3, 
 					id='outletT-dropdown',
 					style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 					clearable=False)
-					], 
-					id="outletT-p", hidden = not(perf_proc.show_outletTs), 
+			], 
+			id="outletT-p", 
+			hidden = True, 
 		),
 					
 		html.Div([
 			html.P("coloring", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
-			dcc.Dropdown(options = perf_proc.coloring_list,
-				value = perf_proc.prefs['contour_coloring'], 
+			dcc.Dropdown(options = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}],
 				id='coloring-dropdown',
 				style= {'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 				clearable=False)
@@ -120,44 +112,43 @@ def perf_proc(data):
 		html.P("show"),
 		dcc.Checklist(
 			    options = [{'label': 'points', 'value': 'points'}],
-					value = show_list,
 					id="show-check"
 			),
 			
 		dcc.Checklist(
 			    options = [{'label': 'interpolate', 'value': 'interpolate'}],
-					value = interp_list,
 					id="interp-check"
 			),
 		html.Div(	[		
-				dcc.Input(id='Nx-input', type='number', value=perf_proc.prefs['Nx']),
-				dcc.Input(id='Ny-input', type='number', value=perf_proc.prefs['Ny'])
-			], id='interp-sizes', hidden = (perf_proc.prefs["interpolate"] == 0)
+				dcc.Input(id='Nx-input', type='number'),
+				dcc.Input(id='Ny-input', type='number')
+			], id='interp-sizes', hidden=True
 		),				
-		
-		
+			
 		html.Div([
-					html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
-					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-					html.Button("clear", id='clear-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
-					html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
-					html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
-					],
-					id='select-div',
-					hidden = True
-				),
+				html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+				html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
+				html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+				html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+				html.Button("clear", id='clear-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
+				html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+				html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+				],
+				id='select-div',
+				hidden = True
+			),
 					
 		html.Br(),
 		html.Div(
-			dcc.Graph(id='perf-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
+			dcc.Graph(id='perf-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
 				config={
 	        'modeBarButtonsToAdd': [
 	        "drawrect",
 	        "eraseshape"
 	        ]
-	    	}), id="graph-div", hidden = not(perf_proc.plotter.have_data))
+	    	}),
+				id="graph-div",
+				hidden = True)
 
 	]
 
@@ -167,7 +158,11 @@ def perf_proc(data):
 	)
 	def send_message(n_clicks):
 		perf_proc.i_send = perf_proc.i_send + 1
-		message = json.dumps({"source": "perf-proc", "dest": "perf-proc", "index": perf_proc.i_send})
+		message = json.dumps({
+			"source": "perf-proc",
+			"dest": "index",
+			"cmd": "init-perf-proc",
+			"index": perf_proc.i_send})
 		return message
 
 	@app.callback(
@@ -176,6 +171,12 @@ def perf_proc(data):
 			Output('outletT-p', 'hidden'),
 			Output('outletT-dropdown', 'value'),
 			Output('outletT-dropdown', 'options'),
+			Output('show-check', 'value'),
+			Output('interp-check', 'value'),
+			Output('display-dropdown', 'value'),
+			Output('coloring-dropdown', 'value'),
+			Output('Nx-input', 'value', allow_duplicate=True),
+			Output('Ny-input', 'value', allow_duplicate=True),
 			[Input("ws", "message")],
 			prevent_initial_call=True
 			)
@@ -186,16 +187,10 @@ def perf_proc(data):
 				if data['dest'] == 'perf-proc':
 					print(f"received by perf-proc:\n{data}")
 					if 'cmd' in data:
-						if data['cmd'] == 'replot':				
-							prefs = read_file("prefs.json")
-							prefs["performance_plots"] = perf_proc.prefs
-							write_file("prefs.json", prefs)
-							
-							create_plot(data)
-							perf_proc.plotter.update_dependent(perf_proc.prefs)			
-							return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(perf_proc.show_outletTs), perf_proc.plotter.iT3, perf_proc.outletTs
+						if data['cmd'] == 'replot':										
+							return replot(data)
 								
-		return no_update, no_update, no_update, no_update, no_update
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -235,8 +230,8 @@ def perf_proc(data):
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Output('Nx-input', 'value'),
-			Output('Ny-input', 'value'),
+			Output('Nx-input', 'value', allow_duplicate=True),
+			Output('Ny-input', 'value', allow_duplicate=True),
 			Input('Nx-input', 'value'),
 			Input('Ny-input', 'value'),
 			prevent_initial_call=True
@@ -436,7 +431,7 @@ def perf_proc(data):
 		fit_list['parameters'] = new_params			
 		write_file("fit_list.json", fit_list)
 		perf_proc.i_send = perf_proc.i_send + 1
-		msg = {"source": "perf-proc", "dest": "index", "cmd": "refresh-fit-params", "index": perf_proc.i_send}
+		msg = {"source": "perf-proc", "dest": "index", "cmd": "refresh-fit", "index": perf_proc.i_send}
 		return json.dumps(msg)
 
 	@app.callback(

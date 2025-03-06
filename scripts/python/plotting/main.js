@@ -56,13 +56,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 						if(data['dest'] == "index")
 							if ('cmd' in data)
 							{
-								if(data['cmd'].localeCompare("init-test-proc"))									
+								if(!data['cmd'].localeCompare("init-test-proc"))									
 								{
-									prefs = await get_menu_values();
+									let prefs = await get_menu_values();
 									await set_elements(prefs);
 									document.getElementById("test-plots").style = "display:block;"
 								}
-								if(data['cmd'].localeCompare("refresh-fit"))
+
+								if(!data['cmd'].localeCompare("init-perf-proc"))									
+								{
+									let prefs = await get_menu_values();
+									await set_elements(prefs);
+									document.getElementById("perf_plot").style = "display:block;"
+								}
+
+								if(!data['cmd'].localeCompare("refresh-fit"))
 									FillFitTables()
 							}
 				
@@ -330,7 +338,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		document.getElementById("test_btn").disabled = true;
 		var data = {};
 		plot_results = await callPyServerJSON("launch_test_proc", "data=" + JSON.stringify(data));
-		//await sleep(2000)
 		const dash_port = await plot_results["port_num"];
 
 		document.getElementById("test-plots").src = "http://localhost:" + dash_port
@@ -338,22 +345,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	}
 
 	async function launch_perf_proc() {
-
-		const perf_form = document.getElementById('perf_form');
-		var prefs = await read_json_file("./prefs.json")
-		var model_id = prefs["model_id"]
-		let model_data_filepath = "../../../test/models_json/" + model_id + ".json";
-		data = {
-		'label': model_id,
-		'model_data_filepath': model_data_filepath
-		};
-			
+		document.getElementById("perf_btn").disabled = true;
+		var data = {}
 		let perf_results = await callPyServerJSON("launch_perf_proc", "data=" + JSON.stringify(data))
 		const dash_port = perf_results["port_num"];
 
 		document.getElementById("perf_plot").src = "http://localhost:" + dash_port
-		document.getElementById("perf_plot").style = "display:block;"
-
 		document.getElementById("perf_btn").disabled = false;
 	}
 
@@ -364,8 +361,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			await FillFitTables()
 		}
 
-	async function FillParamsTable(fit_list) {
-		params_table = document.getElementById('params_table');		
+	async function clear_data() {
+			var fit_list = await read_json_file("./fit_list.json")
+			fit_list['data'] = []
+			await write_json_file("./fit_list.json", fit_list)
+			await FillFitTables()
+		}
+
+	async function FillParamsTable(fit_list) {	
 		let tableHTML = ''
 
 		have_point = false;
@@ -403,7 +406,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	}
 
 	async function FillDataTable(fit_list) {
-		params_table = document.getElementById('data_table');		
 		let tableHTML = ''
 
 		have_point = false;
@@ -414,25 +416,26 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			{		
 				if ('type' in datum)
 				{
-					const tableHeaders = ['type', 'model', 'value'];
+					const tableHeaders = ['type', 'model_id', 'target'];
 					tableHTML = '<table>';						
-				   tableHTML += '<tr>';
-				    tableHeaders.forEach(header => {
-				      tableHTML += `<td>${param[header] || ''}</td>`; 
-				    });
-				    tableHTML += '</tr>';
-				  
-					}
+					tableHTML += '<tr>';
+					tableHeaders.forEach(header => {
+						tableHTML += `<td>${datum[header] || ''}</td>`; 
+					});
+				   tableHTML += '</tr>';
+				  have_point = true;
+				}
 			});
 		}
 		if (!have_point)
-			tableHTML = '<div>No parameters.</div>'
-		document.getElementById('params_table').innerHTML = tableHTML;
+			tableHTML = '<div>No data.</div>'
+		document.getElementById('data_table').innerHTML = tableHTML;
 	}
 
 	async function FillFitTables() {
 
 		var fit_list = await read_json_file("./fit_list.json");
 
-		await FillParamsTable(fit_list)
+		await FillParamsTable(fit_list);
+		await FillDataTable(fit_list);
 	}

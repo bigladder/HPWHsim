@@ -6,9 +6,9 @@
   "test_id": "standard24hr",
   "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "High",
+  "draw_profile": "Medium",
   "performance_plots": {
-    "contour_variable": 0,
+    "contour_variable": 1,
     "contour_coloring": 1,
     "interpolate": 0,
     "Nx": 19,

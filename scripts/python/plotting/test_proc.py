@@ -43,6 +43,7 @@ def test_proc(data):
 	test_proc.prefs = read_file("prefs.json")
 	test_proc.i_send = 0
 	test_proc.prev_show = 0
+	test_proc.uef_val = 0
 	#test_proc.plotter = plot(data)
 	
 	def replot(data):
@@ -77,7 +78,8 @@ def test_proc(data):
 					output_dir = os.path.join(build_dir, 'test', 'output')
 					results_filename = os.path.join(output_dir, "results.json")
 					results = read_file(results_filename)
-					uef_out_text = "simulated UEF: {:.4f}".format(results['UEF'])
+					test_proc.uef_val = results['UEF']
+					uef_out_text = "simulated UEF: {:.4f}".format(test_proc.uef_val)
 					
 					fit_list = read_file("fit_list.json")
 					if 'data' in fit_list:
@@ -89,15 +91,15 @@ def test_proc(data):
 								continue
 							hide_uef_input_val = False
 
-			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, True, hide_uef_fit, hide_uef_input_val, uef_out_text, False
+			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, True, hide_uef_fit, hide_uef_input_val, test_proc.uef_val, uef_out_text, False
 		
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update		
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update			
 	
 	app.layout = [
 		html.Div(
 			[
    		WebSocket(url="ws://localhost:8600", id="ws"),
-			html.Button("send", id='send-btn', n_clicks=0, hidden=True),
+			html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 			
 			dcc.Checklist(id="show-check", inline=True),
 		
@@ -142,7 +144,8 @@ def test_proc(data):
 						id="fit-UEF-check",
 						style = {'fontSize': 16, 'display': 'inline-block', 'margin-left': 8})]),
 				html.Div(
-					dcc.Input(id='target-UEF-input', type='number', value = 0),
+					[html.Label("target:", htmlFor="target-UEF-input", style = {'fontSize': 16, 'display': 'inline-block'}),
+					dcc.Input(id='target-UEF-input', type='number', value = 0)],
 					id='UEF-input-div', 
 					hidden=True)
 				],
@@ -159,7 +162,7 @@ def test_proc(data):
 	)
 	def send_message(n_clicks):
 		test_proc.i_send = test_proc.i_send + 1
-		message = json.dumps({"source": "test-proc", "dest": "index", "cmd": "init-perf-proc", "index": test_proc.i_send})
+		message = json.dumps({"source": "test-proc", "dest": "index", "cmd": "init-test-proc", "index": test_proc.i_send})
 		return message
 
 	@app.callback(
@@ -172,6 +175,7 @@ def test_proc(data):
 				Output('ua-div', 'hidden', allow_duplicate=True),
 				Output('fit-UEF-div', 'hidden'),
 				Output('UEF-input-div', 'hidden', allow_duplicate=True),
+				Output('target-UEF-input', 'value'),
 				Output('UEF-output', 'children'),
 				Output('main-div', 'hidden'),
 				[Input("ws", "message")],
@@ -185,13 +189,13 @@ def test_proc(data):
 					if data['cmd'] == 'replot':						
 						return replot(data)
 						
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 	@app.callback( 
 		Output('ws', 'send', allow_duplicate=True),
 		Output('UEF-input-div', 'hidden', allow_duplicate=True),
 		Input('fit-UEF-check', 'value'),
-		State('target-UEF-input', 'value'),
+		Input('target-UEF-input', 'value'),
 		prevent_initial_call=True
 	)
 	def change_fit_UEF(value, uef_in):	
@@ -204,17 +208,18 @@ def test_proc(data):
 		hide_input = True
 		new_data = data
 		for index, datum in reversed(list(enumerate(data))):
+			print(datum)
 			if 'type' not in datum or datum['type'] != 'UEF':
 				continue
-			if 'model' not in datum or (datum['model'] != test_proc.prefs['model_id']):
+			if 'model_id' not in datum or (datum['model_id'] != test_proc.prefs['model_id']):
 					continue
-
-			if 'fit' in value:
-				new_data[index] = {'type': 'UEF', 'model_id': test_proc.prefs['model_id']}
-				hide_input = False
-			else:
-				del new_data[index]	
+			
+			del new_data[index]	
 		
+		if 'fit' in value:
+			new_data.append({'type': 'UEF', 'model_id': test_proc.prefs['model_id'], 'target': uef_in})
+			hide_input = False
+
 		fit_list['data'] = new_data
 		write_file("fit_list.json", fit_list)		
 		test_proc.i_send = test_proc.i_send + 1
