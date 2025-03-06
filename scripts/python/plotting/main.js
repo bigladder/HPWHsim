@@ -417,7 +417,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 				if ('type' in datum)
 				{
 					const tableHeaders = ['type', 'model_id', 'target'];
-					tableHTML = '<table>';						
+					if (!have_point)
+					{
+						tableHTML = '<table><thead><tr>';
+						tableHeaders.forEach(header => {
+						    tableHTML += `<th>${header}</th>`;
+						  });
+						tableHTML += '</tr></thead><tbody>';
+						have_point = true;	
+					}
+						
 					tableHTML += '<tr>';
 					tableHeaders.forEach(header => {
 						tableHTML += `<td>${datum[header] || ''}</td>`; 
