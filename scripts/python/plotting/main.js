@@ -354,6 +354,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		document.getElementById("perf_btn").disabled = false;
 	}
 
+	async function launch_fit_proc() {
+		document.getElementById("fit_btn").disabled = true;
+		var data = {}
+		let fit_results = await callPyServerJSON("launch_fit_proc", "data=" + JSON.stringify(data))
+		document.getElementById("fit_btn").disabled = false;
+	}
 	async function clear_params() {
 			var fit_list = await read_json_file("./fit_list.json")
 			fit_list['parameters'] = []
@@ -447,4 +453,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 		await FillParamsTable(fit_list);
 		await FillDataTable(fit_list);
+	}
+
+	async function fit()	{
+
 	}
