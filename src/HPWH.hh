@@ -1066,7 +1066,7 @@ class HPWH : public Courier::Sender
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
-        std::ostream* outputStream = &std::cout;
+        std::ostream* outputStream = NULL;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
@@ -1109,6 +1109,8 @@ class HPWH : public Courier::Sender
 
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
+
+    struct Fitter;
 
     /// fields for test output to csv
     struct OutputData

@@ -5746,11 +5746,8 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
     }
 }
 
-void HPWH::makeGeneric(const double targetUEF)
+struct HPWH::Fitter
 {
-    static HPWH::FirstHourRating firstHourRating;
-    static HPWH::StandardTestOptions standardTestOptions;
-
     struct Inverter
     {
         static bool getLeftDampedInv(const double nu,
@@ -5795,7 +5792,7 @@ void HPWH::makeGeneric(const double targetUEF)
 
         virtual Type paramType() = 0;
 
-        virtual void assign(HPWH& hpwh, double*& val) = 0;
+        virtual void assign(double*& val) = 0;
         virtual void showInfo(std::ostream& os) = 0;
     };
 
@@ -5804,36 +5801,39 @@ void HPWH::makeGeneric(const double targetUEF)
         unsigned heatSourceIndex;
         unsigned tempIndex;
         unsigned power;
+        HPWH* hpwh;
 
         Type paramType() override { return Type::copCoef; }
 
         CopCoefInfo(const unsigned heatSourceIndex_in,
                     const unsigned tempIndex_in,
-                    const unsigned power_in)
+                    const unsigned power_in,
+                    HPWH* hpwh_in)
             : ParamInfo()
             , heatSourceIndex(heatSourceIndex_in)
             , tempIndex(tempIndex_in)
             , power(power_in)
+            , hpwh(hpwh_in)
         {
         }
 
-        void assign(HPWH& hpwh, double*& val) override
+        void assign(double*& val) override
         {
             val = nullptr;
             HPWH::HeatSource* heatSource;
-            hpwh.getNthHeatSource(heatSourceIndex, heatSource);
+            hpwh->getNthHeatSource(heatSourceIndex, heatSource);
 
             auto& perfMap = heatSource->perfMap;
             if (tempIndex >= perfMap.size())
             {
-                hpwh.send_error("Invalid heat-source performance-map temperature index.");
+                hpwh->send_error("Invalid heat-source performance-map temperature index.");
             }
 
             auto& perfPoint = perfMap[tempIndex];
             auto& copCoeffs = perfPoint.COP_coeffs;
             if (power >= copCoeffs.size())
             {
-                hpwh.send_error("Invalid heat-source performance-map cop-coefficient power.");
+                hpwh->send_error("Invalid heat-source performance-map cop-coefficient power.");
             }
             std::cout << "Valid parameter:";
             showInfo(std::cout);
@@ -5856,7 +5856,7 @@ void HPWH::makeGeneric(const double targetUEF)
 
         Param() : val(nullptr), dVal(1.e3) {}
 
-        virtual void assignVal(HPWH& hpwh) = 0;
+        virtual void assignVal() = 0;
         virtual void show(std::ostream& os) = 0;
     };
 
@@ -5865,7 +5865,7 @@ void HPWH::makeGeneric(const double targetUEF)
     {
         CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) { dVal = 1.e-9; }
 
-        void assignVal(HPWH& hpwh) override { assign(hpwh, val); }
+        void assignVal() override { assign(val); }
 
         void show(std::ostream& os) override
         {
@@ -5882,33 +5882,204 @@ void HPWH::makeGeneric(const double targetUEF)
 
         Merit() : val(0.), targetVal(0.), tolVal(1.e-6) {}
 
-        virtual void eval(HPWH& hpwh) = 0;
-        virtual void evalDiff(HPWH& hpwh, double& diff) = 0;
+        virtual void eval() = 0;
+        virtual void evalDiff(double& diff) = 0;
     };
 
     struct UEF_Merit : public Merit
     {
-        UEF_Merit(double targetVal_in) : Merit() { targetVal = targetVal_in; }
+        HPWH* hpwh;
+        FirstHourRating* firstHourRating;
+        StandardTestOptions* standardTestOptions;
 
-        void eval(HPWH& hpwh) override
+        UEF_Merit(HPWH* hpwh_in,
+                  FirstHourRating* firstHourRating_in,
+                  StandardTestOptions* standardTestOptions_in,
+                  double targetVal_in)
+            : Merit()
+            , hpwh(hpwh_in)
+            , firstHourRating(firstHourRating_in)
+            , standardTestOptions(standardTestOptions_in)
+
+        {
+            targetVal = targetVal_in;
+        }
+
+        void eval() override
         {
             static HPWH::StandardTestSummary standardTestSummary;
-            hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
+            hpwh->run24hrTest(*firstHourRating, standardTestSummary, *standardTestOptions);
             val = standardTestSummary.UEF;
         }
 
-        void evalDiff(HPWH& hpwh, double& diff) override
+        void evalDiff(double& diff) override
         {
-            eval(hpwh);
+            eval();
             diff = (val - targetVal) / tolVal;
         }
     };
 
+    Fitter::Merit* pMerit;
+    std::vector<Fitter::Param*> pParams;
+    std::shared_ptr<Courier::Courier> courier = nullptr;
+
+    Fitter(Fitter::Merit* pMerit_in,
+           std::vector<Fitter::Param*> pParams_in,
+           std::shared_ptr<Courier::Courier> courier_in)
+        : pMerit(pMerit_in), pParams(pParams_in), courier(courier_in)
+    {
+    }
+
+    void fit(const int maxIters = 20)
+    {
+        std::vector<double> dParams;
+
+        //
+        for (auto& pParam : pParams)
+        {
+            pParam->assignVal();
+            dParams.push_back(pParam->dVal);
+        }
+
+        auto nParams = pParams.size();
+
+        double nu = 0.1;
+        for (auto iter = 0; iter < maxIters; ++iter)
+        {
+            pMerit->eval();
+            std::cout << iter << ": ";
+            std::cout << "UEF: " << pMerit->val << "; ";
+
+            bool first = true;
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                if (!first)
+                    std::cout << ",";
+
+                std::cout << " " << j << ": ";
+                std::cout << *(pParams[j]->val);
+                first = false;
+            }
+
+            double dMerit0 = 0.;
+            pMerit->evalDiff(dMerit0);
+            double FOM0 = dMerit0 * dMerit0;
+            double FOM1 = 0., FOM2 = 0.;
+            std::cout << ", FOM: " << FOM0 << "\n";
+
+            std::vector<double> paramV(nParams);
+            for (std::size_t i = 0; i < nParams; ++i)
+            {
+                paramV[i] = *(pParams[i]->val);
+            }
+
+            std::vector<double> jacobiV(nParams); // 1 x 2
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
+                double dMerit;
+                pMerit->evalDiff(dMerit);
+                jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
+                *(pParams[j]->val) = paramV[j];
+            }
+
+            // try nu
+            std::vector<double> invJacobiV1;
+            bool got1 = Fitter::Inverter::getLeftDampedInv(nu, jacobiV, invJacobiV1);
+
+            std::vector<double> inc1ParamV(2);
+            std::vector<double> paramV1 = paramV;
+            if (got1)
+            {
+                for (std::size_t j = 0; j < nParams; ++j)
+                {
+                    inc1ParamV[j] = -invJacobiV1[j] * dMerit0;
+                    paramV1[j] += inc1ParamV[j];
+                    *(pParams[j]->val) = paramV1[j];
+                }
+                double dMerit;
+                pMerit->evalDiff(dMerit);
+                FOM1 = dMerit * dMerit;
+
+                // restore
+                for (std::size_t j = 0; j < nParams; ++j)
+                {
+                    *(pParams[j]->val) = paramV[j];
+                }
+            }
+
+            // try nu / 2
+            std::vector<double> invJacobiV2;
+            bool got2 = Inverter::getLeftDampedInv(nu / 2., jacobiV, invJacobiV2);
+
+            std::vector<double> inc2ParamV(2);
+            std::vector<double> paramV2 = paramV;
+            if (got2)
+            {
+                for (std::size_t j = 0; j < nParams; ++j)
+                {
+                    inc2ParamV[j] = -invJacobiV2[j] * dMerit0;
+                    paramV2[j] += inc2ParamV[j];
+                    *(pParams[j]->val) = paramV2[j];
+                }
+                double dMerit;
+                pMerit->evalDiff(dMerit);
+                FOM2 = dMerit * dMerit;
+
+                // restore
+                for (std::size_t j = 0; j < nParams; ++j)
+                {
+                    *(pParams[j]->val) = paramV[j];
+                }
+            }
+
+            // check for improvement
+            if (got1 && got2)
+            {
+                if ((FOM1 < FOM0) || (FOM2 < FOM0))
+                { // at least one improved
+                    if (FOM1 < FOM2)
+                    { // pick 1
+                        for (std::size_t i = 0; i < nParams; ++i)
+                        {
+                            *(pParams[i]->val) = paramV1[i];
+                            (pParams[i]->dVal) = inc1ParamV[i] / 1.e3;
+                            FOM0 = FOM1;
+                        }
+                    }
+                    else
+                    { // pick 2
+                        for (std::size_t i = 0; i < nParams; ++i)
+                        {
+                            *(pParams[i]->val) = paramV2[i];
+                            (pParams[i]->dVal) = inc2ParamV[i] / 1.e3;
+                            FOM0 = FOM2;
+                        }
+                    }
+                }
+                else
+                { // no improvement
+                    nu *= 10.;
+                    if (nu > 1.e6)
+                    {
+                        courier->send_error("Failure in makeGenericModel");
+                    }
+                }
+            }
+        }
+    }
+};
+
+void HPWH::makeGeneric(const double targetUEF)
+{
+    HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = false;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.outputStream = &std::cout;
 
+    HPWH::FirstHourRating firstHourRating;
     findFirstHourRating(firstHourRating, standardTestOptions);
     if (customTestOptions.overrideFirstHourRating)
     {
@@ -5919,156 +6090,23 @@ void HPWH::makeGeneric(const double targetUEF)
     }
 
     // set up merit parameter
-    Merit* pMerit;
-    UEF_Merit uefMerit(targetUEF);
+    Fitter::Merit* pMerit;
+    Fitter::UEF_Merit uefMerit(this, &firstHourRating, &standardTestOptions, targetUEF);
     pMerit = &uefMerit;
 
     // set up parameters
-    std::vector<Param*> pParams;
+    std::vector<Fitter::Param*> pParams;
 
-    CopCoefInfo copT2constInfo = {2, 1, 0}; // heatSourceIndex, tempIndex, power
-    CopCoefInfo copT2linInfo = {2, 1, 1};   // heatSourceIndex, tempIndex, power
+    Fitter::CopCoefInfo copT2constInfo = {
+        2, 1, 0, this};                                 // heatSourceIndex, tempIndex, power, *hpwh
+    Fitter::CopCoefInfo copT2linInfo = {2, 1, 1, this}; // heatSourceIndex, tempIndex, power, *hpwh
 
-    CopCoef copT2const(copT2constInfo);
-    CopCoef copT2lin(copT2linInfo);
+    Fitter::CopCoef copT2const(copT2constInfo);
+    Fitter::CopCoef copT2lin(copT2linInfo);
 
     pParams.push_back(&copT2const);
     pParams.push_back(&copT2lin);
 
-    std::vector<double> dParams;
-
-    //
-    for (auto& pParam : pParams)
-    {
-        pParam->assignVal(*this);
-        dParams.push_back(pParam->dVal);
-    }
-
-    auto nParams = pParams.size();
-
-    double nu = 0.1;
-    const int maxIters = 20;
-    for (auto iter = 0; iter < maxIters; ++iter)
-    {
-        pMerit->eval(*this);
-        std::cout << iter << ": ";
-        std::cout << "UEF: " << pMerit->val << "; ";
-
-        bool first = true;
-        for (std::size_t j = 0; j < nParams; ++j)
-        {
-            if (!first)
-                std::cout << ",";
-
-            std::cout << " " << j << ": ";
-            std::cout << *(pParams[j]->val);
-            first = false;
-        }
-
-        double dMerit0 = 0.;
-        pMerit->evalDiff(*this, dMerit0);
-        double FOM0 = dMerit0 * dMerit0;
-        double FOM1 = 0., FOM2 = 0.;
-        std::cout << ", FOM: " << FOM0 << "\n";
-
-        std::vector<double> paramV(nParams);
-        for (std::size_t i = 0; i < nParams; ++i)
-        {
-            paramV[i] = *(pParams[i]->val);
-        }
-
-        std::vector<double> jacobiV(nParams); // 1 x 2
-        for (std::size_t j = 0; j < nParams; ++j)
-        {
-            *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
-            double dMerit;
-            pMerit->evalDiff(*this, dMerit);
-            jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
-            *(pParams[j]->val) = paramV[j];
-        }
-
-        // try nu
-        std::vector<double> invJacobiV1;
-        bool got1 = Inverter::getLeftDampedInv(nu, jacobiV, invJacobiV1);
-
-        std::vector<double> inc1ParamV(2);
-        std::vector<double> paramV1 = paramV;
-        if (got1)
-        {
-            for (std::size_t j = 0; j < nParams; ++j)
-            {
-                inc1ParamV[j] = -invJacobiV1[j] * dMerit0;
-                paramV1[j] += inc1ParamV[j];
-                *(pParams[j]->val) = paramV1[j];
-            }
-            double dMerit;
-            pMerit->evalDiff(*this, dMerit);
-            FOM1 = dMerit * dMerit;
-
-            // restore
-            for (std::size_t j = 0; j < nParams; ++j)
-            {
-                *(pParams[j]->val) = paramV[j];
-            }
-        }
-
-        // try nu / 2
-        std::vector<double> invJacobiV2;
-        bool got2 = Inverter::getLeftDampedInv(nu / 2., jacobiV, invJacobiV2);
-
-        std::vector<double> inc2ParamV(2);
-        std::vector<double> paramV2 = paramV;
-        if (got2)
-        {
-            for (std::size_t j = 0; j < nParams; ++j)
-            {
-                inc2ParamV[j] = -invJacobiV2[j] * dMerit0;
-                paramV2[j] += inc2ParamV[j];
-                *(pParams[j]->val) = paramV2[j];
-            }
-            double dMerit;
-            pMerit->evalDiff(*this, dMerit);
-            FOM2 = dMerit * dMerit;
-
-            // restore
-            for (std::size_t j = 0; j < nParams; ++j)
-            {
-                *(pParams[j]->val) = paramV[j];
-            }
-        }
-
-        // check for improvement
-        if (got1 && got2)
-        {
-            if ((FOM1 < FOM0) || (FOM2 < FOM0))
-            { // at least one improved
-                if (FOM1 < FOM2)
-                { // pick 1
-                    for (std::size_t i = 0; i < nParams; ++i)
-                    {
-                        *(pParams[i]->val) = paramV1[i];
-                        (pParams[i]->dVal) = inc1ParamV[i] / 1.e3;
-                        FOM0 = FOM1;
-                    }
-                }
-                else
-                { // pick 2
-                    for (std::size_t i = 0; i < nParams; ++i)
-                    {
-                        *(pParams[i]->val) = paramV2[i];
-                        (pParams[i]->dVal) = inc2ParamV[i] / 1.e3;
-                        FOM0 = FOM2;
-                    }
-                }
-            }
-            else
-            { // no improvement
-                nu *= 10.;
-                if (nu > 1.e6)
-                {
-                    send_error("Failure in makeGenericModel");
-                }
-            }
-        }
-    }
+    Fitter fitter(pMerit, pParams, get_courier());
+    fitter.fit();
 }

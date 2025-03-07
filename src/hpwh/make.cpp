@@ -48,10 +48,12 @@ void make(const std::string& sSpecType,
     standardTestOptions.saveOutput = true;
     standardTestOptions.sOutputFilename = "";
     standardTestOptions.sOutputDirectory = "";
+    standardTestOptions.outputStream = &std::cout;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
 
+    standardTestOptions.outputStream = &std::cout;
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     standardTestOptions.sOutputDirectory = sOutputDir;
