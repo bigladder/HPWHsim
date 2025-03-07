@@ -14,6 +14,7 @@ struct MeasureMetricsTest : public testing::Test
     MeasureMetricsTest()
     {
         standardTestOptions.saveOutput = false;
+        standardTestOptions.outputStream = &std::cout;
         standardTestOptions.changeSetpoint = true;
         standardTestOptions.nTestTCouples = 6;
         standardTestOptions.setpointT_C = 51.7;
