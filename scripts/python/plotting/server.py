@@ -11,6 +11,7 @@ from simulate import simulate
 from measure import measure
 from test_proc import launch_test_proc
 from perf_proc import launch_perf_proc
+from fit_proc import launch_fit_proc
 from ws import launch_ws
 import json
 from json import dumps
@@ -104,6 +105,22 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.wfile.write(dumps(response).encode('utf-8'))
 					return
 
+			elif self.path.startswith('/launch_fit_proc'):
+					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+					data_str = query_components.get('data', [None])[0]	
+					data = json.loads(data_str)
+					response = launch_fit_proc(data)
+
+					self.send_response(200)
+					self.send_header("Content-type", "application/json")
+					self.send_header("Content-Length", str(len(dumps(response))))
+					#self.send_header("Content-type", "text/html")
+					self.send_header("Access-Control-Allow-Origin", "*")
+					self.end_headers()
+
+					self.wfile.write(dumps(response).encode('utf-8'))
+					return
+			
 			elif self.path.startswith('/launch_perf_proc'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]	

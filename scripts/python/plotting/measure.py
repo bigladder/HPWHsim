@@ -32,7 +32,6 @@ def measure(data):
 		run_list.append('-p')
 		run_list.append(draw_profile)
 
-	print(run_list)
 	result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
 	os.chdir(orig_dir)
 
