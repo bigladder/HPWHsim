@@ -1110,6 +1110,7 @@ class HPWH : public Courier::Sender
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
+    /// provides model optimization
     struct Fitter;
 
     /// fields for test output to csv
