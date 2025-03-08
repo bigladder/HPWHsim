@@ -5746,10 +5746,15 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
     }
 }
 
+/**	Optimizer for varying model parameters to match metrics, used by
+ *  make_generic to implement a target UEF. The structure is fairly general, but
+ *  currently limited to one figure-of-merit (UEF) and two parameters (COP coeffs).
+ *  This could be expanded to include other FOMs, such as total energy in 24-h test.
+ */
 struct HPWH::Fitter
 {
     struct Inverter
-    {
+    { // invert a 1 x 2 matrix
         static bool getLeftDampedInv(const double nu,
                                      const std::vector<double>& matV, // 1 x 2
                                      std::vector<double>& invMatV     // 2 x 1
@@ -5783,7 +5788,7 @@ struct HPWH::Fitter
     };
 
     struct ParamInfo
-    {
+    { // base class for parameter information
         enum class Type
         {
             none,
@@ -5797,7 +5802,7 @@ struct HPWH::Fitter
     };
 
     struct CopCoefInfo : public ParamInfo
-    {
+    { // COP coef parameter info
         unsigned heatSourceIndex;
         unsigned tempIndex;
         unsigned power;
@@ -5818,7 +5823,7 @@ struct HPWH::Fitter
         }
 
         void assign(double*& val) override
-        {
+        { // get a reference to the HPWH member variable
             val = nullptr;
             HPWH::HeatSource* heatSource;
             hpwh->getNthHeatSource(heatSourceIndex, heatSource);
@@ -5850,7 +5855,7 @@ struct HPWH::Fitter
     };
 
     struct Param
-    {
+    { // base class for parameter
         double* val;
         double dVal;
 
@@ -5862,7 +5867,7 @@ struct HPWH::Fitter
 
     struct CopCoef : public Param,
                      CopCoefInfo
-    {
+    { // COP coef parameter
         CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) { dVal = 1.e-9; }
 
         void assignVal() override { assign(val); }
@@ -5875,10 +5880,10 @@ struct HPWH::Fitter
     };
 
     struct Merit
-    {
+    { // base class for a figure of merit
         double val;
         double targetVal;
-        double tolVal;
+        double tolVal; // tolerance
 
         Merit() : val(0.), targetVal(0.), tolVal(1.e-6) {}
 
@@ -5887,7 +5892,7 @@ struct HPWH::Fitter
     };
 
     struct UEF_Merit : public Merit
-    {
+    { // UEF as a figure of merit
         HPWH* hpwh;
         FirstHourRating* firstHourRating;
         StandardTestOptions* standardTestOptions;
@@ -5906,20 +5911,20 @@ struct HPWH::Fitter
         }
 
         void eval() override
-        {
+        { // get current UEF
             static HPWH::StandardTestSummary standardTestSummary;
             hpwh->run24hrTest(*firstHourRating, standardTestSummary, *standardTestOptions);
             val = standardTestSummary.UEF;
         }
 
         void evalDiff(double& diff) override
-        {
+        { // get difference ratio
             eval();
             diff = (val - targetVal) / tolVal;
         }
     };
 
-    Fitter::Merit* pMerit;
+    Fitter::Merit* pMerit; // could be a vector for add'l FOMs
     std::vector<Fitter::Param*> pParams;
     std::shared_ptr<Courier::Courier> courier = nullptr;
 
@@ -5931,7 +5936,7 @@ struct HPWH::Fitter
     }
 
     void fit(const int maxIters = 20)
-    {
+    { // minimize the FOM by varying parameters
         std::vector<double> dParams;
 
         //
