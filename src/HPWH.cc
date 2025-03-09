@@ -6102,9 +6102,11 @@ void HPWH::makeGeneric(const double targetUEF)
     // set up parameters
     std::vector<Fitter::Param*> pParams;
 
+    const int i_heat_source = 2; // for Tier3, Tier4
     Fitter::CopCoefInfo copT2constInfo = {
-        2, 1, 0, this};                                 // heatSourceIndex, tempIndex, power, *hpwh
-    Fitter::CopCoefInfo copT2linInfo = {2, 1, 1, this}; // heatSourceIndex, tempIndex, power, *hpwh
+        i_heat_source, 1, 0, this}; // heatSourceIndex, tempIndex, power, *hpwh
+    Fitter::CopCoefInfo copT2linInfo = {
+        i_heat_source, 1, 1, this}; // heatSourceIndex, tempIndex, power, *hpwh
 
     Fitter::CopCoef copT2const(copT2constInfo);
     Fitter::CopCoef copT2lin(copT2linInfo);
@@ -6114,4 +6116,21 @@ void HPWH::makeGeneric(const double targetUEF)
 
     Fitter fitter(pMerit, pParams, get_courier());
     fitter.fit();
+
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    double input_BTUperHr, cap_BTUperHr, cop0, cop;
+
+    heatSources[2].getCapacity(
+        ambientT_C, 0., standardTestOptions.setpointT_C, input_BTUperHr, cap_BTUperHr, cop0);
+    if (cop0 < 0.)
+        send_error("COP is negative at 0 degC.");
+
+    heatSources[2].getCapacity(ambientT_C,
+                               heatSources[2].maxSetpoint_C,
+                               standardTestOptions.setpointT_C,
+                               input_BTUperHr,
+                               cap_BTUperHr,
+                               cop);
+    if (cop > cop0)
+        send_error("COP slope is positive.");
 }
