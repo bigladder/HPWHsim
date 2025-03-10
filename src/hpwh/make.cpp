@@ -12,8 +12,10 @@ namespace hpwh_cli
 /// make
 static void make(const std::string& sSpecType,
                  const std::string& sModelName,
+                 double ambientT_C,
                  double targetUEF,
-                 std::string sOutputDir);
+                 std::string sOutputDir,
+                 std::string sCustomDrawProfile);
 
 CLI::App* add_make(CLI::App& app)
 {
@@ -28,10 +30,18 @@ CLI::App* add_make(CLI::App& app)
     static double targetUEF = -1.;
     subcommand->add_option("-u,--uef", targetUEF, "target UEF")->required();
 
+    static double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    subcommand->add_option("-a,--amb", ambientT_C, "ambientT (degC)");
+
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
-    subcommand->callback([&]() { make(sSpecType, sModelName, targetUEF, sOutputDir); });
+    static std::string sCustomDrawProfile = "";
+    subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
+
+    subcommand->callback(
+        [&]()
+        { make(sSpecType, sModelName, targetUEF, ambientT_C, sOutputDir, sCustomDrawProfile); });
 
     return subcommand;
 }
@@ -39,7 +49,9 @@ CLI::App* add_make(CLI::App& app)
 void make(const std::string& sSpecType,
           const std::string& sModelName,
           double targetUEF,
-          std::string sOutputDir)
+          double ambientT_C,
+          std::string sOutputDir,
+          std::string sCustomDrawProfile)
 {
     HPWH::FirstHourRating firstHourRating;
     HPWH::StandardTestSummary standardTestSummary;
@@ -52,8 +64,8 @@ void make(const std::string& sSpecType,
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.ambientT_C = ambientT_C;
 
-    standardTestOptions.outputStream = &std::cout;
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     standardTestOptions.sOutputDirectory = sOutputDir;
@@ -74,11 +86,41 @@ void make(const std::string& sSpecType,
         hpwh.initFromFile(sInputFile);
     }
 
+    bool useCustomDrawProfile = (sCustomDrawProfile != "");
+    if (useCustomDrawProfile)
+    {
+        bool foundProfile = false;
+        for (auto& c : sCustomDrawProfile)
+        {
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        if (sCustomDrawProfile.length() > 0)
+        {
+            sCustomDrawProfile[0] =
+                static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
+        }
+        for (const auto& [key, value] : HPWH::FirstHourRating::sDesigMap)
+        {
+            if (value == sCustomDrawProfile)
+            {
+                hpwh.customTestOptions.overrideFirstHourRating = true;
+                hpwh.customTestOptions.desig = key;
+                foundProfile = true;
+                break;
+            }
+        }
+        if (!foundProfile)
+        {
+            std::cout << "Invalid input: Draw profile name not found.\n";
+            exit(1);
+        }
+    }
+
     std::cout << "Model name: " << sModelName << "\n";
     std::cout << "Target UEF: " << targetUEF << "\n";
     std::cout << "Output directory: " << standardTestOptions.sOutputDirectory << "\n\n";
 
-    hpwh.makeGeneric(targetUEF);
+    hpwh.makeGeneric(targetUEF, standardTestOptions);
 
     sPresetOrFile[0] =
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));

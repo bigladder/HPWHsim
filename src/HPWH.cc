@@ -5170,8 +5170,8 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
-    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const double ambientT_C = testOptions.ambientT_C;
+    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double externalT_C = 19.7;
     DRMODES drMode = DR_ALLOW;
 
@@ -5918,9 +5918,6 @@ struct HPWH::Fitter
             {
                 hpwh->send_error("Invalid heat-source performance-map cop-coefficient power.");
             }
-            std::cout << "Valid parameter:";
-            showInfo(std::cout);
-            std::cout << "\n";
             val = &copCoeffs[power];
         };
 
@@ -6049,7 +6046,7 @@ struct HPWH::Fitter
             merit->eval();
             double f0 = merit->val;
 
-            double val1 = val0 + 0.1;
+            double val1 = (1.001) * val0;
             *param->val = val1;
             merit->eval();
             double f1 = merit->val;
@@ -6201,15 +6198,8 @@ struct HPWH::Fitter
     }
 };
 
-void HPWH::makeGeneric(const double targetUEF)
+void HPWH::makeGeneric(const double targetUEF, StandardTestOptions& standardTestOptions)
 {
-    HPWH::StandardTestOptions standardTestOptions;
-    standardTestOptions.saveOutput = false;
-    standardTestOptions.changeSetpoint = true;
-    standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
-    standardTestOptions.outputStream = &std::cout;
-
     HPWH::FirstHourRating firstHourRating;
     findFirstHourRating(firstHourRating, standardTestOptions);
     if (customTestOptions.overrideFirstHourRating)
@@ -6233,11 +6223,8 @@ void HPWH::makeGeneric(const double targetUEF)
     const unsigned i_heat_source = compressorIndex;
     Fitter::CopCoefInfo copT2constInfo = {
         i_heat_source, 1, 0, this}; // heatSourceIndex, tempIndex, power, *hpwh
-    Fitter::CopCoefInfo copT2linInfo = {
-        i_heat_source, 1, 1, this}; // heatSourceIndex, tempIndex, power, *hpwh
 
     Fitter::CopCoef copT2const(copT2constInfo);
-    Fitter::CopCoef copT2lin(copT2linInfo);
 
     pParams.push_back(&copT2const);
     // pParams.push_back(&copT2lin);
@@ -6246,20 +6233,20 @@ void HPWH::makeGeneric(const double targetUEF)
     fitter.fit();
 
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    double input_BTUperHr, cap_BTUperHr, cop0, cop;
+    double input_BTUperHr, cap_BTUperHr, cop1, cop;
 
     auto& compressor = heatSources[i_heat_source];
-    compressor.getCapacity(
-        ambientT_C, 0., standardTestOptions.setpointT_C, input_BTUperHr, cap_BTUperHr, cop0);
-    if (cop0 < 0.)
-        send_error("COP is negative at 0 degC.");
-
     compressor.getCapacity(ambientT_C,
                            compressor.maxSetpoint_C,
                            standardTestOptions.setpointT_C,
                            input_BTUperHr,
                            cap_BTUperHr,
-                           cop);
-    if (cop > cop0)
+                           cop1);
+    if (cop1 < 0.)
+        send_error("COP is negative at maximum condenser temperature.");
+
+    compressor.getCapacity(
+        ambientT_C, 0., standardTestOptions.setpointT_C, input_BTUperHr, cap_BTUperHr, cop);
+    if (cop < cop1)
         send_error("COP slope is positive.");
 }

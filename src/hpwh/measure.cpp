@@ -14,7 +14,8 @@ static void measure(const std::string& sSpecType,
                     std::string sOutputDir,
                     bool sSupressOutput,
                     std::string sResultsFilename,
-                    std::string sCustomDrawProfile);
+                    std::string sCustomDrawProfile,
+                    double ambientT_C);
 
 CLI::App* add_measure(CLI::App& app)
 {
@@ -38,10 +39,19 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sCustomDrawProfile = "";
     subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
+    static double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    subcommand->add_option("-a,--amb", ambientT_C, "ambientT (degC)");
+
     subcommand->callback(
-        [&]() {
-            measure(
-                sSpecType, sModelName, sOutputDir, noData, sResultsFilename, sCustomDrawProfile);
+        [&]()
+        {
+            measure(sSpecType,
+                    sModelName,
+                    sOutputDir,
+                    noData,
+                    sResultsFilename,
+                    sCustomDrawProfile,
+                    ambientT_C);
         });
 
     return subcommand;
@@ -52,7 +62,8 @@ void measure(const std::string& sSpecType,
              std::string sOutputDir,
              bool sSupressOutput,
              std::string sResultsFilename,
-             std::string sCustomDrawProfile)
+             std::string sCustomDrawProfile,
+             double ambientT_C)
 {
     HPWH::StandardTestSummary standardTestSummary;
 
@@ -64,6 +75,7 @@ void measure(const std::string& sSpecType,
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.ambientT_C = ambientT_C;
 
     bool useResultsFile = false;
 
