@@ -1071,6 +1071,7 @@ class HPWH : public Courier::Sender
         std::ofstream outputFile;
         int nTestTCouples = 6;
         double setpointT_C = 51.7;
+        double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     };
 
     /// perform a draw/heat cycle to prepare for test
@@ -1142,7 +1143,7 @@ class HPWH : public Courier::Sender
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
     } customTestOptions;
 
-    void makeGeneric(const double targetUEF);
+    void makeGeneric(const double targetUEF, StandardTestOptions& standardTestOptions);
 
   private:
     void setAllDefaults(); /**< sets all the defaults default */
