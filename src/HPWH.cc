@@ -5924,6 +5924,8 @@ struct HPWH::Fitter
         virtual void assignVal() = 0;
         virtual void show(std::ostream& os) = 0;
         virtual ~Param() = default;
+
+        virtual ParamInput::ParamType paramType() { return ParamInput::ParamType::none; }
     };
 
     struct COP_Coef : public Param,
@@ -5937,6 +5939,8 @@ struct HPWH::Fitter
 
         void assignVal() override { assign(val); }
 
+        ParamInput::ParamType paramType() override { return ParamInput::ParamType::PerfCoef; }
+
         void show(std::ostream& os) override
         {
             showInfo(os);
@@ -5947,40 +5951,46 @@ struct HPWH::Fitter
     struct Merit
     { // base class for a figure of merit
         double currVal;
-        double* pTargetVal;
+        double targetVal;
         double tolVal; // tolerance
 
-        Merit() : currVal(0.), pTargetVal(nullptr), tolVal(1.e-6) {}
+        Merit() : currVal(0.), targetVal(0.), tolVal(1.e-6) {}
 
         virtual void eval() = 0;
         virtual void evalDiff(double& diff) = 0;
+
+        virtual MeritInput::MeritType meritType() { return MeritInput::MeritType::none; }
     };
 
-    struct UEF_Merit : public Merit,
-                       UEF_MeritInput
+    struct UEF_Merit : public Merit
     { // UEF as a figure of merit
         HPWH* hpwh;
         FirstHourRating* firstHourRating;
         StandardTestOptions* standardTestOptions;
+        double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
 
         UEF_Merit(UEF_MeritInput& uefMeritInput,
                   FirstHourRating* firstHourRating_in,
                   StandardTestOptions* standardTestOptions_in,
                   HPWH* hpwh_in)
             : Merit()
-            , UEF_MeritInput(uefMeritInput)
             , hpwh(hpwh_in)
             , firstHourRating(firstHourRating_in)
             , standardTestOptions(standardTestOptions_in)
 
         {
-            pTargetVal = &targetVal;
+            targetVal = uefMeritInput.targetVal;
+            ambientT_C  = uefMeritInput.ambientT_C;
         }
         virtual ~UEF_Merit() = default;
+
+        MeritInput::MeritType meritType() override { return MeritInput::MeritType::UEF; }
 
         void eval() override
         { // get current UEF
             static HPWH::StandardTestSummary standardTestSummary;
+            hpwh->customTestOptions.overrideAmbientT = true;
+            hpwh->customTestOptions.ambientT_C = ambientT_C;
             hpwh->run24hrTest(*firstHourRating, standardTestSummary, *standardTestOptions);
             currVal = standardTestSummary.UEF;
         }
@@ -6044,7 +6054,7 @@ struct HPWH::Fitter
             double f1 = merit->currVal;
 
             int iters =
-                secant(targetFunc, this, *merit->pTargetVal, 1.e-12, val0, f0, val1, f1, 1.e-12);
+                secant(targetFunc, this, merit->targetVal, 1.e-12, val0, f0, val1, f1, 1.e-12);
             if (iters < 0)
                 courier->send_error("Failure in makeGenericModel");
         }
@@ -6061,18 +6071,20 @@ struct HPWH::Fitter
             double nu = 0.1;
             for (auto iter = 0; iter < maxIters; ++iter)
             {
+                std::string iter_msg = fmt::format("iter {:d}: ", iter);
+
                 pMerit->eval();
-                std::cout << iter << ": ";
-                std::cout << "UEF: " << pMerit->currVal << "; ";
+
+                if (pMerit->meritType() == MeritInput::MeritType::UEF)
+                    iter_msg.append(fmt::format(", UEF: {:g}", pMerit->currVal));
 
                 bool first = true;
                 for (std::size_t j = 0; j < nParams; ++j)
                 {
                     if (!first)
-                        std::cout << ",";
+                        iter_msg.append(",");
 
-                    std::cout << " " << j << ": ";
-                    std::cout << *(pParams[j]->val);
+                    iter_msg.append(fmt::format(" param{:d}: {:g}", j, *(pParams[j]->val)));
                     first = false;
                 }
 
@@ -6080,7 +6092,8 @@ struct HPWH::Fitter
                 pMerit->evalDiff(dMerit0);
                 double FOM0 = dMerit0 * dMerit0;
                 double FOM1 = 0., FOM2 = 0.;
-                std::cout << ", FOM: " << FOM0 << "\n";
+                iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
+                courier->send_info(iter_msg);
 
                 std::vector<double> paramV(nParams);
                 for (std::size_t i = 0; i < nParams; ++i)
@@ -6181,6 +6194,11 @@ struct HPWH::Fitter
                         }
                     }
                 }
+                if (FOM0 < 1.e-12)
+                {
+                    courier->send_info("Fit converged.");
+                    break;
+                }
             }
         }
         else
@@ -6233,10 +6251,10 @@ void HPWH::makeGeneric(const GenericOptions& genericOptions,
     for (auto& paramInput : genericOptions.paramInputs)
     {
         std::shared_ptr<Fitter::Param> param;
-        switch (paramInput->paramInputType())
+        switch (paramInput->paramType())
         {
 
-        case ParamInput::ParamInputType::PerfCoef:
+        case ParamInput::ParamType::PerfCoef:
         {
             auto perfCoefInput = static_cast<PerfCoefInput*>(paramInput);
             switch (perfCoefInput->perfCoefType())
@@ -6258,7 +6276,7 @@ void HPWH::makeGeneric(const GenericOptions& genericOptions,
             break;
         }
 
-        case ParamInput::ParamInputType::none:
+        case ParamInput::ParamType::none:
             continue;
         }
         pParams.push_back(param);
