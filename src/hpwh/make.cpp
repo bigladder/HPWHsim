@@ -85,15 +85,16 @@ void make(const std::string& sSpecType,
         hpwh.initFromFile(sInputFile);
     }
 
-    hpwh.customTestOptions.overrideFirstHourRating = true;
-
     HPWH::GenericOptions genericOptions;
 
     HPWH::UEF_MeritInput uef_merit(targetUEF, ambientT_C);
     genericOptions.meritInputs.push_back(&uef_merit);
 
-    HPWH::COP_CoefInput copCoeffInput(1, 0);
-    genericOptions.paramInputs.push_back(&copCoeffInput);
+    HPWH::COP_CoefInput copCoeffInput0(1, 0);
+    genericOptions.paramInputs.push_back(&copCoeffInput0);
+
+    HPWH::COP_CoefInput copCoeffInput1(1, 1);
+    genericOptions.paramInputs.push_back(&copCoeffInput1);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
     if (useCustomDrawProfile)

@@ -1148,12 +1148,12 @@ class HPWH : public Courier::Sender
 
     struct ParamInput
     {
-        enum class ParamInputType
+        enum class ParamType
         {
             none,
             PerfCoef
         };
-        virtual ParamInputType paramInputType() = 0;
+        virtual ParamType paramType() {return ParamType::none;}
     };
 
     struct PerfCoefInput : public ParamInput
@@ -1170,7 +1170,7 @@ class HPWH : public Courier::Sender
             PinCoef,
             COP_Coef
         };
-        ParamInputType paramInputType() override { return ParamInputType::PerfCoef; }
+        ParamType paramType() override { return ParamType::PerfCoef; }
         virtual PerfCoefType perfCoefType() { return PerfCoefType::none; }
     };
 
@@ -1188,13 +1188,15 @@ class HPWH : public Courier::Sender
     struct MeritInput
     { // base class for a figure of merit
         double targetVal;
+
+        MeritInput(double targetVal_in) : targetVal(targetVal_in) {}
+
         enum class MeritType
         {
             none,
             UEF
         };
-        MeritInput(double targetVal_in) : targetVal(targetVal_in) {}
-        virtual MeritType meritType() = 0;
+        virtual MeritType meritType() { return MeritType::none; }
     };
 
     struct UEF_MeritInput : public MeritInput
