@@ -64,7 +64,6 @@ void make(const std::string& sSpecType,
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
-    standardTestOptions.ambientT_C = ambientT_C;
 
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
@@ -85,6 +84,16 @@ void make(const std::string& sSpecType,
         std::string sInputFile = sModelName;
         hpwh.initFromFile(sInputFile);
     }
+
+    hpwh.customTestOptions.overrideFirstHourRating = true;
+
+    HPWH::GenericOptions genericOptions;
+
+    HPWH::UEF_MeritInput uef_merit(targetUEF, ambientT_C);
+    genericOptions.meritInputs.push_back(&uef_merit);
+
+    HPWH::COP_CoefInput copCoeffInput(1, 0);
+    genericOptions.paramInputs.push_back(&copCoeffInput);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
     if (useCustomDrawProfile)
@@ -120,7 +129,7 @@ void make(const std::string& sSpecType,
     std::cout << "Target UEF: " << targetUEF << "\n";
     std::cout << "Output directory: " << standardTestOptions.sOutputDirectory << "\n\n";
 
-    hpwh.makeGeneric(targetUEF, standardTestOptions);
+    hpwh.makeGeneric(genericOptions, standardTestOptions);
 
     sPresetOrFile[0] =
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));

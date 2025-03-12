@@ -75,7 +75,6 @@ void measure(const std::string& sSpecType,
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
-    standardTestOptions.ambientT_C = ambientT_C;
 
     bool useResultsFile = false;
 
@@ -149,6 +148,9 @@ void measure(const std::string& sSpecType,
             exit(1);
         }
     }
+
+    hpwh.customTestOptions.overrideAmbientT = true;
+    hpwh.customTestOptions.ambientT_C = ambientT_C;
 
     *standardTestOptions.outputStream << "Spec type: " << sPresetOrFile << "\n";
     *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
