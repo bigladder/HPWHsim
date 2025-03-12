@@ -4920,9 +4920,11 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    constexpr double externalT_C = 19.7;
+    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
+    const double ambientT_C = (customTestOptions.overrideAmbientT)
+                                  ? customTestOptions.ambientT_C
+                                  : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const double externalT_C = ambientT_C;
 
     if (testOptions.changeSetpoint)
     {
@@ -4998,9 +5000,11 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    constexpr double externalT_C = 19.7;
+    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
+    const double ambientT_C = (customTestOptions.overrideAmbientT)
+                                  ? customTestOptions.ambientT_C
+                                  : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const double externalT_C = ambientT_C;
 
     if (testOptions.changeSetpoint)
     {
@@ -5170,11 +5174,12 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
+    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
     const double ambientT_C = (customTestOptions.overrideAmbientT)
                                   ? customTestOptions.ambientT_C
                                   : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    constexpr double inletT_C = 14.4;     // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double externalT_C = 19.7;
+    const double externalT_C = ambientT_C;
+
     DRMODES drMode = DR_ALLOW;
 
     if (testOptions.changeSetpoint)
@@ -5980,7 +5985,7 @@ struct HPWH::Fitter
 
         {
             targetVal = uefMeritInput.targetVal;
-            ambientT_C  = uefMeritInput.ambientT_C;
+            ambientT_C = uefMeritInput.ambientT_C;
         }
         virtual ~UEF_Merit() = default;
 
@@ -6036,6 +6041,7 @@ struct HPWH::Fitter
         std::vector<double> dParams;
         auto nParams = pParams.size();
         auto nMerits = pMerits.size();
+        bool success = false;
 
         if ((nParams == 1) && (nMerits == 1))
         {
@@ -6185,18 +6191,20 @@ struct HPWH::Fitter
                             }
                         }
                     }
-                    else
-                    { // no improvement
-                        nu *= 10.;
-                        if (nu > 1.e6)
-                        {
-                            courier->send_error("Failure in makeGenericModel");
-                        }
+                }
+                else
+                { // no improvement
+                    nu *= 10.;
+                    if (nu > 1.e6)
+                    {
+                        courier->send_error("Failure in makeGenericModel");
                     }
                 }
+
                 if (FOM0 < 1.e-12)
                 {
                     courier->send_info("Fit converged.");
+                    success = true;
                     break;
                 }
             }
@@ -6205,6 +6213,8 @@ struct HPWH::Fitter
         {
             courier->send_error("Cannot perform fit.");
         }
+        if (!success)
+            courier->send_error("Fit did not converge.");
     }
 };
 
