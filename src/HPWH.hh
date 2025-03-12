@@ -1110,7 +1110,7 @@ class HPWH : public Courier::Sender
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
-    /// provides model optimization
+    /// prototype - provides model optimization
     struct Fitter;
 
     /// fields for test output to csv
@@ -1153,7 +1153,7 @@ class HPWH : public Courier::Sender
             none,
             PerfCoef
         };
-        virtual ParamType paramType() {return ParamType::none;}
+        virtual ParamType paramType() { return ParamType::none; }
     };
 
     struct PerfCoefInput : public ParamInput
