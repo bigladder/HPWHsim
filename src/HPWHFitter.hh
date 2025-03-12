@@ -431,7 +431,7 @@ struct HPWH::Fitter
                 }
             }
 
-            if (FOM0 < 1.e-12)
+            if (FOM0 < 1.e-13)
             {
                 courier->send_info("Fit converged.");
                 success = true;
