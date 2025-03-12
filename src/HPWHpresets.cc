@@ -3957,17 +3957,21 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(2);
 
         compressor->perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            //{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-            {5.22288834, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+            50,                           // Temperature (T)
+            {187.064124, 1.939747, 0.0},  // Input Power Coefficients
+            {5.22288834, -0.0243008, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            70,                        // Temperature (T_F)
-            {148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            //{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-            {6.84694165, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+            67.5,                        // Temperature (F)
+            {152.91959, 2.47660, 0.0},   // Input Power Coefficients
+            {6.643935, -0, 0323733, 0.0} // COP Coefficients
+        });
+
+        compressor->perfMap.push_back({
+            95,                              // Temperature (F)
+            {99.263895, 3.320221, 0.0},      // Input Power Coefficients
+            {8.877008288, -0.045058625, 0.0} // COP Coefficients
         });
 
         compressor->minT = F_TO_C(42.0);
@@ -4367,15 +4371,21 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(2);
 
         compressor->perfMap.push_back({
-            50,                    // Temperature (T_F)
-            {126.9, 2.215, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {6.931, -0.03395, 0.0} // COP Coefficients (COP_coeffs)
+            50,                    // Temperature (F)
+            {126.9, 2.215, 0.0},   // Input Power Coefficients
+            {6.931, -0.03395, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            67.5,                  // Temperature (T_F)
-            {116.6, 2.467, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {8.833, -0.04431, 0.0} // COP Coefficients (COP_coeffs)
+            67.5,                  // Temperature (F)
+            {116.6, 2.467, 0.0},   // Input Power Coefficients
+            {8.833, -0.04431, 0.0} // COP Coefficients
+        });
+
+        compressor->perfMap.push_back({
+            95,                     // Temperature (F)
+            {100.4, 2.863, 0.0},    // Input Power Coefficients
+            {11.822, -0.06059, 0.0} // COP Coefficients
         });
 
         compressor->minT = F_TO_C(37.);
