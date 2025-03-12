@@ -14,6 +14,7 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 set(headers
         HPWHversion.in.hh
         HPWH.hh
+        HPWHFitter.hh
         )
 
 set(sources
