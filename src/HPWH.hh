@@ -1071,7 +1071,6 @@ class HPWH : public Courier::Sender
         std::ofstream outputFile;
         int nTestTCouples = 6;
         double setpointT_C = 51.7;
-        double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     };
 
     /// perform a draw/heat cycle to prepare for test
@@ -1141,9 +1140,82 @@ class HPWH : public Courier::Sender
     {
         bool overrideFirstHourRating = false;
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
+
+        bool overrideAmbientT = false;
+        double ambientT_C = 19.7;
+
     } customTestOptions;
 
-    void makeGeneric(const double targetUEF, StandardTestOptions& standardTestOptions);
+    struct ParamInput
+    {
+        enum class ParamInputType
+        {
+            none,
+            PerfCoef
+        };
+        virtual ParamInputType paramInputType() = 0;
+    };
+
+    struct PerfCoefInput : public ParamInput
+    {
+        unsigned tempIndex;
+        unsigned power;
+        PerfCoefInput(unsigned tempIndex_in, unsigned power_in)
+            : tempIndex(tempIndex_in), power(power_in)
+        {
+        }
+        enum class PerfCoefType
+        {
+            none,
+            PinCoef,
+            COP_Coef
+        };
+        ParamInputType paramInputType() override { return ParamInputType::PerfCoef; }
+        virtual PerfCoefType perfCoefType() { return PerfCoefType::none; }
+    };
+
+    struct PinCoefInput : public PerfCoefInput
+    {
+        PerfCoefType perfCoefType() override { return PerfCoefType::PinCoef; }
+        PinCoefInput(unsigned tempIndex, unsigned power) : PerfCoefInput(tempIndex, power) {}
+    };
+    struct COP_CoefInput : public PerfCoefInput
+    {
+        PerfCoefType perfCoefType() override { return PerfCoefType::COP_Coef; }
+        COP_CoefInput(unsigned tempIndex, unsigned power) : PerfCoefInput(tempIndex, power) {}
+    };
+
+    struct MeritInput
+    { // base class for a figure of merit
+        double targetVal;
+        enum class MeritType
+        {
+            none,
+            UEF
+        };
+        MeritInput(double targetVal_in) : targetVal(targetVal_in) {}
+        virtual MeritType meritType() = 0;
+    };
+
+    struct UEF_MeritInput : public MeritInput
+    {
+        double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+
+        UEF_MeritInput(double targetUEF, double ambientT_C_in = 19.7)
+            : MeritInput(targetUEF), ambientT_C(ambientT_C_in)
+        {
+        }
+        MeritType meritType() override { return MeritType::UEF; }
+    };
+
+    struct GenericOptions
+    {
+        std::vector<MeritInput*> meritInputs;
+        std::vector<ParamInput*> paramInputs;
+    };
+
+    void makeGeneric(const GenericOptions& genericOptions,
+                     StandardTestOptions& standardTestOptions);
 
   private:
     void setAllDefaults(); /**< sets all the defaults default */

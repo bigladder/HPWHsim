@@ -5170,8 +5170,10 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
-    const double ambientT_C = testOptions.ambientT_C;
-    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
+    const double ambientT_C = (customTestOptions.overrideAmbientT)
+                                  ? customTestOptions.ambientT_C
+                                  : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    constexpr double inletT_C = 14.4;     // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double externalT_C = 19.7;
     DRMODES drMode = DR_ALLOW;
 
@@ -5867,36 +5869,18 @@ struct HPWH::Fitter
 
     struct ParamInfo
     { // base class for parameter information
-        enum class Type
-        {
-            none,
-            copCoef
-        };
-
-        virtual Type paramType() = 0;
 
         virtual void assign(double*& val) = 0;
         virtual void showInfo(std::ostream& os) = 0;
     };
 
-    struct CopCoefInfo : public ParamInfo
+    struct COP_CoefInfo : public ParamInfo,
+                          COP_CoefInput
     { // COP coef parameter info
-        unsigned heatSourceIndex;
-        unsigned tempIndex;
-        unsigned power;
         HPWH* hpwh;
 
-        Type paramType() override { return Type::copCoef; }
-
-        CopCoefInfo(const unsigned heatSourceIndex_in,
-                    const unsigned tempIndex_in,
-                    const unsigned power_in,
-                    HPWH* hpwh_in)
-            : ParamInfo()
-            , heatSourceIndex(heatSourceIndex_in)
-            , tempIndex(tempIndex_in)
-            , power(power_in)
-            , hpwh(hpwh_in)
+        COP_CoefInfo(COP_CoefInput cop_CoedInput, HPWH* hpwh_in = nullptr)
+            : ParamInfo(), COP_CoefInput(cop_CoedInput), hpwh(hpwh_in)
         {
         }
 
@@ -5904,7 +5888,8 @@ struct HPWH::Fitter
         { // get a reference to the HPWH member variable
             val = nullptr;
             HPWH::HeatSource* heatSource;
-            hpwh->getNthHeatSource(heatSourceIndex, heatSource);
+
+            hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
             auto& perfMap = heatSource->perfMap;
             if (tempIndex >= perfMap.size())
@@ -5923,7 +5908,6 @@ struct HPWH::Fitter
 
         void showInfo(std::ostream& os) override
         {
-            os << " heat-source index = " << heatSourceIndex;
             os << ", temperature index = " << tempIndex;
             os << ", power = " << power;
         }
@@ -5939,12 +5923,17 @@ struct HPWH::Fitter
 
         virtual void assignVal() = 0;
         virtual void show(std::ostream& os) = 0;
+        virtual ~Param() = default;
     };
 
-    struct CopCoef : public Param,
-                     CopCoefInfo
-    { // COP coef parameter
-        CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) { dVal = 1.e-9; }
+    struct COP_Coef : public Param,
+                      COP_CoefInfo
+    { // COP coefficient parameter
+        COP_Coef(COP_CoefInput& copCoefInput, HPWH* hpwh)
+            : Param(), COP_CoefInfo(copCoefInput, hpwh)
+        {
+            dVal = 1.e-9;
+        }
 
         void assignVal() override { assign(val); }
 
@@ -5957,55 +5946,58 @@ struct HPWH::Fitter
 
     struct Merit
     { // base class for a figure of merit
-        double val;
-        double targetVal;
+        double currVal;
+        double* pTargetVal;
         double tolVal; // tolerance
 
-        Merit() : val(0.), targetVal(0.), tolVal(1.e-6) {}
+        Merit() : currVal(0.), pTargetVal(nullptr), tolVal(1.e-6) {}
 
         virtual void eval() = 0;
         virtual void evalDiff(double& diff) = 0;
     };
 
-    struct UEF_Merit : public Merit
+    struct UEF_Merit : public Merit,
+                       UEF_MeritInput
     { // UEF as a figure of merit
         HPWH* hpwh;
         FirstHourRating* firstHourRating;
         StandardTestOptions* standardTestOptions;
 
-        UEF_Merit(HPWH* hpwh_in,
+        UEF_Merit(UEF_MeritInput& uefMeritInput,
                   FirstHourRating* firstHourRating_in,
                   StandardTestOptions* standardTestOptions_in,
-                  double targetVal_in)
+                  HPWH* hpwh_in)
             : Merit()
+            , UEF_MeritInput(uefMeritInput)
             , hpwh(hpwh_in)
             , firstHourRating(firstHourRating_in)
             , standardTestOptions(standardTestOptions_in)
 
         {
-            targetVal = targetVal_in;
+            pTargetVal = &targetVal;
         }
+        virtual ~UEF_Merit() = default;
 
         void eval() override
         { // get current UEF
             static HPWH::StandardTestSummary standardTestSummary;
             hpwh->run24hrTest(*firstHourRating, standardTestSummary, *standardTestOptions);
-            val = standardTestSummary.UEF;
+            currVal = standardTestSummary.UEF;
         }
 
         void evalDiff(double& diff) override
         { // get difference ratio
             eval();
-            diff = (val - targetVal) / tolVal;
+            diff = (currVal - targetVal) / tolVal;
         }
     };
 
-    std::vector<Fitter::Merit*> pMerits; // could be a vector for add'l FOMs
-    std::vector<Fitter::Param*> pParams;
+    std::vector<std::shared_ptr<Fitter::Merit>> pMerits; // could be a vector for add'l FOMs
+    std::vector<std::shared_ptr<Fitter::Param>> pParams;
     std::shared_ptr<Courier::Courier> courier = nullptr;
 
-    Fitter(std::vector<Fitter::Merit*> pMerits_in,
-           std::vector<Fitter::Param*> pParams_in,
+    Fitter(std::vector<std::shared_ptr<Fitter::Merit>> pMerits_in,
+           std::vector<std::shared_ptr<Fitter::Param>> pParams_in,
            std::shared_ptr<Courier::Courier> courier_in)
         : pMerits(pMerits_in), pParams(pParams_in), courier(courier_in)
     {
@@ -6024,7 +6016,7 @@ struct HPWH::Fitter
 
             *param->val = x;
             merit->eval();
-            return merit->val;
+            return merit->currVal;
         }
         return 1.e12;
     }
@@ -6044,15 +6036,15 @@ struct HPWH::Fitter
             double val0 = *param->val;
             *param->val = val0;
             merit->eval();
-            double f0 = merit->val;
+            double f0 = merit->currVal;
 
             double val1 = (1.001) * val0;
             *param->val = val1;
             merit->eval();
-            double f1 = merit->val;
+            double f1 = merit->currVal;
 
             int iters =
-                secant(targetFunc, this, merit->targetVal, 1.e-12, val0, f0, val1, f1, 1.e-12);
+                secant(targetFunc, this, *merit->pTargetVal, 1.e-12, val0, f0, val1, f1, 1.e-12);
             if (iters < 0)
                 courier->send_error("Failure in makeGenericModel");
         }
@@ -6071,7 +6063,7 @@ struct HPWH::Fitter
             {
                 pMerit->eval();
                 std::cout << iter << ": ";
-                std::cout << "UEF: " << pMerit->val << "; ";
+                std::cout << "UEF: " << pMerit->currVal << "; ";
 
                 bool first = true;
                 for (std::size_t j = 0; j < nParams; ++j)
@@ -6198,7 +6190,8 @@ struct HPWH::Fitter
     }
 };
 
-void HPWH::makeGeneric(const double targetUEF, StandardTestOptions& standardTestOptions)
+void HPWH::makeGeneric(const GenericOptions& genericOptions,
+                       StandardTestOptions& standardTestOptions)
 {
     HPWH::FirstHourRating firstHourRating;
     findFirstHourRating(firstHourRating, standardTestOptions);
@@ -6210,24 +6203,66 @@ void HPWH::makeGeneric(const double targetUEF, StandardTestOptions& standardTest
         std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
+    const unsigned i_heat_source = compressorIndex;
+
     // set up merit values
-    std::vector<Fitter::Merit*> pMerits;
-    Fitter::UEF_Merit uefMerit(this, &firstHourRating, &standardTestOptions, targetUEF);
-    pMerits.push_back(&uefMerit);
+    std::vector<std::shared_ptr<Fitter::Merit>> pMerits = {};
+    for (auto meritInput : genericOptions.meritInputs)
+    {
+        std::shared_ptr<Fitter::Merit> merit;
+        switch (meritInput->meritType())
+        {
+        case MeritInput::MeritType::UEF:
+        {
+            auto uefMeritInput = static_cast<UEF_MeritInput*>(meritInput);
+            merit = std::make_shared<Fitter::UEF_Merit>(
+                *uefMeritInput, &firstHourRating, &standardTestOptions, this);
+            break;
+        }
+        case MeritInput::MeritType::none:
+            continue;
+        }
+        pMerits.push_back(merit);
+    }
 
     if (!hasACompressor())
         send_error("HPWH does not have a compressor.");
 
     // set up parameters
-    std::vector<Fitter::Param*> pParams;
-    const unsigned i_heat_source = compressorIndex;
-    Fitter::CopCoefInfo copT2constInfo = {
-        i_heat_source, 1, 0, this}; // heatSourceIndex, tempIndex, power, *hpwh
+    std::vector<std::shared_ptr<Fitter::Param>> pParams;
+    for (auto& paramInput : genericOptions.paramInputs)
+    {
+        std::shared_ptr<Fitter::Param> param;
+        switch (paramInput->paramInputType())
+        {
 
-    Fitter::CopCoef copT2const(copT2constInfo);
+        case ParamInput::ParamInputType::PerfCoef:
+        {
+            auto perfCoefInput = static_cast<PerfCoefInput*>(paramInput);
+            switch (perfCoefInput->perfCoefType())
+            {
 
-    pParams.push_back(&copT2const);
-    // pParams.push_back(&copT2lin);
+            case PerfCoefInput::PerfCoefType::PinCoef:
+                continue;
+
+            case PerfCoefInput::PerfCoefType::COP_Coef:
+            {
+                auto copCoefInput = static_cast<COP_CoefInput*>(paramInput);
+                param = std::make_shared<Fitter::COP_Coef>(*copCoefInput, this);
+                break;
+            }
+            case PerfCoefInput::PerfCoefType::none:
+                continue;
+                break;
+            }
+            break;
+        }
+
+        case ParamInput::ParamInputType::none:
+            continue;
+        }
+        pParams.push_back(param);
+    }
 
     Fitter fitter(pMerits, pParams, get_courier());
     fitter.fit();
