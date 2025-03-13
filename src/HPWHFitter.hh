@@ -265,7 +265,7 @@ struct HPWH::Fitter : public Sender
             double C = a * b;
             double det = A * B - C * C;
 
-            if (abs(det) < thresh)
+            if (fabs(det) < thresh)
             {
                 return false;
             }
