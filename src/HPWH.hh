@@ -1147,6 +1147,15 @@ class HPWH : public Courier::Sender
     struct GenericOptions;
     void makeGeneric(const GenericOptions& genericOptions,
                      StandardTestOptions& standardTestOptions);
+    void makeGenericUEF(double targetEF, double ambientT_C = 19.7);
+    void makeGenericE50(double targetEF) { return makeGenericUEF(targetEF, 10.); }
+    void makeGenericE95(double targetEF) { return makeGenericUEF(targetEF, 35.); }
+    void makeGenericE50_UEF_E95(double targetEF50, double targetUEF, double targetEF95)
+    {
+        makeGenericE50(targetEF50);
+        makeGenericUEF(targetUEF);
+        makeGenericE95(targetEF95);
+    }
 
   private:
     void setAllDefaults(); /**< sets all the defaults default */

@@ -5850,3 +5850,47 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
     if (cop < cop1)
         send_error("COP slope is positive.");
 }
+
+void HPWH::makeGenericUEF(double targetEF, double ambientT_C)
+{
+    HPWH::GenericOptions genericOptions;
+
+    HPWH::Fitter::UEF_MeritInput uef_merit(targetEF, ambientT_C);
+    genericOptions.meritInputs.push_back(&uef_merit);
+
+    auto& compressor = heatSources[compressorIndex];
+
+    int nPerfPts = compressor.perfMap.size();
+    int i0 = 0, i1 = 0;
+    for (auto& perfPoint : compressor.perfMap)
+    {
+        if (ambientT_C < F_TO_C(perfPoint.T_F))
+            break;
+        i0 = i1;
+        ++i1;
+    }
+    double ratio = 0.;
+    if ((i1 > i0) && (i1 < nPerfPts))
+    {
+        ratio = (ambientT_C - compressor.perfMap[i0].T_F) /
+                (compressor.perfMap[i1].T_F - compressor.perfMap[i0].T_F);
+    }
+    int i_ambientT = (ratio < 0.5) ? i0 : i1;
+
+    HPWH::Fitter::COP_CoefInput copCoeffInput0(i_ambientT, 0);
+    genericOptions.paramInputs.push_back(&copCoeffInput0);
+
+    HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1);
+    genericOptions.paramInputs.push_back(&copCoeffInput1);
+
+    HPWH::StandardTestOptions standardTestOptions;
+    standardTestOptions.saveOutput = true;
+    standardTestOptions.sOutputFilename = "";
+    standardTestOptions.sOutputDirectory = "";
+    standardTestOptions.outputStream = &std::cout;
+    standardTestOptions.changeSetpoint = true;
+    standardTestOptions.nTestTCouples = 6;
+    standardTestOptions.setpointT_C = 51.7;
+
+    makeGeneric(genericOptions, standardTestOptions);
+}
