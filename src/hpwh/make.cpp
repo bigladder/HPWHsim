@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include "HPWH.hh"
+#include "HPWHFitter.hh"
 #include <CLI/CLI.hpp>
 
 namespace hpwh_cli
@@ -87,13 +88,13 @@ void make(const std::string& sSpecType,
 
     HPWH::GenericOptions genericOptions;
 
-    HPWH::UEF_MeritInput uef_merit(targetUEF, ambientT_C);
+    HPWH::Fitter::UEF_MeritInput uef_merit(targetUEF, ambientT_C);
     genericOptions.meritInputs.push_back(&uef_merit);
 
-    HPWH::COP_CoefInput copCoeffInput0(2, 0);
+    HPWH::Fitter::COP_CoefInput copCoeffInput0(2, 0);
     genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-    HPWH::COP_CoefInput copCoeffInput1(2, 1);
+    HPWH::Fitter::COP_CoefInput copCoeffInput1(2, 1);
     genericOptions.paramInputs.push_back(&copCoeffInput1);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");

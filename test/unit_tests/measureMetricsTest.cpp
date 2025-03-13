@@ -3,6 +3,7 @@
 
 // HPWHsim
 #include "HPWH.hh"
+#include "HPWHFitter.hh"
 #include "unit-test.hh"
 
 struct MeasureMetricsTest : public testing::Test
@@ -111,13 +112,13 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
         const double ambientT_C = 10.;
         HPWH::GenericOptions genericOptions;
 
-        HPWH::UEF_MeritInput uef_merit(E50, ambientT_C);
+        HPWH::Fitter::UEF_MeritInput uef_merit(E50, ambientT_C);
         genericOptions.meritInputs.push_back(&uef_merit);
 
-        HPWH::COP_CoefInput copCoeffInput0(0, 0);
+        HPWH::Fitter::COP_CoefInput copCoeffInput0(0, 0);
         genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-        HPWH::COP_CoefInput copCoeffInput1(0, 1);
+        HPWH::Fitter::COP_CoefInput copCoeffInput1(0, 1);
         genericOptions.paramInputs.push_back(&copCoeffInput1);
 
         EXPECT_NO_THROW(hpwh.makeGeneric(genericOptions, standardTestOptions))
@@ -128,13 +129,13 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
 
         HPWH::GenericOptions genericOptions;
 
-        HPWH::UEF_MeritInput uef_merit(UEF, ambientT_C);
+        HPWH::Fitter::UEF_MeritInput uef_merit(UEF, ambientT_C);
         genericOptions.meritInputs.push_back(&uef_merit);
 
-        HPWH::COP_CoefInput copCoeffInput0(1, 0);
+        HPWH::Fitter::COP_CoefInput copCoeffInput0(1, 0);
         genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-        HPWH::COP_CoefInput copCoeffInput1(1, 1);
+        HPWH::Fitter::COP_CoefInput copCoeffInput1(1, 1);
         genericOptions.paramInputs.push_back(&copCoeffInput1);
 
         EXPECT_NO_THROW(hpwh.makeGeneric(genericOptions, standardTestOptions))
@@ -145,13 +146,13 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
 
         HPWH::GenericOptions genericOptions;
 
-        HPWH::UEF_MeritInput uef_merit(E95, ambientT_C);
+        HPWH::Fitter::UEF_MeritInput uef_merit(E95, ambientT_C);
         genericOptions.meritInputs.push_back(&uef_merit);
 
-        HPWH::COP_CoefInput copCoeffInput0(2, 0);
+        HPWH::Fitter::COP_CoefInput copCoeffInput0(2, 0);
         genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-        HPWH::COP_CoefInput copCoeffInput1(2, 1);
+        HPWH::Fitter::COP_CoefInput copCoeffInput1(2, 1);
         genericOptions.paramInputs.push_back(&copCoeffInput1);
 
         EXPECT_NO_THROW(hpwh.makeGeneric(genericOptions, standardTestOptions))
