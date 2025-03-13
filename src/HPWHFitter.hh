@@ -13,8 +13,12 @@
 
 struct HPWH::Fitter : public Sender
 {
-    struct ParamInput
+    struct ParamInput : public Sender
     {
+        ParamInput(std::shared_ptr<Courier::Courier> courier)
+            : Sender("ParamInput", "paramInput", courier)
+        {
+        }
         enum class ParamType
         {
             none,
@@ -27,8 +31,10 @@ struct HPWH::Fitter : public Sender
     {
         unsigned tempIndex;
         unsigned power;
-        PerfCoefInput(unsigned tempIndex_in, unsigned power_in)
-            : tempIndex(tempIndex_in), power(power_in)
+        PerfCoefInput(unsigned tempIndex_in,
+                      unsigned power_in,
+                      std::shared_ptr<Courier::Courier> courier)
+            : ParamInput(courier), tempIndex(tempIndex_in), power(power_in)
         {
         }
         enum class PerfCoefType
@@ -44,19 +50,28 @@ struct HPWH::Fitter : public Sender
     struct PinCoefInput : public PerfCoefInput
     {
         PerfCoefType perfCoefType() override { return PerfCoefType::PinCoef; }
-        PinCoefInput(unsigned tempIndex, unsigned power) : PerfCoefInput(tempIndex, power) {}
+        PinCoefInput(unsigned tempIndex, unsigned power, std::shared_ptr<Courier::Courier> courier)
+            : PerfCoefInput(tempIndex, power, courier)
+        {
+        }
     };
     struct COP_CoefInput : public PerfCoefInput
     {
         PerfCoefType perfCoefType() override { return PerfCoefType::COP_Coef; }
-        COP_CoefInput(unsigned tempIndex, unsigned power) : PerfCoefInput(tempIndex, power) {}
+        COP_CoefInput(unsigned tempIndex, unsigned power, std::shared_ptr<Courier::Courier> courier)
+            : PerfCoefInput(tempIndex, power, courier)
+        {
+        }
     };
 
-    struct MeritInput
+    struct MeritInput : public Sender
     { // base class for a figure of merit
         double targetVal;
 
-        MeritInput(double targetVal_in) : targetVal(targetVal_in) {}
+        MeritInput(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
+            : Sender("MeritInput", "meritInput", courier), targetVal(targetVal_in)
+        {
+        }
 
         enum class MeritType
         {
@@ -69,8 +84,10 @@ struct HPWH::Fitter : public Sender
     struct UEF_MeritInput : public MeritInput
     {
         double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-        UEF_MeritInput(double targetUEF, double ambientT_C_in = 19.7)
-            : MeritInput(targetUEF), ambientT_C(ambientT_C_in)
+        UEF_MeritInput(double targetUEF,
+                       double ambientT_C_in,
+                       std::shared_ptr<Courier::Courier> courier)
+            : MeritInput(targetUEF, courier), ambientT_C(ambientT_C_in)
         {
         }
         MeritType meritType() override { return MeritType::UEF; }
@@ -78,6 +95,7 @@ struct HPWH::Fitter : public Sender
 
     struct ParamInfo
     { // base class for parameter information
+
         virtual void assign(double*& val) = 0;
     };
 
@@ -86,8 +104,8 @@ struct HPWH::Fitter : public Sender
     { // COP coef parameter info
         HPWH* hpwh;
 
-        COP_CoefInfo(COP_CoefInput cop_CoedInput, HPWH* hpwh_in = nullptr)
-            : ParamInfo(), COP_CoefInput(cop_CoedInput), hpwh(hpwh_in)
+        COP_CoefInfo(COP_CoefInput cop_CoefInput, HPWH* hpwh_in)
+            : ParamInfo(), COP_CoefInput(cop_CoefInput), hpwh(hpwh_in)
         {
         }
 
@@ -101,14 +119,14 @@ struct HPWH::Fitter : public Sender
             auto& perfMap = heatSource->perfMap;
             if (tempIndex >= perfMap.size())
             {
-                hpwh->send_error("Invalid heat-source performance-map temperature index.");
+                send_error("Invalid heat-source performance-map temperature index.");
             }
 
             auto& perfPoint = perfMap[tempIndex];
             auto& copCoeffs = perfPoint.COP_coeffs;
             if (power >= copCoeffs.size())
             {
-                hpwh->send_error("Invalid heat-source performance-map cop-coefficient power.");
+                send_error("Invalid heat-source performance-map cop-coefficient power.");
             }
             val = &copCoeffs[power];
         }
@@ -201,8 +219,8 @@ struct HPWH::Fitter : public Sender
 
     Fitter(std::vector<std::shared_ptr<Fitter::Merit>> pMerits_in,
            std::vector<std::shared_ptr<Fitter::Param>> pParams_in,
-           std::shared_ptr<Courier::Courier> courier_in)
-        : Sender("Fitter", "fitter", courier_in), pMerits(pMerits_in), pParams(pParams_in)
+           std::shared_ptr<Courier::Courier> courier)
+        : Sender("Fitter", "fitter", courier), pMerits(pMerits_in), pParams(pParams_in)
     {
     }
 

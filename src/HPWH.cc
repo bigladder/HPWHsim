@@ -5855,7 +5855,7 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C)
 {
     HPWH::GenericOptions genericOptions;
 
-    HPWH::Fitter::UEF_MeritInput uef_merit(targetEF, ambientT_C);
+    HPWH::Fitter::UEF_MeritInput uef_merit(targetEF, ambientT_C, get_courier());
     genericOptions.meritInputs.push_back(&uef_merit);
 
     auto& compressor = heatSources[compressorIndex];
@@ -5877,10 +5877,10 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C)
     }
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput0(i_ambientT, 0);
+    HPWH::Fitter::COP_CoefInput copCoeffInput0(i_ambientT, 0, get_courier());
     genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1);
+    HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
     genericOptions.paramInputs.push_back(&copCoeffInput1);
 
     HPWH::StandardTestOptions standardTestOptions;
