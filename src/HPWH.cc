@@ -4913,10 +4913,12 @@ void HPWH::initFromFile(string modelName)
 
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
+///         Draw until heating begins, wait for recovery
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 void HPWH::prepForTest(StandardTestOptions& testOptions)
 {
+    // apply first-hour-rating criterion EERE-2019-BT-TP-0032-0058, p. 40479
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
@@ -4960,7 +4962,7 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
             break;
         }
 
-        case 2: // wait for heat to turn on
+        case 2: // wait for heat to turn off
         {
             if (!isHeating)
             {
