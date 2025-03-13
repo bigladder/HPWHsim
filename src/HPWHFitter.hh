@@ -96,7 +96,8 @@ struct HPWH::Fitter : public Sender
     struct ParamInfo
     { // base class for parameter information
 
-        virtual void assign(double*& val) = 0;
+        virtual void setValue(double x) = 0;
+        virtual double getValue() = 0;
     };
 
     struct COP_CoefInfo : public ParamInfo,
@@ -109,11 +110,9 @@ struct HPWH::Fitter : public Sender
         {
         }
 
-        void assign(double*& val) override
-        { // get a reference to the HPWH member variable
-            val = nullptr;
+        void setValue(double x) override
+        { // set the HPWH member variable
             HPWH::HeatSource* heatSource;
-
             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
             auto& perfMap = heatSource->perfMap;
@@ -128,19 +127,39 @@ struct HPWH::Fitter : public Sender
             {
                 send_error("Invalid heat-source performance-map cop-coefficient power.");
             }
-            val = &copCoeffs[power];
+            copCoeffs[power] = x;
+        }
+
+        double getValue() override
+        { // get a reference to the HPWH member variable
+            HPWH::HeatSource* heatSource;
+            hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
+
+            auto& perfMap = heatSource->perfMap;
+            if (tempIndex >= perfMap.size())
+            {
+                send_error("Invalid heat-source performance-map temperature index.");
+            }
+
+            auto& perfPoint = perfMap[tempIndex];
+            auto& copCoeffs = perfPoint.COP_coeffs;
+            if (power >= copCoeffs.size())
+            {
+                send_error("Invalid heat-source performance-map cop-coefficient power.");
+            }
+            return copCoeffs[power];
         }
     };
 
     struct Param
     { // base class for parameter
-        double* val;
         double dVal;
         bool hold = false;
 
-        Param() : val(nullptr), dVal(1.e3) {}
+        Param() : dVal(1.e3) {}
 
-        virtual void assignVal() = 0;
+        virtual void setValue(double x) = 0;
+        virtual double getValue() = 0;
         virtual ~Param() = default;
 
         virtual ParamInput::ParamType paramType() { return ParamInput::ParamType::none; }
@@ -155,8 +174,8 @@ struct HPWH::Fitter : public Sender
             dVal = 1.e-9;
         }
 
-        void assignVal() override { assign(val); }
-
+        void setValue(double x) override { COP_CoefInfo::setValue(x); }
+        double getValue() override { return COP_CoefInfo::getValue(); }
         ParamInput::ParamType paramType() override { return ParamInput::ParamType::PerfCoef; }
     };
 

@@ -21,7 +21,7 @@ static double targetFunc(void* p0, double& x)
         auto param = fitter->pParams[0];
         auto merit = fitter->pMerits[0];
 
-        *param->val = x;
+        param->setValue(x);
         merit->eval();
         return merit->currVal;
     }
@@ -115,7 +115,6 @@ void HPWH::Fitter::leastSquares()
     std::vector<double> dParams;
     for (auto& pParam : pParams)
     {
-        pParam->assignVal();
         dParams.push_back(pParam->dVal);
     }
 
@@ -138,7 +137,7 @@ void HPWH::Fitter::leastSquares()
             if (!first)
                 iter_msg.append(",");
 
-            iter_msg.append(fmt::format(" param{:d}: {:g}", j, *(pParams[j]->val)));
+            iter_msg.append(fmt::format(" param{:d}: {:g}", j, pParams[j]->getValue()));
             first = false;
         }
 
@@ -152,17 +151,17 @@ void HPWH::Fitter::leastSquares()
         std::vector<double> paramV(nParams);
         for (std::size_t i = 0; i < nParams; ++i)
         {
-            paramV[i] = *(pParams[i]->val);
+            paramV[i] = pParams[i]->getValue();
         }
 
         std::vector<double> jacobiV(nParams); // 1 x 2
         for (std::size_t j = 0; j < nParams; ++j)
         {
-            *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
+            pParams[j]->setValue(paramV[j] + (pParams[j]->dVal));
             double dMerit;
             pMerit->evalDiff(dMerit);
             jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
-            *(pParams[j]->val) = paramV[j];
+            pParams[j]->setValue(paramV[j]);
         }
 
         // try nu
@@ -177,7 +176,7 @@ void HPWH::Fitter::leastSquares()
             {
                 inc1ParamV[j] = -invJacobiV1[j] * dMerit0;
                 paramV1[j] += inc1ParamV[j];
-                *(pParams[j]->val) = paramV1[j];
+                pParams[j]->setValue(paramV1[j]);
             }
             double dMerit;
             pMerit->evalDiff(dMerit);
@@ -186,7 +185,7 @@ void HPWH::Fitter::leastSquares()
             // restore
             for (std::size_t j = 0; j < nParams; ++j)
             {
-                *(pParams[j]->val) = paramV[j];
+                pParams[j]->setValue(paramV[j]);
             }
         }
 
@@ -202,7 +201,7 @@ void HPWH::Fitter::leastSquares()
             {
                 inc2ParamV[j] = -invJacobiV2[j] * dMerit0;
                 paramV2[j] += inc2ParamV[j];
-                *(pParams[j]->val) = paramV2[j];
+                pParams[j]->setValue(paramV2[j]);
             }
             double dMerit;
             pMerit->evalDiff(dMerit);
@@ -211,7 +210,7 @@ void HPWH::Fitter::leastSquares()
             // restore
             for (std::size_t j = 0; j < nParams; ++j)
             {
-                *(pParams[j]->val) = paramV[j];
+                pParams[j]->setValue(paramV[j]);
             }
         }
 
@@ -224,7 +223,7 @@ void HPWH::Fitter::leastSquares()
                 { // pick 1
                     for (std::size_t i = 0; i < nParams; ++i)
                     {
-                        *(pParams[i]->val) = paramV1[i];
+                        pParams[i]->setValue(paramV1[i]);
                         (pParams[i]->dVal) = inc1ParamV[i] / 1.e3;
                         FOM0 = FOM1;
                     }
@@ -233,7 +232,7 @@ void HPWH::Fitter::leastSquares()
                 { // pick 2
                     for (std::size_t i = 0; i < nParams; ++i)
                     {
-                        *(pParams[i]->val) = paramV2[i];
+                        pParams[i]->setValue(paramV2[i]);
                         (pParams[i]->dVal) = inc2ParamV[i] / 1.e3;
                         FOM0 = FOM2;
                     }
@@ -270,16 +269,16 @@ void HPWH::Fitter::fit()
         auto param = pParams[0];
         auto merit = pMerits[0];
 
-        param->assignVal();
-        double val0 = *param->val;
-        *param->val = val0;
+        double val0 = param->getValue();
         merit->eval();
         double f0 = merit->currVal;
 
         double val1 = (1.001) * val0;
-        *param->val = val1;
+        param->setValue(val1);
         merit->eval();
         double f1 = merit->currVal;
+
+        param->setValue(val0);
 
         int iters = secant(targetFunc, this, merit->targetVal, 1.e-12, val0, f0, val1, f1, 1.e-12);
         if (iters < 0)
