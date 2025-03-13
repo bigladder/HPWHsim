@@ -245,19 +245,19 @@ void HPWH::Fitter::leastSquares()
             nu *= 10.;
             if (nu > 1.e6)
             {
-                courier->send_error("Failure in makeGenericModel using leastSquares");
+                send_error("Failure in makeGenericModel using leastSquares");
             }
         }
 
         if (FOM0 < 1.e-13)
         {
-            courier->send_info("Fit converged.");
+            send_info("Fit converged.");
             success = true;
             break;
         }
     }
     if (!success)
-        courier->send_error("Fit did not converge.");
+        send_error("Fit did not converge.");
 }
 
 void HPWH::Fitter::fit()
@@ -291,6 +291,6 @@ void HPWH::Fitter::fit()
     }
     else
     {
-        courier->send_error("Cannot perform fit.");
+        send_error("Cannot perform fit.");
     }
 }

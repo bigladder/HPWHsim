@@ -88,13 +88,13 @@ void make(const std::string& sSpecType,
 
     HPWH::GenericOptions genericOptions;
 
-    HPWH::Fitter::UEF_MeritInput uef_merit(targetUEF, ambientT_C);
+    HPWH::Fitter::UEF_MeritInput uef_merit(targetUEF, ambientT_C, hpwh.get_courier());
     genericOptions.meritInputs.push_back(&uef_merit);
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput0(2, 0);
+    HPWH::Fitter::COP_CoefInput copCoeffInput0(2, 0, hpwh.get_courier());
     genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput1(2, 1);
+    HPWH::Fitter::COP_CoefInput copCoeffInput1(2, 1, hpwh.get_courier());
     genericOptions.paramInputs.push_back(&copCoeffInput1);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
