@@ -5860,7 +5860,7 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C)
 
     auto& compressor = heatSources[compressorIndex];
 
-    int nPerfPts = compressor.perfMap.size();
+    int nPerfPts = static_cast<int>(compressor.perfMap.size());
     int i0 = 0, i1 = 0;
     for (auto& perfPoint : compressor.perfMap)
     {
