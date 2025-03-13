@@ -5754,7 +5754,7 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
     }
 }
 
-void HPWH::makeGeneric(const GenericOptions& genericOptions,
+void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
                        StandardTestOptions& standardTestOptions)
 {
     HPWH::FirstHourRating firstHourRating;
@@ -5777,14 +5777,14 @@ void HPWH::makeGeneric(const GenericOptions& genericOptions,
         std::shared_ptr<Fitter::Merit> merit;
         switch (meritInput->meritType())
         {
-        case MeritInput::MeritType::UEF:
+        case Fitter::MeritInput::MeritType::UEF:
         {
-            auto uefMeritInput = static_cast<UEF_MeritInput*>(meritInput);
+            auto uefMeritInput = static_cast<Fitter::UEF_MeritInput*>(meritInput);
             merit = std::make_shared<Fitter::UEF_Merit>(
                 *uefMeritInput, &firstHourRating, &standardTestOptions, this);
             break;
         }
-        case MeritInput::MeritType::none:
+        case Fitter::MeritInput::MeritType::none:
             continue;
         }
         pMerits.push_back(merit);
@@ -5801,29 +5801,29 @@ void HPWH::makeGeneric(const GenericOptions& genericOptions,
         switch (paramInput->paramType())
         {
 
-        case ParamInput::ParamType::PerfCoef:
+        case Fitter::ParamInput::ParamType::PerfCoef:
         {
-            auto perfCoefInput = static_cast<PerfCoefInput*>(paramInput);
+            auto perfCoefInput = static_cast<Fitter::PerfCoefInput*>(paramInput);
             switch (perfCoefInput->perfCoefType())
             {
 
-            case PerfCoefInput::PerfCoefType::PinCoef:
+            case Fitter::PerfCoefInput::PerfCoefType::PinCoef:
                 continue;
 
-            case PerfCoefInput::PerfCoefType::COP_Coef:
+            case Fitter::PerfCoefInput::PerfCoefType::COP_Coef:
             {
-                auto copCoefInput = static_cast<COP_CoefInput*>(paramInput);
+                auto copCoefInput = static_cast<Fitter::COP_CoefInput*>(paramInput);
                 param = std::make_shared<Fitter::COP_Coef>(*copCoefInput, this);
                 break;
             }
-            case PerfCoefInput::PerfCoefType::none:
+            case Fitter::PerfCoefInput::PerfCoefType::none:
                 continue;
                 break;
             }
             break;
         }
 
-        case ParamInput::ParamType::none:
+        case Fitter::ParamInput::ParamType::none:
             continue;
         }
         pParams.push_back(param);

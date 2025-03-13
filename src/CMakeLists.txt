@@ -23,6 +23,7 @@ set(sources
         HPWHHeatSources.cc
         HPWHHeatingLogics.cc
         HPWHpresets.cc
+        HPWHFitter.cc
         )
 
 set(library_sources

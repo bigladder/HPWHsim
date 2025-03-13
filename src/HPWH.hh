@@ -1110,9 +1110,6 @@ class HPWH : public Courier::Sender
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
-    /// prototype - provides model optimization
-    struct Fitter;
-
     /// fields for test output to csv
     struct OutputData
     {
@@ -1146,76 +1143,8 @@ class HPWH : public Courier::Sender
 
     } customTestOptions;
 
-    struct ParamInput
-    {
-        enum class ParamType
-        {
-            none,
-            PerfCoef
-        };
-        virtual ParamType paramType() { return ParamType::none; }
-    };
-
-    struct PerfCoefInput : public ParamInput
-    {
-        unsigned tempIndex;
-        unsigned power;
-        PerfCoefInput(unsigned tempIndex_in, unsigned power_in)
-            : tempIndex(tempIndex_in), power(power_in)
-        {
-        }
-        enum class PerfCoefType
-        {
-            none,
-            PinCoef,
-            COP_Coef
-        };
-        ParamType paramType() override { return ParamType::PerfCoef; }
-        virtual PerfCoefType perfCoefType() { return PerfCoefType::none; }
-    };
-
-    struct PinCoefInput : public PerfCoefInput
-    {
-        PerfCoefType perfCoefType() override { return PerfCoefType::PinCoef; }
-        PinCoefInput(unsigned tempIndex, unsigned power) : PerfCoefInput(tempIndex, power) {}
-    };
-    struct COP_CoefInput : public PerfCoefInput
-    {
-        PerfCoefType perfCoefType() override { return PerfCoefType::COP_Coef; }
-        COP_CoefInput(unsigned tempIndex, unsigned power) : PerfCoefInput(tempIndex, power) {}
-    };
-
-    struct MeritInput
-    { // base class for a figure of merit
-        double targetVal;
-
-        MeritInput(double targetVal_in) : targetVal(targetVal_in) {}
-
-        enum class MeritType
-        {
-            none,
-            UEF
-        };
-        virtual MeritType meritType() { return MeritType::none; }
-    };
-
-    struct UEF_MeritInput : public MeritInput
-    {
-        double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-
-        UEF_MeritInput(double targetUEF, double ambientT_C_in = 19.7)
-            : MeritInput(targetUEF), ambientT_C(ambientT_C_in)
-        {
-        }
-        MeritType meritType() override { return MeritType::UEF; }
-    };
-
-    struct GenericOptions
-    {
-        std::vector<MeritInput*> meritInputs;
-        std::vector<ParamInput*> paramInputs;
-    };
-
+    struct Fitter;
+    struct GenericOptions;
     void makeGeneric(const GenericOptions& genericOptions,
                      StandardTestOptions& standardTestOptions);
 
