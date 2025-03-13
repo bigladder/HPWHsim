@@ -106,6 +106,10 @@ int HPWH::Fitter::secant( // find x given f(x) (secant method)
     return i;
 } // ::secant
 
+//-----------------------------------------------------------------------------
+///	@brief	Least-squares minimization (one metric, two parameters)
+/// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
+//-----------------------------------------------------------------------------
 void HPWH::Fitter::leastSquares()
 {
     bool success = false;
@@ -119,7 +123,6 @@ void HPWH::Fitter::leastSquares()
     }
 
     auto pMerit = pMerits[0];
-
     auto nParams = pParams.size();
     double nu = 0.1;
     for (auto iter = 0; iter < maxIters; ++iter)
