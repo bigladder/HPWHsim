@@ -4913,7 +4913,8 @@ void HPWH::initFromFile(string modelName)
 
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
-///         Draw until heating begins, wait for recovery
+///         Draw until heating begins, wait for recovery.
+/// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.2.4)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 void HPWH::prepForTest(StandardTestOptions& testOptions)
@@ -4993,6 +4994,7 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
 
 //-----------------------------------------------------------------------------
 ///	@brief	Find first-hour rating designation for 24-hr test
+/// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.3.3)
 /// @param[out] firstHourRating	    contains first-hour rating designation
 ///	@param[in]	setpointT_C		    setpoint temperature (optional)
 /// @return	true (success), false (failure).
@@ -5163,7 +5165,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 
 //-----------------------------------------------------------------------------
 ///	@brief	Performs standard 24-hr test
-/// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058
+/// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058 (5.4.2)
 /// @param[in] firstHourRating          specifies first-hour rating
 /// @param[out] testSummary	            contains test metrics on output
 ///	@param[in]	setpointT_C		        setpoint temperature (optional)
