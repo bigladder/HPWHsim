@@ -163,6 +163,7 @@ struct HPWH::Fitter : public Sender
         virtual ~Param() = default;
 
         virtual ParamInput::ParamType paramType() { return ParamInput::ParamType::none; }
+        virtual void show() {}
     };
 
     struct COP_Coef : public Param,
@@ -177,6 +178,8 @@ struct HPWH::Fitter : public Sender
         void setValue(double x) override { COP_CoefInfo::setValue(x); }
         double getValue() override { return COP_CoefInfo::getValue(); }
         ParamInput::ParamType paramType() override { return ParamInput::ParamType::PerfCoef; }
+
+        void show() override { send_info(fmt::format("COP[{}]: {}", tempIndex, getValue())); }
     };
 
     struct Merit
@@ -241,6 +244,12 @@ struct HPWH::Fitter : public Sender
            std::shared_ptr<Courier::Courier> courier)
         : Sender("Fitter", "fitter", courier), pMerits(pMerits_in), pParams(pParams_in)
     {
+    }
+
+    void showParams()
+    {
+        for (auto param : pParams)
+            param->show();
     }
 
     struct Inverter

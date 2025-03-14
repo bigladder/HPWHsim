@@ -4912,10 +4912,38 @@ void HPWH::initFromFile(string modelName)
 #endif
 
 //-----------------------------------------------------------------------------
+///	@brief	Determine the inletT testing based on the ambientT
+/// @return	inletT (C)
+//-----------------------------------------------------------------------------
+double findInletT_C(double ambientT_C)
+{
+    const double ambientT_C_E50 = 10.;
+    const double ambientT_C_UEF = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const double ambientT_C_E95 = 35.;
+
+    const double inletT_C_E50 = F_TO_C(50.0); // table
+    const double inletT_C_UEF = 14.4;         // EERE-2019-BT-TP-0032-0058, p. 40433
+    const double inletT_C_E95 = F_TO_C(67.0); // table
+
+    if (ambientT_C < ambientT_C_E50)
+        return inletT_C_E50;
+    if (ambientT_C < ambientT_C_UEF)
+    { // linear interp
+        double ratio = (ambientT_C - ambientT_C_E50) / (ambientT_C_UEF - ambientT_C_E50);
+        return (1. - ratio) * inletT_C_E50 + ratio * inletT_C_UEF;
+    }
+    if (ambientT_C < ambientT_C_E95)
+    { // linear interp
+        double ratio = (ambientT_C - ambientT_C_UEF) / (ambientT_C_E95 - ambientT_C_UEF);
+        return (1. - ratio) * inletT_C_UEF + ratio * inletT_C_E95;
+    }
+    return inletT_C_E95;
+}
+
+//-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
 ///         Draw until heating begins, wait for recovery.
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.2.4)
-/// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 void HPWH::prepForTest(StandardTestOptions& testOptions)
 {
@@ -4924,11 +4952,11 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
     const double ambientT_C = (customTestOptions.overrideAmbientT)
                                   ? customTestOptions.ambientT_C
                                   : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     const double externalT_C = ambientT_C;
+    double inletT_C = findInletT_C(ambientT_C);
 
     if (testOptions.changeSetpoint)
     {
@@ -4997,7 +5025,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.3.3)
 /// @param[out] firstHourRating	    contains first-hour rating designation
 ///	@param[in]	setpointT_C		    setpoint temperature (optional)
-/// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOptions& testOptions)
 {
@@ -5005,11 +5032,11 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
     const double ambientT_C = (customTestOptions.overrideAmbientT)
                                   ? customTestOptions.ambientT_C
                                   : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     const double externalT_C = ambientT_C;
+    double inletT_C = findInletT_C(ambientT_C);
 
     if (testOptions.changeSetpoint)
     {
@@ -5157,10 +5184,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 
     const std::string sFirstHourRatingDesig =
         HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-
-    *testOptions.outputStream << "\tFirst-Hour Rating:\n";
-    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
-    *testOptions.outputStream << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -5169,7 +5192,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 /// @param[in] firstHourRating          specifies first-hour rating
 /// @param[out] testSummary	            contains test metrics on output
 ///	@param[in]	setpointT_C		        setpoint temperature (optional)
-/// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 void HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& testSummary,
@@ -5179,11 +5201,11 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
-    constexpr double inletT_C = 14.4; // EERE-2019-BT-TP-0032-0058, p. 40433
     const double ambientT_C = (customTestOptions.overrideAmbientT)
                                   ? customTestOptions.ambientT_C
                                   : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     const double externalT_C = ambientT_C;
+    double inletT_C = findInletT_C(ambientT_C);
 
     DRMODES drMode = DR_ALLOW;
 
@@ -5677,7 +5699,6 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
 {
     if (standardTestOptions.saveOutput)
     {
-
         std::string sFullOutputFilename =
             standardTestOptions.sOutputDirectory + "/" + standardTestOptions.sOutputFilename;
         standardTestOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
@@ -5697,6 +5718,12 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
     }
 
     findFirstHourRating(firstHourRating, standardTestOptions);
+    *standardTestOptions.outputStream << "\tFirst-Hour Rating:";
+    *standardTestOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L
+                                      << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tDesignation: " << FirstHourRating::sDesigMap[firstHourRating.desig] << "\n";
+
     if (customTestOptions.overrideFirstHourRating)
     {
         firstHourRating.desig = customTestOptions.desig;
@@ -5768,8 +5795,6 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        *standardTestOptions.outputStream
-            << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
     const unsigned i_heat_source = compressorIndex;
@@ -5836,9 +5861,8 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
     Fitter fitter(pMerits, pParams, get_courier());
     fitter.fit();
 
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    constexpr double ambientT_C = 19.7; // may be overridden with customTestOptions
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
-
     auto& compressor = heatSources[i_heat_source];
     compressor.getCapacity(ambientT_C,
                            compressor.maxSetpoint_C,
@@ -5855,7 +5879,10 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
         send_error("COP slope is positive.");
 }
 
-void HPWH::makeGenericUEF(double targetEF, double ambientT_C)
+//-----------------------------------------------------------------------------
+///	@brief	Make a generic model from the current model by varying COP coef's
+//-----------------------------------------------------------------------------
+void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
 {
     HPWH::GenericOptions genericOptions;
 
@@ -5884,8 +5911,8 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C)
     HPWH::Fitter::COP_CoefInput copCoeffInput0(i_ambientT, 0, get_courier());
     genericOptions.paramInputs.push_back(&copCoeffInput0);
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
-    genericOptions.paramInputs.push_back(&copCoeffInput1);
+    // HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
+    // genericOptions.paramInputs.push_back(&copCoeffInput1);
 
     HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = true;
