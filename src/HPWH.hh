@@ -1002,7 +1002,7 @@ class HPWH : public Courier::Sender
             Low,
             Medium,
             High
-        };
+        } desig;
 
         static inline std::unordered_map<Desig, std::string> sDesigMap = {
             {Desig::VerySmall, "Very Small"},
@@ -1010,7 +1010,6 @@ class HPWH : public Courier::Sender
             {Desig::Medium, "Medium"},
             {Desig::High, "High"}};
 
-        Desig desig;
         double drawVolume_L;
     };
 
