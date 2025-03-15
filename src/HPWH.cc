@@ -5785,8 +5785,7 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
     }
 }
 
-void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
-                       StandardTestOptions& standardTestOptions)
+void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, StandardTestOptions& standardTestOptions)
 {
     HPWH::FirstHourRating firstHourRating;
     findFirstHourRating(firstHourRating, standardTestOptions);
@@ -5799,24 +5798,24 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
 
     const unsigned i_heat_source = compressorIndex;
 
-    // set up figures of merit
-    std::vector<std::shared_ptr<Fitter::Merit>> pMerits = {};
-    for (auto meritInput : genericOptions.meritInputs)
+    // set up metrics
+    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics = {};
+    for (auto metricInput : fitOptions.metricInputs)
     {
-        std::shared_ptr<Fitter::Merit> merit;
-        switch (meritInput->meritType())
+        std::shared_ptr<Fitter::Metric> metric;
+        switch (metricInput->metricType())
         {
-        case Fitter::MeritInput::MeritType::UEF:
+        case Fitter::MetricInput::MetricType::UEF:
         {
-            auto uefMeritInput = static_cast<Fitter::UEF_MeritInput*>(meritInput);
-            merit = std::make_shared<Fitter::UEF_Merit>(
-                *uefMeritInput, &firstHourRating, &standardTestOptions, this);
+            auto uefMetricInput = static_cast<Fitter::UEF_MetricInput*>(metricInput);
+            metric = std::make_shared<Fitter::UEF_Metric>(
+                *uefMetricInput, &firstHourRating, &standardTestOptions, this);
             break;
         }
-        case Fitter::MeritInput::MeritType::none:
+        case Fitter::MetricInput::MetricType::none:
             continue;
         }
-        pMerits.push_back(merit);
+        pMetrics.push_back(metric);
     }
 
     if (!hasACompressor())
@@ -5824,7 +5823,7 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
 
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Param>> pParams;
-    for (auto& paramInput : genericOptions.paramInputs)
+    for (auto& paramInput : fitOptions.paramInputs)
     {
         std::shared_ptr<Fitter::Param> param;
         switch (paramInput->paramType())
@@ -5858,7 +5857,7 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
         pParams.push_back(param);
     }
 
-    Fitter fitter(pMerits, pParams, get_courier());
+    Fitter fitter(pMetrics, pParams, get_courier());
     fitter.fit();
 
     constexpr double ambientT_C = 19.7; // may be overridden with customTestOptions
@@ -5884,10 +5883,10 @@ void HPWH::makeGeneric(const HPWH::GenericOptions& genericOptions,
 //-----------------------------------------------------------------------------
 void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
 {
-    HPWH::GenericOptions genericOptions;
+    HPWH::FitOptions fitOptions;
 
-    HPWH::Fitter::UEF_MeritInput uef_merit(targetEF, ambientT_C, get_courier());
-    genericOptions.meritInputs.push_back(&uef_merit);
+    HPWH::Fitter::UEF_MetricInput uef_metric(targetEF, ambientT_C, get_courier());
+    fitOptions.metricInputs.push_back(&uef_metric);
 
     auto& compressor = heatSources[compressorIndex];
 
@@ -5909,10 +5908,10 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
 
     HPWH::Fitter::COP_CoefInput copCoeffInput0(i_ambientT, 0, get_courier());
-    genericOptions.paramInputs.push_back(&copCoeffInput0);
+    fitOptions.paramInputs.push_back(&copCoeffInput0);
 
     // HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
-    // genericOptions.paramInputs.push_back(&copCoeffInput1);
+    // fitOptions.paramInputs.push_back(&copCoeffInput1);
 
     HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = true;
@@ -5923,5 +5922,5 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
 
-    makeGeneric(genericOptions, standardTestOptions);
+    makeGeneric(fitOptions, standardTestOptions);
 }
