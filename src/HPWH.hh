@@ -1143,9 +1143,8 @@ class HPWH : public Courier::Sender
     } customTestOptions;
 
     struct Fitter;
-    struct GenericOptions;
-    void makeGeneric(const GenericOptions& genericOptions,
-                     StandardTestOptions& standardTestOptions);
+    struct FitOptions;
+    void makeGeneric(const FitOptions& genericOptions, StandardTestOptions& standardTestOptions);
     void makeGenericUEF(double targetEF, double ambientT_C = 19.7);
     void makeGenericE50(double targetEF) { return makeGenericUEF(targetEF, 10.); }
     void makeGenericE95(double targetEF) { return makeGenericUEF(targetEF, 35.); }

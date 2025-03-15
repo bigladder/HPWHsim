@@ -7,8 +7,8 @@
 
 /**	Optimizer for varying model parameters to match metrics, used by
  *  make_generic to implement a target UEF. The structure is fairly general, but
- *  currently limited to one figure-of-merit (UEF) and two parameters (COP coeffs).
- *  This could be expanded to include other FOMs, such as total energy in 24-h test.
+ *  currently limited to one metric (UEF) and two parameters (COP coeffs).
+ *  This could be expanded to include other metrics, such as total energy in 24-h test.
  */
 
 struct HPWH::Fitter : public Sender
@@ -64,33 +64,33 @@ struct HPWH::Fitter : public Sender
         }
     };
 
-    struct MeritInput : public Sender
-    { // base class for a figure of merit
+    struct MetricInput : public Sender
+    { // base class for metric input
         double targetVal;
 
-        MeritInput(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
-            : Sender("MeritInput", "meritInput", courier), targetVal(targetVal_in)
+        MetricInput(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
+            : Sender("MetricInput", "metricInput", courier), targetVal(targetVal_in)
         {
         }
 
-        enum class MeritType
+        enum class MetricType
         {
             none,
             UEF
         };
-        virtual MeritType meritType() { return MeritType::none; }
+        virtual MetricType metricType() { return MetricType::none; }
     };
 
-    struct UEF_MeritInput : public MeritInput
+    struct UEF_MetricInput : public MetricInput
     {
         double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-        UEF_MeritInput(double targetUEF,
-                       double ambientT_C_in,
-                       std::shared_ptr<Courier::Courier> courier)
-            : MeritInput(targetUEF, courier), ambientT_C(ambientT_C_in)
+        UEF_MetricInput(double targetUEF,
+                        double ambientT_C_in,
+                        std::shared_ptr<Courier::Courier> courier)
+            : MetricInput(targetUEF, courier), ambientT_C(ambientT_C_in)
         {
         }
-        MeritType meritType() override { return MeritType::UEF; }
+        MetricType metricType() override { return MetricType::UEF; }
     };
 
     struct ParamInfo
@@ -182,43 +182,43 @@ struct HPWH::Fitter : public Sender
         void show() override { send_info(fmt::format("COP[{}]: {}", tempIndex, getValue())); }
     };
 
-    struct Merit
-    { // base class for a figure of merit
+    struct Metric
+    { // base class for a metric to meet
         double currVal;
         double targetVal;
         double tolVal; // tolerance
 
-        Merit() : currVal(0.), targetVal(0.), tolVal(1.e-6) {}
+        Metric() : currVal(0.), targetVal(0.), tolVal(1.e-6) {}
 
         virtual void eval() = 0;
         virtual void evalDiff(double& diff) = 0;
 
-        virtual MeritInput::MeritType meritType() { return MeritInput::MeritType::none; }
+        virtual MetricInput::MetricType metricType() { return MetricInput::MetricType::none; }
     };
 
-    struct UEF_Merit : public Merit
-    { // UEF as a figure of merit
+    struct UEF_Metric : public Metric
+    { // UEF as a metric
         HPWH* hpwh;
         FirstHourRating* firstHourRating;
         StandardTestOptions* standardTestOptions;
         double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
 
-        UEF_Merit(UEF_MeritInput& uefMeritInput,
-                  FirstHourRating* firstHourRating_in,
-                  StandardTestOptions* standardTestOptions_in,
-                  HPWH* hpwh_in)
-            : Merit()
+        UEF_Metric(UEF_MetricInput& uefMetricInput,
+                   FirstHourRating* firstHourRating_in,
+                   StandardTestOptions* standardTestOptions_in,
+                   HPWH* hpwh_in)
+            : Metric()
             , hpwh(hpwh_in)
             , firstHourRating(firstHourRating_in)
             , standardTestOptions(standardTestOptions_in)
 
         {
-            targetVal = uefMeritInput.targetVal;
-            ambientT_C = uefMeritInput.ambientT_C;
+            targetVal = uefMetricInput.targetVal;
+            ambientT_C = uefMetricInput.ambientT_C;
         }
-        virtual ~UEF_Merit() = default;
+        virtual ~UEF_Metric() = default;
 
-        MeritInput::MeritType meritType() override { return MeritInput::MeritType::UEF; }
+        MetricInput::MetricType metricType() override { return MetricInput::MetricType::UEF; }
 
         void eval() override
         { // get current UEF
@@ -236,13 +236,13 @@ struct HPWH::Fitter : public Sender
         }
     };
 
-    std::vector<std::shared_ptr<Fitter::Merit>> pMerits; // could be a vector for add'l FOMs
+    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics; // could be a vector for add'l FOMs
     std::vector<std::shared_ptr<Fitter::Param>> pParams;
 
-    Fitter(std::vector<std::shared_ptr<Fitter::Merit>> pMerits_in,
+    Fitter(std::vector<std::shared_ptr<Fitter::Metric>> pMetrics_in,
            std::vector<std::shared_ptr<Fitter::Param>> pParams_in,
            std::shared_ptr<Courier::Courier> courier)
-        : Sender("Fitter", "fitter", courier), pMerits(pMerits_in), pParams(pParams_in)
+        : Sender("Fitter", "fitter", courier), pMetrics(pMetrics_in), pParams(pParams_in)
     {
     }
 
@@ -306,9 +306,9 @@ struct HPWH::Fitter : public Sender
     void fit();
 };
 
-struct HPWH::GenericOptions
+struct HPWH::FitOptions
 {
-    std::vector<HPWH::Fitter::MeritInput*> meritInputs;
+    std::vector<HPWH::Fitter::MetricInput*> metricInputs;
     std::vector<HPWH::Fitter::ParamInput*> paramInputs;
 };
 #endif

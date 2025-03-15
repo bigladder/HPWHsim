@@ -86,16 +86,16 @@ void make(const std::string& sSpecType,
         hpwh.initFromFile(sInputFile);
     }
 
-    HPWH::GenericOptions genericOptions;
+    HPWH::FitOptions fitOptions;
 
-    HPWH::Fitter::UEF_MeritInput uef_merit(targetUEF, ambientT_C, hpwh.get_courier());
-    genericOptions.meritInputs.push_back(&uef_merit);
+    HPWH::Fitter::UEF_MetricInput uef_metric(targetUEF, ambientT_C, hpwh.get_courier());
+    fitOptions.metricInputs.push_back(&uef_metric);
 
     HPWH::Fitter::COP_CoefInput copCoeffInput0(2, 0, hpwh.get_courier());
-    genericOptions.paramInputs.push_back(&copCoeffInput0);
+    fitOptions.paramInputs.push_back(&copCoeffInput0);
 
     HPWH::Fitter::COP_CoefInput copCoeffInput1(2, 1, hpwh.get_courier());
-    genericOptions.paramInputs.push_back(&copCoeffInput1);
+    fitOptions.paramInputs.push_back(&copCoeffInput1);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
     if (useCustomDrawProfile)
@@ -127,11 +127,7 @@ void make(const std::string& sSpecType,
         }
     }
 
-    std::cout << "Model name: " << sModelName << "\n";
-    std::cout << "Target UEF: " << targetUEF << "\n";
-    std::cout << "Output directory: " << standardTestOptions.sOutputDirectory << "\n\n";
-
-    hpwh.makeGeneric(genericOptions, standardTestOptions);
+    hpwh.makeGeneric(fitOptions, standardTestOptions);
 
     sPresetOrFile[0] =
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
