@@ -5186,16 +5186,15 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
 /// @param[out] testSummary	            contains test metrics on output
 ///	@param[in]	setpointT_C		        setpoint temperature (optional)
 //-----------------------------------------------------------------------------
-void HPWH::run24hrTest(TestOptions& testOptions,
-                       TestSummary& testSummary)
+void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
 {
     // select the first draw cluster size and pattern
     auto firstDrawClusterSize = firstDrawClusterSizes[testOptions.desig];
     DrawPattern& drawPattern = drawPatterns[testOptions.desig];
 
-    const double ambientT_C = testOptions.testConfiguration.ambientT_C; // EERE-2019-BT-TP-0032-0058, p. 40435
+    double inletT_C = testOptions.testConfiguration.inletT_C;
+    const double ambientT_C = testOptions.testConfiguration.ambientT_C;
     const double externalT_C = ambientT_C;
-    double inletT_C = findInletT_C(ambientT_C);
 
     DRMODES drMode = DR_ALLOW;
 
@@ -5651,21 +5650,21 @@ void HPWH::run24hrTest(TestOptions& testOptions,
         testSummary.adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ;
 
     // find the "Uniform Energy Factor" (6.4.4)
-    testSummary.UEF = 0.;
+    testSummary.EF = 0.;
     if (testSummary.modifiedConsumedWaterHeatingEnergy_kJ > 0.)
     {
-        testSummary.UEF =
+        testSummary.EF =
             standardDeliveredEnergy_kJ / testSummary.modifiedConsumedWaterHeatingEnergy_kJ;
     }
 
     // find the "Annual Energy Consumption" (6.4.5)
     testSummary.annualConsumedEnergy_kJ = 0.;
-    if (testSummary.UEF > 0.)
+    if (testSummary.EF > 0.)
     {
         constexpr double days_per_year = 365.;
         const double nominalDifferenceT_C = F_TO_C(67.);
         testSummary.annualConsumedEnergy_kJ =
-            days_per_year * removedHeatCapacity_kJperC * nominalDifferenceT_C / testSummary.UEF;
+            days_per_year * removedHeatCapacity_kJperC * nominalDifferenceT_C / testSummary.EF;
     }
 
     // find the "Annual Electrical Energy Consumption" (6.4.6)
@@ -5678,9 +5677,11 @@ void HPWH::run24hrTest(TestOptions& testOptions,
     }
 }
 
-void HPWH::makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
+void HPWH::makeGenericE50_UEF_E95(double targetE50,
+                                  double targetUEF,
+                                  double targetE95,
+                                  TestOptions& testOptions)
 {
-    TestOptions testOptions;
 
     testOptions.testConfiguration = testConfiguration_E50;
     makeGenericEF(targetE50, testOptions);
@@ -5692,8 +5693,7 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50, double targetUEF, double tar
     makeGenericEF(targetE95, testOptions);
 }
 
-void HPWH::measureMetrics(TestOptions& testOptions,
-                         TestSummary& testSummary)
+void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
 {
     if (testOptions.saveOutput)
     {
@@ -5709,10 +5709,8 @@ void HPWH::measureMetrics(TestOptions& testOptions,
         std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
 
         int csvOptions = HPWH::CSVOPT_NONE;
-        WriteCSVHeading(testOptions.outputFile,
-                        sHeader.c_str(),
-                        testOptions.nTestTCouples,
-                        csvOptions);
+        WriteCSVHeading(
+            testOptions.outputFile, sHeader.c_str(), testOptions.nTestTCouples, csvOptions);
     }
 
     run24hrTest(testOptions, testSummary);
@@ -5724,33 +5722,29 @@ void HPWH::measureMetrics(TestOptions& testOptions,
         results.append("\t\tDoes not qualify as consumer water heater.\n");
     }
 
-    results.append(
-        fmt::format("\t\tRecovery Efficiency: {:g}\n", testSummary.recoveryEfficiency));
+    results.append(fmt::format("\t\tRecovery Efficiency: {:g}\n", testSummary.recoveryEfficiency));
 
     results.append(fmt::format("\t\tStandby Loss Coefficient (kJ/h degC): {:g}\n",
                                testSummary.standbyLossCoefficient_kJperhC));
 
-    results.append(fmt::format("\t\tUEF: {:g}\n", testSummary.UEF));
-
-    results.append(fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n",
-                               testSummary.avgInletT_C));
-
-    results.append(fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n",
-                               testSummary.avgOutletT_C));
+    results.append(fmt::format("\t\tEF: {:g}\n", testSummary.EF));
 
     results.append(
-        fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", testSummary.removedVolume_L));
+        fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n", testSummary.avgInletT_C));
+
+    results.append(
+        fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n", testSummary.avgOutletT_C));
+
+    results.append(fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", testSummary.removedVolume_L));
 
     results.append(fmt::format("\t\tDaily Water-Heating Energy Consumption (kWh): {:g}\n",
                                KJ_TO_KWH(testSummary.waterHeatingEnergy_kJ)));
 
-    results.append(
-        fmt::format("\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): {:g}\n",
-                    KJ_TO_KWH(testSummary.adjustedConsumedWaterHeatingEnergy_kJ)));
+    results.append(fmt::format("\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(testSummary.adjustedConsumedWaterHeatingEnergy_kJ)));
 
-    results.append(
-        fmt::format("\t\tModified Daily Water-Heating Energy Consumption (kWh): {:g}\n",
-                    KJ_TO_KWH(testSummary.modifiedConsumedWaterHeatingEnergy_kJ)));
+    results.append(fmt::format("\t\tModified Daily Water-Heating Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(testSummary.modifiedConsumedWaterHeatingEnergy_kJ)));
 
     results.append("\tAnnual Values:\n");
     results.append(fmt::format("\t\tAnnual Electrical Energy Consumption (kWh): {:g}\n",
@@ -5771,9 +5765,6 @@ void HPWH::measureMetrics(TestOptions& testOptions,
 
 void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOptions)
 {
-    HPWH::FirstHourRating firstHourRating;
-    findFirstHourRating(firstHourRating, testOptions);
-
     const unsigned i_heat_source = compressorIndex;
 
     // set up metrics
@@ -5783,10 +5774,9 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
         std::shared_ptr<Fitter::Metric> metric;
         switch (metric_in->metricType())
         {
-        case Fitter::Metric::MetricType::UEF:
+        case Fitter::Metric::MetricType::EF:
         {
-            metric = std::make_shared<Fitter::UEF_Metric>(
-                *metric_in, &testOptions, this);
+            metric = std::make_shared<Fitter::EF_Metric>(*metric_in, &testOptions, this);
             break;
         }
         case Fitter::Metric::MetricType::none:
@@ -5857,12 +5847,12 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
 //-----------------------------------------------------------------------------
 ///	@brief	Make a generic model from the current model by varying COP coef's
 //-----------------------------------------------------------------------------
-void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions &testOptions)
+void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 {
     HPWH::FitOptions fitOptions;
 
-    HPWH::Fitter::UEF_Metric uef_metric(targetEF, &testOptions, get_courier(), this);
-    fitOptions.metrics.push_back(&uef_metric);
+    HPWH::Fitter::EF_Metric ef_metric(targetEF, &testOptions, get_courier(), this);
+    fitOptions.metrics.push_back(&ef_metric);
 
     auto& compressor = heatSources[compressorIndex];
 
@@ -5888,7 +5878,6 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions &testOptions)
 
     // HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
     // fitOptions.paramInputs.push_back(&copCoeffInput1);
-
 
     makeGeneric(fitOptions, testOptions);
 }
