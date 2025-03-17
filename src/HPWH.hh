@@ -1082,7 +1082,7 @@ class HPWH : public Courier::Sender
         std::ofstream outputFile;
         int nTestTCouples = 6;
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
-        TestConfiguration testConfiguration;
+        TestConfiguration testConfiguration = testConfiguration_UEF;
     };
 
     /// perform a draw/heat cycle to prepare for test
