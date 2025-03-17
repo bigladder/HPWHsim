@@ -49,12 +49,11 @@ CLI::App* add_make(CLI::App& app)
 
 void make(const std::string& sSpecType,
           const std::string& sModelName,
-          double targetUEF,
+          double targetEF,
           double ambientT_C,
           std::string sOutputDir,
           std::string sCustomDrawProfile)
 {
-    HPWH::FirstHourRating firstHourRating;
     HPWH::TestSummary testSummary;
 
     HPWH::TestOptions testOptions;
@@ -69,6 +68,9 @@ void make(const std::string& sSpecType,
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     testOptions.sOutputDirectory = sOutputDir;
+
+    testOptions.testConfiguration.ambientT_C = ambientT_C;
+    testOptions.testConfiguration.inletT_C = HPWH::findInletT_C(ambientT_C);
 
     for (auto& c : sPresetOrFile)
     {
@@ -88,8 +90,8 @@ void make(const std::string& sSpecType,
 
     HPWH::FitOptions fitOptions;
 
-    HPWH::Fitter::UEF_Metric uef_metric(targetUEF, &testOptions, hpwh.get_courier(), &hpwh);
-    fitOptions.metrics.push_back(&uef_metric);
+    HPWH::Fitter::EF_Metric ef_metric(targetEF, &testOptions, hpwh.get_courier(), &hpwh);
+    fitOptions.metrics.push_back(&ef_metric);
 
     HPWH::Fitter::COP_Coef copCoeff0(2, 0, hpwh.get_courier(), &hpwh);
     fitOptions.params.push_back(&copCoeff0);
@@ -125,11 +127,17 @@ void make(const std::string& sSpecType,
             exit(1);
         }
     }
+    else
+    {
+        HPWH::FirstHourRating firstHourRating;
+        hpwh.findFirstHourRating(firstHourRating, testOptions);
+    }
 
     hpwh.makeGeneric(fitOptions, testOptions);
 
     sPresetOrFile[0] =
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+
     testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
     hpwh.measureMetrics(testOptions, testSummary);

@@ -146,6 +146,11 @@ void measure(const std::string& sSpecType,
             exit(1);
         }
     }
+    else
+    {
+        HPWH::FirstHourRating firstHourRating;
+        hpwh.findFirstHourRating(firstHourRating, testOptions);
+    }
 
     testOptions.testConfiguration.ambientT_C = ambientT_C;
     testOptions.testConfiguration.inletT_C = HPWH::findInletT_C(ambientT_C);
