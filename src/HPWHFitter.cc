@@ -131,7 +131,7 @@ void HPWH::Fitter::leastSquares()
 
         pMetric->eval();
 
-        if (pMetric->metricType() == MetricInput::MetricType::UEF)
+        if (pMetric->metricType() == Metric::MetricType::UEF)
             iter_msg.append(fmt::format(", UEF: {:g}", pMetric->currVal));
 
         bool first = true;

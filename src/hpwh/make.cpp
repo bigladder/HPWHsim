@@ -55,20 +55,20 @@ void make(const std::string& sSpecType,
           std::string sCustomDrawProfile)
 {
     HPWH::FirstHourRating firstHourRating;
-    HPWH::StandardTestSummary standardTestSummary;
+    HPWH::TestSummary testSummary;
 
-    HPWH::StandardTestOptions standardTestOptions;
-    standardTestOptions.saveOutput = true;
-    standardTestOptions.sOutputFilename = "";
-    standardTestOptions.sOutputDirectory = "";
-    standardTestOptions.outputStream = &std::cout;
-    standardTestOptions.changeSetpoint = true;
-    standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
+    HPWH::TestOptions testOptions;
+    testOptions.saveOutput = true;
+    testOptions.sOutputFilename = "";
+    testOptions.sOutputDirectory = "";
+    testOptions.resultsStream = NULL;
+    testOptions.changeSetpoint = true;
+    testOptions.nTestTCouples = 6;
+    testOptions.setpointT_C = 51.7;
 
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
-    standardTestOptions.sOutputDirectory = sOutputDir;
+    testOptions.sOutputDirectory = sOutputDir;
 
     for (auto& c : sPresetOrFile)
     {
@@ -88,14 +88,14 @@ void make(const std::string& sSpecType,
 
     HPWH::FitOptions fitOptions;
 
-    HPWH::Fitter::UEF_MetricInput uef_metric(targetUEF, ambientT_C, hpwh.get_courier());
-    fitOptions.metricInputs.push_back(&uef_metric);
+    HPWH::Fitter::UEF_Metric uef_metric(targetUEF, &testOptions, hpwh.get_courier(), &hpwh);
+    fitOptions.metrics.push_back(&uef_metric);
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput0(2, 0, hpwh.get_courier());
-    fitOptions.paramInputs.push_back(&copCoeffInput0);
+    HPWH::Fitter::COP_Coef copCoeff0(2, 0, hpwh.get_courier(), &hpwh);
+    fitOptions.params.push_back(&copCoeff0);
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput1(2, 1, hpwh.get_courier());
-    fitOptions.paramInputs.push_back(&copCoeffInput1);
+    HPWH::Fitter::COP_Coef copCoeff1(2, 1, hpwh.get_courier(), &hpwh);
+    fitOptions.params.push_back(&copCoeff1);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
     if (useCustomDrawProfile)
@@ -114,8 +114,7 @@ void make(const std::string& sSpecType,
         {
             if (value == sCustomDrawProfile)
             {
-                hpwh.customTestOptions.overrideFirstHourRating = true;
-                hpwh.customTestOptions.desig = key;
+                testOptions.desig = key;
                 foundProfile = true;
                 break;
             }
@@ -127,12 +126,12 @@ void make(const std::string& sSpecType,
         }
     }
 
-    hpwh.makeGeneric(fitOptions, standardTestOptions);
+    hpwh.makeGeneric(fitOptions, testOptions);
 
     sPresetOrFile[0] =
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
-    standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+    testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
-    hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
+    hpwh.measureMetrics(testOptions, testSummary);
 }
 } // namespace hpwh_cli

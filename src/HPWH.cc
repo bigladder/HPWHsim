@@ -4915,7 +4915,7 @@ void HPWH::initFromFile(string modelName)
 ///	@brief	Determine the inletT testing based on the ambientT
 /// @return	inletT (C)
 //-----------------------------------------------------------------------------
-double findInletT_C(double ambientT_C)
+double HPWH::findInletT_C(double ambientT_C)
 {
     const double ambientT_C_E50 = 10.;
     const double ambientT_C_UEF = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
@@ -4945,18 +4945,16 @@ double findInletT_C(double ambientT_C)
 ///         Draw until heating begins, wait for recovery.
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.2.4)
 //-----------------------------------------------------------------------------
-void HPWH::prepForTest(StandardTestOptions& testOptions)
+void HPWH::prepForTest(TestOptions& testOptions)
 {
     // apply first-hour-rating criterion EERE-2019-BT-TP-0032-0058, p. 40479
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    const double ambientT_C = (customTestOptions.overrideAmbientT)
-                                  ? customTestOptions.ambientT_C
-                                  : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    double inletT_C = testOptions.testConfiguration.inletT_C;
+    const double ambientT_C = testOptions.testConfiguration.ambientT_C;
     const double externalT_C = ambientT_C;
-    double inletT_C = findInletT_C(ambientT_C);
 
     if (testOptions.changeSetpoint)
     {
@@ -5026,17 +5024,15 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
 /// @param[out] firstHourRating	    contains first-hour rating designation
 ///	@param[in]	setpointT_C		    setpoint temperature (optional)
 //-----------------------------------------------------------------------------
-void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOptions& testOptions)
+void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& testOptions)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    const double ambientT_C = (customTestOptions.overrideAmbientT)
-                                  ? customTestOptions.ambientT_C
-                                  : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const double ambientT_C = testConfiguration_UEF.ambientT_C;
     const double externalT_C = ambientT_C;
-    double inletT_C = findInletT_C(ambientT_C);
+    double inletT_C = testConfiguration_UEF.inletT_C;
 
     if (testOptions.changeSetpoint)
     {
@@ -5073,7 +5069,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     int elapsedTime_min = 0;
     while (!done)
     {
-
         // limit draw-volume increment to tank volume
         double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
         if (incrementalDrawVolume_L > tankVolume_L)
@@ -5181,9 +5176,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     {
         firstHourRating.desig = FirstHourRating::Desig::High;
     }
-
-    const std::string sFirstHourRatingDesig =
-        HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+    testOptions.desig = firstHourRating.desig; // use in 24-hr test
 }
 
 //-----------------------------------------------------------------------------
@@ -5193,26 +5186,18 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 /// @param[out] testSummary	            contains test metrics on output
 ///	@param[in]	setpointT_C		        setpoint temperature (optional)
 //-----------------------------------------------------------------------------
-void HPWH::run24hrTest(const FirstHourRating firstHourRating,
-                       StandardTestSummary& testSummary,
-                       StandardTestOptions& testOptions)
+void HPWH::run24hrTest(TestOptions& testOptions,
+                       TestSummary& testSummary)
 {
     // select the first draw cluster size and pattern
-    auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
-    DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
+    auto firstDrawClusterSize = firstDrawClusterSizes[testOptions.desig];
+    DrawPattern& drawPattern = drawPatterns[testOptions.desig];
 
-    const double ambientT_C = (customTestOptions.overrideAmbientT)
-                                  ? customTestOptions.ambientT_C
-                                  : 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const double ambientT_C = testOptions.testConfiguration.ambientT_C; // EERE-2019-BT-TP-0032-0058, p. 40435
     const double externalT_C = ambientT_C;
     double inletT_C = findInletT_C(ambientT_C);
 
     DRMODES drMode = DR_ALLOW;
-
-    if (testOptions.changeSetpoint)
-    {
-        setSetpoint(testOptions.setpointT_C, UNITS_C);
-    }
 
     prepForTest(testOptions);
 
@@ -5693,16 +5678,29 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     }
 }
 
-void HPWH::measureMetrics(FirstHourRating& firstHourRating,
-                          StandardTestOptions& standardTestOptions,
-                          StandardTestSummary& standardTestSummary)
+void HPWH::makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
 {
-    if (standardTestOptions.saveOutput)
+    TestOptions testOptions;
+
+    testOptions.testConfiguration = testConfiguration_E50;
+    makeGenericEF(targetE50, testOptions);
+
+    testOptions.testConfiguration = testConfiguration_UEF;
+    makeGenericEF(targetUEF, testOptions);
+
+    testOptions.testConfiguration = testConfiguration_E95;
+    makeGenericEF(targetE95, testOptions);
+}
+
+void HPWH::measureMetrics(TestOptions& testOptions,
+                         TestSummary& testSummary)
+{
+    if (testOptions.saveOutput)
     {
         std::string sFullOutputFilename =
-            standardTestOptions.sOutputDirectory + "/" + standardTestOptions.sOutputFilename;
-        standardTestOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
-        if (!standardTestOptions.outputFile.is_open())
+            testOptions.sOutputDirectory + "/" + testOptions.sOutputFilename;
+        testOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
+        if (!testOptions.outputFile.is_open())
         {
             send_error(fmt::format("Could not open output file {}", sFullOutputFilename));
         }
@@ -5711,108 +5709,87 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
 
         int csvOptions = HPWH::CSVOPT_NONE;
-        WriteCSVHeading(standardTestOptions.outputFile,
+        WriteCSVHeading(testOptions.outputFile,
                         sHeader.c_str(),
-                        standardTestOptions.nTestTCouples,
+                        testOptions.nTestTCouples,
                         csvOptions);
     }
 
-    findFirstHourRating(firstHourRating, standardTestOptions);
-    *standardTestOptions.outputStream << "\tFirst-Hour Rating:";
-    *standardTestOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L
-                                      << "\n";
-    *standardTestOptions.outputStream
-        << "\t\tDesignation: " << FirstHourRating::sDesigMap[firstHourRating.desig] << "\n";
+    run24hrTest(testOptions, testSummary);
 
-    if (customTestOptions.overrideFirstHourRating)
+    std::string results = "";
+    results.append("\t24-Hour Test Results:\n");
+    if (!testSummary.qualifies)
     {
-        firstHourRating.desig = customTestOptions.desig;
-        const std::string sFirstHourRatingDesig =
-            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        *standardTestOptions.outputStream
-            << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+        results.append("\t\tDoes not qualify as consumer water heater.\n");
     }
 
-    run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
+    results.append(
+        fmt::format("\t\tRecovery Efficiency: {:g}\n", testSummary.recoveryEfficiency));
 
-    *standardTestOptions.outputStream << "\t24-Hour Test Results:\n";
-    if (!standardTestSummary.qualifies)
+    results.append(fmt::format("\t\tStandby Loss Coefficient (kJ/h degC): {:g}\n",
+                               testSummary.standbyLossCoefficient_kJperhC));
+
+    results.append(fmt::format("\t\tUEF: {:g}\n", testSummary.UEF));
+
+    results.append(fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n",
+                               testSummary.avgInletT_C));
+
+    results.append(fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n",
+                               testSummary.avgOutletT_C));
+
+    results.append(
+        fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", testSummary.removedVolume_L));
+
+    results.append(fmt::format("\t\tDaily Water-Heating Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(testSummary.waterHeatingEnergy_kJ)));
+
+    results.append(
+        fmt::format("\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): {:g}\n",
+                    KJ_TO_KWH(testSummary.adjustedConsumedWaterHeatingEnergy_kJ)));
+
+    results.append(
+        fmt::format("\t\tModified Daily Water-Heating Energy Consumption (kWh): {:g}\n",
+                    KJ_TO_KWH(testSummary.modifiedConsumedWaterHeatingEnergy_kJ)));
+
+    results.append("\tAnnual Values:\n");
+    results.append(fmt::format("\t\tAnnual Electrical Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(testSummary.annualConsumedElectricalEnergy_kJ)));
+
+    results.append(fmt::format("\t\tAnnual Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(testSummary.annualConsumedEnergy_kJ)));
+
+    send_info("\n" + results);
+    if (testOptions.resultsStream)
+        *testOptions.resultsStream << results;
+
+    if (testOptions.saveOutput)
     {
-        *standardTestOptions.outputStream << "\t\tDoes not qualify as consumer water heater.\n";
-    }
-
-    *standardTestOptions.outputStream
-        << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
-
-    *standardTestOptions.outputStream << "\t\tStandby Loss Coefficient (kJ/h degC): "
-                                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
-
-    *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
-
-    *standardTestOptions.outputStream
-        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
-
-    *standardTestOptions.outputStream
-        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
-
-    *standardTestOptions.outputStream
-        << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
-
-    *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
-                                      << "\n";
-
-    *standardTestOptions.outputStream
-        << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
-
-    *standardTestOptions.outputStream
-        << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
-
-    *standardTestOptions.outputStream << "\tAnnual Values:\n";
-    *standardTestOptions.outputStream
-        << "\t\tAnnual Electrical Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
-
-    *standardTestOptions.outputStream << "\t\tAnnual Energy Consumption (kWh): "
-                                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
-                                      << "\n";
-
-    if (standardTestOptions.saveOutput)
-    {
-        standardTestOptions.outputFile.close();
+        testOptions.outputFile.close();
     }
 }
 
-void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, StandardTestOptions& standardTestOptions)
+void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOptions)
 {
     HPWH::FirstHourRating firstHourRating;
-    findFirstHourRating(firstHourRating, standardTestOptions);
-    if (customTestOptions.overrideFirstHourRating)
-    {
-        firstHourRating.desig = customTestOptions.desig;
-        const std::string sFirstHourRatingDesig =
-            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-    }
+    findFirstHourRating(firstHourRating, testOptions);
 
     const unsigned i_heat_source = compressorIndex;
 
     // set up metrics
     std::vector<std::shared_ptr<Fitter::Metric>> pMetrics = {};
-    for (auto metricInput : fitOptions.metricInputs)
+    for (auto metric_in : fitOptions.metrics)
     {
         std::shared_ptr<Fitter::Metric> metric;
-        switch (metricInput->metricType())
+        switch (metric_in->metricType())
         {
-        case Fitter::MetricInput::MetricType::UEF:
+        case Fitter::Metric::MetricType::UEF:
         {
-            auto uefMetricInput = static_cast<Fitter::UEF_MetricInput*>(metricInput);
             metric = std::make_shared<Fitter::UEF_Metric>(
-                *uefMetricInput, &firstHourRating, &standardTestOptions, this);
+                *metric_in, &testOptions, this);
             break;
         }
-        case Fitter::MetricInput::MetricType::none:
+        case Fitter::Metric::MetricType::none:
             continue;
         }
         pMetrics.push_back(metric);
@@ -5823,35 +5800,34 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, StandardTestOptions& 
 
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Param>> pParams;
-    for (auto& paramInput : fitOptions.paramInputs)
+    for (auto& param_in : fitOptions.params)
     {
         std::shared_ptr<Fitter::Param> param;
-        switch (paramInput->paramType())
+        switch (param_in->paramType())
         {
 
-        case Fitter::ParamInput::ParamType::PerfCoef:
+        case Fitter::Param::ParamType::PerfCoef:
         {
-            auto perfCoefInput = static_cast<Fitter::PerfCoefInput*>(paramInput);
-            switch (perfCoefInput->perfCoefType())
+            auto perfCoef = static_cast<Fitter::PerfCoef*>(param_in);
+            switch (perfCoef->perfCoefType())
             {
 
-            case Fitter::PerfCoefInput::PerfCoefType::PinCoef:
+            case Fitter::PerfCoef::PerfCoefType::PinCoef:
                 continue;
 
-            case Fitter::PerfCoefInput::PerfCoefType::COP_Coef:
+            case Fitter::PerfCoef::PerfCoefType::COP_Coef:
             {
-                auto copCoefInput = static_cast<Fitter::COP_CoefInput*>(paramInput);
-                param = std::make_shared<Fitter::COP_Coef>(*copCoefInput, this);
+                param = std::make_shared<Fitter::COP_Coef>(*perfCoef, this);
                 break;
             }
-            case Fitter::PerfCoefInput::PerfCoefType::none:
+            case Fitter::PerfCoef::PerfCoefType::none:
                 continue;
                 break;
             }
             break;
         }
 
-        case Fitter::ParamInput::ParamType::none:
+        case Fitter::Param::ParamType::none:
             continue;
         }
         pParams.push_back(param);
@@ -5865,7 +5841,7 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, StandardTestOptions& 
     auto& compressor = heatSources[i_heat_source];
     compressor.getCapacity(ambientT_C,
                            compressor.maxSetpoint_C,
-                           standardTestOptions.setpointT_C,
+                           testOptions.setpointT_C,
                            input_BTUperHr,
                            cap_BTUperHr,
                            cop1);
@@ -5873,7 +5849,7 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, StandardTestOptions& 
         send_error("COP is negative at maximum condenser temperature.");
 
     compressor.getCapacity(
-        ambientT_C, 0., standardTestOptions.setpointT_C, input_BTUperHr, cap_BTUperHr, cop);
+        ambientT_C, 0., testOptions.setpointT_C, input_BTUperHr, cap_BTUperHr, cop);
     if (cop < cop1)
         send_error("COP slope is positive.");
 }
@@ -5881,12 +5857,12 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, StandardTestOptions& 
 //-----------------------------------------------------------------------------
 ///	@brief	Make a generic model from the current model by varying COP coef's
 //-----------------------------------------------------------------------------
-void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
+void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions &testOptions)
 {
     HPWH::FitOptions fitOptions;
 
-    HPWH::Fitter::UEF_MetricInput uef_metric(targetEF, ambientT_C, get_courier());
-    fitOptions.metricInputs.push_back(&uef_metric);
+    HPWH::Fitter::UEF_Metric uef_metric(targetEF, &testOptions, get_courier(), this);
+    fitOptions.metrics.push_back(&uef_metric);
 
     auto& compressor = heatSources[compressorIndex];
 
@@ -5894,7 +5870,7 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
     int i0 = 0, i1 = 0;
     for (auto& perfPoint : compressor.perfMap)
     {
-        if (ambientT_C < F_TO_C(perfPoint.T_F))
+        if (testOptions.testConfiguration.ambientT_C < F_TO_C(perfPoint.T_F))
             break;
         i0 = i1;
         ++i1;
@@ -5902,25 +5878,17 @@ void HPWH::makeGenericUEF(double targetEF, double ambientT_C /* = 19.7 */)
     double ratio = 0.;
     if ((i1 > i0) && (i1 < nPerfPts))
     {
-        ratio = (ambientT_C - compressor.perfMap[i0].T_F) /
+        ratio = (testOptions.testConfiguration.ambientT_C - compressor.perfMap[i0].T_F) /
                 (compressor.perfMap[i1].T_F - compressor.perfMap[i0].T_F);
     }
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
 
-    HPWH::Fitter::COP_CoefInput copCoeffInput0(i_ambientT, 0, get_courier());
-    fitOptions.paramInputs.push_back(&copCoeffInput0);
+    HPWH::Fitter::COP_Coef copCoeff0(i_ambientT, 0, get_courier(), this);
+    fitOptions.params.push_back(&copCoeff0);
 
     // HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
     // fitOptions.paramInputs.push_back(&copCoeffInput1);
 
-    HPWH::StandardTestOptions standardTestOptions;
-    standardTestOptions.saveOutput = true;
-    standardTestOptions.sOutputFilename = "";
-    standardTestOptions.sOutputDirectory = "";
-    standardTestOptions.outputStream = &std::cout;
-    standardTestOptions.changeSetpoint = true;
-    standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
 
-    makeGeneric(fitOptions, standardTestOptions);
+    makeGeneric(fitOptions, testOptions);
 }
