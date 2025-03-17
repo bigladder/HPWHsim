@@ -14,11 +14,6 @@ struct MeasureMetricsTest : public testing::Test
 
     MeasureMetricsTest()
     {
-        testOptions.saveOutput = false;
-        testOptions.resultsStream = NULL;
-        testOptions.changeSetpoint = true;
-        testOptions.nTestTCouples = 6;
-        testOptions.setpointT_C = 51.7;
     }
 };
 
@@ -35,6 +30,7 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, testOptions))
         << "Could not complete first-hour rating test.";
 
+    testOptions.testConfiguration = HPWH::testConfiguration_UEF;
     EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
         << "Could not complete complete 24-hr test.";
 
@@ -57,6 +53,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, testOptions))
         << "Could not complete first-hour rating test.";
 
+    testOptions.testConfiguration = HPWH::testConfiguration_UEF;
     EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
         << "Could not complete complete 24-hr test.";
 
@@ -79,6 +76,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
     EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, testOptions))
         << "Could not complete first-hour rating test.";
 
+    testOptions.testConfiguration = HPWH::testConfiguration_UEF;
     EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
         << "Could not complete complete 24-hr test.";
 
