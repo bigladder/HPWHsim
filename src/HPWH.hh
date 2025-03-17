@@ -1013,8 +1013,8 @@ class HPWH : public Courier::Sender
         double drawVolume_L;
     };
 
-    /// collection of information derived from standard test
-    struct StandardTestSummary
+    /// collection of information derived from standard 24-h test
+    struct TestSummary
     {
         // first recovery values
         double recoveryEfficiency = 0.; // eta_r
@@ -1060,29 +1060,42 @@ class HPWH : public Courier::Sender
         bool qualifies = false;
     };
 
-    struct StandardTestOptions
+
+    struct TestConfiguration
+    {
+        double ambientT_C = 19.7;
+        double inletT_C = 19.7;
+    };
+
+    inline static TestConfiguration testConfiguration_UEF = {19.7, 19.7};
+    inline static TestConfiguration testConfiguration_E50 = {10., 10.};
+    inline static TestConfiguration testConfiguration_E95 = {35., 19.4};
+
+    struct TestOptions
     {
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
-        std::ostream* outputStream = NULL;
+        std::ostream* resultsStream = NULL;
         bool changeSetpoint = false;
+        double setpointT_C = 51.7;
         std::ofstream outputFile;
         int nTestTCouples = 6;
-        double setpointT_C = 51.7;
+        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
+        TestConfiguration testConfiguration;
     };
 
     /// perform a draw/heat cycle to prepare for test
-    void prepForTest(StandardTestOptions& standardTestOptions);
+    void prepForTest(TestOptions& testOptions);
 
     /// determine first-hour rating
-    void findFirstHourRating(FirstHourRating& firstHourRating,
-                             StandardTestOptions& standardTestOptions);
+    void findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& testOptions);
 
     /// run 24-hr draw pattern and compute metrics
-    void run24hrTest(const FirstHourRating firstHourRating,
-                     StandardTestSummary& standardTestSummary,
-                     StandardTestOptions& standardTestOptions);
+    void run24hrTest(TestOptions& testOptions,
+                     TestSummary& testSummary);
+
+    static double findInletT_C(double ambientT_C);
 
     /// specific information for a single draw
     struct Draw
@@ -1128,32 +1141,14 @@ class HPWH : public Courier::Sender
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-    void measureMetrics(FirstHourRating& firstHourRating,
-                        StandardTestOptions& standardTestOptions,
-                        StandardTestSummary& standardTestSummary);
-
-    struct CustomTestOptions
-    {
-        bool overrideFirstHourRating = false;
-        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
-
-        bool overrideAmbientT = false;
-        double ambientT_C = 19.7;
-
-    } customTestOptions;
+    void measureMetrics(TestOptions& testOptions,
+                        TestSummary& standardTestSummary);
 
     struct Fitter;
     struct FitOptions;
-    void makeGeneric(const FitOptions& genericOptions, StandardTestOptions& standardTestOptions);
-    void makeGenericUEF(double targetEF, double ambientT_C = 19.7);
-    void makeGenericE50(double targetEF) { return makeGenericUEF(targetEF, 10.); }
-    void makeGenericE95(double targetEF) { return makeGenericUEF(targetEF, 35.); }
-    void makeGenericE50_UEF_E95(double targetEF50, double targetUEF, double targetEF95)
-    {
-        makeGenericE50(targetEF50);
-        makeGenericUEF(targetUEF);
-        makeGenericE95(targetEF95);
-    }
+    void makeGeneric(const FitOptions& fitOptions, TestOptions& testOptions);
+    void makeGenericEF(double targetEF, TestOptions& testOptions);
+    void makeGenericE50_UEF_E95(double targetEF50, double targetUEF, double targetEF95);
 
   private:
     void setAllDefaults(); /**< sets all the defaults default */
@@ -1455,14 +1450,14 @@ class HPWH::HeatSource : public Courier::Sender
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
-    struct perfPoint
+    struct PerfPoint
     {
         double T_F;
         std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
         std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
     };
 
-    std::vector<perfPoint> perfMap;
+    std::vector<PerfPoint> perfMap;
     /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
   private:

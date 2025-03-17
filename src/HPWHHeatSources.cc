@@ -439,7 +439,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 {
     std::sort(perfMap.begin(),
               perfMap.end(),
-              [](const HPWH::HeatSource::perfPoint& a, const HPWH::HeatSource::perfPoint& b) -> bool
+              [](const HPWH::HeatSource::PerfPoint& a, const HPWH::HeatSource::PerfPoint& b) -> bool
               { return a.T_F < b.T_F; });
 }
 

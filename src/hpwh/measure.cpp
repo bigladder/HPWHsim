@@ -65,24 +65,23 @@ void measure(const std::string& sSpecType,
              std::string sCustomDrawProfile,
              double ambientT_C)
 {
-    HPWH::StandardTestSummary standardTestSummary;
+    HPWH::TestSummary testSummary;
 
-    HPWH::StandardTestOptions standardTestOptions;
-    standardTestOptions.saveOutput = false;
-    standardTestOptions.sOutputFilename = "";
-    standardTestOptions.sOutputDirectory = "";
-    standardTestOptions.outputStream = &std::cout;
-    standardTestOptions.changeSetpoint = true;
-    standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
+    HPWH::TestOptions testOptions;
+    testOptions.saveOutput = false;
+    testOptions.sOutputFilename = "";
+    testOptions.sOutputDirectory = "";
+    testOptions.resultsStream = NULL;
+    testOptions.changeSetpoint = true;
+    testOptions.nTestTCouples = 6;
+    testOptions.setpointT_C = 51.7;
 
     bool useResultsFile = false;
-
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     if (sOutputDir != "")
     {
-        standardTestOptions.saveOutput = true;
-        standardTestOptions.sOutputDirectory = sOutputDir;
+        testOptions.saveOutput = true;
+        testOptions.sOutputDirectory = sOutputDir;
 
         if (sResultsFilename != "")
         {
@@ -91,12 +90,12 @@ void measure(const std::string& sSpecType,
             resultsFile->open(sResultsFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
             if (resultsFile->is_open())
             {
-                standardTestOptions.outputStream = resultsFile;
+                testOptions.resultsStream = resultsFile;
                 useResultsFile = true;
             }
         }
     }
-    standardTestOptions.saveOutput = !sSupressOutput;
+    testOptions.saveOutput = !sSupressOutput;
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
 
     for (auto& c : sPresetOrFile)
@@ -136,33 +135,37 @@ void measure(const std::string& sSpecType,
         {
             if (value == sCustomDrawProfile)
             {
-                hpwh.customTestOptions.overrideFirstHourRating = true;
-                hpwh.customTestOptions.desig = key;
+                testOptions.desig = key;
                 foundProfile = true;
                 break;
             }
         }
         if (!foundProfile)
         {
-            std::cout << "Invalid input: Draw profile name not found.\n";
+            hpwh.get_courier()->send_error("Invalid input: Draw profile name not found.");
             exit(1);
         }
     }
 
-    hpwh.customTestOptions.overrideAmbientT = true;
-    hpwh.customTestOptions.ambientT_C = ambientT_C;
+    testOptions.testConfiguration.ambientT_C = ambientT_C;
+    testOptions.testConfiguration.inletT_C = HPWH::findInletT_C(ambientT_C);
 
-    *standardTestOptions.outputStream << "Spec type: " << sPresetOrFile << "\n";
-    *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
+    std::string results = "";
+    results.append(fmt::format("Spec type: {}", sPresetOrFile));
+    results.append(fmt::format("Model name: {}", sModelName));
 
-    standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+    hpwh.get_courier()->send_info("\n" + results);
+    if (testOptions.resultsStream)
+        *testOptions.resultsStream << results;
 
-    HPWH::FirstHourRating firstHourRating;
-    hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
+    testOptions.sOutputFilename =
+        "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+
+    hpwh.measureMetrics(testOptions, testSummary);
 
     if (useResultsFile)
     {
-        delete standardTestOptions.outputStream;
+        delete testOptions.resultsStream;
     }
 }
 } // namespace hpwh_cli
