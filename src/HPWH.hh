@@ -1051,7 +1051,7 @@ class HPWH : public Courier::Sender
         double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
         double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
         double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
-        double UEF = 0.;
+        double EF = 0.;
 
         // (calculated) annual totals
         double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
@@ -1059,7 +1059,6 @@ class HPWH : public Courier::Sender
 
         bool qualifies = false;
     };
-
 
     struct TestConfiguration
     {
@@ -1092,8 +1091,7 @@ class HPWH : public Courier::Sender
     void findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& testOptions);
 
     /// run 24-hr draw pattern and compute metrics
-    void run24hrTest(TestOptions& testOptions,
-                     TestSummary& testSummary);
+    void run24hrTest(TestOptions& testOptions, TestSummary& testSummary);
 
     static double findInletT_C(double ambientT_C);
 
@@ -1141,14 +1139,16 @@ class HPWH : public Courier::Sender
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-    void measureMetrics(TestOptions& testOptions,
-                        TestSummary& standardTestSummary);
+    void measureMetrics(TestOptions& testOptions, TestSummary& standardTestSummary);
 
     struct Fitter;
     struct FitOptions;
     void makeGeneric(const FitOptions& fitOptions, TestOptions& testOptions);
     void makeGenericEF(double targetEF, TestOptions& testOptions);
-    void makeGenericE50_UEF_E95(double targetEF50, double targetUEF, double targetEF95);
+    void makeGenericE50_UEF_E95(double targetEF50,
+                                double targetUEF,
+                                double targetEF95,
+                                TestOptions& testOptions);
 
   private:
     void setAllDefaults(); /**< sets all the defaults default */

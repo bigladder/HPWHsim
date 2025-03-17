@@ -108,12 +108,14 @@ struct HPWH::Fitter : public Sender
     { // COP coefficient parameter
         COP_Coef(unsigned tempIndex_in,
                  unsigned power_in,
-                 std::shared_ptr<Courier::Courier> courier, HPWH* hpwh_in) :
-            PerfCoef(tempIndex_in, power_in, courier, hpwh_in) { dVal = 1.e-9; }
+                 std::shared_ptr<Courier::Courier> courier,
+                 HPWH* hpwh_in)
+            : PerfCoef(tempIndex_in, power_in, courier, hpwh_in)
+        {
+            dVal = 1.e-9;
+        }
 
-        COP_Coef(PerfCoef& perfCoef,
-                 HPWH* hpwh_in) :
-            PerfCoef(perfCoef, hpwh_in) { dVal = 1.e-9; }
+        COP_Coef(PerfCoef& perfCoef, HPWH* hpwh_in) : PerfCoef(perfCoef, hpwh_in) { dVal = 1.e-9; }
 
         Param::ParamType paramType() override { return Param::ParamType::PerfCoef; }
         PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::COP_Coef; }
@@ -132,52 +134,52 @@ struct HPWH::Fitter : public Sender
         double tolVal; // tolerance
 
         Metric(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
-            : Sender("MetricInput", "metricInput", courier), targetVal(targetVal_in), currVal(0.), tolVal(1.e-6) {}
+            : Sender("MetricInput", "metricInput", courier)
+            , targetVal(targetVal_in)
+            , currVal(0.)
+            , tolVal(1.e-6)
+        {
+        }
 
         enum class MetricType
         {
             none,
-            UEF
+            EF
         };
         virtual MetricType metricType() { return MetricType::none; }
 
-       virtual void eval() = 0;
-       virtual void evalDiff(double& diff) = 0;
+        virtual void eval() = 0;
+        virtual void evalDiff(double& diff) = 0;
     };
 
-    struct UEF_Metric : public Metric
+    struct EF_Metric : public Metric
     {
         HPWH* hpwh;
         TestOptions* testOptions;
         double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
 
-        UEF_Metric(double targetUEF,
-                   TestOptions* testOptions_in,
-                   std::shared_ptr<Courier::Courier> courier,
-                   HPWH* hpwh_in = nullptr)
-            : Metric(targetUEF, courier), hpwh(hpwh_in)
-            , testOptions(testOptions_in)
+        EF_Metric(double targetEF,
+                  TestOptions* testOptions_in,
+                  std::shared_ptr<Courier::Courier> courier,
+                  HPWH* hpwh_in = nullptr)
+            : Metric(targetEF, courier), hpwh(hpwh_in), testOptions(testOptions_in)
         {
         }
 
-        UEF_Metric(Metric& metric,
-                   TestOptions* testOptions_in,
-                   HPWH* hpwh_in = nullptr)
-            : Metric(metric), hpwh(hpwh_in)
-            , testOptions(testOptions_in)
+        EF_Metric(Metric& metric, TestOptions* testOptions_in, HPWH* hpwh_in = nullptr)
+            : Metric(metric), hpwh(hpwh_in), testOptions(testOptions_in)
         {
         }
 
-       virtual ~UEF_Metric() = default;
+        virtual ~EF_Metric() = default;
 
-       MetricType metricType() override { return MetricType::UEF; }
-
+        MetricType metricType() override { return MetricType::EF; }
 
         void eval() override
-        { // get current UEF
+        { // get current EF
             static HPWH::TestSummary testSummary;
             hpwh->run24hrTest(*testOptions, testSummary);
-            currVal = testSummary.UEF;
+            currVal = testSummary.EF;
         }
 
         void evalDiff(double& diff) override
@@ -187,7 +189,7 @@ struct HPWH::Fitter : public Sender
         }
     };
 
-    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics; // could be a vector for add'l FOMs
+    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics;
     std::vector<std::shared_ptr<Fitter::Param>> pParams;
 
     Fitter(std::vector<std::shared_ptr<Fitter::Metric>> pMetrics_in,
