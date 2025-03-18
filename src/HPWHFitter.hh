@@ -67,32 +67,49 @@ struct HPWH::Fitter : public Sender
         /// check validity and return reference to HPWH member variable
         double* getPerfCoeff()
         {
-             HPWH::HeatSource* heatSource;
-             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
+            HPWH::HeatSource* heatSource;
+            hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
-             auto& perfMap = heatSource->perfMap;
-             if (tempIndex >= perfMap.size())
-             {
-                 send_error("Invalid heat-source performance-map temperature index.");
-             }
+            auto& perfMap = heatSource->perfMap;
+            if (tempIndex >= perfMap.size())
+            {
+                send_error("Invalid heat-source performance-map temperature index.");
+            }
 
-             auto& perfPoint = perfMap[tempIndex];
-             auto& perfCoeffs = getCoeffs(perfPoint);
-             if (exponent >= perfCoeffs.size())
-             {
-                 send_error("Invalid heat-source performance-map coefficient exponent.");
-             }
-             return &perfCoeffs[exponent];
+            auto& perfPoint = perfMap[tempIndex];
+            auto& perfCoeffs = getCoeffs(perfPoint);
+            if (exponent >= perfCoeffs.size())
+            {
+                send_error("Invalid heat-source performance-map coefficient exponent.");
+            }
+            return &perfCoeffs[exponent];
         }
 
-        void setValue(double x) override
+        void setValue(double x) override { *getPerfCoeff() = x; }
+
+        double getValue() override { return *getPerfCoeff(); }
+    };
+
+    struct PinCoef : public PerfCoef
+    { // input-power coefficient parameter
+        PinCoef(unsigned tempIndex_in,
+                unsigned exponent_in,
+                std::shared_ptr<Courier::Courier> courier,
+                HPWH* hpwh_in)
+            : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
         {
-             *getPerfCoeff() = x;
+            dVal = 1.e-9;
         }
 
-        double getValue() override
+        PinCoef(PerfCoef& perfCoef, HPWH* hpwh_in) : PerfCoef(perfCoef, hpwh_in) { dVal = 1.e-5; }
+
+        PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::PinCoef; }
+
+        void show() override { send_info(fmt::format("Pin[{}]: {}", tempIndex, getValue())); }
+
+        std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
         {
-            return *getPerfCoeff();
+            return perfPoint.inputPower_coeffs;
         }
     };
 
@@ -124,8 +141,8 @@ struct HPWH::Fitter : public Sender
     struct Metric : public Sender
     {
         double targetVal; // value to be matched
-        double currVal; // current value
-        double tolVal; // tolerance
+        double currVal;   // current value
+        double tolVal;    // tolerance
 
         Metric(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
             : Sender("MetricInput", "metricInput", courier)
