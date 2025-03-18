@@ -112,8 +112,8 @@ int secant( // find x given f(x) (secant method)
 /// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
 //-----------------------------------------------------------------------------
 static bool getLeftDampedInverse(const double nu,
-                             const std::vector<double>& matV, // 1 x 2
-                             std::vector<double>& invMatV     // 2 x 1
+                                 const std::vector<double>& matV, // 1 x 2
+                                 std::vector<double>& invMatV     // 2 x 1
 )
 {
     constexpr double thresh = 1.e-12;
@@ -181,7 +181,7 @@ void HPWH::Fitter::leastSquares()
         }
 
         double dMetric0 = 0.;
-        pMetric->evalDiff(dMetric0); // (
+        pMetric->evalDiff(dMetric0);       // (
         double FOM0 = dMetric0 * dMetric0; // figures of merit
         double FOM1 = 0., FOM2 = 0.;
         iter_msg.append(fmt::format(", FOM: {:g}", FOM0));

@@ -5796,7 +5796,6 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
 
         switch (param_in->paramType())
         {
-            pParams.push_back(param);
         case Fitter::Param::ParamType::PerfCoef:
         {
             auto perfCoef = dynamic_cast<Fitter::PerfCoef*>(param_in);
