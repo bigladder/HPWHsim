@@ -106,7 +106,8 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
     constexpr double UEF = 4.3;
     constexpr double E95 = 4.9;
 
-    EXPECT_NO_THROW(hpwh.makeGenericE50_UEF_E95(E50, UEF, E95, testOptions)) << "Could not make generic model.";
+    EXPECT_NO_THROW(hpwh.makeGenericE50_UEF_E95(E50, UEF, E95, testOptions))
+        << "Could not make generic model.";
 
     { // verify E50
         testOptions.testConfiguration = HPWH::testConfiguration_E50;
