@@ -63,44 +63,38 @@ struct HPWH::Fitter : public Sender
         virtual PerfCoefType perfCoefType() { return PerfCoefType::none; }
 
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
-        void setValue(double x) override
-        { // set the HPWH member variable
-            HPWH::HeatSource* heatSource;
-            hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
-            auto& perfMap = heatSource->perfMap;
-            if (tempIndex >= perfMap.size())
-            {
-                send_error("Invalid heat-source performance-map temperature index.");
-            }
+        /// check validity and return reference to member variable
+        double* getPerfCoeff()
+        {
+             HPWH::HeatSource* heatSource;
+             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
-            auto& perfPoint = perfMap[tempIndex];
-            auto& perfCoeffs = getCoeffs(perfPoint);
-            if (power >= perfCoeffs.size())
-            {
-                send_error("Invalid heat-source performance-map coefficient power.");
-            }
-            perfCoeffs[power] = x;
+             auto& perfMap = heatSource->perfMap;
+             if (tempIndex >= perfMap.size())
+             {
+                 send_error("Invalid heat-source performance-map temperature index.");
+             }
+
+             auto& perfPoint = perfMap[tempIndex];
+             auto& perfCoeffs = getCoeffs(perfPoint);
+             if (power >= perfCoeffs.size())
+             {
+                 send_error("Invalid heat-source performance-map coefficient power.");
+             }
+             return &perfCoeffs[power];
         }
 
+        /// set the HPWH member variable
+        void setValue(double x) override
+        {
+             *getPerfCoeff() = x;
+        }
+
+        /// get the value HPWH member variable
         double getValue() override
-        { // get a reference to the HPWH member variable
-            HPWH::HeatSource* heatSource;
-            hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
-
-            auto& perfMap = heatSource->perfMap;
-            if (tempIndex >= perfMap.size())
-            {
-                send_error("Invalid heat-source performance-map temperature index.");
-            }
-
-            auto& perfPoint = perfMap[tempIndex];
-            auto& perfCoeffs = getCoeffs(perfPoint);
-            if (power >= perfCoeffs.size())
-            {
-                send_error("Invalid heat-source performance-map coefficient power.");
-            }
-            return perfCoeffs[power];
+        {
+            return *getPerfCoeff();
         }
     };
 
