@@ -6,9 +6,10 @@
 #include "HPWH.hh"
 
 /**	Optimizer for varying model parameters to match metrics, used by
- *  make_generic to implement a target UEF. The structure is fairly general, but
- *  currently limited to one metric (UEF) and two parameters (COP coeffs).
- *  This could be expanded to include other metrics, such as total energy in 24-h test.
+ *  makeGeneric to modify tperformance coeffs to mathc a target EF.
+ *  The structure is fairly general, but currently limited to one metric (UEF)
+ *  and two parameters (COP coeffs). This could be expanded to include other metrics,
+ *  such as total energy in 24-h test.
  */
 
 struct HPWH::Fitter : public Sender
@@ -89,7 +90,7 @@ struct HPWH::Fitter : public Sender
 
         double getValue() override { return *getPerfCoeff(); }
 
-        std::shared_ptr<PerfCoef> make(HPWH *hpwh_in)
+        std::shared_ptr<PerfCoef> make(HPWH* hpwh_in)
         {
             switch (perfCoefType())
             {

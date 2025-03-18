@@ -163,8 +163,7 @@ void measure(const std::string& sSpecType,
     if (testOptions.resultsStream)
         *testOptions.resultsStream << results;
 
-    testOptions.sOutputFilename =
-        "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+    testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
     hpwh.measureMetrics(testOptions, testSummary);
 
