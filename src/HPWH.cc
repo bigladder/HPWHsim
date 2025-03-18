@@ -5182,9 +5182,8 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
 //-----------------------------------------------------------------------------
 ///	@brief	Performs standard 24-hr test
 /// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058 (5.4.2)
-/// @param[in] firstHourRating          specifies first-hour rating
+/// @param[in/out] testOptions          reporting and configuration
 /// @param[out] testSummary	            contains test metrics on output
-///	@param[in]	setpointT_C		        setpoint temperature (optional)
 //-----------------------------------------------------------------------------
 void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
 {
@@ -5677,12 +5676,14 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     }
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Modify *this hpwh to meet target metrics
+//-----------------------------------------------------------------------------
 void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,
                                   double targetE95,
                                   TestOptions& testOptions)
 {
-
     testOptions.testConfiguration = testConfiguration_E50;
     makeGenericEF(targetE50, testOptions);
 
@@ -5693,6 +5694,65 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
     makeGenericEF(targetE95, testOptions);
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	first-hour rating as a verbose string
+//-----------------------------------------------------------------------------
+std::string HPWH::FirstHourRating::report()
+{
+    std::string results = "";
+    results.append("\tFirst-Hour Rating:\n");
+    results.append(fmt::format("\t\tVolume Drawn (L): {:g}\n", drawVolume_L));
+    results.append(fmt::format("\t\tDesignation: {}\n", sDesigMap[desig]));
+    return results;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	24-hr test summary as a verbose string
+//-----------------------------------------------------------------------------
+std::string HPWH::TestSummary::report()
+{
+    std::string results = "";
+    results.append("\t24-Hour Test Results:\n");
+    if (!qualifies)
+    {
+        results.append("\t\tDoes not qualify as consumer water heater.\n");
+    }
+
+    results.append(fmt::format("\t\tRecovery Efficiency: {:g}\n", recoveryEfficiency));
+
+    results.append(fmt::format("\t\tStandby Loss Coefficient (kJ/h degC): {:g}\n",
+                               standbyLossCoefficient_kJperhC));
+
+    results.append(fmt::format("\t\tEF: {:g}\n", EF));
+
+    results.append(fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n", avgInletT_C));
+
+    results.append(fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n", avgOutletT_C));
+
+    results.append(fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", removedVolume_L));
+
+    results.append(fmt::format("\t\tDaily Water-Heating Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(waterHeatingEnergy_kJ)));
+
+    results.append(fmt::format("\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(adjustedConsumedWaterHeatingEnergy_kJ)));
+
+    results.append(fmt::format("\t\tModified Daily Water-Heating Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(modifiedConsumedWaterHeatingEnergy_kJ)));
+
+    results.append("\tAnnual Values:\n");
+    results.append(fmt::format("\t\tAnnual Electrical Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(annualConsumedElectricalEnergy_kJ)));
+
+    results.append(fmt::format("\t\tAnnual Energy Consumption (kWh): {:g}\n",
+                               KJ_TO_KWH(annualConsumedEnergy_kJ)));
+
+    return results;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Measure the EF and other results of standard 24-hr tests
+//-----------------------------------------------------------------------------
 void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
 {
     if (testOptions.saveOutput)
@@ -5715,54 +5775,16 @@ void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
 
     run24hrTest(testOptions, testSummary);
 
-    std::string results = "";
-    results.append("\t24-Hour Test Results:\n");
-    if (!testSummary.qualifies)
-    {
-        results.append("\t\tDoes not qualify as consumer water heater.\n");
-    }
-
-    results.append(fmt::format("\t\tRecovery Efficiency: {:g}\n", testSummary.recoveryEfficiency));
-
-    results.append(fmt::format("\t\tStandby Loss Coefficient (kJ/h degC): {:g}\n",
-                               testSummary.standbyLossCoefficient_kJperhC));
-
-    results.append(fmt::format("\t\tEF: {:g}\n", testSummary.EF));
-
-    results.append(
-        fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n", testSummary.avgInletT_C));
-
-    results.append(
-        fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n", testSummary.avgOutletT_C));
-
-    results.append(fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", testSummary.removedVolume_L));
-
-    results.append(fmt::format("\t\tDaily Water-Heating Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(testSummary.waterHeatingEnergy_kJ)));
-
-    results.append(fmt::format("\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(testSummary.adjustedConsumedWaterHeatingEnergy_kJ)));
-
-    results.append(fmt::format("\t\tModified Daily Water-Heating Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(testSummary.modifiedConsumedWaterHeatingEnergy_kJ)));
-
-    results.append("\tAnnual Values:\n");
-    results.append(fmt::format("\t\tAnnual Electrical Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(testSummary.annualConsumedElectricalEnergy_kJ)));
-
-    results.append(fmt::format("\t\tAnnual Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(testSummary.annualConsumedEnergy_kJ)));
-
-    send_info("\n" + results);
-    if (testOptions.resultsStream)
-        *testOptions.resultsStream << results;
-
     if (testOptions.saveOutput)
     {
         testOptions.outputFile.close();
     }
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Make a generic model from this hpwh meeting fitOptions.metrics
+/// by varying fitOptions.params
+//-----------------------------------------------------------------------------
 void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOptions)
 {
     const unsigned i_heat_source = compressorIndex;
@@ -5815,10 +5837,9 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
     Fitter fitter(pMetrics, pParams, get_courier());
     fitter.fit();
 
-    constexpr double ambientT_C = 19.7; // may be overridden with customTestOptions
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
     auto& compressor = heatSources[i_heat_source];
-    compressor.getCapacity(ambientT_C,
+    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
                            compressor.maxSetpoint_C,
                            testOptions.setpointT_C,
                            input_BTUperHr,
@@ -5827,14 +5848,19 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
     if (cop1 < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor.getCapacity(
-        ambientT_C, 0., testOptions.setpointT_C, input_BTUperHr, cap_BTUperHr, cop);
+    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
+                           0., /// low condenserT_C
+                           testOptions.setpointT_C,
+                           input_BTUperHr,
+                           cap_BTUperHr,
+                           cop);
     if (cop < cop1)
         send_error("COP slope is positive.");
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Make a generic model from the current model by varying COP coef's
+///	@brief	Make a generic model with target EF from the current model
+/// by varying COP coef's
 //-----------------------------------------------------------------------------
 void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 {
@@ -5845,6 +5871,7 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 
     auto& compressor = heatSources[compressorIndex];
 
+    // pick the nearest index
     int nPerfPts = static_cast<int>(compressor.perfMap.size());
     int i0 = 0, i1 = 0;
     for (auto& perfPoint : compressor.perfMap)

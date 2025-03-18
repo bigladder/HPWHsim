@@ -1011,6 +1011,7 @@ class HPWH : public Courier::Sender
             {Desig::High, "High"}};
 
         double drawVolume_L;
+        std::string report();
     };
 
     /// collection of information derived from standard 24-h test
@@ -1058,6 +1059,9 @@ class HPWH : public Courier::Sender
         double annualConsumedEnergy_kJ = 0.;           // E_annual
 
         bool qualifies = false;
+
+        // return a verbose string summary
+        std::string report();
     };
 
     struct TestConfiguration
@@ -1139,7 +1143,7 @@ class HPWH : public Courier::Sender
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-    void measureMetrics(TestOptions& testOptions, TestSummary& standardTestSummary);
+    void measureMetrics(TestOptions& testOptions, TestSummary& testSummary);
 
     struct Fitter;
     struct FitOptions;
@@ -1151,7 +1155,7 @@ class HPWH : public Courier::Sender
                                 TestOptions& testOptions);
 
   private:
-    void setAllDefaults(); /**< sets all the defaults default */
+    void setAllDefaults(); /**< sets all the defaults */
 
     void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
