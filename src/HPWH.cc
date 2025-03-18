@@ -5798,7 +5798,9 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
         {
         case Fitter::Metric::MetricType::EF:
         {
-            metric = std::make_shared<Fitter::EF_Metric>(*metric_in, &testOptions, this);
+            auto ef_metric = dynamic_cast<Fitter::EF_Metric*>(metric_in);
+            metric = ef_metric->make(&testOptions, this);
+
             break;
         }
         case Fitter::Metric::MetricType::none:

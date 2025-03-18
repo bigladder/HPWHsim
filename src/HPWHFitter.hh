@@ -221,6 +221,11 @@ struct HPWH::Fitter : public Sender
             eval();
             diff = (currVal - targetVal) / tolVal;
         }
+
+        std::shared_ptr<EF_Metric> make(TestOptions* testOptions_in, HPWH* hpwh_in)
+        {
+            return std::make_shared<Fitter::EF_Metric>(*this, testOptions_in, hpwh_in);
+        }
     };
 
     /// metric and parameter data retained as shared pts
