@@ -5,15 +5,15 @@
 
 #include "HPWH.hh"
 
-/**	Optimizer for varying model parameters to match metrics, used by
- *  makeGeneric to modify tperformance coeffs to mathc a target EF.
- *  The structure is fairly general, but currently limited to one metric (UEF)
- *  and two parameters (COP coeffs). This could be expanded to include other metrics,
- *  such as total energy in 24-h test.
- */
-
+///	@struct HPWH::Fitter HPWHFitter.h
+/// Optimizer for varying model parameters to match metrics, used by
+/// HPWH::makeGeneric to modify performance coeffs to match a target UEF.
+/// The structure is fairly general, but currently limited to one metric (UEF)
+/// and two parameters (COP coeffs). This could be expanded to include other metrics,
+/// such as total energy in 24-hr test.
 struct HPWH::Fitter : public Sender
 {
+    ///	base class for variational parameters
     struct Param : public Sender
     {
         double dVal;
@@ -37,6 +37,7 @@ struct HPWH::Fitter : public Sender
         virtual void show() {}
     };
 
+    /// performance-coefficient parameter
     struct PerfCoef : public Param
     {
         HPWH* hpwh;
@@ -109,8 +110,9 @@ struct HPWH::Fitter : public Sender
         }
     };
 
+    /// input-power coefficient parameter
     struct PinCoef : public PerfCoef
-    { // input-power coefficient parameter
+    {
         PinCoef(unsigned tempIndex_in,
                 unsigned exponent_in,
                 std::shared_ptr<Courier::Courier> courier,
@@ -132,8 +134,9 @@ struct HPWH::Fitter : public Sender
         }
     };
 
+    ///	coefficient-of-performance coefficient parameter
     struct COP_Coef : public PerfCoef
-    { // COP coefficient parameter
+    {
         COP_Coef(unsigned tempIndex_in,
                  unsigned exponent_in,
                  std::shared_ptr<Courier::Courier> courier,
@@ -155,7 +158,7 @@ struct HPWH::Fitter : public Sender
         }
     };
 
-    /// base class for metric data,
+    ///	base class for metric data,
     /// i.e., a target value to match by varying parameters
     struct Metric : public Sender
     {
@@ -220,7 +223,7 @@ struct HPWH::Fitter : public Sender
         }
     };
 
-    /// metric and parameter data saved as shared pts
+    /// metric and parameter data retained as shared pts
     std::vector<std::shared_ptr<Fitter::Metric>> pMetrics;
     std::vector<std::shared_ptr<Fitter::Param>> pParams;
 

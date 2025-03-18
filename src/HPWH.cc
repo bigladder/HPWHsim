@@ -5815,7 +5815,6 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
     for (auto& param_in : fitOptions.params)
     {
         std::shared_ptr<Fitter::Param> param;
-
         switch (param_in->paramType())
         {
         case Fitter::Param::ParamType::PerfCoef:
