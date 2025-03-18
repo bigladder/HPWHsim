@@ -40,17 +40,17 @@ struct HPWH::Fitter : public Sender
     {
         HPWH* hpwh;
         unsigned tempIndex;
-        unsigned power;
+        unsigned exponent;
 
         PerfCoef(unsigned tempIndex_in,
-                 unsigned power_in,
+                 unsigned exponent_in,
                  std::shared_ptr<Courier::Courier> courier,
                  HPWH* hpwh_in = nullptr)
-            : Param(courier), hpwh(hpwh_in), tempIndex(tempIndex_in), power(power_in)
+            : Param(courier), hpwh(hpwh_in), tempIndex(tempIndex_in), exponent(exponent_in)
         {
         }
         PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
-            : PerfCoef(perfCoef.tempIndex, perfCoef.power, perfCoef.courier, hpwh_in)
+            : PerfCoef(perfCoef.tempIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
         {
         }
         enum class PerfCoefType
@@ -64,7 +64,7 @@ struct HPWH::Fitter : public Sender
 
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
 
-        /// check validity and return reference to member variable
+        /// check validity and return reference to HPWH member variable
         double* getPerfCoeff()
         {
              HPWH::HeatSource* heatSource;
@@ -78,20 +78,18 @@ struct HPWH::Fitter : public Sender
 
              auto& perfPoint = perfMap[tempIndex];
              auto& perfCoeffs = getCoeffs(perfPoint);
-             if (power >= perfCoeffs.size())
+             if (exponent >= perfCoeffs.size())
              {
-                 send_error("Invalid heat-source performance-map coefficient power.");
+                 send_error("Invalid heat-source performance-map coefficient exponent.");
              }
-             return &perfCoeffs[power];
+             return &perfCoeffs[exponent];
         }
 
-        /// set the HPWH member variable
         void setValue(double x) override
         {
              *getPerfCoeff() = x;
         }
 
-        /// get the value HPWH member variable
         double getValue() override
         {
             return *getPerfCoeff();
@@ -101,18 +99,18 @@ struct HPWH::Fitter : public Sender
     struct COP_Coef : public PerfCoef
     { // COP coefficient parameter
         COP_Coef(unsigned tempIndex_in,
-                 unsigned power_in,
+                 unsigned exponent_in,
                  std::shared_ptr<Courier::Courier> courier,
                  HPWH* hpwh_in)
-            : PerfCoef(tempIndex_in, power_in, courier, hpwh_in)
+            : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
         {
             dVal = 1.e-9;
         }
 
         COP_Coef(PerfCoef& perfCoef, HPWH* hpwh_in) : PerfCoef(perfCoef, hpwh_in) { dVal = 1.e-9; }
 
-        Param::ParamType paramType() override { return Param::ParamType::PerfCoef; }
         PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::COP_Coef; }
+
         void show() override { send_info(fmt::format("COP[{}]: {}", tempIndex, getValue())); }
 
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
@@ -121,10 +119,12 @@ struct HPWH::Fitter : public Sender
         }
     };
 
+    /// base class for metric data,
+    /// i.e., a target value to match by varying parameters
     struct Metric : public Sender
-    { // base class for metric input
-        double targetVal;
-        double currVal;
+    {
+        double targetVal; // value to be matched
+        double currVal; // current value
         double tolVal; // tolerance
 
         Metric(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
@@ -146,6 +146,7 @@ struct HPWH::Fitter : public Sender
         virtual void evalDiff(double& diff) = 0;
     };
 
+    /// energy-factor metric, i.e., E50, UEF, E95
     struct EF_Metric : public Metric
     {
         HPWH* hpwh;
@@ -183,6 +184,7 @@ struct HPWH::Fitter : public Sender
         }
     };
 
+    /// metric and parameter data saved as shared pts
     std::vector<std::shared_ptr<Fitter::Metric>> pMetrics;
     std::vector<std::shared_ptr<Fitter::Param>> pParams;
 
@@ -203,6 +205,8 @@ struct HPWH::Fitter : public Sender
     void fit();
 };
 
+/// container for passing fit information
+/// to generate shared ptrs (see HPWH::makeGeneric)
 struct HPWH::FitOptions
 {
     std::vector<HPWH::Fitter::Metric*> metrics;
