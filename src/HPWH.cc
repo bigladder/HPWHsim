@@ -5804,9 +5804,9 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
 
             case Fitter::PerfCoef::PerfCoefType::PinCoef:
             {
-                continue;
+                param = std::make_shared<Fitter::PinCoef>(*perfCoef, this);
+                break;
             }
-
             case Fitter::PerfCoef::PerfCoefType::COP_Coef:
             {
                 param = std::make_shared<Fitter::COP_Coef>(*perfCoef, this);
