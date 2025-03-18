@@ -119,6 +119,13 @@ void measure(const std::string& sSpecType,
         hpwh.initFromFile(inputFile);
     }
 
+    sPresetOrFile[0] = // capitalize first char
+        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+
+    std::string results = "";
+    results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
+    results.append(fmt::format("\tModel Name: {}\n", sModelName));
+
     if (useCustomDrawProfile)
     {
         bool foundProfile = false;
@@ -137,6 +144,7 @@ void measure(const std::string& sSpecType,
             {
                 testOptions.desig = key;
                 foundProfile = true;
+                results.append(fmt::format("\tCustom Draw Profile: {}\n", sCustomDrawProfile));
                 break;
             }
         }
@@ -150,22 +158,20 @@ void measure(const std::string& sSpecType,
     {
         HPWH::FirstHourRating firstHourRating;
         hpwh.findFirstHourRating(firstHourRating, testOptions);
+        results.append(firstHourRating.report());
     }
 
     testOptions.testConfiguration.ambientT_C = ambientT_C;
     testOptions.testConfiguration.inletT_C = HPWH::findInletT_C(ambientT_C);
 
-    std::string results = "";
-    results.append(fmt::format("Spec type: {}", sPresetOrFile));
-    results.append(fmt::format("Model name: {}", sModelName));
+    testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+
+    hpwh.measureMetrics(testOptions, testSummary);
+    results.append(testSummary.report());
 
     hpwh.get_courier()->send_info("\n" + results);
     if (testOptions.resultsStream)
         *testOptions.resultsStream << results;
-
-    testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
-
-    hpwh.measureMetrics(testOptions, testSummary);
 
     if (useResultsFile)
     {

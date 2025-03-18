@@ -88,16 +88,14 @@ void make(const std::string& sSpecType,
         hpwh.initFromFile(sInputFile);
     }
 
-    HPWH::FitOptions fitOptions;
+    sPresetOrFile[0] = // capitalize first char
+        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
 
-    HPWH::Fitter::EF_Metric ef_metric(targetEF, &testOptions, hpwh.get_courier(), &hpwh);
-    fitOptions.metrics.push_back(&ef_metric);
+    std::string results = "";
+    results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
+    results.append(fmt::format("\tModel Name: {}\n", sModelName));
 
-    HPWH::Fitter::COP_Coef copCoeff0(2, 0, hpwh.get_courier(), &hpwh);
-    fitOptions.params.push_back(&copCoeff0);
-
-    HPWH::Fitter::COP_Coef copCoeff1(2, 1, hpwh.get_courier(), &hpwh);
-    fitOptions.params.push_back(&copCoeff1);
+    hpwh.makeGenericEF(targetEF, testOptions);
 
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
     if (useCustomDrawProfile)
@@ -118,6 +116,7 @@ void make(const std::string& sSpecType,
             {
                 testOptions.desig = key;
                 foundProfile = true;
+                results.append(fmt::format("\tCustom Draw Profile: {}\n", sCustomDrawProfile));
                 break;
             }
         }
@@ -131,15 +130,18 @@ void make(const std::string& sSpecType,
     {
         HPWH::FirstHourRating firstHourRating;
         hpwh.findFirstHourRating(firstHourRating, testOptions);
+        results.append(firstHourRating.report());
     }
 
-    hpwh.makeGeneric(fitOptions, testOptions);
-
-    sPresetOrFile[0] =
-        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+    hpwh.makeGenericEF(targetEF, testOptions);
 
     testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
     hpwh.measureMetrics(testOptions, testSummary);
+    results.append(testSummary.report());
+
+    hpwh.get_courier()->send_info("\n" + results);
+    if (testOptions.resultsStream)
+        *testOptions.resultsStream << results;
 }
 } // namespace hpwh_cli
