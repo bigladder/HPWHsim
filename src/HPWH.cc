@@ -5803,7 +5803,9 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
             {
 
             case Fitter::PerfCoef::PerfCoefType::PinCoef:
+            {
                 continue;
+            }
 
             case Fitter::PerfCoef::PerfCoefType::COP_Coef:
             {
@@ -5812,7 +5814,6 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
             }
             case Fitter::PerfCoef::PerfCoefType::none:
                 continue;
-                break;
             }
             break;
         }
