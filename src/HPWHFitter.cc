@@ -29,7 +29,7 @@ static double targetFunc(void* p0, double& x)
 }
 
 //-----------------------------------------------------------------------------
-int HPWH::Fitter::secant( // find x given f(x) (secant method)
+int secant( // find x given f(x) (secant method)
     double (*pFunc)(void* pO, double& x),
     // function under investigation; note that it
     //   may CHANGE x re domain limits etc.
@@ -107,6 +107,42 @@ int HPWH::Fitter::secant( // find x given f(x) (secant method)
 } // ::secant
 
 //-----------------------------------------------------------------------------
+///	@brief	Left pseudo-inverse an m x n (1 x 2) matrix, (one metric, two parameters)
+///         with scaling of diagonal terms (damping off-diagonal terms of inverse)
+/// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
+//-----------------------------------------------------------------------------
+static bool getLeftDampedInverse(const double nu,
+                             const std::vector<double>& matV, // 1 x 2
+                             std::vector<double>& invMatV     // 2 x 1
+)
+{
+    constexpr double thresh = 1.e-12;
+
+    if (matV.size() != 2)
+    {
+        return false;
+    }
+
+    double a = matV[0];
+    double b = matV[1];
+
+    double A = (1. + nu) * a * a;
+    double B = (1. + nu) * b * b;
+    double C = a * b;
+    double det = A * B - C * C;
+
+    if (fabs(det) < thresh)
+    {
+        return false;
+    }
+
+    invMatV.resize(2);
+    invMatV[0] = (a * B - b * C) / det;
+    invMatV[1] = (-a * C + b * A) / det;
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 ///	@brief	Least-squares minimization (one metric, two parameters)
 /// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
 //-----------------------------------------------------------------------------
@@ -145,8 +181,8 @@ void HPWH::Fitter::leastSquares()
         }
 
         double dMetric0 = 0.;
-        pMetric->evalDiff(dMetric0);
-        double FOM0 = dMetric0 * dMetric0;
+        pMetric->evalDiff(dMetric0); // (
+        double FOM0 = dMetric0 * dMetric0; // figures of merit
         double FOM1 = 0., FOM2 = 0.;
         iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
         courier->send_info(iter_msg);
@@ -169,7 +205,7 @@ void HPWH::Fitter::leastSquares()
 
         // try nu
         std::vector<double> invJacobiV1;
-        bool got1 = Fitter::Inverter::getLeftDampedInv(nu, jacobiV, invJacobiV1);
+        bool got1 = getLeftDampedInverse(nu, jacobiV, invJacobiV1);
 
         std::vector<double> inc1ParamV(2);
         std::vector<double> paramV1 = paramV;
@@ -194,7 +230,7 @@ void HPWH::Fitter::leastSquares()
 
         // try nu / 2
         std::vector<double> invJacobiV2;
-        bool got2 = Inverter::getLeftDampedInv(nu / 2., jacobiV, invJacobiV2);
+        bool got2 = getLeftDampedInverse(nu / 2., jacobiV, invJacobiV2);
 
         std::vector<double> inc2ParamV(2);
         std::vector<double> paramV2 = paramV;

@@ -205,56 +205,6 @@ struct HPWH::Fitter : public Sender
             param->show();
     }
 
-    struct Inverter
-    { // invert a 1 x 2 matrix
-        static bool getLeftDampedInv(const double nu,
-                                     const std::vector<double>& matV, // 1 x 2
-                                     std::vector<double>& invMatV     // 2 x 1
-        )
-        {
-            constexpr double thresh = 1.e-12;
-
-            if (matV.size() != 2)
-            {
-                return false;
-            }
-
-            double a = matV[0];
-            double b = matV[1];
-
-            double A = (1. + nu) * a * a;
-            double B = (1. + nu) * b * b;
-            double C = a * b;
-            double det = A * B - C * C;
-
-            if (fabs(det) < thresh)
-            {
-                return false;
-            }
-
-            invMatV.resize(2);
-            invMatV[0] = (a * B - b * C) / det;
-            invMatV[1] = (-a * C + b * A) / det;
-            return true;
-        }
-    };
-
-    int secant( // find x given f(x) (secant method)
-        double (*pFunc)(void* pO, double& x),
-        // function under investigation; note that it
-        //   may CHANGE x re domain limits etc.
-        void* pO,               // pointer passed to *pFunc, typ object pointer
-        double f,               // f( x) value sought
-        double eps,             // convergence tolerance, hi- or both sides
-                                //   see also epsLo
-        double& x1,             // x 1st guess,
-                                //   returned with result
-        double& f1,             // f( x1), if known, else pass DBL_MIN
-                                //   returned: f( x1), may be != f, if no converge
-        double x2,              // x 2nd guess
-        double f2 /*=DBL_MIN*/, // f( x2), if known
-        double epsLo /*=-1.*/); // lo-side convergence tolerance
-
     void leastSquares();
     void fit();
 };
