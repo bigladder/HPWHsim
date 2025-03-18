@@ -5793,29 +5793,18 @@ void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOpti
     for (auto& param_in : fitOptions.params)
     {
         std::shared_ptr<Fitter::Param> param;
+
         switch (param_in->paramType())
         {
-
+            pParams.push_back(param);
         case Fitter::Param::ParamType::PerfCoef:
         {
-            auto perfCoef = static_cast<Fitter::PerfCoef*>(param_in);
-            switch (perfCoef->perfCoefType())
-            {
-
-            case Fitter::PerfCoef::PerfCoefType::PinCoef:
-            {
-                param = std::make_shared<Fitter::PinCoef>(*perfCoef, this);
+            auto perfCoef = dynamic_cast<Fitter::PerfCoef*>(param_in);
+            param = perfCoef->make(this);
+            if (param)
                 break;
-            }
-            case Fitter::PerfCoef::PerfCoefType::COP_Coef:
-            {
-                param = std::make_shared<Fitter::COP_Coef>(*perfCoef, this);
-                break;
-            }
-            case Fitter::PerfCoef::PerfCoefType::none:
+            else
                 continue;
-            }
-            break;
         }
 
         case Fitter::Param::ParamType::none:

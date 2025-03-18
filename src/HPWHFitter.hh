@@ -88,6 +88,24 @@ struct HPWH::Fitter : public Sender
         void setValue(double x) override { *getPerfCoeff() = x; }
 
         double getValue() override { return *getPerfCoeff(); }
+
+        std::shared_ptr<PerfCoef> make(HPWH *hpwh_in)
+        {
+            switch (perfCoefType())
+            {
+            case PerfCoefType::PinCoef:
+            {
+                return std::make_shared<Fitter::PinCoef>(*this, hpwh_in);
+            }
+            case PerfCoefType::COP_Coef:
+            {
+                return std::make_shared<Fitter::COP_Coef>(*this, hpwh_in);
+            }
+            case Fitter::PerfCoef::PerfCoefType::none:
+                break;
+            }
+            return nullptr;
+        }
     };
 
     struct PinCoef : public PerfCoef
@@ -229,4 +247,5 @@ struct HPWH::FitOptions
     std::vector<HPWH::Fitter::Metric*> metrics;
     std::vector<HPWH::Fitter::Param*> params;
 };
+
 #endif
