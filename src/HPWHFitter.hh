@@ -7,7 +7,7 @@
 
 ///	@struct HPWH::Fitter HPWHFitter.h
 /// Optimizer for varying model parameters to match metrics, used by
-/// HPWH::makeGeneric to modify performance coeffs to match a target UEF.
+/// HPWH::makeGenericEF to modify performance coeffs to match a target UEF.
 /// The structure is fairly general, but currently limited to one metric (UEF)
 /// and two parameters (COP coeffs). This could be expanded to include other metrics,
 /// such as total energy in 24-hr test.
@@ -16,7 +16,7 @@ struct HPWH::Fitter : public Sender
     ///	base class for variational parameters
     struct Param : public Sender
     {
-        double dVal;
+        double dVal; // differential increment (least squares)
         Param(std::shared_ptr<Courier::Courier> courier)
             : Sender("ParamInput", "paramInput", courier)
         {
@@ -37,7 +37,7 @@ struct HPWH::Fitter : public Sender
         virtual void show() {}
     };
 
-    /// performance-coefficient parameter
+    /// performance-coefficient
     struct PerfCoef : public Param
     {
         HPWH* hpwh;
@@ -168,7 +168,6 @@ struct HPWH::Fitter : public Sender
     {
         HPWH* hpwh;
         TestOptions* testOptions;
-        double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
 
         EF_Metric(double targetEF,
                   TestOptions* testOptions_in,
