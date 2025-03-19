@@ -72,9 +72,6 @@ void measure(const std::string& sSpecType,
     testOptions.sOutputFilename = "";
     testOptions.sOutputDirectory = "";
     testOptions.resultsStream = NULL;
-    testOptions.changeSetpoint = true;
-    testOptions.nTestTCouples = 6;
-    testOptions.setpointT_C = 51.7;
 
     bool useResultsFile = false;
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
