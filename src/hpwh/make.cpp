@@ -54,8 +54,6 @@ void make(const std::string& sSpecType,
           std::string sOutputDir,
           std::string sCustomDrawProfile)
 {
-    HPWH::TestSummary testSummary;
-
     HPWH::TestOptions testOptions;
     testOptions.saveOutput = true;
     testOptions.sOutputFilename = "";
@@ -134,6 +132,7 @@ void make(const std::string& sSpecType,
 
     testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
+    HPWH::TestSummary testSummary;
     hpwh.measureMetrics(testOptions, testSummary);
     results.append(testSummary.report());
 
