@@ -1067,12 +1067,13 @@ class HPWH : public Courier::Sender
     struct TestConfiguration
     {
         double ambientT_C = 19.7;
-        double inletT_C = 19.7;
+        double inletT_C = 14.4;
+        double externalT_C = 19.7;
     };
 
-    inline static TestConfiguration testConfiguration_E50 = {10., 10.};
-    inline static TestConfiguration testConfiguration_UEF = {19.7, 14.4};
-    inline static TestConfiguration testConfiguration_E95 = {35., 19.4};
+    inline static TestConfiguration testConfiguration_E50 = {10., 10., 10.};
+    inline static TestConfiguration testConfiguration_UEF = {19.7, 14.4, 19.7};
+    inline static TestConfiguration testConfiguration_E95 = {35., 19.4, 35.};
 
     struct TestOptions
     {
