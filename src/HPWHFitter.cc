@@ -4,12 +4,9 @@
 #include "HPWH.hh"
 #include "HPWHFitter.hh"
 
-/**	Optimizer for varying model parameters to match metrics, used by
- *  makeGeneric to implement a target UEF. The structure is fairly general, but
- *  currently limited to one metric and two parameters (COP coeffs).
- *  This could be expanded to include other FOMs, such as total energy in 24-h test.
- */
-
+//-----------------------------------------------------------------------------
+///	@brief	target function used by secant
+//-----------------------------------------------------------------------------
 static double targetFunc(void* p0, double& x)
 { // provide single function value
     HPWH::Fitter* fitter = (HPWH::Fitter*)p0;
@@ -28,6 +25,8 @@ static double targetFunc(void* p0, double& x)
     return 1.e12;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	secant function, directly from cse/nummeth.cpp
 //-----------------------------------------------------------------------------
 int secant( // find x given f(x) (secant method)
     double (*pFunc)(void* pO, double& x),
@@ -107,9 +106,9 @@ int secant( // find x given f(x) (secant method)
 } // ::secant
 
 //-----------------------------------------------------------------------------
-///	@brief	Left pseudo-inverse an m x n (1 x 2) matrix, (one metric, two parameters)
+///	@brief	Left pseudo-inverse an m x n (1 x 2) matrix, J, (one metric, two parameters)
 ///         with scaling of diagonal terms (damping off-diagonal terms of inverse)
-///         J^L = (J^T * J)^-1 * J^T
+///         J^L = (J^T * J + nu * diag(J^T * J))^-1 * J^T
 //-----------------------------------------------------------------------------
 static bool getLeftDampedInverse(const double nu,
                                  const std::vector<double>& matV, // 1 x 2
@@ -145,6 +144,7 @@ static bool getLeftDampedInverse(const double nu,
 //-----------------------------------------------------------------------------
 ///	@brief	Least-squares minimization (one metric, two parameters)
 /// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
+///         This can be generalized with suitable matrix utilities.
 //-----------------------------------------------------------------------------
 void HPWH::Fitter::leastSquares()
 {
@@ -182,7 +182,7 @@ void HPWH::Fitter::leastSquares()
 
         double dMetric0 = 0.;
         pMetric->evalDiff(dMetric0);
-        double FOM0 = dMetric0 * dMetric0; // figures of merit
+        double FOM0 = dMetric0 * dMetric0; // figure of merit
         double FOM1 = 0., FOM2 = 0.;
         iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
         courier->send_info(iter_msg);
@@ -298,13 +298,16 @@ void HPWH::Fitter::leastSquares()
         send_error("Fit did not converge.");
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Perform fit: vary parameters to meet metrics
+//-----------------------------------------------------------------------------
 void HPWH::Fitter::fit()
-{ // minimize the FOM by varying parameters
+{
     auto nParams = pParams.size();
     auto nMetrics = pMetrics.size();
 
     if ((nParams == 1) && (nMetrics == 1))
-    {
+    { // use secant
         auto param = pParams[0];
         auto metric = pMetrics[0];
 
@@ -312,7 +315,7 @@ void HPWH::Fitter::fit()
         metric->eval();
         double f0 = metric->currVal;
 
-        double val1 = (1.001) * val0;
+        double val1 = (val0 == 0.) ? 0.001 : (1.001) * val0; // small increment
         param->setValue(val1);
         metric->eval();
         double f1 = metric->currVal;
@@ -324,7 +327,7 @@ void HPWH::Fitter::fit()
             send_error("Failure in makeGenericModel using secant");
     }
     else if ((nParams == 2) && (nMetrics == 1))
-    {
+    { // use least-squares
         leastSquares();
     }
     else

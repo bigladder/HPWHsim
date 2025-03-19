@@ -37,7 +37,7 @@ struct HPWH::Fitter : public Sender
         virtual void show() {}
     };
 
-    /// performance-coefficient
+    /// performance coefficient
     struct PerfCoef : public Param
     {
         HPWH* hpwh;
@@ -186,15 +186,17 @@ struct HPWH::Fitter : public Sender
 
         MetricType metricType() override { return MetricType::EF; }
 
+        /// get current EF
         void eval() override
-        { // get current EF
+        {
             static HPWH::TestSummary testSummary;
             hpwh->run24hrTest(*testOptions, testSummary);
             currVal = testSummary.EF;
         }
 
+        /// get difference ratio
         void evalDiff(double& diff) override
-        { // get difference ratio
+        {
             eval();
             diff = (currVal - targetVal) / tolVal;
         }
