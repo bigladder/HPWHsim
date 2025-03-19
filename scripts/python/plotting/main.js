@@ -367,9 +367,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			await FillFitTables()
 		}
 
-	async function clear_data() {
+	async function clear_metrics() {
 			var fit_list = await read_json_file("./fit_list.json")
-			fit_list['data'] = []
+			fit_list['metrics'] = []
 			await write_json_file("./fit_list.json", fit_list)
 			await FillFitTables()
 		}
@@ -411,16 +411,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		document.getElementById('params_table').innerHTML = tableHTML;
 	}
 
-	async function FillDataTable(fit_list) {
+	async function FillMetricsTable(fit_list) {
 		let tableHTML = ''
 
 		have_point = false;
-		if ('data' in fit_list)
+		if ('metrics' in fit_list)
 		{		
-			let data = fit_list['data']
-			data.forEach(datum =>
+			let metrics = fit_list['metrics']
+			metrics.forEach(metric =>
 			{		
-				if ('type' in datum)
+				if ('type' in metric)
 				{
 					const tableHeaders = ['type', 'model_id', 'target'];
 					if (!have_point)
@@ -435,7 +435,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 						
 					tableHTML += '<tr>';
 					tableHeaders.forEach(header => {
-						tableHTML += `<td>${datum[header] || ''}</td>`; 
+						tableHTML += `<td>${metric[header] || ''}</td>`; 
 					});
 				   tableHTML += '</tr>';
 				  have_point = true;
@@ -443,8 +443,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			});
 		}
 		if (!have_point)
-			tableHTML = '<div>No data.</div>'
-		document.getElementById('data_table').innerHTML = tableHTML;
+			tableHTML = '<div>No metrics.</div>'
+		document.getElementById('metrics_table').innerHTML = tableHTML;
 	}
 
 	async function FillFitTables() {
@@ -452,7 +452,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		var fit_list = await read_json_file("./fit_list.json");
 
 		await FillParamsTable(fit_list);
-		await FillDataTable(fit_list);
+		await FillMetricsTable(fit_list);
 	}
 
 	async function fit()	{

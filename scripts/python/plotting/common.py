@@ -34,3 +34,22 @@ def get_perf_map(model_data):
 				return perf_map
 
 	return {}
+
+def set_perf_map(model_data, perf_map):
+	is_central = "central_system" not in model_data
+	if is_central:
+		perf = model_data["central_system"]		
+	else:
+		perf = model_data["integrated_system"]["performance"]
+
+	hscs = perf["heat_source_configurations"]	
+	for ihs, hsc in enumerate(hscs):
+		if "heat_source_type" in hsc:
+			if hsc["heat_source_type"] in {"CONDENSER", "AIRTOWATERHEATPUMP"}:
+				hsc["heat_source"]["performance"]["performance_map"] = perf_map							
+				perf["heat_source_configurations"][ihs] = hsc
+				if is_central: 
+					model_data["central_system"] = perf
+				else:
+					model_data["integrated_system"]["performance"] = perf
+				return
