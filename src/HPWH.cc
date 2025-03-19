@@ -5782,97 +5782,20 @@ void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Make a generic model from this hpwh meeting fitOptions.metrics
-/// by varying fitOptions.params
-//-----------------------------------------------------------------------------
-void HPWH::makeGeneric(const HPWH::FitOptions& fitOptions, TestOptions& testOptions)
-{
-    const unsigned i_heat_source = compressorIndex;
-
-    // set up metrics
-    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics = {};
-    for (auto metric_in : fitOptions.metrics)
-    {
-        std::shared_ptr<Fitter::Metric> metric;
-        switch (metric_in->metricType())
-        {
-        case Fitter::Metric::MetricType::EF:
-        {
-            auto ef_metric = dynamic_cast<Fitter::EF_Metric*>(metric_in);
-            metric = ef_metric->make(&testOptions, this);
-
-            break;
-        }
-        case Fitter::Metric::MetricType::none:
-            continue;
-        }
-        pMetrics.push_back(metric);
-    }
-
-    if (!hasACompressor())
-        send_error("HPWH does not have a compressor.");
-
-    // set up parameters
-    std::vector<std::shared_ptr<Fitter::Param>> pParams;
-    for (auto& param_in : fitOptions.params)
-    {
-        std::shared_ptr<Fitter::Param> param;
-        switch (param_in->paramType())
-        {
-        case Fitter::Param::ParamType::PerfCoef:
-        {
-            auto perfCoef = dynamic_cast<Fitter::PerfCoef*>(param_in);
-            param = perfCoef->make(this);
-            if (param)
-                break;
-            else
-                continue;
-        }
-
-        case Fitter::Param::ParamType::none:
-            continue;
-        }
-        pParams.push_back(param);
-    }
-
-    Fitter fitter(pMetrics, pParams, get_courier());
-    fitter.fit();
-
-    double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    auto& compressor = heatSources[i_heat_source];
-    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
-                           compressor.maxSetpoint_C,
-                           testOptions.setpointT_C,
-                           input_BTUperHr,
-                           cap_BTUperHr,
-                           cop1);
-    if (cop1 < 0.)
-        send_error("COP is negative at maximum condenser temperature.");
-
-    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
-                           0., /// low condenserT_C
-                           testOptions.setpointT_C,
-                           input_BTUperHr,
-                           cap_BTUperHr,
-                           cop);
-    if (cop < cop1)
-        send_error("COP slope is positive.");
-}
-
-//-----------------------------------------------------------------------------
 ///	@brief	Make a generic model with target EF from the current model
 /// by varying COP coef's
 //-----------------------------------------------------------------------------
 void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 {
-    HPWH::FitOptions fitOptions;
-
-    HPWH::Fitter::EF_Metric ef_metric(targetEF, &testOptions, get_courier(), this);
-    fitOptions.metrics.push_back(&ef_metric);
+    // set up metrics
+    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics = {};
+    auto ef_metric =
+        std::make_shared<HPWH::Fitter::EF_Metric>(targetEF, &testOptions, get_courier(), this);
+    pMetrics.push_back(ef_metric);
 
     auto& compressor = heatSources[compressorIndex];
 
-    // pick the nearest index
+    // pick the nearest temperature index
     int nPerfPts = static_cast<int>(compressor.perfMap.size());
     int i0 = 0, i1 = 0;
     for (auto& perfPoint : compressor.perfMap)
@@ -5890,11 +5813,33 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
     }
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
 
-    HPWH::Fitter::COP_Coef copCoeff0(i_ambientT, 0, get_courier(), this);
-    fitOptions.params.push_back(&copCoeff0);
+    // set up parameters
+    std::vector<std::shared_ptr<Fitter::Param>> pParams;
+    auto copCoeff0 = std::make_shared<HPWH::Fitter::COP_Coef>(i_ambientT, 0, get_courier(), this);
+    pParams.push_back(copCoeff0);
 
-    // HPWH::Fitter::COP_CoefInput copCoeffInput1(i_ambientT, 1, get_courier());
-    // fitOptions.paramInputs.push_back(&copCoeffInput1);
+    // auto copCoeff1 = std::make_shared<HPWH::Fitter::COP_Coef>(i_ambientT, 1, get_courier(),
+    // this); pParams.push_back(copCoeff1);
 
-    makeGeneric(fitOptions, testOptions);
+    Fitter fitter(pMetrics, pParams, get_courier());
+    fitter.fit();
+
+    double input_BTUperHr, cap_BTUperHr, cop1, cop;
+    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
+                           compressor.maxSetpoint_C,
+                           testOptions.setpointT_C,
+                           input_BTUperHr,
+                           cap_BTUperHr,
+                           cop1);
+    if (cop1 < 0.)
+        send_error("COP is negative at maximum condenser temperature.");
+
+    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
+                           0., /// low condenserT_C
+                           testOptions.setpointT_C,
+                           input_BTUperHr,
+                           cap_BTUperHr,
+                           cop);
+    if (cop < cop1)
+        send_error("COP slope is positive.");
 }

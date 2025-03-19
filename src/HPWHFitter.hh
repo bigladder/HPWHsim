@@ -90,24 +90,6 @@ struct HPWH::Fitter : public Sender
         void setValue(double x) override { *getPerfCoeff() = x; }
 
         double getValue() override { return *getPerfCoeff(); }
-
-        std::shared_ptr<PerfCoef> make(HPWH* hpwh_in)
-        {
-            switch (perfCoefType())
-            {
-            case PerfCoefType::PinCoef:
-            {
-                return std::make_shared<Fitter::PinCoef>(*this, hpwh_in);
-            }
-            case PerfCoefType::COP_Coef:
-            {
-                return std::make_shared<Fitter::COP_Coef>(*this, hpwh_in);
-            }
-            case Fitter::PerfCoef::PerfCoefType::none:
-                break;
-            }
-            return nullptr;
-        }
     };
 
     /// input-power coefficient parameter
@@ -119,10 +101,8 @@ struct HPWH::Fitter : public Sender
                 HPWH* hpwh_in)
             : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
         {
-            dVal = 1.e-9;
+            dVal = 1.e-5;
         }
-
-        PinCoef(PerfCoef& perfCoef, HPWH* hpwh_in) : PerfCoef(perfCoef, hpwh_in) { dVal = 1.e-5; }
 
         PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::PinCoef; }
 
@@ -145,8 +125,6 @@ struct HPWH::Fitter : public Sender
         {
             dVal = 1.e-9;
         }
-
-        COP_Coef(PerfCoef& perfCoef, HPWH* hpwh_in) : PerfCoef(perfCoef, hpwh_in) { dVal = 1.e-9; }
 
         PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::COP_Coef; }
 
@@ -221,11 +199,6 @@ struct HPWH::Fitter : public Sender
             eval();
             diff = (currVal - targetVal) / tolVal;
         }
-
-        std::shared_ptr<EF_Metric> make(TestOptions* testOptions_in, HPWH* hpwh_in)
-        {
-            return std::make_shared<Fitter::EF_Metric>(*this, testOptions_in, hpwh_in);
-        }
     };
 
     /// metric and parameter data retained as shared pts
@@ -247,14 +220,6 @@ struct HPWH::Fitter : public Sender
 
     void leastSquares();
     void fit();
-};
-
-/// container for passing fit information
-/// to generate shared ptrs (see HPWH::makeGeneric)
-struct HPWH::FitOptions
-{
-    std::vector<HPWH::Fitter::Metric*> metrics;
-    std::vector<HPWH::Fitter::Param*> params;
 };
 
 #endif
