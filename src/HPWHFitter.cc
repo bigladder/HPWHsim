@@ -109,7 +109,7 @@ int secant( // find x given f(x) (secant method)
 //-----------------------------------------------------------------------------
 ///	@brief	Left pseudo-inverse an m x n (1 x 2) matrix, (one metric, two parameters)
 ///         with scaling of diagonal terms (damping off-diagonal terms of inverse)
-/// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
+///         J^L = (J^T * J)^-1 * J^T
 //-----------------------------------------------------------------------------
 static bool getLeftDampedInverse(const double nu,
                                  const std::vector<double>& matV, // 1 x 2
@@ -181,7 +181,7 @@ void HPWH::Fitter::leastSquares()
         }
 
         double dMetric0 = 0.;
-        pMetric->evalDiff(dMetric0);       // (
+        pMetric->evalDiff(dMetric0);
         double FOM0 = dMetric0 * dMetric0; // figures of merit
         double FOM1 = 0., FOM2 = 0.;
         iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
