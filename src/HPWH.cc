@@ -4952,9 +4952,9 @@ void HPWH::prepForTest(TestOptions& testOptions)
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    double inletT_C = testOptions.testConfiguration.inletT_C;
+    const double inletT_C = testOptions.testConfiguration.inletT_C;
     const double ambientT_C = testOptions.testConfiguration.ambientT_C;
-    const double externalT_C = ambientT_C;
+    const double externalT_C = testOptions.testConfiguration.externalT_C;
 
     if (testOptions.changeSetpoint)
     {
@@ -5030,10 +5030,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    const double ambientT_C = testConfiguration_UEF.ambientT_C;
-    const double externalT_C = ambientT_C;
-    double inletT_C = testConfiguration_UEF.inletT_C;
-
     if (testOptions.changeSetpoint)
     {
         setSetpoint(testOptions.setpointT_C, UNITS_C);
@@ -5076,14 +5072,14 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
             incrementalDrawVolume_L = tankVolume_L;
         }
 
-        runOneStep(inletT_C,                // inlet water temperature (C)
-                   incrementalDrawVolume_L, // draw volume (L)
-                   ambientT_C,              // ambient Temp (C)
-                   externalT_C,             // external Temp (C)
-                   drMode,                  // DDR Status
-                   0.,                      // inlet-2 volume (L)
-                   inletT_C,                // inlet-2 Temp (C)
-                   NULL);                   // no extra heat
+        runOneStep(testConfiguration_UEF.inletT_C,    // inlet water temperature (C)
+                   incrementalDrawVolume_L,           // draw volume (L)
+                   testConfiguration_UEF.ambientT_C,  // ambient Temp (C)
+                   testConfiguration_UEF.externalT_C, // external Temp (C)
+                   drMode,                            // DDR Status
+                   0.,                                // inlet-2 volume (L)
+                   testConfiguration_UEF.inletT_C,    // inlet-2 Temp (C)
+                   NULL);                             // no extra heat
 
         tankT_C = getAverageTankTemp_C();
 
@@ -5191,9 +5187,9 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     auto firstDrawClusterSize = firstDrawClusterSizes[testOptions.desig];
     DrawPattern& drawPattern = drawPatterns[testOptions.desig];
 
-    double inletT_C = testOptions.testConfiguration.inletT_C;
+    const double inletT_C = testOptions.testConfiguration.inletT_C;
     const double ambientT_C = testOptions.testConfiguration.ambientT_C;
-    const double externalT_C = ambientT_C;
+    const double externalT_C = testOptions.testConfiguration.externalT_C;
 
     DRMODES drMode = DR_ALLOW;
 
@@ -5206,14 +5202,14 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     bool heatersAreOn = false;
     while ((preTime_min < 60) || heatersAreOn)
     {
-        runOneStep(inletT_C,    // inlet water temperature (C)
-                   0,           // draw volume (L)
-                   ambientT_C,  // ambient Temp (C)
-                   externalT_C, // external Temp (C)
-                   drMode,      // DDR Status
-                   0.,          // inlet-2 volume (L)
-                   inletT_C,    // inlet-2 Temp (C)
-                   NULL);       // no extra heat
+        runOneStep(testOptions.testConfiguration.inletT_C,    // inlet water temperature (C)
+                   0,                                         // draw volume (L)
+                   testOptions.testConfiguration.ambientT_C,  // ambient Temp (C)
+                   testOptions.testConfiguration.externalT_C, // external Temp (C)
+                   drMode,                                    // DDR Status
+                   0.,                                        // inlet-2 volume (L)
+                   inletT_C,                                  // inlet-2 Temp (C)
+                   NULL);                                     // no extra heat
 
         heatersAreOn = false;
         for (auto& heatSource : heatSources)
