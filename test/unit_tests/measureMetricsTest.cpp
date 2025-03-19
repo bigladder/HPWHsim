@@ -33,8 +33,7 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
         << "Could not complete first-hour rating test.";
 
     testOptions.testConfiguration = HPWH::testConfiguration_UEF;
-    EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
-        << "Could not complete 24-hr test.";
+    EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary)) << "Could not complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 272.5659, 1.e-4);
