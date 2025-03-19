@@ -82,12 +82,12 @@ def test_proc(data):
 					uef_out_text = "simulated UEF: {:.4f}".format(test_proc.uef_val)
 					
 					fit_list = read_file("fit_list.json")
-					if 'data' in fit_list:
-						data = fit_list['data']
-						for index, datum in reversed(list(enumerate(data))):
-							if 'type' not in datum or datum['type'] != 'UEF':
+					if 'metrics' in fit_list:
+						metrics = fit_list['metrics']
+						for index, metric in reversed(list(enumerate(metrics))):
+							if 'type' not in metric or metric['type'] != 'UEF':
 								continue
-							if 'model' not in datum or (datum['model'] != test_proc.prefs['model_id']):
+							if 'model' not in metric or (metric['model'] != test_proc.prefs['model_id']):
 								continue
 							hide_uef_input_val = False
 
@@ -200,27 +200,26 @@ def test_proc(data):
 	)
 	def change_fit_UEF(value, uef_in):	
 		fit_list = read_file("fit_list.json")
-		if 'data' in fit_list:
-			data = fit_list['data']
+		if 'metrics' in fit_list:
+			metrics = fit_list['metrics']
 		else:
-			data = []
+			metrics = []
 		
 		hide_input = True
-		new_data = data
-		for index, datum in reversed(list(enumerate(data))):
-			print(datum)
-			if 'type' not in datum or datum['type'] != 'UEF':
+		new_metrics = metrics
+		for index, metric in reversed(list(enumerate(metrics))):
+			if 'type' not in metric or metric['type'] != 'UEF':
 				continue
-			if 'model_id' not in datum or (datum['model_id'] != test_proc.prefs['model_id']):
+			if 'model_id' not in metric or (metric['model_id'] != test_proc.prefs['model_id']):
 					continue
 			
 			del new_data[index]	
 		
 		if 'fit' in value:
-			new_data.append({'type': 'UEF', 'model_id': test_proc.prefs['model_id'], 'target': uef_in})
+			new_metrics.append({'type': 'UEF', 'model_id': test_proc.prefs['model_id'], 'target': uef_in})
 			hide_input = False
 
-		fit_list['data'] = new_data
+		fit_list['metrics'] = new_metrics
 		write_file("fit_list.json", fit_list)		
 		test_proc.i_send = test_proc.i_send + 1
 		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
