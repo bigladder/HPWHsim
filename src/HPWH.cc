@@ -5075,14 +5075,14 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
             incrementalDrawVolume_L = tankVolume_L;
         }
 
-        runOneStep(inletT_C,    // inlet water temperature (C)
-                   incrementalDrawVolume_L,           // draw volume (L)
-                   ambientT_C,  // ambient Temp (C)
-                   externalT_C, // external Temp (C)
-                   drMode,                            // DDR Status
-                   0.,                                // inlet-2 volume (L)
-                   inletT_C,    // inlet-2 Temp (C)
-                   NULL);                             // no extra heat
+        runOneStep(inletT_C,                // inlet water temperature (C)
+                   incrementalDrawVolume_L, // draw volume (L)
+                   ambientT_C,              // ambient Temp (C)
+                   externalT_C,             // external Temp (C)
+                   drMode,                  // DDR Status
+                   0.,                      // inlet-2 volume (L)
+                   inletT_C,                // inlet-2 Temp (C)
+                   NULL);                   // no extra heat
 
         tankT_C = getAverageTankTemp_C();
 
@@ -5206,13 +5206,13 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     while ((preTime_min < 60) || heatersAreOn)
     {
         runOneStep(inletT_C,    // inlet water temperature (C)
-                   0,                                         // draw volume (L)
+                   0,           // draw volume (L)
                    ambientT_C,  // ambient Temp (C)
                    externalT_C, // external Temp (C)
-                   drMode,                                    // DDR Status
-                   0.,                                        // inlet-2 volume (L)
-                   inletT_C,                                  // inlet-2 Temp (C)
-                   NULL);                                     // no extra heat
+                   drMode,      // DDR Status
+                   0.,          // inlet-2 volume (L)
+                   inletT_C,    // inlet-2 Temp (C)
+                   NULL);       // no extra heat
 
         heatersAreOn = false;
         for (auto& heatSource : heatSources)
