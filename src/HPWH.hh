@@ -1081,12 +1081,12 @@ class HPWH : public Courier::Sender
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
         std::ostream* resultsStream = NULL;
-        bool changeSetpoint = false;
-        double setpointT_C = 51.7;
         std::ofstream outputFile;
-        int nTestTCouples = 6;
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
         TestConfiguration testConfiguration = testConfiguration_UEF;
+        bool changeSetpoint = true;
+        double setpointT_C = 51.7;
+        int nTestTCouples = 6;
     };
 
     /// perform a draw/heat cycle to prepare for test

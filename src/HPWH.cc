@@ -5030,6 +5030,9 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
+    const double inletT_C = testConfiguration_UEF.inletT_C;
+    const double ambientT_C = testConfiguration_UEF.ambientT_C;
+    const double externalT_C = testConfiguration_UEF.externalT_C;
     if (testOptions.changeSetpoint)
     {
         setSetpoint(testOptions.setpointT_C, UNITS_C);
@@ -5072,13 +5075,13 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
             incrementalDrawVolume_L = tankVolume_L;
         }
 
-        runOneStep(testConfiguration_UEF.inletT_C,    // inlet water temperature (C)
+        runOneStep(inletT_C,    // inlet water temperature (C)
                    incrementalDrawVolume_L,           // draw volume (L)
-                   testConfiguration_UEF.ambientT_C,  // ambient Temp (C)
-                   testConfiguration_UEF.externalT_C, // external Temp (C)
+                   ambientT_C,  // ambient Temp (C)
+                   externalT_C, // external Temp (C)
                    drMode,                            // DDR Status
                    0.,                                // inlet-2 volume (L)
-                   testConfiguration_UEF.inletT_C,    // inlet-2 Temp (C)
+                   inletT_C,    // inlet-2 Temp (C)
                    NULL);                             // no extra heat
 
         tankT_C = getAverageTankTemp_C();
@@ -5202,10 +5205,10 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     bool heatersAreOn = false;
     while ((preTime_min < 60) || heatersAreOn)
     {
-        runOneStep(testOptions.testConfiguration.inletT_C,    // inlet water temperature (C)
+        runOneStep(inletT_C,    // inlet water temperature (C)
                    0,                                         // draw volume (L)
-                   testOptions.testConfiguration.ambientT_C,  // ambient Temp (C)
-                   testOptions.testConfiguration.externalT_C, // external Temp (C)
+                   ambientT_C,  // ambient Temp (C)
+                   externalT_C, // external Temp (C)
                    drMode,                                    // DDR Status
                    0.,                                        // inlet-2 volume (L)
                    inletT_C,                                  // inlet-2 Temp (C)

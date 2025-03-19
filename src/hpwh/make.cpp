@@ -61,9 +61,6 @@ void make(const std::string& sSpecType,
     testOptions.sOutputFilename = "";
     testOptions.sOutputDirectory = "";
     testOptions.resultsStream = NULL;
-    testOptions.changeSetpoint = true;
-    testOptions.nTestTCouples = 6;
-    testOptions.setpointT_C = 51.7;
 
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
