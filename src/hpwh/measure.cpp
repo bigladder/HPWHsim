@@ -152,7 +152,7 @@ void measure(const std::string& sSpecType,
     else
     {
         HPWH::FirstHourRating firstHourRating;
-        hpwh.findFirstHourRating(firstHourRating, testOptions);
+        hpwh.findFirstHourRating(firstHourRating);
         results.append(firstHourRating.report());
     }
 

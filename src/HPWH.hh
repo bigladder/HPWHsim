@@ -1084,16 +1084,14 @@ class HPWH : public Courier::Sender
         std::ofstream outputFile;
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
         TestConfiguration testConfiguration = testConfiguration_UEF;
-        bool changeSetpoint = true;
-        double setpointT_C = 51.7;
         int nTestTCouples = 6;
     };
 
     /// perform a draw/heat cycle to prepare for test
-    void prepForTest(TestOptions& testOptions);
+    void prepForTest(const TestConfiguration& test_configuration);
 
     /// determine first-hour rating
-    void findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& testOptions);
+    void findFirstHourRating(FirstHourRating& firstHourRating);
 
     /// run 24-hr draw pattern and compute metrics
     void run24hrTest(TestOptions& testOptions, TestSummary& testSummary);

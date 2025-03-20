@@ -4916,21 +4916,17 @@ void HPWH::initFromFile(string modelName)
 ///         Draw until heating begins, wait for recovery.
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.2.4)
 //-----------------------------------------------------------------------------
-void HPWH::prepForTest(TestOptions& testOptions)
+void HPWH::prepForTest(const TestConfiguration& testConfiguration)
 {
     // apply first-hour-rating criterion EERE-2019-BT-TP-0032-0058, p. 40479
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    const double inletT_C = testOptions.testConfiguration.inletT_C;
-    const double ambientT_C = testOptions.testConfiguration.ambientT_C;
-    const double externalT_C = testOptions.testConfiguration.externalT_C;
+    const double inletT_C = testConfiguration.inletT_C;
+    const double ambientT_C = testConfiguration.ambientT_C;
+    const double externalT_C = testConfiguration.externalT_C;
 
-    if (testOptions.changeSetpoint)
-    {
-        setSetpoint(testOptions.setpointT_C, UNITS_C);
-    }
 
     DRMODES drMode = DR_ALLOW;
     bool isDrawing = false;
@@ -4993,9 +4989,8 @@ void HPWH::prepForTest(TestOptions& testOptions)
 ///	@brief	Find first-hour rating designation for 24-hr test
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.3.3)
 /// @param[out] firstHourRating	    contains first-hour rating designation
-///	@param[in]	setpointT_C		    setpoint temperature (optional)
 //-----------------------------------------------------------------------------
-void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& testOptions)
+void HPWH::findFirstHourRating(FirstHourRating& firstHourRating)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5004,10 +4999,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
     const double inletT_C = testConfiguration_UEF.inletT_C;
     const double ambientT_C = testConfiguration_UEF.ambientT_C;
     const double externalT_C = testConfiguration_UEF.externalT_C;
-    if (testOptions.changeSetpoint)
-    {
-        setSetpoint(testOptions.setpointT_C, UNITS_C);
-    }
 
     double tankT_C = getAverageTankTemp_C();
     double maxTankT_C = tankT_C;
@@ -5030,7 +5021,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
     bool done = false;
     int step = 0;
 
-    prepForTest(testOptions);
+    prepForTest(testConfiguration_UEF);
 
     bool firstDraw = true;
     isDrawing = true;
@@ -5146,7 +5137,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, TestOptions& te
     {
         firstHourRating.desig = FirstHourRating::Desig::High;
     }
-    testOptions.desig = firstHourRating.desig; // use in 24-hr test
 }
 
 //-----------------------------------------------------------------------------
@@ -5167,7 +5157,7 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
 
     DRMODES drMode = DR_ALLOW;
 
-    prepForTest(testOptions);
+    prepForTest(testOptions.testConfiguration);
 
     std::vector<OutputData> outputDataSet;
 
@@ -5798,7 +5788,7 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
     compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
                            compressor.maxSetpoint_C,
-                           testOptions.setpointT_C,
+                           getSetpoint(),
                            input_BTUperHr,
                            cap_BTUperHr,
                            cop1);
@@ -5807,7 +5797,7 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 
     compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
                            0., /// low condenserT_C
-                           testOptions.setpointT_C,
+                           getSetpoint(),
                            input_BTUperHr,
                            cap_BTUperHr,
                            cop);
