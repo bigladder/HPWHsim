@@ -34,65 +34,71 @@ struct HPWH::Fitter : public Sender
     {
       private:
         HPWH* hpwh;
-        unsigned tempIndex;
+        unsigned temperatureIndex;
         unsigned exponent;
+        double* member_data;
 
       public:
-        PerfCoef(unsigned tempIndex_in,
-                 unsigned exponent_in,
-                 std::shared_ptr<Courier::Courier> courier,
-                 HPWH* hpwh_in = nullptr)
-            : Parameter(courier), hpwh(hpwh_in), tempIndex(tempIndex_in), exponent(exponent_in)
-        {
-        }
-        PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
-            : PerfCoef(perfCoef.tempIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
-        {
-        }
-
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
 
-        /// check validity and return reference to HPWH member variable
-      private:
-        double* getPerfCoeff()
+        /// check validity and retain pointer to HPWH member variable
+        void assign()
         {
             HPWH::HeatSource* heatSource;
             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
             auto& perfMap = heatSource->perfMap;
-            if (tempIndex >= perfMap.size())
+            if (temperatureIndex >= perfMap.size())
             {
                 send_error("Invalid heat-source performance-map temperature index.");
             }
 
-            auto& perfPoint = perfMap[tempIndex];
+            auto& perfPoint = perfMap[temperatureIndex];
             auto& perfCoeffs = getCoeffs(perfPoint);
             if (exponent >= perfCoeffs.size())
             {
                 send_error("Invalid heat-source performance-map coefficient exponent.");
             }
-            return &perfCoeffs[exponent];
+            member_data = &perfCoeffs[exponent];
+        }
+
+        PerfCoef(unsigned temperatureIndex_in,
+                 unsigned exponent_in,
+                 std::shared_ptr<Courier::Courier> courier,
+                 HPWH* hpwh_in = nullptr)
+            : Parameter(courier)
+            , hpwh(hpwh_in)
+            , temperatureIndex(temperatureIndex_in)
+            , exponent(exponent_in)
+            , member_data(nullptr)
+        {
+        }
+
+        PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
+            : PerfCoef(perfCoef.temperatureIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
+        {
         }
 
       public:
-        void setValue(double x) override { *getPerfCoeff() = x; }
+        void setValue(double x) override { *member_data = x; }
 
-        double getValue() override { return *getPerfCoeff(); }
+        double getValue() override { return *member_data; }
 
         virtual std::string getFormat() const = 0;
 
-        std::string show() override { return fmt::format(getFormat(), tempIndex, getValue()); }
+        std::string show() override { return fmt::format(getFormat(), temperatureIndex, getValue()); }
     };
 
     /// input-power coefficient parameter
     struct PinCoef : public PerfCoef
     {
-        PinCoef(unsigned tempIndex_in,
+        PinCoef(unsigned temperatureIndex_in,
                 unsigned exponent_in,
                 std::shared_ptr<Courier::Courier> courier,
                 HPWH* hpwh_in)
-            : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
+            : PerfCoef(temperatureIndex_in, exponent_in, courier, hpwh_in)
         {
+            assign();
             increment = 1.e-5;
         }
 
@@ -107,12 +113,13 @@ struct HPWH::Fitter : public Sender
     ///	coefficient-of-performance coefficient parameter
     struct COP_Coef : public PerfCoef
     {
-        COP_Coef(unsigned tempIndex_in,
+        COP_Coef(unsigned temperatureIndex_in,
                  unsigned exponent_in,
                  std::shared_ptr<Courier::Courier> courier,
                  HPWH* hpwh_in)
-            : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
+            : PerfCoef(temperatureIndex_in, exponent_in, courier, hpwh_in)
         {
+            assign();
             increment = 1.e-9;
         }
 
