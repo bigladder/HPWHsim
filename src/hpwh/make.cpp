@@ -13,26 +13,26 @@ namespace hpwh_cli
 /// make
 static void make(const std::string& sSpecType,
                  const std::string& sModelName,
-                 double ambientT_C,
-                 double targetUEF,
+                 double targetEF,
+                 std::string sTestConfig,
                  std::string sOutputDir,
                  std::string sCustomDrawProfile);
 
 CLI::App* add_make(CLI::App& app)
 {
-    const auto subcommand = app.add_subcommand("make", "Make a model with a specified UEF");
+    const auto subcommand = app.add_subcommand("make", "Make a model with a specified EF");
 
     static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
+    subcommand->add_option("-s,--spec", sSpecType, "specification type (Preset, File)");
 
     static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+    subcommand->add_option("-m,--model", sModelName, "model name")->required();
 
     static double targetUEF = -1.;
-    subcommand->add_option("-u,--uef", targetUEF, "target UEF")->required();
+    subcommand->add_option("-e,--ef", targetUEF, "target EF")->required();
 
-    static double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    subcommand->add_option("-a,--amb", ambientT_C, "ambientT (degC)");
+    static std::string sTestConfig = "UEF";
+    subcommand->add_option("-c,--config", sTestConfig, "test configuration");
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -42,7 +42,7 @@ CLI::App* add_make(CLI::App& app)
 
     subcommand->callback(
         [&]()
-        { make(sSpecType, sModelName, targetUEF, ambientT_C, sOutputDir, sCustomDrawProfile); });
+        { make(sSpecType, sModelName, targetUEF, sTestConfig, sOutputDir, sCustomDrawProfile); });
 
     return subcommand;
 }
@@ -50,7 +50,7 @@ CLI::App* add_make(CLI::App& app)
 void make(const std::string& sSpecType,
           const std::string& sModelName,
           double targetEF,
-          double ambientT_C,
+          std::string sTestConfig,
           std::string sOutputDir,
           std::string sCustomDrawProfile)
 {
@@ -64,8 +64,17 @@ void make(const std::string& sSpecType,
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     testOptions.sOutputDirectory = sOutputDir;
 
-    testOptions.testConfiguration.ambientT_C = ambientT_C;
-    testOptions.testConfiguration.inletT_C = HPWH::findInletT_C(ambientT_C);
+    // select test configuration
+    transform(sTestConfig.begin(),
+              sTestConfig.end(),
+              sTestConfig.begin(),
+              ::toupper); // make uppercase
+    if (sTestConfig == "E50")
+        testOptions.testConfiguration = HPWH::testConfiguration_E50;
+    else if (sTestConfig == "E95")
+        testOptions.testConfiguration = HPWH::testConfiguration_E95;
+    else
+        testOptions.testConfiguration = HPWH::testConfiguration_UEF;
 
     for (auto& c : sPresetOrFile)
     {
