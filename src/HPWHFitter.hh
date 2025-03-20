@@ -147,8 +147,8 @@ struct HPWH::Fitter : public Sender
         };
         virtual MetricType metricType() { return MetricType::none; }
 
-        virtual void eval() = 0;
-        virtual void evalDiff(double& diff) = 0;
+        virtual void evaluate() = 0;
+        virtual double findError() = 0;
     };
 
     /// energy-factor metric, i.e., E50, UEF, E95
@@ -175,18 +175,18 @@ struct HPWH::Fitter : public Sender
         MetricType metricType() override { return MetricType::EF; }
 
         /// get current EF
-        void eval() override
+        void evaluate() override
         {
             static HPWH::TestSummary testSummary;
             hpwh->run24hrTest(*testOptions, testSummary);
             currentValue = testSummary.EF;
         }
 
-        /// get difference ratio
-        void evalDiff(double& diff) override
+        /// find error ratio
+        double findError() override
         {
-            eval();
-            diff = (currentValue - targetValue) / tolerance;
+            evaluate();
+            return (currentValue - targetValue) / tolerance;
         }
     };
 
