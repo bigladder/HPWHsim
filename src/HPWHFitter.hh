@@ -15,16 +15,14 @@ struct HPWH::Fitter : public Sender
     struct Parameter : public Sender
     {
         double increment; // differential increment (least squares)
+        double* member_data;
 
         Parameter(std::shared_ptr<Courier::Courier> courier)
             : Sender("Parameter", "parameter", courier)
         {
         }
-        Parameter() : increment(1.e3) {}
+        Parameter() : increment(1.e3), member_data(nullptr) {}
         virtual ~Parameter() = default;
-
-        virtual void setValue(double x) = 0;
-        virtual double getValue() = 0;
 
         virtual std::string show() = 0;
     };
@@ -36,7 +34,6 @@ struct HPWH::Fitter : public Sender
         HPWH* hpwh;
         unsigned temperatureIndex;
         unsigned exponent;
-        double* member_data;
 
       public:
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
@@ -70,7 +67,6 @@ struct HPWH::Fitter : public Sender
             , hpwh(hpwh_in)
             , temperatureIndex(temperatureIndex_in)
             , exponent(exponent_in)
-            , member_data(nullptr)
         {
         }
 
@@ -80,13 +76,12 @@ struct HPWH::Fitter : public Sender
         }
 
       public:
-        void setValue(double x) override { *member_data = x; }
-
-        double getValue() override { return *member_data; }
-
         virtual std::string getFormat() const = 0;
 
-        std::string show() override { return fmt::format(getFormat(), temperatureIndex, getValue()); }
+        std::string show() override
+        {
+            return fmt::format(getFormat(), temperatureIndex, *member_data);
+        }
     };
 
     /// input-power coefficient parameter

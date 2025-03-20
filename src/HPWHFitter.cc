@@ -18,7 +18,7 @@ static double targetFunc(void* p0, double& x)
         auto param = fitter->parameters[0];
         auto metric = fitter->metrics[0];
 
-        param->setValue(x);
+        *param->member_data = x;
         metric->evaluate();
         return metric->currentValue;
     }
@@ -171,16 +171,16 @@ void HPWH::Fitter::performLeastSquaresMiminization()
         std::vector<double> paramV(nParameters);
         for (std::size_t i = 0; i < nParameters; ++i)
         {
-            paramV[i] = parameters[i]->getValue();
+            paramV[i] = *parameters[i]->member_data;
         }
 
         std::vector<double> jacobiV(nParameters); // 1 x 2
         for (std::size_t j = 0; j < nParameters; ++j)
         {
-            parameters[j]->setValue(paramV[j] + (parameters[j]->increment));
+            *parameters[j]->member_data = paramV[j] + (parameters[j]->increment);
             double dMetric = metric->findError();
             jacobiV[j] = (dMetric - dMetric0) / (parameters[j]->increment);
-            parameters[j]->setValue(paramV[j]);
+            *parameters[j]->member_data = paramV[j];
         }
 
         // try nu
@@ -195,7 +195,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             {
                 inc1ParamV[j] = -invJacobiV1[j] * dMetric0;
                 paramV1[j] += inc1ParamV[j];
-                parameters[j]->setValue(paramV1[j]);
+                *parameters[j]->member_data = paramV1[j];
             }
             double dMetric = metric->findError();
             FOM1 = dMetric * dMetric;
@@ -203,7 +203,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             // restore
             for (std::size_t j = 0; j < nParameters; ++j)
             {
-                parameters[j]->setValue(paramV[j]);
+                *parameters[j]->member_data = paramV[j];
             }
         }
 
@@ -219,7 +219,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             {
                 inc2ParamV[j] = -invJacobiV2[j] * dMetric0;
                 paramV2[j] += inc2ParamV[j];
-                parameters[j]->setValue(paramV2[j]);
+                *parameters[j]->member_data = paramV2[j];
             }
             double dMetric = metric->findError();
             FOM2 = dMetric * dMetric;
@@ -227,7 +227,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             // restore
             for (std::size_t j = 0; j < nParameters; ++j)
             {
-                parameters[j]->setValue(paramV[j]);
+                *parameters[j]->member_data = paramV[j];
             }
         }
 
@@ -240,7 +240,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
                 { // pick 1
                     for (std::size_t i = 0; i < nParameters; ++i)
                     {
-                        parameters[i]->setValue(paramV1[i]);
+                        *parameters[i]->member_data = paramV1[i];
                         (parameters[i]->increment) = inc1ParamV[i] / 1.e3;
                         FOM0 = FOM1;
                     }
@@ -249,7 +249,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
                 { // pick 2
                     for (std::size_t i = 0; i < nParameters; ++i)
                     {
-                        parameters[i]->setValue(paramV2[i]);
+                        *parameters[i]->member_data = paramV2[i];
                         (parameters[i]->increment) = inc2ParamV[i] / 1.e3;
                         FOM0 = FOM2;
                     }
@@ -289,16 +289,16 @@ void HPWH::Fitter::fit()
         auto param = parameters[0];
         auto metric = metrics[0];
 
-        double val0 = param->getValue();
+        double val0 = *param->member_data;
         metric->evaluate();
         double f0 = metric->currentValue;
 
         double val1 = (val0 == 0.) ? 0.001 : (1.001) * val0; // small increment
-        param->setValue(val1);
+        *param->member_data = val1;
         metric->evaluate();
         double f1 = metric->currentValue;
 
-        param->setValue(val0);
+        *param->member_data = val0;
 
         int iters =
             secant(targetFunc, this, metric->targetValue, 1.e-12, val0, f0, val1, f1, 1.e-12);
