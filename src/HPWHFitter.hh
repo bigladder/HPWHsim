@@ -173,7 +173,7 @@ struct HPWH::Fitter : public Sender
         /// get current EF
         void evaluate() override
         {
-            hpwh->run24hrTest(*testOptions, testSummary);
+            testSummary = hpwh->run24hrTest(*testOptions);
             currentValue = testSummary.EF;
         }
 
