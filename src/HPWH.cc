@@ -4997,7 +4997,7 @@ void HPWH::prepForTest(const TestConfiguration& testConfiguration)
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.3.3)
 /// @param[out] firstHourRating	    contains first-hour rating designation
 //-----------------------------------------------------------------------------
-void HPWH::findFirstHourRating(FirstHourRating& firstHourRating)
+HPWH::FirstHourRating HPWH::findFirstHourRating()
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5028,6 +5028,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating)
     DRMODES drMode = DR_ALLOW;
     double drawVolume_L = 0.;
 
+    FirstHourRating firstHourRating;
     firstHourRating.drawVolume_L = 0.;
 
     double sumOutletVolumeT_LC = 0.;
@@ -5158,6 +5159,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating)
     {
         firstHourRating.desig = FirstHourRating::Desig::High;
     }
+    return firstHourRating;
 }
 
 //-----------------------------------------------------------------------------
@@ -5166,7 +5168,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating)
 /// @param[in/out] testOptions          reporting and configuration
 /// @param[out] testSummary	            contains test metrics on output
 //-----------------------------------------------------------------------------
-void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
+HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
 {
     // select the first draw cluster size and pattern
     auto firstDrawClusterSize = firstDrawClusterSizes[testOptions.desig];
@@ -5261,6 +5263,8 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     // used to find average 24-hr test temperatures
     double sumOutletVolumeT_LC = 0.;
     double sumInletVolumeT_LC = 0.;
+
+    TestSummary testSummary;
 
     // first-recovery info
     testSummary.recoveryStoredEnergy_kJ = 0.;
@@ -5669,6 +5673,8 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
             (testSummary.usedElectricalEnergy_kJ / testSummary.usedEnergy_kJ) *
             testSummary.annualConsumedEnergy_kJ;
     }
+
+    return testSummary;
 }
 
 //-----------------------------------------------------------------------------
@@ -5749,8 +5755,9 @@ std::string HPWH::TestSummary::report()
 //-----------------------------------------------------------------------------
 ///	@brief	Measure the EF and other results of standard 24-hr tests
 //-----------------------------------------------------------------------------
-void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
+HPWH::TestSummary HPWH::measureMetrics(TestOptions& testOptions)
 {
+    TestSummary testSummary;
     if (testOptions.saveOutput)
     {
         std::string sFullOutputFilename =
@@ -5769,12 +5776,14 @@ void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
             testOptions.outputFile, sHeader.c_str(), testOptions.nTestTCouples, csvOptions);
     }
 
-    run24hrTest(testOptions, testSummary);
+    testSummary = run24hrTest(testOptions);
 
     if (testOptions.saveOutput)
     {
         testOptions.outputFile.close();
     }
+
+    return testSummary;
 }
 
 //-----------------------------------------------------------------------------

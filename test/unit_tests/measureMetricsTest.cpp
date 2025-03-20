@@ -23,14 +23,15 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     const std::string sModelName = "AquaThermAire";
     hpwh.initPreset(sModelName);
 
-    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating))
+    EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
 
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::Medium);
 
     testOptions.testConfiguration = HPWH::testConfiguration_UEF;
     testOptions.desig = firstHourRating.desig;
-    EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary)) << "Could not complete 24-hr test.";
+    EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(testOptions))
+        << "Could not complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 272.5659, 1.e-4);
@@ -48,14 +49,14 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     const std::string sModelName = "AOSmithHPTS50";
     hpwh.initPreset(sModelName);
 
-    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating))
+    EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
 
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::Low);
 
     testOptions.testConfiguration = HPWH::testConfiguration_UEF;
     testOptions.desig = firstHourRating.desig;
-    EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
+    EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(testOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
@@ -74,14 +75,14 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
     const std::string sModelName = "AOSmithHPTS80";
     hpwh.initPreset(sModelName);
 
-    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating))
+    EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
 
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::High);
 
     testOptions.testConfiguration = HPWH::testConfiguration_UEF;
     testOptions.desig = firstHourRating.desig;
-    EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
+    EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(testOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
@@ -99,7 +100,7 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
     const std::string sModelName = "AWHSTier4Generic50";
     hpwh.initPreset(sModelName);
 
-    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating))
+    EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
     testOptions.desig = firstHourRating.desig;
 
@@ -113,19 +114,19 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
     { // verify E50
         testOptions.testConfiguration = HPWH::testConfiguration_E50;
         testOptions.desig = firstHourRating.desig;
-        EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(testOptions))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, E50, 1.e-12) << "Did not measure expected E50";
     }
     { // verify UEF
         testOptions.testConfiguration = HPWH::testConfiguration_UEF;
-        EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(testOptions))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, UEF, 1.e-12) << "Did not measure expected UEF";
     }
     { // verify E95
         testOptions.testConfiguration = HPWH::testConfiguration_E95;
-        EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(testOptions))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, E95, 1.e-12) << "Did not measure expected E95";
     }

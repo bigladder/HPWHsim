@@ -1093,10 +1093,10 @@ class HPWH : public Courier::Sender
     void prepForTest(const TestConfiguration& test_configuration);
 
     /// determine first-hour rating
-    void findFirstHourRating(FirstHourRating& firstHourRating);
+    FirstHourRating findFirstHourRating();
 
-    /// run 24-hr draw pattern and compute metrics
-    void run24hrTest(TestOptions& testOptions, TestSummary& testSummary);
+    /// run 24-hr draw pattern
+    TestSummary run24hrTest(TestOptions& testOptions);
 
     /// specific information for a single draw
     struct Draw
@@ -1142,7 +1142,7 @@ class HPWH : public Courier::Sender
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-    void measureMetrics(TestOptions& testOptions, TestSummary& testSummary);
+    TestSummary measureMetrics(TestOptions& testOptions);
 
     struct Fitter;
     TestSummary makeGenericEF(double targetEF, TestOptions& testOptions);

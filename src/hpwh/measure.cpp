@@ -151,8 +151,7 @@ void measure(const std::string& sSpecType,
     }
     else
     {
-        HPWH::FirstHourRating firstHourRating;
-        hpwh.findFirstHourRating(firstHourRating);
+        auto firstHourRating = hpwh.findFirstHourRating();
         results.append(firstHourRating.report());
     }
 
@@ -170,8 +169,7 @@ void measure(const std::string& sSpecType,
 
     testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
-    HPWH::TestSummary testSummary;
-    hpwh.measureMetrics(testOptions, testSummary);
+    auto testSummary = hpwh.measureMetrics(testOptions);
     results.append(testSummary.report());
 
     hpwh.get_courier()->send_info("\n" + results);
