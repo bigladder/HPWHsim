@@ -67,6 +67,14 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+// see EERE-2019-BT-TP-0032-0058 (p. 40433, 40435, 40476)
+HPWH::TestConfiguration HPWH::testConfiguration_E50 = {F_TO_C(50.), F_TO_C(50.), F_TO_C(50.)};
+HPWH::TestConfiguration HPWH::testConfiguration_UEF = {F_TO_C(67.5), F_TO_C(58.), F_TO_C(67.5)};
+HPWH::TestConfiguration HPWH::testConfiguration_E95 = {F_TO_C(95.), F_TO_C(67.), F_TO_C(95.)};
+
+// stipulated setpoint for 24-hr test, see EERE-2019-BT-TP-0032-0058 (p. 40475)
+double HPWH::testSetpointT_C = F_TO_C(125.);
+
 std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> HPWH::firstDrawClusterSizes = {
     {HPWH::FirstHourRating::Desig::VerySmall, 5},
     {HPWH::FirstHourRating::Desig::Low, 3},
@@ -4927,7 +4935,6 @@ void HPWH::prepForTest(const TestConfiguration& testConfiguration)
     const double ambientT_C = testConfiguration.ambientT_C;
     const double externalT_C = testConfiguration.externalT_C;
 
-
     DRMODES drMode = DR_ALLOW;
     bool isDrawing = false;
     bool done = false;
@@ -4999,6 +5006,20 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating)
     const double inletT_C = testConfiguration_UEF.inletT_C;
     const double ambientT_C = testConfiguration_UEF.ambientT_C;
     const double externalT_C = testConfiguration_UEF.externalT_C;
+
+    // change setpoint to DOE value, or highest available
+    // see EERE-2019-BT-TP-0032-0058 (p. 40475)
+    double maxAllowedSetpointT_C;
+    std::string why;
+    if (isNewSetpointPossible(HPWH::testSetpointT_C, maxAllowedSetpointT_C, why, UNITS_C))
+    {
+        setSetpoint(HPWH::testSetpointT_C);
+    }
+    else
+    {
+        if (isNewSetpointPossible(maxAllowedSetpointT_C, maxAllowedSetpointT_C, why, UNITS_C))
+            setSetpoint(maxAllowedSetpointT_C);
+    }
 
     double tankT_C = getAverageTankTemp_C();
     double maxTankT_C = tankT_C;
@@ -5156,6 +5177,20 @@ void HPWH::run24hrTest(TestOptions& testOptions, TestSummary& testSummary)
     const double externalT_C = testOptions.testConfiguration.externalT_C;
 
     DRMODES drMode = DR_ALLOW;
+
+    // change setpoint to DOE value, or highest available
+    // see EERE-2019-BT-TP-0032-0058 (p. 40475)
+    double maxAllowedSetpointT_C;
+    std::string why;
+    if (isNewSetpointPossible(HPWH::testSetpointT_C, maxAllowedSetpointT_C, why, UNITS_C))
+    {
+        setSetpoint(HPWH::testSetpointT_C);
+    }
+    else
+    {
+        if (isNewSetpointPossible(maxAllowedSetpointT_C, maxAllowedSetpointT_C, why, UNITS_C))
+            setSetpoint(maxAllowedSetpointT_C);
+    }
 
     prepForTest(testOptions.testConfiguration);
 

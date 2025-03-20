@@ -33,9 +33,9 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     EXPECT_NO_THROW(hpwh.run24hrTest(testOptions, testSummary)) << "Could not complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume_L, 272.5658, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume_L, 272.5659, 1.e-4);
 
-    EXPECT_NEAR(testSummary.EF, 2.6782, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 2.6852, 1.e-4);
 }
 
 /*
@@ -59,9 +59,9 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume_L, 188.7624, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume_L, 188.0302, 1.e-4);
 
-    EXPECT_NEAR(testSummary.EF, 3.9041, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 4.0056, 1.e-4);
 }
 
 /*
@@ -85,8 +85,8 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(testSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume_L, 312.2590, 1.e-4);
-    EXPECT_NEAR(testSummary.EF, 4.2404, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume_L, 310.8838, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 4.3307, 1.e-4);
 }
 
 /*
