@@ -1145,7 +1145,7 @@ class HPWH : public Courier::Sender
     void measureMetrics(TestOptions& testOptions, TestSummary& testSummary);
 
     struct Fitter;
-    void makeGenericEF(double targetEF, TestOptions& testOptions);
+    TestSummary makeGenericEF(double targetEF, TestOptions& testOptions);
     void makeGenericE50_UEF_E95(double targetEF50,
                                 double targetUEF,
                                 double targetEF95,

@@ -156,6 +156,7 @@ struct HPWH::Fitter : public Sender
     {
         HPWH* hpwh;
         TestOptions* testOptions;
+        TestSummary testSummary;
 
         EF_Metric(double targetEF,
                   TestOptions* testOptions_in,
@@ -177,7 +178,6 @@ struct HPWH::Fitter : public Sender
         /// get current EF
         void evaluate() override
         {
-            static HPWH::TestSummary testSummary;
             hpwh->run24hrTest(*testOptions, testSummary);
             currentValue = testSummary.EF;
         }
@@ -188,6 +188,8 @@ struct HPWH::Fitter : public Sender
             evaluate();
             return (currentValue - targetValue) / tolerance;
         }
+
+        const TestSummary getTestSummary() { return testSummary; }
     };
 
     /// metric and parameter data retained as shared pts
