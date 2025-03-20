@@ -24,13 +24,6 @@ struct HPWH::Fitter : public Sender
         Param() : dVal(1.e3) {}
         virtual ~Param() = default;
 
-        enum class ParamType
-        {
-            none,
-            PerfCoef
-        };
-        virtual ParamType paramType() { return ParamType::none; }
-
         virtual void setValue(double x) = 0;
         virtual double getValue() = 0;
 
@@ -55,14 +48,6 @@ struct HPWH::Fitter : public Sender
             : PerfCoef(perfCoef.tempIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
         {
         }
-        enum class PerfCoefType
-        {
-            none,
-            PinCoef,
-            COP_Coef
-        };
-        ParamType paramType() override { return ParamType::PerfCoef; }
-        virtual PerfCoefType perfCoefType() { return PerfCoefType::none; }
 
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
 
@@ -104,8 +89,6 @@ struct HPWH::Fitter : public Sender
             dVal = 1.e-5;
         }
 
-        PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::PinCoef; }
-
         void show() override { send_info(fmt::format("Pin[{}]: {}", tempIndex, getValue())); }
 
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
@@ -125,8 +108,6 @@ struct HPWH::Fitter : public Sender
         {
             dVal = 1.e-9;
         }
-
-        PerfCoef::PerfCoefType perfCoefType() override { return PerfCoef::PerfCoefType::COP_Coef; }
 
         void show() override { send_info(fmt::format("COP[{}]: {}", tempIndex, getValue())); }
 
