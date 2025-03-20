@@ -10,17 +10,17 @@
 static double targetFunc(void* p0, double& x)
 { // provide single function value
     HPWH::Fitter* fitter = (HPWH::Fitter*)p0;
-    auto nParams = fitter->pParams.size();
-    auto nMetrics = fitter->pMetrics.size();
+    auto nParameters = fitter->parameters.size();
+    auto nMetrics = fitter->metrics.size();
 
-    if ((nParams == 1) && (nMetrics == 1))
+    if ((nParameters == 1) && (nMetrics == 1))
     {
-        auto param = fitter->pParams[0];
-        auto metric = fitter->pMetrics[0];
+        auto param = fitter->parameters[0];
+        auto metric = fitter->metrics[0];
 
         param->setValue(x);
         metric->eval();
-        return metric->currVal;
+        return metric->currentValue;
     }
     return 1.e12;
 }
@@ -152,55 +152,51 @@ void HPWH::Fitter::leastSquares()
     const int maxIters = 20;
 
     //
-    std::vector<double> dParams;
-    for (auto& pParam : pParams)
-    {
-        dParams.push_back(pParam->dVal);
-    }
+    std::vector<double> increments;
 
-    auto pMetric = pMetrics[0];
-    auto nParams = pParams.size();
+    auto metric = metrics[0];
+    auto nParameters = parameters.size();
     double nu = 0.1;
     for (auto iter = 0; iter < maxIters; ++iter)
     {
         std::string iter_msg = fmt::format("iter {:d}: ", iter);
 
-        pMetric->eval();
+        metric->eval();
 
-        if (pMetric->metricType() == Metric::MetricType::EF)
-            iter_msg.append(fmt::format(", EF: {:g}", pMetric->currVal));
+        if (metric->metricType() == Metric::MetricType::EF)
+            iter_msg.append(fmt::format(", EF: {:g}", metric->currentValue));
 
         bool first = true;
-        for (std::size_t j = 0; j < nParams; ++j)
+        for (std::size_t j = 0; j < nParameters; ++j)
         {
             if (!first)
                 iter_msg.append(",");
 
-            iter_msg.append(fmt::format(" param{:d}: {:g}", j, pParams[j]->getValue()));
+            iter_msg.append(fmt::format(" param{:d}: {:g}", j, parameters[j]->getValue()));
             first = false;
         }
 
         double dMetric0 = 0.;
-        pMetric->evalDiff(dMetric0);
+        metric->evalDiff(dMetric0);
         double FOM0 = dMetric0 * dMetric0; // figure of merit
         double FOM1 = 0., FOM2 = 0.;
         iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
         courier->send_info(iter_msg);
 
-        std::vector<double> paramV(nParams);
-        for (std::size_t i = 0; i < nParams; ++i)
+        std::vector<double> paramV(nParameters);
+        for (std::size_t i = 0; i < nParameters; ++i)
         {
-            paramV[i] = pParams[i]->getValue();
+            paramV[i] = parameters[i]->getValue();
         }
 
-        std::vector<double> jacobiV(nParams); // 1 x 2
-        for (std::size_t j = 0; j < nParams; ++j)
+        std::vector<double> jacobiV(nParameters); // 1 x 2
+        for (std::size_t j = 0; j < nParameters; ++j)
         {
-            pParams[j]->setValue(paramV[j] + (pParams[j]->dVal));
+            parameters[j]->setValue(paramV[j] + (parameters[j]->increment));
             double dMetric;
-            pMetric->evalDiff(dMetric);
-            jacobiV[j] = (dMetric - dMetric0) / (pParams[j]->dVal);
-            pParams[j]->setValue(paramV[j]);
+            metric->evalDiff(dMetric);
+            jacobiV[j] = (dMetric - dMetric0) / (parameters[j]->increment);
+            parameters[j]->setValue(paramV[j]);
         }
 
         // try nu
@@ -211,20 +207,20 @@ void HPWH::Fitter::leastSquares()
         std::vector<double> paramV1 = paramV;
         if (got1)
         {
-            for (std::size_t j = 0; j < nParams; ++j)
+            for (std::size_t j = 0; j < nParameters; ++j)
             {
                 inc1ParamV[j] = -invJacobiV1[j] * dMetric0;
                 paramV1[j] += inc1ParamV[j];
-                pParams[j]->setValue(paramV1[j]);
+                parameters[j]->setValue(paramV1[j]);
             }
             double dMetric;
-            pMetric->evalDiff(dMetric);
+            metric->evalDiff(dMetric);
             FOM1 = dMetric * dMetric;
 
             // restore
-            for (std::size_t j = 0; j < nParams; ++j)
+            for (std::size_t j = 0; j < nParameters; ++j)
             {
-                pParams[j]->setValue(paramV[j]);
+                parameters[j]->setValue(paramV[j]);
             }
         }
 
@@ -236,20 +232,20 @@ void HPWH::Fitter::leastSquares()
         std::vector<double> paramV2 = paramV;
         if (got2)
         {
-            for (std::size_t j = 0; j < nParams; ++j)
+            for (std::size_t j = 0; j < nParameters; ++j)
             {
                 inc2ParamV[j] = -invJacobiV2[j] * dMetric0;
                 paramV2[j] += inc2ParamV[j];
-                pParams[j]->setValue(paramV2[j]);
+                parameters[j]->setValue(paramV2[j]);
             }
             double dMetric;
-            pMetric->evalDiff(dMetric);
+            metric->evalDiff(dMetric);
             FOM2 = dMetric * dMetric;
 
             // restore
-            for (std::size_t j = 0; j < nParams; ++j)
+            for (std::size_t j = 0; j < nParameters; ++j)
             {
-                pParams[j]->setValue(paramV[j]);
+                parameters[j]->setValue(paramV[j]);
             }
         }
 
@@ -260,19 +256,19 @@ void HPWH::Fitter::leastSquares()
             { // at least one improved
                 if (FOM1 < FOM2)
                 { // pick 1
-                    for (std::size_t i = 0; i < nParams; ++i)
+                    for (std::size_t i = 0; i < nParameters; ++i)
                     {
-                        pParams[i]->setValue(paramV1[i]);
-                        (pParams[i]->dVal) = inc1ParamV[i] / 1.e3;
+                        parameters[i]->setValue(paramV1[i]);
+                        (parameters[i]->increment) = inc1ParamV[i] / 1.e3;
                         FOM0 = FOM1;
                     }
                 }
                 else
                 { // pick 2
-                    for (std::size_t i = 0; i < nParams; ++i)
+                    for (std::size_t i = 0; i < nParameters; ++i)
                     {
-                        pParams[i]->setValue(paramV2[i]);
-                        (pParams[i]->dVal) = inc2ParamV[i] / 1.e3;
+                        parameters[i]->setValue(paramV2[i]);
+                        (parameters[i]->increment) = inc2ParamV[i] / 1.e3;
                         FOM0 = FOM2;
                     }
                 }
@@ -303,26 +299,27 @@ void HPWH::Fitter::leastSquares()
 //-----------------------------------------------------------------------------
 void HPWH::Fitter::fit()
 {
-    auto nParams = pParams.size();
-    auto nMetrics = pMetrics.size();
+    auto nParams = parameters.size();
+    auto nMetrics = metrics.size();
 
     if ((nParams == 1) && (nMetrics == 1))
     { // use secant
-        auto param = pParams[0];
-        auto metric = pMetrics[0];
+        auto param = parameters[0];
+        auto metric = metrics[0];
 
         double val0 = param->getValue();
         metric->eval();
-        double f0 = metric->currVal;
+        double f0 = metric->currentValue;
 
         double val1 = (val0 == 0.) ? 0.001 : (1.001) * val0; // small increment
         param->setValue(val1);
         metric->eval();
-        double f1 = metric->currVal;
+        double f1 = metric->currentValue;
 
         param->setValue(val0);
 
-        int iters = secant(targetFunc, this, metric->targetVal, 1.e-12, val0, f0, val1, f1, 1.e-12);
+        int iters =
+            secant(targetFunc, this, metric->targetValue, 1.e-12, val0, f0, val1, f1, 1.e-12);
         if (iters < 0)
             send_error("Failure in makeGenericModel using secant");
     }

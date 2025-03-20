@@ -5787,10 +5787,10 @@ void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
 void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 {
     // set up metrics
-    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics = {};
+    std::vector<std::shared_ptr<Fitter::Metric>> metrics = {};
     auto ef_metric =
         std::make_shared<HPWH::Fitter::EF_Metric>(targetEF, &testOptions, get_courier(), this);
-    pMetrics.push_back(ef_metric);
+    metrics.push_back(ef_metric);
 
     auto& compressor = heatSources[compressorIndex];
 
@@ -5813,14 +5813,14 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
 
     // set up parameters
-    std::vector<std::shared_ptr<Fitter::Param>> pParams;
+    std::vector<std::shared_ptr<Fitter::Parameter>> params;
     auto copCoeff0 = std::make_shared<HPWH::Fitter::COP_Coef>(i_ambientT, 0, get_courier(), this);
-    pParams.push_back(copCoeff0);
+    params.push_back(copCoeff0);
 
     // auto copCoeff1 = std::make_shared<HPWH::Fitter::COP_Coef>(i_ambientT, 1, get_courier(),
     // this); pParams.push_back(copCoeff1);
 
-    Fitter fitter(pMetrics, pParams, get_courier());
+    Fitter fitter(metrics, params, get_courier());
     fitter.fit();
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
