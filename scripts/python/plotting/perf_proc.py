@@ -408,7 +408,7 @@ def perf_proc(data):
 					continue
 				if 'variable' not in param or param['variable'] != point['variable']:
 					continue
-				if 'model_id' not in param or param['model_id'] != point['model_id']:
+				if 'model_id' not in param or param['model_id'] != point['model']:
 					continue
 					
 				if 'coords' not in param:
