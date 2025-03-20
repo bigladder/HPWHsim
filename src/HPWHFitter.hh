@@ -21,7 +21,6 @@ struct HPWH::Fitter : public Sender
             : Sender("Parameter", "parameter", courier), increment(1.e-12), data_ptr(nullptr)
         {
         }
-        Parameter() : increment(1.e3), data_ptr(nullptr) {}
         virtual ~Parameter() = default;
 
         virtual std::string show() = 0;
@@ -34,6 +33,28 @@ struct HPWH::Fitter : public Sender
         HPWH* hpwh;
         unsigned temperatureIndex;
         unsigned exponent;
+
+      public:
+        PerfCoef(unsigned temperatureIndex_in,
+                 unsigned exponent_in,
+                 std::shared_ptr<Courier::Courier> courier,
+                 HPWH* hpwh_in = nullptr)
+            : Parameter(courier)
+            , hpwh(hpwh_in)
+            , temperatureIndex(temperatureIndex_in)
+            , exponent(exponent_in)
+        {
+        }
+
+        PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
+            : PerfCoef(perfCoef.temperatureIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
+        {
+        }
+
+        std::string show() override
+        {
+            return fmt::format(getFormat(), temperatureIndex, *data_ptr);
+        }
 
       protected:
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
@@ -59,31 +80,8 @@ struct HPWH::Fitter : public Sender
             data_ptr = &perfCoeffs[exponent];
         }
 
-      public:
-        PerfCoef(unsigned temperatureIndex_in,
-                 unsigned exponent_in,
-                 std::shared_ptr<Courier::Courier> courier,
-                 HPWH* hpwh_in = nullptr)
-            : Parameter(courier)
-            , hpwh(hpwh_in)
-            , temperatureIndex(temperatureIndex_in)
-            , exponent(exponent_in)
-        {
-        }
-
-        PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
-            : PerfCoef(perfCoef.temperatureIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
-        {
-        }
-
       private:
         [[nodiscard]] virtual std::string getFormat() const = 0;
-
-      public:
-        std::string show() override
-        {
-            return fmt::format(getFormat(), temperatureIndex, *data_ptr);
-        }
     };
 
     /// input-power coefficient parameter
@@ -99,13 +97,13 @@ struct HPWH::Fitter : public Sender
             increment = 1.e-5;
         }
 
+      private:
+        [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
+
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
         {
             return perfPoint.inputPower_coeffs;
         }
-
-      private:
-        [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
     };
 
     ///	coefficient-of-performance coefficient parameter
@@ -146,13 +144,6 @@ struct HPWH::Fitter : public Sender
         {
         }
 
-        enum class MetricType
-        {
-            none,
-            EF
-        };
-        virtual MetricType metricType() { return MetricType::none; }
-
         virtual void evaluate() = 0;
         virtual double findError() = 0;
     };
@@ -179,8 +170,6 @@ struct HPWH::Fitter : public Sender
 
         virtual ~EF_Metric() = default;
 
-        MetricType metricType() override { return MetricType::EF; }
-
         /// get current EF
         void evaluate() override
         {
@@ -195,7 +184,7 @@ struct HPWH::Fitter : public Sender
             return (currentValue - targetValue) / tolerance;
         }
 
-        TestSummary getTestSummary() { return testSummary; }
+        TestSummary getTestSummary() const { return testSummary; }
     };
 
     /// metric and parameter data retained as shared pts
