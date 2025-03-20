@@ -35,7 +35,7 @@ struct HPWH::Fitter : public Sender
         unsigned temperatureIndex;
         unsigned exponent;
 
-      public:
+      protected:
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
 
         /// check validity and retain pointer to HPWH member variable
@@ -59,6 +59,7 @@ struct HPWH::Fitter : public Sender
             member_data = &perfCoeffs[exponent];
         }
 
+      public:
         PerfCoef(unsigned temperatureIndex_in,
                  unsigned exponent_in,
                  std::shared_ptr<Courier::Courier> courier,
@@ -75,9 +76,10 @@ struct HPWH::Fitter : public Sender
         {
         }
 
-      public:
+      private:
         virtual std::string getFormat() const = 0;
 
+      public:
         std::string show() override
         {
             return fmt::format(getFormat(), temperatureIndex, *member_data);
@@ -102,6 +104,7 @@ struct HPWH::Fitter : public Sender
             return perfPoint.inputPower_coeffs;
         }
 
+      private:
         std::string getFormat() const override { return "Pin[{}]: {}"; }
     };
 
@@ -118,6 +121,7 @@ struct HPWH::Fitter : public Sender
             increment = 1.e-9;
         }
 
+      private:
         std::string getFormat() const override { return "COP[{}]: {}"; }
 
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
@@ -195,14 +199,33 @@ struct HPWH::Fitter : public Sender
     };
 
     /// metric and parameter data retained as shared pts
+  private:
     std::vector<std::shared_ptr<Fitter::Metric>> metrics;
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
 
+  public:
     Fitter(std::vector<std::shared_ptr<Fitter::Metric>> metrics_in,
            std::vector<std::shared_ptr<Fitter::Parameter>> params_in,
            std::shared_ptr<Courier::Courier> courier)
         : Sender("Fitter", "fitter", courier), metrics(metrics_in), parameters(params_in)
     {
+    }
+
+    double setSingleParameter(double x)
+    {
+        auto nParameters = parameters.size();
+        auto nMetrics = metrics.size();
+
+        if ((nParameters == 1) && (nMetrics == 1))
+        {
+            auto param = parameters[0];
+            auto metric = metrics[0];
+
+            *param->member_data = x;
+            metric->evaluate();
+            return metric->currentValue;
+        }
+        return 1.e12;
     }
 
     std::string showParameters() const
