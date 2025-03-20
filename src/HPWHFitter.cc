@@ -10,7 +10,7 @@
 static double targetFunc(void* p0, double& x)
 { // provide single function value
     auto fitter = static_cast<HPWH::Fitter*>(p0);
-    return fitter->setSingleParameter(x);
+    return fitter->getMetricSingleParameter(x);
 }
 
 //-----------------------------------------------------------------------------

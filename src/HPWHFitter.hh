@@ -202,7 +202,8 @@ struct HPWH::Fitter : public Sender
     {
     }
 
-    double setSingleParameter(double x)
+    // evaluate the current metric using provided single-parameter value
+    double getMetricSingleParameter(double x)
     {
         auto nParameters = parameters.size();
         auto nMetrics = metrics.size();
