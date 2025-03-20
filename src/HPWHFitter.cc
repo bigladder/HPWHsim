@@ -28,7 +28,7 @@ static double targetFunc(void* p0, double& x)
 //-----------------------------------------------------------------------------
 ///	@brief	secant function, directly from cse/nummeth.cpp
 //-----------------------------------------------------------------------------
-int secant( // find x given f(x) (secant method)
+static int secant( // find x given f(x) (secant method)
     double (*pFunc)(void* pO, double& x),
     // function under investigation; note that it
     //   may CHANGE x re domain limits etc.
