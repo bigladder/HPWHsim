@@ -19,7 +19,7 @@ static double targetFunc(void* p0, double& x)
         auto metric = fitter->metrics[0];
 
         param->setValue(x);
-        metric->eval();
+        metric->evaluate();
         return metric->currentValue;
     }
     return 1.e12;
@@ -161,24 +161,9 @@ void HPWH::Fitter::performLeastSquaresMiminization()
     {
         std::string iter_msg = fmt::format("iter {:d}: ", iter);
 
-        metric->eval();
-
-        if (metric->metricType() == Metric::MetricType::EF)
-            iter_msg.append(fmt::format(", EF: {:g}", metric->currentValue));
-
-        bool first = true;
-        for (std::size_t j = 0; j < nParameters; ++j)
-        {
-            if (!first)
-                iter_msg.append(",");
-
-            iter_msg.append(fmt::format(" param{:d}: {:g}", j, parameters[j]->getValue()));
-            first = false;
-        }
-
-        double dMetric0 = 0.;
-        metric->evalDiff(dMetric0);
+        double dMetric0 = metric->findError();
         double FOM0 = dMetric0 * dMetric0; // figure of merit
+
         double FOM1 = 0., FOM2 = 0.;
         iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
         courier->send_info(iter_msg);
@@ -193,8 +178,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
         for (std::size_t j = 0; j < nParameters; ++j)
         {
             parameters[j]->setValue(paramV[j] + (parameters[j]->increment));
-            double dMetric;
-            metric->evalDiff(dMetric);
+            double dMetric = metric->findError();
             jacobiV[j] = (dMetric - dMetric0) / (parameters[j]->increment);
             parameters[j]->setValue(paramV[j]);
         }
@@ -213,8 +197,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
                 paramV1[j] += inc1ParamV[j];
                 parameters[j]->setValue(paramV1[j]);
             }
-            double dMetric;
-            metric->evalDiff(dMetric);
+            double dMetric = metric->findError();
             FOM1 = dMetric * dMetric;
 
             // restore
@@ -238,8 +221,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
                 paramV2[j] += inc2ParamV[j];
                 parameters[j]->setValue(paramV2[j]);
             }
-            double dMetric;
-            metric->evalDiff(dMetric);
+            double dMetric = metric->findError();
             FOM2 = dMetric * dMetric;
 
             // restore
@@ -308,12 +290,12 @@ void HPWH::Fitter::fit()
         auto metric = metrics[0];
 
         double val0 = param->getValue();
-        metric->eval();
+        metric->evaluate();
         double f0 = metric->currentValue;
 
         double val1 = (val0 == 0.) ? 0.001 : (1.001) * val0; // small increment
         param->setValue(val1);
-        metric->eval();
+        metric->evaluate();
         double f1 = metric->currentValue;
 
         param->setValue(val0);
