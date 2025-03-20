@@ -14,15 +14,16 @@
 struct HPWH::Fitter : public Sender
 {
     ///	base class for variational parameters
-    struct Param : public Sender
+    struct Parameter : public Sender
     {
-        double dVal; // differential increment (least squares)
-        Param(std::shared_ptr<Courier::Courier> courier)
-            : Sender("ParamInput", "paramInput", courier)
+        double increment; // differential increment (least squares)
+
+        Parameter(std::shared_ptr<Courier::Courier> courier)
+            : Sender("Parameter", "parameter", courier)
         {
         }
-        Param() : dVal(1.e3) {}
-        virtual ~Param() = default;
+        Parameter() : increment(1.e3) {}
+        virtual ~Parameter() = default;
 
         virtual void setValue(double x) = 0;
         virtual double getValue() = 0;
@@ -31,17 +32,19 @@ struct HPWH::Fitter : public Sender
     };
 
     /// performance coefficient
-    struct PerfCoef : public Param
+    struct PerfCoef : public Parameter
     {
+      private:
         HPWH* hpwh;
         unsigned tempIndex;
         unsigned exponent;
 
+      public:
         PerfCoef(unsigned tempIndex_in,
                  unsigned exponent_in,
                  std::shared_ptr<Courier::Courier> courier,
                  HPWH* hpwh_in = nullptr)
-            : Param(courier), hpwh(hpwh_in), tempIndex(tempIndex_in), exponent(exponent_in)
+            : Parameter(courier), hpwh(hpwh_in), tempIndex(tempIndex_in), exponent(exponent_in)
         {
         }
         PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
@@ -52,6 +55,7 @@ struct HPWH::Fitter : public Sender
         virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
 
         /// check validity and return reference to HPWH member variable
+      private:
         double* getPerfCoeff()
         {
             HPWH::HeatSource* heatSource;
@@ -72,9 +76,14 @@ struct HPWH::Fitter : public Sender
             return &perfCoeffs[exponent];
         }
 
+      public:
         void setValue(double x) override { *getPerfCoeff() = x; }
 
         double getValue() override { return *getPerfCoeff(); }
+
+        virtual std::string getFormat() const = 0;
+
+        void show() override { send_info(fmt::format(getFormat(), tempIndex, getValue())); }
     };
 
     /// input-power coefficient parameter
@@ -86,15 +95,15 @@ struct HPWH::Fitter : public Sender
                 HPWH* hpwh_in)
             : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
         {
-            dVal = 1.e-5;
+            increment = 1.e-5;
         }
-
-        void show() override { send_info(fmt::format("Pin[{}]: {}", tempIndex, getValue())); }
 
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
         {
             return perfPoint.inputPower_coeffs;
         }
+
+        std::string getFormat() const override { return "Pin[{}]: {}"; }
     };
 
     ///	coefficient-of-performance coefficient parameter
@@ -106,10 +115,10 @@ struct HPWH::Fitter : public Sender
                  HPWH* hpwh_in)
             : PerfCoef(tempIndex_in, exponent_in, courier, hpwh_in)
         {
-            dVal = 1.e-9;
+            increment = 1.e-9;
         }
 
-        void show() override { send_info(fmt::format("COP[{}]: {}", tempIndex, getValue())); }
+        std::string getFormat() const override { return "COP[{}]: {}"; }
 
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
         {
@@ -121,15 +130,15 @@ struct HPWH::Fitter : public Sender
     /// i.e., a target value to match by varying parameters
     struct Metric : public Sender
     {
-        double targetVal; // value to be matched
-        double currVal;   // current value
-        double tolVal;    // tolerance
+        double targetValue;  // value to be matched
+        double currentValue; // current value
+        double tolerance;    // tolerance
 
-        Metric(double targetVal_in, std::shared_ptr<Courier::Courier> courier)
+        Metric(double targetValue_in, std::shared_ptr<Courier::Courier> courier)
             : Sender("MetricInput", "metricInput", courier)
-            , targetVal(targetVal_in)
-            , currVal(0.)
-            , tolVal(1.e-6)
+            , targetValue(targetValue_in)
+            , currentValue(0.)
+            , tolerance(1.e-6)
         {
         }
 
@@ -172,32 +181,32 @@ struct HPWH::Fitter : public Sender
         {
             static HPWH::TestSummary testSummary;
             hpwh->run24hrTest(*testOptions, testSummary);
-            currVal = testSummary.EF;
+            currentValue = testSummary.EF;
         }
 
         /// get difference ratio
         void evalDiff(double& diff) override
         {
             eval();
-            diff = (currVal - targetVal) / tolVal;
+            diff = (currentValue - targetValue) / tolerance;
         }
     };
 
     /// metric and parameter data retained as shared pts
-    std::vector<std::shared_ptr<Fitter::Metric>> pMetrics;
-    std::vector<std::shared_ptr<Fitter::Param>> pParams;
+    std::vector<std::shared_ptr<Fitter::Metric>> metrics;
+    std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
 
-    Fitter(std::vector<std::shared_ptr<Fitter::Metric>> pMetrics_in,
-           std::vector<std::shared_ptr<Fitter::Param>> pParams_in,
+    Fitter(std::vector<std::shared_ptr<Fitter::Metric>> metrics_in,
+           std::vector<std::shared_ptr<Fitter::Parameter>> params_in,
            std::shared_ptr<Courier::Courier> courier)
-        : Sender("Fitter", "fitter", courier), pMetrics(pMetrics_in), pParams(pParams_in)
+        : Sender("Fitter", "fitter", courier), metrics(metrics_in), parameters(params_in)
     {
     }
 
     void showParams()
     {
-        for (auto param : pParams)
-            param->show();
+        for (auto parameter : parameters)
+            parameter->show();
     }
 
     void leastSquares();
