@@ -4912,35 +4912,6 @@ void HPWH::initFromFile(string modelName)
 #endif
 
 //-----------------------------------------------------------------------------
-///	@brief	Determine the inletT testing based on the ambientT
-/// @return	inletT (C)
-//-----------------------------------------------------------------------------
-double HPWH::findInletT_C(double ambientT_C)
-{
-    const double ambientT_C_E50 = 10.;
-    const double ambientT_C_UEF = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    const double ambientT_C_E95 = 35.;
-
-    const double inletT_C_E50 = F_TO_C(50.0); // table
-    const double inletT_C_UEF = 14.4;         // EERE-2019-BT-TP-0032-0058, p. 40433
-    const double inletT_C_E95 = F_TO_C(67.0); // table
-
-    if (ambientT_C < ambientT_C_E50)
-        return inletT_C_E50;
-    if (ambientT_C < ambientT_C_UEF)
-    { // linear interp
-        double ratio = (ambientT_C - ambientT_C_E50) / (ambientT_C_UEF - ambientT_C_E50);
-        return (1. - ratio) * inletT_C_E50 + ratio * inletT_C_UEF;
-    }
-    if (ambientT_C < ambientT_C_E95)
-    { // linear interp
-        double ratio = (ambientT_C - ambientT_C_UEF) / (ambientT_C_E95 - ambientT_C_UEF);
-        return (1. - ratio) * inletT_C_UEF + ratio * inletT_C_E95;
-    }
-    return inletT_C_E95;
-}
-
-//-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
 ///         Draw until heating begins, wait for recovery.
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.2.4)

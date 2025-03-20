@@ -209,7 +209,7 @@ struct HPWH::Fitter : public Sender
             parameter->show();
     }
 
-    void leastSquares();
+    void performLeastSquaresMiminization();
     void fit();
 };
 

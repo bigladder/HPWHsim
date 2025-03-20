@@ -146,7 +146,7 @@ static bool getLeftDampedInverse(const double nu,
 /// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
 ///         This can be generalized with suitable matrix utilities.
 //-----------------------------------------------------------------------------
-void HPWH::Fitter::leastSquares()
+void HPWH::Fitter::performLeastSquaresMiminization()
 {
     bool success = false;
     const int maxIters = 20;
@@ -325,7 +325,7 @@ void HPWH::Fitter::fit()
     }
     else if ((nParams == 2) && (nMetrics == 1))
     { // use least-squares
-        leastSquares();
+        performLeastSquaresMiminization();
     }
     else
     {

@@ -1098,8 +1098,6 @@ class HPWH : public Courier::Sender
     /// run 24-hr draw pattern and compute metrics
     void run24hrTest(TestOptions& testOptions, TestSummary& testSummary);
 
-    static double findInletT_C(double ambientT_C);
-
     /// specific information for a single draw
     struct Draw
     {

@@ -2607,7 +2607,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dC = dF_TO_dC(2);
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
-        // top resistor values
+        // top resistor values4
         resistiveElementTop->setupAsResistiveElement(8, 4500);
         resistiveElementTop->isVIP = true;
 

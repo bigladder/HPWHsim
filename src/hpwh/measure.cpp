@@ -15,7 +15,7 @@ static void measure(const std::string& sSpecType,
                     bool sSupressOutput,
                     std::string sResultsFilename,
                     std::string sCustomDrawProfile,
-                    double ambientT_C);
+                    std::string sTestConfig);
 
 CLI::App* add_measure(CLI::App& app)
 {
@@ -39,8 +39,8 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sCustomDrawProfile = "";
     subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
-    static double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    subcommand->add_option("-a,--amb", ambientT_C, "ambientT (degC)");
+    static std::string sTestConfig = "UEF";
+    subcommand->add_option("-c,--config", sTestConfig, "test configuration");
 
     subcommand->callback(
         [&]()
@@ -51,7 +51,7 @@ CLI::App* add_measure(CLI::App& app)
                     noData,
                     sResultsFilename,
                     sCustomDrawProfile,
-                    ambientT_C);
+                    sTestConfig);
         });
 
     return subcommand;
@@ -63,7 +63,7 @@ void measure(const std::string& sSpecType,
              bool sSupressOutput,
              std::string sResultsFilename,
              std::string sCustomDrawProfile,
-             double ambientT_C)
+             std::string sTestConfig)
 {
     HPWH::TestOptions testOptions;
     testOptions.saveOutput = false;
@@ -156,8 +156,17 @@ void measure(const std::string& sSpecType,
         results.append(firstHourRating.report());
     }
 
-    testOptions.testConfiguration.ambientT_C = ambientT_C;
-    testOptions.testConfiguration.inletT_C = HPWH::findInletT_C(ambientT_C);
+    // select test configuration
+    transform(sTestConfig.begin(),
+              sTestConfig.end(),
+              sTestConfig.begin(),
+              ::toupper); // make uppercase
+    if (sTestConfig == "E50")
+        testOptions.testConfiguration = HPWH::testConfiguration_E50;
+    else if (sTestConfig == "E95")
+        testOptions.testConfiguration = HPWH::testConfiguration_E95;
+    else
+        testOptions.testConfiguration = HPWH::testConfiguration_UEF;
 
     testOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
