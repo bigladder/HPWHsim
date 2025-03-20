@@ -5679,6 +5679,7 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetE95,
                                   TestOptions& testOptions)
 {
+    // return test summaries unused
     testOptions.testConfiguration = testConfiguration_E50;
     makeGenericEF(targetE50, testOptions);
 
@@ -5780,7 +5781,7 @@ void HPWH::measureMetrics(TestOptions& testOptions, TestSummary& testSummary)
 ///	@brief	Make a generic model with target EF from the current model
 /// by varying COP coef's
 //-----------------------------------------------------------------------------
-void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
+HPWH::TestSummary HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 {
     // set up metrics
     std::vector<std::shared_ptr<Fitter::Metric>> metrics = {};
@@ -5838,4 +5839,6 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
                            cop);
     if (cop < cop1)
         send_error("COP slope is positive.");
+
+    return ef_metric->getTestSummary();
 }
