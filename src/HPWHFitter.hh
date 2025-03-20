@@ -15,13 +15,13 @@ struct HPWH::Fitter : public Sender
     struct Parameter : public Sender
     {
         double increment; // differential increment (least squares)
-        double* member_data;
+        double* data_ptr;
 
-        Parameter(std::shared_ptr<Courier::Courier> courier)
-            : Sender("Parameter", "parameter", courier)
+        explicit Parameter(std::shared_ptr<Courier::Courier> courier)
+            : Sender("Parameter", "parameter", courier), increment(1.e-12), data_ptr(nullptr)
         {
         }
-        Parameter() : increment(1.e3), member_data(nullptr) {}
+        Parameter() : increment(1.e3), data_ptr(nullptr) {}
         virtual ~Parameter() = default;
 
         virtual std::string show() = 0;
@@ -56,7 +56,7 @@ struct HPWH::Fitter : public Sender
             {
                 send_error("Invalid heat-source performance-map coefficient exponent.");
             }
-            member_data = &perfCoeffs[exponent];
+            data_ptr = &perfCoeffs[exponent];
         }
 
       public:
@@ -77,12 +77,12 @@ struct HPWH::Fitter : public Sender
         }
 
       private:
-        virtual std::string getFormat() const = 0;
+        [[nodiscard]] virtual std::string getFormat() const = 0;
 
       public:
         std::string show() override
         {
-            return fmt::format(getFormat(), temperatureIndex, *member_data);
+            return fmt::format(getFormat(), temperatureIndex, *data_ptr);
         }
     };
 
@@ -105,7 +105,7 @@ struct HPWH::Fitter : public Sender
         }
 
       private:
-        std::string getFormat() const override { return "Pin[{}]: {}"; }
+        [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
     };
 
     ///	coefficient-of-performance coefficient parameter
@@ -122,7 +122,7 @@ struct HPWH::Fitter : public Sender
         }
 
       private:
-        std::string getFormat() const override { return "COP[{}]: {}"; }
+        [[nodiscard]] std::string getFormat() const override { return "COP[{}]: {}"; }
 
         std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
         {
@@ -195,7 +195,7 @@ struct HPWH::Fitter : public Sender
             return (currentValue - targetValue) / tolerance;
         }
 
-        const TestSummary getTestSummary() { return testSummary; }
+        TestSummary getTestSummary() { return testSummary; }
     };
 
     /// metric and parameter data retained as shared pts
@@ -207,7 +207,9 @@ struct HPWH::Fitter : public Sender
     Fitter(std::vector<std::shared_ptr<Fitter::Metric>> metrics_in,
            std::vector<std::shared_ptr<Fitter::Parameter>> params_in,
            std::shared_ptr<Courier::Courier> courier)
-        : Sender("Fitter", "fitter", courier), metrics(metrics_in), parameters(params_in)
+        : Sender("Fitter", "fitter", courier)
+        , metrics(std::move(metrics_in))
+        , parameters(std::move(params_in))
     {
     }
 
@@ -221,18 +223,18 @@ struct HPWH::Fitter : public Sender
             auto param = parameters[0];
             auto metric = metrics[0];
 
-            *param->member_data = x;
+            *param->data_ptr = x;
             metric->evaluate();
             return metric->currentValue;
         }
         return 1.e12;
     }
 
-    std::string showParameters() const
+    [[nodiscard]] std::string showParameters() const
     {
-        std::string s = "";
+        std::string s;
         bool first = true;
-        for (auto parameter : parameters)
+        for (const auto& parameter : parameters)
         {
             if (!first)
                 s.append("\n");
@@ -242,7 +244,7 @@ struct HPWH::Fitter : public Sender
         return s;
     }
 
-    void performLeastSquaresMiminization();
+    void performLeastSquaresMinimization();
     void fit();
 };
 
