@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 static double targetFunc(void* p0, double& x)
 { // provide single function value
-    HPWH::Fitter* fitter = (HPWH::Fitter*)p0;
+    auto fitter = static_cast<HPWH::Fitter*>(p0);
     auto nParameters = fitter->parameters.size();
     auto nMetrics = fitter->metrics.size();
 

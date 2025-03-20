@@ -1,8 +1,6 @@
 #ifndef HPWHFITTER_hh
 #define HPWHFITTER_hh
 
-#include <cfloat>
-
 #include "HPWH.hh"
 
 ///	@struct HPWH::Fitter HPWHFitter.h
