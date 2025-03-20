@@ -139,7 +139,6 @@ void HPWH::Fitter::performLeastSquaresMinimization()
     bool success = false;
     const int maxIters = 20;
 
-    //
     std::vector<double> increments;
 
     auto metric = metrics[0];
