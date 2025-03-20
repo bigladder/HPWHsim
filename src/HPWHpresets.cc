@@ -4377,9 +4377,9 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         compressor->perfMap.push_back({
-            67.46,                   // Temperature (F)
-            {116.6235, 2.4664, 0.0}, // Input Power Coefficients
-            {8.82866, -0.04429, 0.0} // COP Coefficients
+            67.5,                  // Temperature (F)
+            {116.6, 2.467, 0.0},   // Input Power Coefficients
+            {8.833, -0.04431, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({

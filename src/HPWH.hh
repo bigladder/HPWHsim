@@ -1066,14 +1066,15 @@ class HPWH : public Courier::Sender
 
     struct TestConfiguration
     {
-        double ambientT_C = 19.7;
-        double inletT_C = 14.4;
-        double externalT_C = 19.7;
+        double ambientT_C;
+        double inletT_C;
+        double externalT_C;
     };
 
-    inline static TestConfiguration testConfiguration_E50 = {10., 10., 10.};
-    inline static TestConfiguration testConfiguration_UEF = {19.7, 14.4, 19.7};
-    inline static TestConfiguration testConfiguration_E95 = {35., 19.4, 35.};
+    static TestConfiguration testConfiguration_E50;
+    static TestConfiguration testConfiguration_UEF;
+    static TestConfiguration testConfiguration_E95;
+    static double testSetpointT_C;
 
     struct TestOptions
     {
@@ -1084,6 +1085,7 @@ class HPWH : public Courier::Sender
         std::ofstream outputFile;
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
         TestConfiguration testConfiguration = testConfiguration_UEF;
+        bool overrideSetpoint = true;
         int nTestTCouples = 6;
     };
 
