@@ -134,7 +134,7 @@ static bool getLeftDampedInverse(const double nu,
 /// @note	see [Numerical Recipes, Ch. 15.5](https://numerical.recipes/book.html)
 ///         This can be generalized with suitable matrix utilities.
 //-----------------------------------------------------------------------------
-void HPWH::Fitter::performLeastSquaresMiminization()
+void HPWH::Fitter::performLeastSquaresMinimization()
 {
     bool success = false;
     const int maxIters = 20;
@@ -159,16 +159,16 @@ void HPWH::Fitter::performLeastSquaresMiminization()
         std::vector<double> paramV(nParameters);
         for (std::size_t i = 0; i < nParameters; ++i)
         {
-            paramV[i] = *parameters[i]->member_data;
+            paramV[i] = *parameters[i]->data_ptr;
         }
 
         std::vector<double> jacobiV(nParameters); // 1 x 2
         for (std::size_t j = 0; j < nParameters; ++j)
         {
-            *parameters[j]->member_data = paramV[j] + (parameters[j]->increment);
+            *parameters[j]->data_ptr = paramV[j] + (parameters[j]->increment);
             double dMetric = metric->findError();
             jacobiV[j] = (dMetric - dMetric0) / (parameters[j]->increment);
-            *parameters[j]->member_data = paramV[j];
+            *parameters[j]->data_ptr = paramV[j];
         }
 
         // try nu
@@ -183,7 +183,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             {
                 inc1ParamV[j] = -invJacobiV1[j] * dMetric0;
                 paramV1[j] += inc1ParamV[j];
-                *parameters[j]->member_data = paramV1[j];
+                *parameters[j]->data_ptr = paramV1[j];
             }
             double dMetric = metric->findError();
             FOM1 = dMetric * dMetric;
@@ -191,7 +191,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             // restore
             for (std::size_t j = 0; j < nParameters; ++j)
             {
-                *parameters[j]->member_data = paramV[j];
+                *parameters[j]->data_ptr = paramV[j];
             }
         }
 
@@ -207,7 +207,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             {
                 inc2ParamV[j] = -invJacobiV2[j] * dMetric0;
                 paramV2[j] += inc2ParamV[j];
-                *parameters[j]->member_data = paramV2[j];
+                *parameters[j]->data_ptr = paramV2[j];
             }
             double dMetric = metric->findError();
             FOM2 = dMetric * dMetric;
@@ -215,7 +215,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
             // restore
             for (std::size_t j = 0; j < nParameters; ++j)
             {
-                *parameters[j]->member_data = paramV[j];
+                *parameters[j]->data_ptr = paramV[j];
             }
         }
 
@@ -228,7 +228,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
                 { // pick 1
                     for (std::size_t i = 0; i < nParameters; ++i)
                     {
-                        *parameters[i]->member_data = paramV1[i];
+                        *parameters[i]->data_ptr = paramV1[i];
                         (parameters[i]->increment) = inc1ParamV[i] / 1.e3;
                         FOM0 = FOM1;
                     }
@@ -237,7 +237,7 @@ void HPWH::Fitter::performLeastSquaresMiminization()
                 { // pick 2
                     for (std::size_t i = 0; i < nParameters; ++i)
                     {
-                        *parameters[i]->member_data = paramV2[i];
+                        *parameters[i]->data_ptr = paramV2[i];
                         (parameters[i]->increment) = inc2ParamV[i] / 1.e3;
                         FOM0 = FOM2;
                     }
@@ -277,16 +277,16 @@ void HPWH::Fitter::fit()
         auto param = parameters[0];
         auto metric = metrics[0];
 
-        double val0 = *param->member_data;
+        double val0 = *param->data_ptr;
         metric->evaluate();
         double f0 = metric->currentValue;
 
         double val1 = (val0 == 0.) ? 0.001 : (1.001) * val0; // small increment
-        *param->member_data = val1;
+        *param->data_ptr = val1;
         metric->evaluate();
         double f1 = metric->currentValue;
 
-        *param->member_data = val0;
+        *param->data_ptr = val0;
 
         int iters =
             secant(targetFunc, this, metric->targetValue, 1.e-12, val0, f0, val1, f1, 1.e-12);
@@ -295,7 +295,7 @@ void HPWH::Fitter::fit()
     }
     else if ((nParams == 2) && (nMetrics == 1))
     { // use least-squares
-        performLeastSquaresMiminization();
+        performLeastSquaresMinimization();
     }
     else
     {
