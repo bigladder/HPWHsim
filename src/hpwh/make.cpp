@@ -99,8 +99,6 @@ void make(const std::string& sSpecType,
     results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
     results.append(fmt::format("\tModel Name: {}\n", sModelName));
 
-    hpwh.makeGenericEF(targetEF, testOptions);
-
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
     if (useCustomDrawProfile)
     {

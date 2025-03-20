@@ -28,7 +28,7 @@ struct HPWH::Fitter : public Sender
         virtual void setValue(double x) = 0;
         virtual double getValue() = 0;
 
-        virtual void show() {}
+        virtual std::string show() = 0;
     };
 
     /// performance coefficient
@@ -83,7 +83,7 @@ struct HPWH::Fitter : public Sender
 
         virtual std::string getFormat() const = 0;
 
-        void show() override { send_info(fmt::format(getFormat(), tempIndex, getValue())); }
+        std::string show() override { return fmt::format(getFormat(), tempIndex, getValue()); }
     };
 
     /// input-power coefficient parameter
@@ -203,10 +203,18 @@ struct HPWH::Fitter : public Sender
     {
     }
 
-    void showParams()
+    std::string showParameters() const
     {
+        std::string s = "";
+        bool first = true;
         for (auto parameter : parameters)
-            parameter->show();
+        {
+            if (!first)
+                s.append("\n");
+            s.append(parameter->show());
+            first = false;
+        }
+        return s;
     }
 
     void performLeastSquaresMiminization();

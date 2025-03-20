@@ -5793,6 +5793,7 @@ void HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
 
     Fitter fitter(metrics, params, get_courier());
     fitter.fit();
+    send_info(fitter.showParameters());
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
     compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
