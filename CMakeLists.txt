@@ -62,31 +62,21 @@ if (${PROJECT_NAME}_USE_DATA_MODEL_GENERATION)
         include(poetry-install)
         poetry_install(${pythonScriptDir})
 
-        if (NOT EXISTS "${dataModelDir}")
-            execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${srcCodeDir}")
-        endif()
-
         execute_process(
             COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 
             COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${srcCodeDir}"
-            WORKING_DIRECTORY "${pythonScriptDir}"
-            RESULT_VARIABLE build_data_model_result)
+            WORKING_DIRECTORY "${pythonScriptDir}")
 
-        if (build_data_model_result EQUAL 0)
-            set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
-            message(STATUS "Data-model source-code generation succeeded")
-        else()
-            message(STATUS "Data-model source-code generation failed")
-        endif()
+        set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
     endif()
 else()
     set(srcCodeDir "${PROJECT_SOURCE_DIR}/hpwh_data_model")
     set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
 endif()
 
-add_custom_target(wait_for_data_model ALL DEPENDS "${srcCodeDir}")
+add_custom_target(generate_data_model ALL DEPENDS "${srcCodeDir}")
 
 if (${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
     add_subdirectory("${srcCodeDir}/cpp")
