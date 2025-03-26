@@ -19,19 +19,17 @@ def generate(repo_dir, data_model_dir, gen_out_dir):
 	if gen_out_dir == '':    
 		gen_out_dir = os.path.join(repo_dir, "build", "hpwh_data_model")
 	
-	max_wait_time_s = 10.
-	start_time_s = time.time()
-	while True:
-		if os.path.exists(data_model_dir):
-			time.sleep(1)				
-			lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)
-			lat.generate_cpp_project()
-			time.sleep(1)
-			return True
-		
-		if time.time() - start_time_s > max_wait_time_s:
-			print("hpwh_data_model code generation failed.")
-			return False
+	try:
+		os.mkdir(gen_out_dir)
+	except FileExistsError:
+		print(f"Directory '{gen_out_dir} already exists.")
+	except FileNotFoundError:
+		print(f"Cannot create code-generation directory {gen_out_dir}")
+		return
+	
+	if os.path.exists(data_model_dir):			
+		lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)
+		lat.generate_cpp_project()
 
 # main
 if __name__ == "__main__":
