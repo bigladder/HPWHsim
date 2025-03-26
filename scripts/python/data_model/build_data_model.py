@@ -27,7 +27,8 @@ def generate(repo_dir, data_model_dir, gen_out_dir):
 		print(f"Cannot create code-generation directory {gen_out_dir}")
 		return
 	
-	if os.path.exists(data_model_dir):			
+	if os.path.exists(data_model_dir):
+		time.sleep(1)			
 		lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)
 		lat.generate_cpp_project()
 

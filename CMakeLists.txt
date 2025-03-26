@@ -76,7 +76,7 @@ else()
     set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
 endif()
 
-add_custom_target(generate_data_model ALL DEPENDS "${srcCodeDir}")
+add_custom_target(generate_data_model ALL DEPENDS "${srcCodeDir}/cpp")
 
 if (${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
     add_subdirectory("${srcCodeDir}/cpp")
