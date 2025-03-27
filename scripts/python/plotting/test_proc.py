@@ -44,9 +44,12 @@ def test_proc(data):
 	test_proc.i_send = 0
 	test_proc.prev_show = 0
 	test_proc.uef_val = 0
-	#test_proc.plotter = plot(data)
+	test_proc.plotter = {}
 	
 	def replot(data):
+		test_proc.prefs = read_file("prefs.json")
+		data['model_id'] = test_proc.prefs['model_id']
+		data['test_id'] = test_proc.prefs['test_id']
 		test_proc.plotter = plot(data)
 		if test_proc.plotter.have_fig:
 			test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -91,9 +94,9 @@ def test_proc(data):
 								continue
 							hide_uef_input_val = False
 
-			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, True, hide_uef_fit, hide_uef_input_val, test_proc.uef_val, uef_out_text, False
+			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, True, hide_uef_fit, test_proc.uef_val, uef_out_text, False, False
 		
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update			
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 	
 	app.layout = [
 		html.Div(
@@ -102,35 +105,22 @@ def test_proc(data):
 			html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 			
 			dcc.Checklist(id="show-check", inline=True),
+
+			html.Div(html.Button('Get UA', id='get-ua-btn', n_clicks=0), hidden=True),
 		
 			dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
 			
 			html.P("", id='energy_measured_p'),
 			html.P("", id='energy_simulated_p'),
-			
-			html.Div(
-				[
-					dcc.Markdown("""
-						**find UA**
-									 
-						Select an area on the temperature plot.
-						"""),
-					
-					html.Label("tank volume (L)", htmlFor="tank-volume"),
-					dcc.Input(
-		          id = "tank-volume",
-							type = "text",
-		          value="189.271",
-		        ),
-
-						html.Button('Get UA', id='get-ua-btn', n_clicks=0, disabled = True),
-
-						html.P(id='ua-p', style = {'fontSize': 18, 'display': 'inline'}), html.Br()
-				],
-				id = 'ua-div',
-				className='six columns',
-				hidden = True
-			),
+	
+			html.Div([
+					html.P("match:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
+					html.Button("+", id='match-selected', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+					html.Button("-", id='ignore-selected', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+					],
+					id='select-div',
+					hidden = True
+				),
 		
 			html.Div([
 				html.Div([
@@ -166,18 +156,17 @@ def test_proc(data):
 		return message
 
 	@app.callback(
-
 				Output('test-graph', 'figure', allow_duplicate=True),
 				Output('show-check', 'options'),
 				Output('show-check', 'value'),
 				Output('energy_measured_p', 'children'),
 				Output('energy_simulated_p', 'children'),
-				Output('ua-div', 'hidden', allow_duplicate=True),
 				Output('fit-UEF-div', 'hidden'),
 				Output('UEF-input-div', 'hidden', allow_duplicate=True),
 				Output('target-UEF-input', 'value'),
 				Output('UEF-output', 'children'),
 				Output('main-div', 'hidden'),
+				Output('select-div', 'hidden'),
 				[Input("ws", "message")],
 				prevent_initial_call=True
 			)
@@ -255,154 +244,78 @@ def test_proc(data):
 		return test_proc.plotter.plot.figure, value_list
 			
 	@callback(
-		Output('get-ua-btn', 'disabled'),
-		Output('ua-div', 'hidden', allow_duplicate=True),
-		Output('ua-p', 'children', allow_duplicate=True),
 		Output('test-graph', 'figure', allow_duplicate=True),
+		Output('select-div', 'hidden', allow_duplicate=True),
 		Input('test-graph', 'selectedData'),
 		State('test-graph', 'figure'),
-		State('tank-volume', 'value'),
 		prevent_initial_call=True
 	)
-	def select_temperature_data(selectedData, fig, tank_vol_L):
-		if float(tank_vol_L) <= 0:
-			return True, True, "", fig
-		
+	def select_data(selectedData, fig):
 		if not selectedData:
-			return True, True, "", fig
+			return fig, True
 		
 		if not "range" in selectedData:
-			return True, True, "", fig
+			return fig, True
 				
-		range = selectedData["range"]
-		if not "y3" in range:
-			return True, True, "", fig
-		
-		t_min_i = range["x3"][0]
-		t_min_f = range["x3"][1]
+		test_proc.plotter.select_data(selectedData)	
+		return fig, False
 
-		have_measured = False
-		have_simulated = False
-		for trace in fig["data"]:
-			if "name" in trace:
-				if trace["name"] == "Storage Tank Average Temperature - Measured":
-					have_measured = True
-				elif trace["name"] == "Storage Tank Average Temperature - Simulated":
-					have_simulated = True
-					
-		if have_measured:
-			test_proc.variable_type = "Measured"
-		elif have_simulated:
-			test_proc.variable_type = "Simulated"
-		else:
-			return True, True, "", fig
-			
-		found_avgT = False
-		for trace in fig["data"]:
-			if "name" in trace:
-				if trace["name"] == f"Storage Tank Average Temperature - {test_proc.variable_type}":
-					measured_tank_T = trace
-					found_avgT = True
-		
-		found_ambientT = False		
-		for trace in fig["data"]:				
-			if trace["name"] == f"Ambient Temperature - {test_proc.variable_type}":
-				if "name" in trace:
-					ambient_T = trace
-					found_ambientT = True
-				
-		if not(found_avgT and found_ambientT):
-			return True, True, "", fig
-		
-		new_fig = go.Figure(fig)
-		for i, trace in enumerate(fig["data"]):
-			if "name" in trace:	
-				if trace["name"] == f"temperature fit - {test_proc.variable_type}":
-					new_data = list(new_fig.data)
-					new_data.pop(i)
-					new_fig.data = new_data	
-		new_fig.update_layout()	
-				
-		selected_t_minL = []
-		selected_tank_TL = []
-		selected_ambient_TL = []		
-
-		n = 0
-		for t_min in measured_tank_T["x"]:
-			if t_min_i <= t_min and t_min <= t_min_f:
-				selected_t_minL.append(t_min)
-				selected_tank_TL.append(measured_tank_T["y"][n])
-				selected_ambient_TL.append(ambient_T["y"][n])
-			n += 1	
-			
-		test_proc.selected_t_minV = np.array(selected_t_minL)
-		test_proc.selected_tank_TV = np.array(selected_tank_TL)
-		test_proc.selected_ambient_TV = np.array(selected_ambient_TL)
-					
-		if n < 2:
-			return True, True, "", fig
-
-		return False, False, "", new_fig
-
-	@callback(
-		Output('test-graph', 'figure'),
-		Output('ua-p', 'children'),
-		Input('get-ua-btn', 'n_clicks'),
-		State('test-graph', 'figure'),
-		State('tank-volume', 'value'),
-		prevent_initial_call=True
-	)
-	def calc_ua(n_clicks, fig, tankVol_L):
-		for i, trace in enumerate(fig["data"]):	
-			if "name" in trace:
-				if trace["name"] == "temperature fit":
-					new_data = list(new_fig.data)
-					new_data.pop(i)
-					new_fig.data = new_data	
-		
-		t_min_i = test_proc.selected_t_minV[0]	
-		t_min_f = test_proc.selected_t_minV[-1]
-		
-		tank_T_i = test_proc.selected_tank_TV[0]
-		tank_T_f = test_proc.selected_tank_TV[-1]
-
-		ambient_T_i = test_proc.selected_ambient_TV[0]
-		ambient_T_f = test_proc.selected_ambient_TV[-1]
-		
-		rhoWater_kg_per_L = 0.995
-		sWater_kJ_per_kgC = 4.180
-		
-		cTank_kJ_per_C = rhoWater_kg_per_L * float(tankVol_L) * sWater_kJ_per_kgC 
-		ambientT_avg = (ambient_T_i + ambient_T_f) / 2
-		
-		temp_ratio = (tank_T_i - tank_T_f)  / (tank_T_i - ambientT_avg)
-		dt_min = t_min_f - t_min_i
-		dt_h = dt_min / 60	
-
-		UA = cTank_kJ_per_C * temp_ratio / dt_h
-		tau_min0 = dt_min / temp_ratio
-
-		def T_t(params, t_min):
-			return ambientT_avg + (tank_T_i - ambientT_avg) * np.exp(-(t_min - t_min_i) / params[0])
-
-		def diffT_t(params, t_min):
-			return T_t(params, t_min) - test_proc.selected_tank_TV
 	
-		tau_min = tau_min0
-		res = least_squares(diffT_t, test_proc.selected_t_minV, args=(tau_min, ))
-		UA = cTank_kJ_per_C / (tau_min / 60)
+	@app.callback(
+			Output('ws', 'send', allow_duplicate=True),
+			Input('match-selected', 'n_clicks'),
+			prevent_initial_call=True
+	)
+	def match_selected(nclicks):
+		fit_list = read_file("fit_list.json")
+		if 'metrics' in fit_list:
+			metrics = fit_list['metrics']
+		else:
+			metrics = []		
 		
-		fit_tank_TV = test_proc.selected_tank_TV
-		for i, t_min in enumerate(test_proc.selected_t_minV):
-			fit_tank_TV[i] = T_t([tau_min], t_min)
+		for metric in test_proc.plotter.metrics:
+			metrics.append(metric)
 		
-		trace = go.Scatter(name = f"temperature fit - {test_proc.variable_type}", x=test_proc.selected_t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
-		new_fig = go.Figure(fig)	
-		new_fig.add_trace(trace)
-		new_fig.update_layout()		
+		new_metrics = metrics
 		
-		return new_fig, " {:.4f} kJ/hC".format(UA)
+		fit_list['metrics'] = new_metrics			
+		write_file("fit_list.json", fit_list)
+		test_proc.i_send = test_proc.i_send + 1
+		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
+		return json.dumps(msg)
 
+	@app.callback(
+			Output('ws', 'send', allow_duplicate=True),
+			Input('ignore-selected', 'n_clicks'),
+			prevent_initial_call=True
+	)
+	def ignore_selected(nclicks):
+		fit_list = read_file("fit_list.json")
+		if 'metrics' in fit_list:
+			fit_metrics = fit_list['metrics']
+		else:
+			fit_metrics = []		
+	
+		new_metrics = fit_metrics
+		for metric in test_proc.plotter.metrics:
+			for index, fit_metric in reversed(list(enumerate(fit_metrics))):
+				if 'type' not in metric or metric['type'] != fit_metric['type']:
+					continue
+				if 'variable' not in metric or metric['variable'] != fit_metric['variable']:
+					continue
+				if 'model_id' not in metric or metric['model_id'] != fit_metric['model_id']:
+					continue				
+				if 't_min' not in metric or metric['t_min'] != fit_metric['t_min']:
+					continue
+								
+				del new_metrics[index]
+		
+		fit_list['metrics'] = new_metrics			
+		write_file("fit_list.json", fit_list)
+		test_proc.i_send = test_proc.i_send + 1
+		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
+		return json.dumps(msg)
+	
 	app.run(debug=True, use_reloader=False, port = test_proc.port_num)
 
 test_proc.port_num = 8050

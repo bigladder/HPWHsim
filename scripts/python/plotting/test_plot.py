@@ -55,12 +55,16 @@ class DataSet:
 		self.filepath = ""
 
 class TestPlotter:
-	def __init__(self):
+	def __init__(self, data):
 		self.plot = {}
+		self.label = data['model_id']
+		self.test_id = data['test_id']
 		self.energy_data = {}
 		self.measured = DataSet("Measured")
 		self.simulated = DataSet("Simulated")
 		self.have_fig = False
+		self.metrics = {}
+		self.model_id = ""
 
 		self.variables = {
 			"Y-Variables": {
@@ -218,7 +222,25 @@ class TestPlotter:
 		self.simulated = self.organize_tank_temperatures(self.simulated)
 	
 		self.simulated.have_data = True
- 					
+ 			
+	def select_data(self, selectedData):
+		self.metrics = []
+		if self.measured.have_data:
+			if "range" in selectedData:
+				range = selectedData["range"]
+				if "x" in range: # power
+					t_mins = self.measured.df["Time(min)"]
+					Pins = self.measured.df["PowerIn(W)"]
+					for t_min, Pin in zip(t_mins, Pins):
+						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
+							metric = {}
+							metric['type'] = "time-series"
+							metric['model_id'] = self.label
+							metric['test_id'] = self.test_id
+							metric['variable'] = "Pin"
+							metric['t_min'] = t_min
+							self.metrics.append(metric)
+					
 	def plot_graphs(self, data_set, variable, value, row):
 
 		if (value in [1, 2]) and (data_set.variable_type == "Measured"):
@@ -295,7 +317,10 @@ class TestPlotter:
 		return self
 
 def plot(data):
-	plotter = TestPlotter()	
+	plotter = TestPlotter(data)
+	if "model_id" in data:
+		plotter.model_id = data["model_id"]
+
 	if "measured_filepath" in data:
 		plotter.read_measured(data["measured_filepath"])
 	if "simulated_filepath" in data:
