@@ -14,11 +14,11 @@ def generate(repo_dir, data_model_dir, gen_out_dir):
 
 	if data_model_dir == '':
 		data_model_dir = os.path.join(repo_dir, "vendor", "hpwh_data_model")
-            
+	          
 	working_dir = "."
 	if gen_out_dir == '':    
 		gen_out_dir = os.path.join(repo_dir, "build", "hpwh_data_model")
-	
+
 	try:
 		os.mkdir(gen_out_dir)
 	except FileExistsError:
@@ -27,10 +27,11 @@ def generate(repo_dir, data_model_dir, gen_out_dir):
 		print(f"Cannot create code-generation directory {gen_out_dir}")
 		return
 	
-	if os.path.exists(data_model_dir):
-		time.sleep(1)			
+	try:		
 		lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)
 		lat.generate_cpp_project()
+	except:
+		print(f"Code generation failed")
 
 # main
 if __name__ == "__main__":
