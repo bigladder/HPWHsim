@@ -12,11 +12,5 @@
       ]
     }
   ],
-  "metrics": [
-    {
-      "type": "UEF",
-      "model_id": "Rheem2020Build50",
-      "target": 3.08
-    }
-  ]
+  "metrics": []
 }

@@ -213,7 +213,7 @@ def test_proc(data):
 			if 'model_id' not in metric or (metric['model_id'] != test_proc.prefs['model_id']):
 					continue
 			
-			del new_data[index]	
+			del new_metrics[index]	
 		
 		if 'fit' in value:
 			new_metrics.append({'type': 'UEF', 'model_id': test_proc.prefs['model_id'], 'target': uef_in})
