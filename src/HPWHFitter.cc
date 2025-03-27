@@ -280,7 +280,7 @@ void HPWH::Fitter::fit()
         metric->evaluate();
         double f0 = metric->currentValue;
 
-        double val1 = (val0 == 0.) ? 0.001 : (1.001) * val0; // small increment
+        double val1 = val0 + param->increment;
         *param->data_ptr = val1;
         metric->evaluate();
         double f1 = metric->currentValue;
