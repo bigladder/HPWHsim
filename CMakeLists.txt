@@ -51,64 +51,6 @@ endif ()
 add_subdirectory(vendor)
 add_subdirectory(src)
 
-# Either generate hpwh-data-model code, or use existing code
-set(${PROJECT_NAME}_USE_DATA_MODEL_GENERATION TRUE CACHE BOOL "Use data-model source code generation" FORCE)
-if (${PROJECT_NAME}_USE_DATA_MODEL_GENERATION)
-    set(genOutDir "${PROJECT_BINARY_DIR}/hpwh_data_model")
-    if (NOT ${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
-        set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
-        set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
-
-        include(poetry-install)
-        poetry_install(${pythonScriptDir})
-
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-
-            COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genOutDir}"
-            WORKING_DIRECTORY "${pythonScriptDir}")
-
-        set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
-    endif()
-else()
-    set(genOutDir "${PROJECT_SOURCE_DIR}/hpwh_data_model")
-    set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
-endif()
-
-if (${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
-	add_subdirectory("${genOutDir}/cpp")
-
-	set(gen_include
-		ASHRAE205.h, 
-		load-object.h,
-		HPWHSimInput.h,
-		HeatSourceConfiguration.h,
-		RSRESISTANCEWATERHEATSOURCE.h,
-		RSCONDENSERWATERHEATSOURCE.h,
-		RSINTEGRATEDWATERHEATER.h,
-		RSAIRTOWATERHEATPUMP.h,
-		CentralWaterHeatingSystem.h,
-		RSTANK.h)
-    list(TRANSFORM gen_include PREPEND "${genOutDir}/cpp/include/hpwh_data_model/")
-
-    set(gen_src
-        ASHRAE205.cpp,
-        HPWHSimInput.cpp,
-        HeatSourceConfiguration.cpp,
-        RSRESISTANCEWATERHEATSOURCE.cpp,
-        RSCONDENSERWATERHEATSOURCE.cpp,
-        RSINTEGRATEDWATERHEATER.cpp,
-        RSAIRTOWATERHEATPUMP.cpp,
-        CentralWaterHeatingSystem.cpp,
-        RSTANK.cpp,
-        core.cpp)
-    list(TRANSFORM gen_src PREPEND "${genOutDir}/cpp/src/")
-
-    set(gen_files gen_include gen_src "${genOutDir}/cpp/CMakeLists.txt" "${genOutDir}/cpp/src/CMakeLists.txt")
-	add_custom_target(generate_data_model ALL DEPENDS gen_files)
-endif ()
-
 if (${PROJECT_NAME}_BUILD_TESTING)
 	add_subdirectory(test)
     if (${PROJECT_NAME}_COVERAGE)
