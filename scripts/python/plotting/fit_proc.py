@@ -85,12 +85,12 @@ def fit_proc(data):
 				if 'type' in metric:
 					if metric['type'] == 'UEF':
 						for param in params:
-						if 'type' in param:
-							if param['type'] == 'UEF':
-								if param['model_id'] == datum['model_id']:
-									new_uef = get_UEF(param)
-									targ_uef = datum['UEF']
-									return (new_uef - targ_uef) / 1.
+							if 'type' in param:
+								if param['type'] == 'UEF':
+									if param['model_id'] == datum['model_id']:
+										new_uef = get_UEF(param)
+										targ_uef = datum['UEF']
+										return (new_uef - targ_uef) / 1.
 								
 				return 1.e8
 

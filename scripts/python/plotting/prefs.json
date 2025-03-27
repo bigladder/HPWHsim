@@ -1,11 +1,11 @@
 {
-  "model_id": "Rheem2020Build50",
+  "model_id": "BradfordWhiteAeroThermRE2H65",
   "model_spec": "JSON",
   "build_dir": "../../../build",
-  "test_list": "All tests",
-  "test_id": "standard24hr",
+  "test_list": "Tests with data",
+  "test_id": "RE2H65_UEF50",
   "show_simulated": true,
-  "show_measured": false,
+  "show_measured": true,
   "draw_profile": "Medium",
   "performance_plots": {
     "contour_variable": 1,
