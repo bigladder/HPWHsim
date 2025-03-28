@@ -1014,6 +1014,21 @@ class HPWH : public Courier::Sender
         std::string report();
     };
 
+    /// fields for test output to csv
+    struct TestData
+    {
+        int time_min;
+        double ambientT_C;
+        double setpointT_C;
+        double inletT_C;
+        double drawVolume_L;
+        DRMODES drMode;
+        std::vector<double> h_srcIn_kWh;
+        std::vector<double> h_srcOut_kWh;
+        std::vector<double> thermocoupleT_C;
+        double outletT_C;
+    };
+
     /// collection of information derived from standard 24-h test
     struct TestSummary
     {
@@ -1060,6 +1075,8 @@ class HPWH : public Courier::Sender
 
         bool qualifies = false;
 
+        std::vector<TestData> testDataSet = {};
+
         // return a verbose string summary
         std::string report();
     };
@@ -1076,19 +1093,6 @@ class HPWH : public Courier::Sender
     static TestConfiguration testConfiguration_E95;
     static double testSetpointT_C;
 
-    struct TestOptions
-    {
-        bool saveOutput = false;
-        std::string sOutputDirectory = "";
-        std::string sOutputFilename = "";
-        std::ostream* resultsStream = NULL;
-        std::ofstream outputFile;
-        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
-        TestConfiguration testConfiguration = testConfiguration_UEF;
-        bool overrideSetpoint = true;
-        int nTestTCouples = 6;
-    };
-
     /// perform a draw/heat cycle to prepare for test
     void prepForTest(const TestConfiguration& test_configuration);
 
@@ -1096,7 +1100,13 @@ class HPWH : public Courier::Sender
     FirstHourRating findFirstHourRating();
 
     /// run 24-hr draw pattern
-    TestSummary run24hrTest(TestOptions& testOptions);
+    TestSummary run24hrTest(TestConfiguration testConfiguration,
+                            FirstHourRating::Desig desig,
+                            bool saveOutput = false);
+    TestSummary run24hrTest(TestConfiguration testConfiguration, bool saveOutput = false)
+    {
+        return run24hrTest(testConfiguration, findFirstHourRating().desig, saveOutput);
+    }
 
     /// specific information for a single draw
     struct Draw
@@ -1123,33 +1133,65 @@ class HPWH : public Courier::Sender
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
-    /// fields for test output to csv
-    struct OutputData
-    {
-        int time_min;
-        double ambientT_C;
-        double setpointT_C;
-        double inletT_C;
-        double drawVolume_L;
-        DRMODES drMode;
-        std::vector<double> h_srcIn_kWh;
-        std::vector<double> h_srcOut_kWh;
-        std::vector<double> thermocoupleT_C;
-        double outletT_C;
-    };
-
     int writeRowAsCSV(std::ofstream& outFILE,
-                      OutputData& outputData,
+                      TestData& testData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-    TestSummary measureMetrics(TestOptions& testOptions);
-
     struct Fitter;
-    TestSummary makeGenericEF(double targetEF, TestOptions& testOptions);
-    void makeGenericE50_UEF_E95(double targetEF50,
+    TestSummary makeGenericEF(double targetEF,
+                              TestConfiguration testConfiguration,
+                              FirstHourRating::Desig desig);
+    TestSummary makeGenericEF(double targetEF, TestConfiguration testConfiguration)
+    {
+        return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().desig);
+    }
+
+    void makeGenericE50_UEF_E95(double targetE50,
                                 double targetUEF,
-                                double targetEF95,
-                                TestOptions& testOptions);
+                                double targetE95,
+                                FirstHourRating::Desig desig);
+
+    void makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
+    {
+        return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, findFirstHourRating().desig);
+    }
+
+    // E50
+    TestSummary makeGenericE50(double targetE50, FirstHourRating::Desig desig)
+    {
+        return makeGenericEF(targetE50, testConfiguration_E50, desig);
+    }
+    TestSummary makeGenericE50(double targetE50)
+    {
+        return makeGenericEF(targetE50, testConfiguration_E50, findFirstHourRating().desig);
+    }
+
+    // UEF
+    // fit using UEF config, then adjust E50, E95 coeff's
+    TestSummary makeGenericUEF_Adjusted(double targetUEF, FirstHourRating::Desig desig);
+
+    TestSummary
+    makeGenericUEF(double targetUEF, FirstHourRating::Desig desig, bool adjusted = false)
+    {
+        if (adjusted)
+            return makeGenericUEF_Adjusted(targetUEF, desig);
+        else
+            return makeGenericEF(targetUEF, testConfiguration_UEF, desig);
+    }
+    TestSummary makeGenericUEF(double targetUEF, bool adjusted = false)
+    {
+        return makeGenericUEF(targetUEF, findFirstHourRating().desig, adjusted);
+    }
+
+    // E95
+    TestSummary makeGenericE95(double targetE95, FirstHourRating::Desig desig)
+    {
+        return makeGenericEF(targetE95, testConfiguration_E95, desig);
+    }
+    TestSummary makeGenericE95(double targetE95)
+    {
+        return makeGenericEF(targetE95, testConfiguration_E95, findFirstHourRating().desig);
+    }
 
   private:
     void setAllDefaults(); /**< sets all the defaults */

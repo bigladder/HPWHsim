@@ -966,41 +966,38 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
 }
 
 int HPWH::writeRowAsCSV(std::ofstream& outFILE,
-                        OutputData& outputData,
+                        TestData& testData,
                         const CSVOPTIONS& options /* = CSVOPTIONS::CSVOPT_NONE */) const
 {
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     //
-    outFILE << fmt::format("{:d}", outputData.time_min);
+    outFILE << fmt::format("{:d}", testData.time_min);
+    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.ambientT_C) : testData.ambientT_C);
+    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.setpointT_C) : testData.setpointT_C);
+    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.inletT_C) : testData.inletT_C);
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
-    outFILE << fmt::format(",{:0.2f}",
-                           doIP ? C_TO_F(outputData.setpointT_C) : outputData.setpointT_C);
-    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
-    outFILE << fmt::format(",{:0.2f}",
-                           doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
-    outFILE << fmt::format(",{}", static_cast<int>(outputData.drMode));
+                           doIP ? L_TO_GAL(testData.drawVolume_L) : testData.drawVolume_L);
+    outFILE << fmt::format(",{}", static_cast<int>(testData.drMode));
 
     //
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               outputData.h_srcIn_kWh[iHS] * 1000.,
-                               outputData.h_srcOut_kWh[iHS] * 1000.);
+                               testData.h_srcIn_kWh[iHS] * 1000.,
+                               testData.h_srcOut_kWh[iHS] * 1000.);
     }
 
     //
-    for (auto thermocoupleT_C : outputData.thermocoupleT_C)
+    for (auto thermocoupleT_C : testData.thermocoupleT_C)
     {
         outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
     }
 
     //
-    if (outputData.drawVolume_L > 0.)
+    if (testData.drawVolume_L > 0.)
     {
-        outFILE << fmt::format(",{:0.2f}",
-                               doIP ? C_TO_F(outputData.outletT_C) : outputData.outletT_C);
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.outletT_C) : testData.outletT_C);
     }
     else
     {
@@ -5168,15 +5165,17 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
 /// @param[in/out] testOptions          reporting and configuration
 /// @param[out] testSummary	            contains test metrics on output
 //-----------------------------------------------------------------------------
-HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
+HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
+                                    FirstHourRating::Desig desig,
+                                    bool saveOutput)
 {
     // select the first draw cluster size and pattern
-    auto firstDrawClusterSize = firstDrawClusterSizes[testOptions.desig];
-    DrawPattern& drawPattern = drawPatterns[testOptions.desig];
+    auto firstDrawClusterSize = firstDrawClusterSizes[desig];
+    DrawPattern& drawPattern = drawPatterns[desig];
 
-    const double inletT_C = testOptions.testConfiguration.inletT_C;
-    const double ambientT_C = testOptions.testConfiguration.ambientT_C;
-    const double externalT_C = testOptions.testConfiguration.externalT_C;
+    const double inletT_C = testConfiguration.inletT_C;
+    const double ambientT_C = testConfiguration.ambientT_C;
+    const double externalT_C = testConfiguration.externalT_C;
 
     DRMODES drMode = DR_ALLOW;
 
@@ -5194,9 +5193,14 @@ HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
             setSetpoint(maxAllowedSetpointT_C);
     }
 
-    prepForTest(testOptions.testConfiguration);
+    prepForTest(testConfiguration);
 
-    std::vector<OutputData> outputDataSet;
+    const int nTestTCouples = 6;
+    TestSummary testSummary;
+    testSummary.testDataSet = {};
+
+    std::string strPreamble;
+    std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
 
     // idle for 1 hr
     int preTime_min = 0;
@@ -5218,39 +5222,39 @@ HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
             heatersAreOn |= heatSource.isEngaged();
         }
 
+        if (saveOutput)
         {
-            OutputData outputData;
-            outputData.time_min = preTime_min;
-            outputData.ambientT_C = ambientT_C;
-            outputData.setpointT_C = getSetpoint();
-            outputData.inletT_C = inletT_C;
-            outputData.drawVolume_L = 0.;
-            outputData.drMode = drMode;
+            TestData testData;
+            testData.time_min = preTime_min;
+            testData.ambientT_C = ambientT_C;
+            testData.setpointT_C = getSetpoint();
+            testData.inletT_C = inletT_C;
+            testData.drawVolume_L = 0.;
+            testData.drMode = drMode;
 
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
-                outputData.h_srcOut_kWh.push_back(
-                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+                testData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                testData.h_srcOut_kWh.push_back(getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
 
-            for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
+            for (int iTC = 0; iTC < nTestTCouples; ++iTC)
             {
-                outputData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
+                testData.thermocoupleT_C.push_back(
+                    getNthSimTcouple(iTC + 1, nTestTCouples, UNITS_C));
             }
-            outputData.outletT_C = 0.;
+            testData.outletT_C = 0.;
 
-            outputDataSet.push_back(outputData);
+            testSummary.testDataSet.push_back(testData);
         }
 
         ++preTime_min;
     }
 
     // correct time to start test at 0 min
-    for (auto& outputData : outputDataSet)
+    for (auto& testData : testSummary.testDataSet)
     {
-        outputData.time_min -= preTime_min;
+        testData.time_min -= preTime_min;
     }
 
     double tankT_C = getAverageTankTemp_C();
@@ -5263,8 +5267,6 @@ HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
     // used to find average 24-hr test temperatures
     double sumOutletVolumeT_LC = 0.;
     double sumInletVolumeT_LC = 0.;
-
-    TestSummary testSummary;
 
     // first-recovery info
     testSummary.recoveryStoredEnergy_kJ = 0.;
@@ -5379,30 +5381,30 @@ HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
                    inletT_C,         // inlet-2 Temp (C)
                    NULL);            // no extra heat
 
+        if (saveOutput)
         {
-            OutputData outputData;
-            outputData.time_min = runTime_min;
-            outputData.ambientT_C = ambientT_C;
-            outputData.setpointT_C = getSetpoint();
-            outputData.inletT_C = inletT_C;
-            outputData.drawVolume_L = stepDrawVolume_L;
-            outputData.drMode = drMode;
+            TestData testData;
+            testData.time_min = runTime_min;
+            testData.ambientT_C = ambientT_C;
+            testData.setpointT_C = getSetpoint();
+            testData.inletT_C = inletT_C;
+            testData.drawVolume_L = stepDrawVolume_L;
+            testData.drMode = drMode;
 
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
-                outputData.h_srcOut_kWh.push_back(
-                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+                testData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                testData.h_srcOut_kWh.push_back(getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
 
-            for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
+            for (int iTC = 0; iTC < nTestTCouples; ++iTC)
             {
-                outputData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
+                testData.thermocoupleT_C.push_back(
+                    getNthSimTcouple(iTC + 1, nTestTCouples, UNITS_C));
             }
-            outputData.outletT_C = outletTemp_C;
+            testData.outletT_C = outletTemp_C;
 
-            outputDataSet.push_back(outputData);
+            testSummary.testDataSet.push_back(testData);
         }
 
         tankT_C = getAverageTankTemp_C();
@@ -5534,14 +5536,6 @@ HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
         standbyEndTime_min = endTime_min;
         standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
         standbyEndT_C = tankT_C;                             // Tsu,0
-    }
-
-    if (testOptions.saveOutput)
-    {
-        for (auto& outputData : outputDataSet)
-        {
-            writeRowAsCSV(testOptions.outputFile, outputData);
-        }
     }
 
     testSummary.avgOutletT_C = sumOutletVolumeT_LC / testSummary.removedVolume_L;
@@ -5677,23 +5671,55 @@ HPWH::TestSummary HPWH::run24hrTest(TestOptions& testOptions)
     return testSummary;
 }
 
+HPWH::TestSummary HPWH::makeGenericUEF_Adjusted(double targetUEF,
+                                                HPWH::FirstHourRating::Desig desig)
+{
+    auto& compressor = heatSources[compressorIndex];
+
+    // pick the nearest temperature index
+    int nPerfPts = static_cast<int>(compressor.perfMap.size());
+    int i0 = 0, i1 = 0;
+    for (auto& perfPoint : compressor.perfMap)
+    {
+        if (testConfiguration_UEF.ambientT_C < F_TO_C(perfPoint.T_F))
+            break;
+        i0 = i1;
+        ++i1;
+    }
+    double ratio = 0.;
+    if ((i1 > i0) && (i1 < nPerfPts))
+    {
+        ratio = (testConfiguration_UEF.ambientT_C - compressor.perfMap[i0].T_F) /
+                (compressor.perfMap[i1].T_F - compressor.perfMap[i0].T_F);
+    }
+    int i_ambientT = (ratio < 0.5) ? i0 : i1;
+
+    auto originalCoef = compressor.perfMap[i_ambientT].COP_coeffs[0];
+    auto testSummary = makeGenericUEF(targetUEF, desig);
+
+    double dCOP_coef = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoef;
+
+    for (int i = 0; i < nPerfPts; ++i)
+    {
+        if (i != i_ambientT)
+            compressor.perfMap[i].COP_coeffs[0] += dCOP_coef;
+    }
+
+    return testSummary;
+}
+
 //-----------------------------------------------------------------------------
 ///	@brief	Modify *this hpwh to meet target metrics
 //-----------------------------------------------------------------------------
 void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,
                                   double targetE95,
-                                  TestOptions& testOptions)
+                                  FirstHourRating::Desig desig)
 {
     // return test summaries unused
-    testOptions.testConfiguration = testConfiguration_E50;
-    makeGenericEF(targetE50, testOptions);
-
-    testOptions.testConfiguration = testConfiguration_UEF;
-    makeGenericEF(targetUEF, testOptions);
-
-    testOptions.testConfiguration = testConfiguration_E95;
-    makeGenericEF(targetE95, testOptions);
+    makeGenericE50(targetE50, desig);
+    makeGenericUEF(targetUEF, desig);
+    makeGenericE95(targetE95, desig);
 }
 
 //-----------------------------------------------------------------------------
@@ -5701,8 +5727,7 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
 //-----------------------------------------------------------------------------
 std::string HPWH::FirstHourRating::report()
 {
-    std::string results = "";
-    results.append("\tFirst-Hour Rating:\n");
+    std::string results = "\tFirst-Hour Rating:\n";
     results.append(fmt::format("\t\tVolume Drawn (L): {:g}\n", drawVolume_L));
     results.append(fmt::format("\t\tDesignation: {}\n", sDesigMap[desig]));
     return results;
@@ -5713,8 +5738,7 @@ std::string HPWH::FirstHourRating::report()
 //-----------------------------------------------------------------------------
 std::string HPWH::TestSummary::report()
 {
-    std::string results = "";
-    results.append("\t24-Hour Test Results:\n");
+    std::string results = "\t24-Hour Test Results:\n";
     if (!qualifies)
     {
         results.append("\t\tDoes not qualify as consumer water heater.\n");
@@ -5753,49 +5777,17 @@ std::string HPWH::TestSummary::report()
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Measure the EF and other results of standard 24-hr tests
-//-----------------------------------------------------------------------------
-HPWH::TestSummary HPWH::measureMetrics(TestOptions& testOptions)
-{
-    TestSummary testSummary;
-    if (testOptions.saveOutput)
-    {
-        std::string sFullOutputFilename =
-            testOptions.sOutputDirectory + "/" + testOptions.sOutputFilename;
-        testOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
-        if (!testOptions.outputFile.is_open())
-        {
-            send_error(fmt::format("Could not open output file {}", sFullOutputFilename));
-        }
-
-        std::string strPreamble;
-        std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
-
-        int csvOptions = HPWH::CSVOPT_NONE;
-        WriteCSVHeading(
-            testOptions.outputFile, sHeader.c_str(), testOptions.nTestTCouples, csvOptions);
-    }
-
-    testSummary = run24hrTest(testOptions);
-
-    if (testOptions.saveOutput)
-    {
-        testOptions.outputFile.close();
-    }
-
-    return testSummary;
-}
-
-//-----------------------------------------------------------------------------
 ///	@brief	Make a generic model with target EF from the current model
 /// by varying COP coef's
 //-----------------------------------------------------------------------------
-HPWH::TestSummary HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOptions)
+HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
+                                      TestConfiguration testConfiguration,
+                                      FirstHourRating::Desig desig)
 {
     // set up metrics
     std::vector<std::shared_ptr<Fitter::Metric>> metrics = {};
-    auto ef_metric =
-        std::make_shared<HPWH::Fitter::EF_Metric>(targetEF, &testOptions, get_courier(), this);
+    auto ef_metric = std::make_shared<HPWH::Fitter::EF_Metric>(
+        targetEF, testConfiguration, desig, get_courier(), this);
     metrics.push_back(ef_metric);
 
     auto& compressor = heatSources[compressorIndex];
@@ -5805,7 +5797,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOp
     int i0 = 0, i1 = 0;
     for (auto& perfPoint : compressor.perfMap)
     {
-        if (testOptions.testConfiguration.ambientT_C < F_TO_C(perfPoint.T_F))
+        if (testConfiguration.ambientT_C < F_TO_C(perfPoint.T_F))
             break;
         i0 = i1;
         ++i1;
@@ -5813,7 +5805,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOp
     double ratio = 0.;
     if ((i1 > i0) && (i1 < nPerfPts))
     {
-        ratio = (testOptions.testConfiguration.ambientT_C - compressor.perfMap[i0].T_F) /
+        ratio = (testConfiguration.ambientT_C - compressor.perfMap[i0].T_F) /
                 (compressor.perfMap[i1].T_F - compressor.perfMap[i0].T_F);
     }
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
@@ -5831,7 +5823,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOp
     send_info(fitter.showParameters());
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
+    compressor.getCapacity(testConfiguration.ambientT_C,
                            compressor.maxSetpoint_C,
                            getSetpoint(),
                            input_BTUperHr,
@@ -5840,7 +5832,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF, HPWH::TestOptions& testOp
     if (cop1 < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor.getCapacity(testOptions.testConfiguration.ambientT_C,
+    compressor.getCapacity(testConfiguration.ambientT_C,
                            0., /// low condenserT_C
                            getSetpoint(),
                            input_BTUperHr,

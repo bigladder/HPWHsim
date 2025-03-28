@@ -152,19 +152,19 @@ struct HPWH::Fitter : public Sender
     struct EF_Metric : public Metric
     {
         HPWH* hpwh;
-        TestOptions* testOptions;
+        TestConfiguration testConfiguration;
+        FirstHourRating::Desig desig;
         TestSummary testSummary;
 
         EF_Metric(double targetEF,
-                  TestOptions* testOptions_in,
+                  TestConfiguration testConfiguration_in,
+                  FirstHourRating::Desig desig_in,
                   std::shared_ptr<Courier::Courier> courier,
                   HPWH* hpwh_in = nullptr)
-            : Metric(targetEF, courier), hpwh(hpwh_in), testOptions(testOptions_in)
-        {
-        }
-
-        EF_Metric(Metric& metric, TestOptions* testOptions_in, HPWH* hpwh_in = nullptr)
-            : Metric(metric), hpwh(hpwh_in), testOptions(testOptions_in)
+            : Metric(targetEF, courier)
+            , hpwh(hpwh_in)
+            , testConfiguration(testConfiguration_in)
+            , desig(desig_in)
         {
         }
 
@@ -173,7 +173,7 @@ struct HPWH::Fitter : public Sender
         /// get current EF
         void evaluate() override
         {
-            testSummary = hpwh->run24hrTest(*testOptions);
+            testSummary = hpwh->run24hrTest(testConfiguration, desig, false);
             currentValue = testSummary.EF;
         }
 
