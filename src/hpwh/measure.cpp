@@ -92,18 +92,21 @@ void measure(const std::string& sSpecType,
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
 
     std::string results = "";
-    HPWH::FirstHourRating::Desig desig;
+    auto desig = HPWH::FirstHourRating::Desig::Medium;
 
     // set draw profile
     if (sCustomDrawProfile != "")
     {
         bool foundProfile = false;
-        for (auto& c : sCustomDrawProfile)
-        {
-            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
         if (sCustomDrawProfile.length() > 0)
         {
+            // make lowercase
+            for (auto& c : sCustomDrawProfile)
+            {
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
+
+            // make first char upper
             sCustomDrawProfile[0] =
                 static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
         }
