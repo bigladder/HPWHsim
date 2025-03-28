@@ -113,7 +113,7 @@ void make(const std::string& sSpecType,
     results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
     results.append(fmt::format("\tModel Name: {}\n", sModelName));
 
-    HPWH::FirstHourRating::Desig desig;
+    auto desig = HPWH::FirstHourRating::Desig::Medium;
     if (sCustomDrawProfile != "")
     {
         bool foundProfile = false;
