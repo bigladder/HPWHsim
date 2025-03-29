@@ -5638,8 +5638,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     return testSummary;
 }
 
-HPWH::TestSummary HPWH::makeGenericUEF_Adjusted(double targetUEF,
-                                                HPWH::FirstHourRating::Desig desig)
+HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::Desig desig)
 {
     auto& compressor = heatSources[compressorIndex];
 
@@ -5662,7 +5661,7 @@ HPWH::TestSummary HPWH::makeGenericUEF_Adjusted(double targetUEF,
     int i_ambientT = (ratio < 0.5) ? i0 : i1;
 
     auto originalCoef = compressor.perfMap[i_ambientT].COP_coeffs[0];
-    auto testSummary = makeGenericUEF(targetUEF, desig);
+    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, desig);
 
     double dCOP_coef = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoef;
 
@@ -5684,9 +5683,9 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   FirstHourRating::Desig desig)
 {
     // return test summaries unused
-    makeGenericE50(targetE50, desig);
-    makeGenericUEF(targetUEF, desig);
-    makeGenericE95(targetE95, desig);
+    makeGenericEF(targetE50, testConfiguration_E50, desig);
+    makeGenericEF(targetUEF, testConfiguration_UEF, desig);
+    makeGenericEF(targetE95, testConfiguration_E95, desig);
 }
 
 //-----------------------------------------------------------------------------
