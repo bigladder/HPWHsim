@@ -1152,41 +1152,11 @@ class HPWH : public Courier::Sender
         return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, findFirstHourRating().desig);
     }
 
-    // E50
-    TestSummary makeGenericE50(double targetE50, FirstHourRating::Desig desig)
-    {
-        return makeGenericEF(targetE50, testConfiguration_E50, desig);
-    }
-    TestSummary makeGenericE50(double targetE50)
-    {
-        return makeGenericEF(targetE50, testConfiguration_E50, findFirstHourRating().desig);
-    }
-
-    // UEF
     // fit using UEF config, then adjust E50, E95 coeff's
-    TestSummary makeGenericUEF_Adjusted(double targetUEF, FirstHourRating::Desig desig);
-
-    TestSummary
-    makeGenericUEF(double targetUEF, FirstHourRating::Desig desig, bool adjust_all = false)
+    TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Desig desig);
+    TestSummary makeGenericUEF(double targetUEF)
     {
-        if (adjust_all)
-            return makeGenericUEF_Adjusted(targetUEF, desig);
-        else
-            return makeGenericEF(targetUEF, testConfiguration_UEF, desig);
-    }
-    TestSummary makeGenericUEF(double targetUEF, bool adjusted = false)
-    {
-        return makeGenericUEF(targetUEF, findFirstHourRating().desig, adjusted);
-    }
-
-    // E95
-    TestSummary makeGenericE95(double targetE95, FirstHourRating::Desig desig)
-    {
-        return makeGenericEF(targetE95, testConfiguration_E95, desig);
-    }
-    TestSummary makeGenericE95(double targetE95)
-    {
-        return makeGenericEF(targetE95, testConfiguration_E95, findFirstHourRating().desig);
+        return makeGenericUEF(targetUEF, findFirstHourRating().desig);
     }
 
   private:
