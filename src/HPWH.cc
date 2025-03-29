@@ -965,49 +965,6 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     return 0;
 }
 
-int HPWH::writeRowAsCSV(std::ofstream& outFILE,
-                        TestData& testData,
-                        const CSVOPTIONS& options /* = CSVOPTIONS::CSVOPT_NONE */) const
-{
-    bool doIP = (options & CSVOPT_IPUNITS) != 0;
-
-    //
-    outFILE << fmt::format("{:d}", testData.time_min);
-    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.ambientT_C) : testData.ambientT_C);
-    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.setpointT_C) : testData.setpointT_C);
-    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.inletT_C) : testData.inletT_C);
-    outFILE << fmt::format(",{:0.2f}",
-                           doIP ? L_TO_GAL(testData.drawVolume_L) : testData.drawVolume_L);
-    outFILE << fmt::format(",{}", static_cast<int>(testData.drMode));
-
-    //
-    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
-    {
-        outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               testData.h_srcIn_kWh[iHS] * 1000.,
-                               testData.h_srcOut_kWh[iHS] * 1000.);
-    }
-
-    //
-    for (auto thermocoupleT_C : testData.thermocoupleT_C)
-    {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
-    }
-
-    //
-    if (testData.drawVolume_L > 0.)
-    {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.outletT_C) : testData.outletT_C);
-    }
-    else
-    {
-        outFILE << ",";
-    }
-
-    outFILE << std::endl;
-    return 0;
-}
-
 bool HPWH::isSetpointFixed() const { return setpointFixed; }
 
 void HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
