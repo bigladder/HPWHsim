@@ -4391,6 +4391,16 @@ void HPWH::initFromFile(string modelName)
                 else
                     send_warning("Invalid units.");
             }
+            else if (token == "maxSetpointT")
+            {
+                line_ss >> tempDouble >> units;
+                if (units == "C")
+                    heatSources[heatsource].maxSetpoint_C = tempDouble;
+                else if (units == "F")
+                    heatSources[heatsource].maxSetpoint_C = F_TO_C(tempDouble);
+                else
+                    send_warning("Invalid units.");
+            }
             else if (token == "onlogic" || token == "offlogic" || token == "standbylogic")
             {
                 line_ss >> tempString;
