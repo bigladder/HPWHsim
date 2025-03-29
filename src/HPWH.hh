@@ -1133,10 +1133,6 @@ class HPWH : public Courier::Sender
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
-    int writeRowAsCSV(std::ofstream& outFILE,
-                      TestData& testData,
-                      const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
-
     struct Fitter;
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
@@ -1171,9 +1167,9 @@ class HPWH : public Courier::Sender
     TestSummary makeGenericUEF_Adjusted(double targetUEF, FirstHourRating::Desig desig);
 
     TestSummary
-    makeGenericUEF(double targetUEF, FirstHourRating::Desig desig, bool adjusted = false)
+    makeGenericUEF(double targetUEF, FirstHourRating::Desig desig, bool adjust_all = false)
     {
-        if (adjusted)
+        if (adjust_all)
             return makeGenericUEF_Adjusted(targetUEF, desig);
         else
             return makeGenericEF(targetUEF, testConfiguration_UEF, desig);
