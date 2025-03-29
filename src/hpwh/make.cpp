@@ -73,9 +73,6 @@ void make(const std::string& sSpecType,
           std::string sResultsFilename,
           std::string sCustomDrawProfile)
 {
-    // process command line arguments
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
-
     // select test configuration
     transform(sTestConfig.begin(),
               sTestConfig.end(),
@@ -90,13 +87,20 @@ void make(const std::string& sSpecType,
     else
         testConfiguration = HPWH::testConfiguration_UEF;
 
+    // process command line arguments
+    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     for (auto& c : sPresetOrFile)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
+    if (sPresetOrFile.length() > 0)
+    {
+        sPresetOrFile[0] =
+            static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+    }
 
     HPWH hpwh;
-    if (sPresetOrFile == "preset")
+    if (sPresetOrFile == "Preset")
     {
         hpwh.initPreset(sModelName);
     }
