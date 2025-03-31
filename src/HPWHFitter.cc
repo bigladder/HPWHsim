@@ -184,15 +184,16 @@ void HPWH::Fitter::performLeastSquaresMinimization()
         std::vector<double> inverseJacobiV; // invert jacobian using damping nu
         if (getLeftDampedInverse(nu, jacobiV, inverseJacobiV))
         {
-            // check incremented parameters
+            // find error using incremented parameters
             std::vector<double> incrementParamV(2);
             for (std::size_t i = 0; i < nParameters; ++i)
             {
                 incrementParamV[i] = -inverseJacobiV[i] * error;
                 *parameters[i]->data_ptr = parameterV[i] + incrementParamV[i]; // increment
             }
-            double incError = metric->findError();
-            double incFOM = incError * incError; // FOM with increments applied
+            double incrementedError = metric->findError();
+            double incrementedFOM =
+                incrementedError * incrementedError; // FOM with increments applied
 
             // restore parameters
             for (std::size_t j = 0; j < nParameters; ++j)
@@ -200,14 +201,14 @@ void HPWH::Fitter::performLeastSquaresMinimization()
                 *parameters[j]->data_ptr = parameterV[j];
             }
 
-            if (incFOM < FOM)
+            if (incrementedFOM < FOM)
             {
                 // improved, so apply increments and reduce nu
                 for (std::size_t i = 0; i < nParameters; ++i)
                 {
                     *parameters[i]->data_ptr = parameterV[i] + incrementParamV[i];
                     (parameters[i]->increment) = fabs(incrementParamV[i]) / 1.e3;
-                    FOM = incFOM;
+                    FOM = incrementedFOM;
                 }
                 nu /= 10.;
                 improved = true;
