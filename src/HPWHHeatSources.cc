@@ -1059,3 +1059,23 @@ void HPWH::HeatSource::changeResistanceWatts(double watts)
         perfP.inputPower_coeffs[0] = watts;
     }
 }
+
+// pick the nearest temperature index
+int HPWH::HeatSource::getAmbientT_index(double ambientT_C)
+{
+    int nPerfPts = static_cast<int>(perfMap.size());
+    int i0 = 0, i1 = 0;
+    for (auto& perfPoint : perfMap)
+    {
+        if (ambientT_C < F_TO_C(perfPoint.T_F))
+            break;
+        i0 = i1;
+        ++i1;
+    }
+    double ratio = 0.;
+    if ((i1 > i0) && (i1 < nPerfPts))
+    {
+        ratio = (ambientT_C - perfMap[i0].T_F) / (perfMap[i1].T_F - perfMap[i0].T_F);
+    }
+    return (ratio < 0.5) ? i0 : i1;
+}
