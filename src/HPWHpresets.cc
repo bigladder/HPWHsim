@@ -3957,20 +3957,20 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(2);
 
         compressor->perfMap.push_back({
-            50,                           // Temperature (T)
-            {187.064124, 1.939747, 0.0},  // Input Power Coefficients
+            50,                           // Temperature (F)
+            {187.064124, 1.939747, 0.0},  // Input Power (W) Coefficients
             {5.22288834, -0.0243008, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
             67.5,                            // Temperature (F)
-            {152.9195905, 2.476598, 0.0},    // Input Power Coefficients
+            {152.9195905, 2.476598, 0.0},    // Input Power (W) Coefficients
             {6.643934986, -0.032373288, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
             95,                           // Temperature (F)
-            {99.263895, 3.320221, 0.0},   // Input Power Coefficients
+            {99.263895, 3.320221, 0.0},   // Input Power (W) Coefficients
             {8.87700829, -0.0450586, 0.0} // COP Coefficients
         });
 
@@ -4372,19 +4372,19 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->perfMap.push_back({
             50,                    // Temperature (F)
-            {126.9, 2.215, 0.0},   // Input Power Coefficients
+            {126.9, 2.215, 0.0},   // Input Power (W) Coefficients
             {6.931, -0.03395, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
             67.5,                  // Temperature (F)
-            {116.6, 2.467, 0.0},   // Input Power Coefficients
+            {116.6, 2.467, 0.0},   // Input Power (W) Coefficients
             {8.833, -0.04431, 0.0} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
             95,                     // Temperature (F)
-            {100.4, 2.863, 0.0},    // Input Power Coefficients
+            {100.4, 2.863, 0.0},    // Input Power (W) Coefficients
             {11.822, -0.06059, 0.0} // COP Coefficients
         });
 

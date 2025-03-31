@@ -1057,8 +1057,8 @@ class HPWH : public Courier::Sender
         // 24-hr values
         double removedVolume_L = 0.;
         double waterHeatingEnergy_kJ = 0.; // Q_HW
-        double avgOutletT_C = 0.;          // <Tdel,i>
-        double avgInletT_C = 0.;           // <Tin,i>
+        double averageOutletT_C = 0.;          // <Tdel,i>
+        double averageInletT_C = 0.;           // <Tin,i>
 
         double usedFossilFuelEnergy_kJ = 0.;               // Q_f
         double usedElectricalEnergy_kJ = 0.;               // Q_e
