@@ -996,19 +996,19 @@ class HPWH : public Courier::Sender
     /// first-hour rating designations to determine draw pattern for 24-hr test
     struct FirstHourRating
     {
-        enum class Desig
+        enum class Designation
         {
             VerySmall,
             Low,
             Medium,
             High
-        } desig;
+        } designation;
 
-        static inline std::unordered_map<Desig, std::string> sDesigMap = {
-            {Desig::VerySmall, "Very Small"},
-            {Desig::Low, "Low"},
-            {Desig::Medium, "Medium"},
-            {Desig::High, "High"}};
+        static inline std::unordered_map<Designation, std::string> sDesigMap = {
+            {Designation::VerySmall, "Very Small"},
+            {Designation::Low, "Low"},
+            {Designation::Medium, "Medium"},
+            {Designation::High, "High"}};
 
         double drawVolume_L;
         std::string report();
@@ -1101,11 +1101,11 @@ class HPWH : public Courier::Sender
 
     /// run 24-hr draw pattern
     TestSummary run24hrTest(TestConfiguration testConfiguration,
-                            FirstHourRating::Desig desig,
+                            FirstHourRating::Designation designation,
                             bool saveOutput = false);
     TestSummary run24hrTest(TestConfiguration testConfiguration, bool saveOutput = false)
     {
-        return run24hrTest(testConfiguration, findFirstHourRating().desig, saveOutput);
+        return run24hrTest(testConfiguration, findFirstHourRating().designation, saveOutput);
     }
 
     /// specific information for a single draw
@@ -1128,35 +1128,35 @@ class HPWH : public Courier::Sender
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
-    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes;
+    static std::unordered_map<FirstHourRating::Designation, std::size_t> firstDrawClusterSizes;
 
     /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
+    static std::unordered_map<FirstHourRating::Designation, DrawPattern> drawPatterns;
 
     struct Fitter;
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
-                              FirstHourRating::Desig desig);
+                              FirstHourRating::Designation designation);
     TestSummary makeGenericEF(double targetEF, TestConfiguration testConfiguration)
     {
-        return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().desig);
+        return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().designation);
     }
 
     void makeGenericE50_UEF_E95(double targetE50,
                                 double targetUEF,
                                 double targetE95,
-                                FirstHourRating::Desig desig);
+                                FirstHourRating::Designation designation);
 
     void makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
     {
-        return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, findFirstHourRating().desig);
+        return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, findFirstHourRating().designation);
     }
 
     // fit using UEF config, then adjust E50, E95 coeff's
-    TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Desig desig);
+    TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Designation designation);
     TestSummary makeGenericUEF(double targetUEF)
     {
-        return makeGenericUEF(targetUEF, findFirstHourRating().desig);
+        return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
 
   private:

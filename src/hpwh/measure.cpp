@@ -92,7 +92,7 @@ void measure(const std::string& sSpecType,
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
 
     std::string results = "";
-    auto desig = HPWH::FirstHourRating::Desig::Medium;
+    auto designation = HPWH::FirstHourRating::Designation::Medium;
 
     // set draw profile
     if (sCustomDrawProfile != "")
@@ -114,7 +114,7 @@ void measure(const std::string& sSpecType,
         {
             if (value == sCustomDrawProfile)
             {
-                desig = key;
+                designation = key;
                 foundProfile = true;
                 results.append(fmt::format("\tCustom Draw Profile: {}\n", sCustomDrawProfile));
                 break;
@@ -129,7 +129,7 @@ void measure(const std::string& sSpecType,
     else
     {
         auto firstHourRating = hpwh.findFirstHourRating();
-        desig = firstHourRating.desig;
+        designation = firstHourRating.designation;
         results.append(firstHourRating.report());
     }
 
@@ -144,7 +144,7 @@ void measure(const std::string& sSpecType,
     else if (sTestConfig == "E95")
         testConfiguration = HPWH::testConfiguration_E95;
 
-    auto testSummary = hpwh.run24hrTest(testConfiguration, desig, saveTestData);
+    auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
     }

@@ -75,14 +75,14 @@ HPWH::TestConfiguration HPWH::testConfiguration_E95 = {F_TO_C(95.), F_TO_C(67.),
 // stipulated setpoint for 24-hr test, see EERE-2019-BT-TP-0032-0058 (p. 40475)
 double HPWH::testSetpointT_C = F_TO_C(125.);
 
-std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> HPWH::firstDrawClusterSizes = {
-    {HPWH::FirstHourRating::Desig::VerySmall, 5},
-    {HPWH::FirstHourRating::Desig::Low, 3},
-    {HPWH::FirstHourRating::Desig::Medium, 3},
-    {HPWH::FirstHourRating::Desig::High, 4}};
+std::unordered_map<HPWH::FirstHourRating::Designation, std::size_t> HPWH::firstDrawClusterSizes = {
+    {HPWH::FirstHourRating::Designation::VerySmall, 5},
+    {HPWH::FirstHourRating::Designation::Low, 3},
+    {HPWH::FirstHourRating::Designation::Medium, 3},
+    {HPWH::FirstHourRating::Designation::High, 4}};
 
-std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPatterns = {
-    {HPWH::FirstHourRating::Desig::VerySmall,
+std::unordered_map<HPWH::FirstHourRating::Designation, HPWH::DrawPattern> HPWH::drawPatterns = {
+    {HPWH::FirstHourRating::Designation::VerySmall,
      {{HM_TO_MIN(0, 00), 7.6, 3.8},
       {HM_TO_MIN(1, 00), 3.8, 3.8},
       {HM_TO_MIN(1, 05), 1.9, 3.8},
@@ -93,7 +93,7 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(9, 00), 5.7, 3.8},
       {HM_TO_MIN(9, 15), 3.8, 3.8}}},
 
-    {HPWH::FirstHourRating::Desig::Low,
+    {HPWH::FirstHourRating::Designation::Low,
      {{HM_TO_MIN(0, 00), 56.8, 6.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(1, 00), 3.8, 3.8},
@@ -106,7 +106,7 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 11.4, 6.4}}},
 
-    {HPWH::FirstHourRating::Desig::Medium,
+    {HPWH::FirstHourRating::Designation::Medium,
      {{HM_TO_MIN(0, 00), 56.8, 6.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(1, 40), 34.1, 6.4},
@@ -120,7 +120,7 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 26.5, 6.4}}},
 
-    {HPWH::FirstHourRating::Desig::High,
+    {HPWH::FirstHourRating::Designation::High,
      {{HM_TO_MIN(0, 00), 102, 11.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(0, 40), 3.8, 3.8},
@@ -5109,19 +5109,19 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
     //
     if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
     {
-        firstHourRating.desig = FirstHourRating::Desig::VerySmall;
+        firstHourRating.designation = FirstHourRating::Designation::VerySmall;
     }
     else if (firstHourRating.drawVolume_L < GAL_TO_L(51.))
     {
-        firstHourRating.desig = FirstHourRating::Desig::Low;
+        firstHourRating.designation = FirstHourRating::Designation::Low;
     }
     else if (firstHourRating.drawVolume_L < GAL_TO_L(75.))
     {
-        firstHourRating.desig = FirstHourRating::Desig::Medium;
+        firstHourRating.designation = FirstHourRating::Designation::Medium;
     }
     else
     {
-        firstHourRating.desig = FirstHourRating::Desig::High;
+        firstHourRating.designation = FirstHourRating::Designation::High;
     }
     return firstHourRating;
 }
@@ -5133,12 +5133,12 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
 /// @param[out] testSummary	            contains test metrics on output
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
-                                    FirstHourRating::Desig desig,
+                                    FirstHourRating::Designation designation,
                                     bool saveOutput)
 {
     // select the first draw cluster size and pattern
-    auto firstDrawClusterSize = firstDrawClusterSizes[desig];
-    DrawPattern& drawPattern = drawPatterns[desig];
+    auto firstDrawClusterSize = firstDrawClusterSizes[designation];
+    DrawPattern& drawPattern = drawPatterns[designation];
 
     const double inletT_C = testConfiguration.inletT_C;
     const double ambientT_C = testConfiguration.ambientT_C;
@@ -5638,7 +5638,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     return testSummary;
 }
 
-HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::Desig desig)
+HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::Designation designation)
 {
     auto& compressor = heatSources[compressorIndex];
 
@@ -5646,7 +5646,7 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::
     int i_ambientT = compressor.getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
     auto originalCoef = compressor.perfMap[i_ambientT].COP_coeffs[0];
-    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, desig);
+    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
     double dCOP_coef = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoef;
 
@@ -5666,12 +5666,12 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::
 void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,
                                   double targetE95,
-                                  FirstHourRating::Desig desig)
+                                  FirstHourRating::Designation designation)
 {
     // return test summaries unused
-    makeGenericEF(targetE50, testConfiguration_E50, desig);
-    makeGenericEF(targetUEF, testConfiguration_UEF, desig);
-    makeGenericEF(targetE95, testConfiguration_E95, desig);
+    makeGenericEF(targetE50, testConfiguration_E50, designation);
+    makeGenericEF(targetUEF, testConfiguration_UEF, designation);
+    makeGenericEF(targetE95, testConfiguration_E95, designation);
 }
 
 //-----------------------------------------------------------------------------
@@ -5681,7 +5681,7 @@ std::string HPWH::FirstHourRating::report()
 {
     std::string results = "\tFirst-Hour Rating:\n";
     results.append(fmt::format("\t\tVolume Drawn (L): {:g}\n", drawVolume_L));
-    results.append(fmt::format("\t\tDesignation: {}\n", sDesigMap[desig]));
+    results.append(fmt::format("\t\tDesignation: {}\n", sDesigMap[designation]));
     return results;
 }
 
@@ -5734,12 +5734,12 @@ std::string HPWH::TestSummary::report()
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
                                       TestConfiguration testConfiguration,
-                                      FirstHourRating::Desig desig)
+                                      FirstHourRating::Designation designation)
 {
     // set up metrics
     std::vector<std::shared_ptr<Fitter::Metric>> metrics = {};
     auto ef_metric = std::make_shared<HPWH::Fitter::EF_Metric>(
-        targetEF, testConfiguration, desig, get_courier(), this);
+        targetEF, testConfiguration, designation, get_courier(), this);
     metrics.push_back(ef_metric);
 
     auto& compressor = heatSources[compressorIndex];

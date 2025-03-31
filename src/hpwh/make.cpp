@@ -117,7 +117,7 @@ void make(const std::string& sSpecType,
     results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
     results.append(fmt::format("\tModel Name: {}\n", sModelName));
 
-    auto desig = HPWH::FirstHourRating::Desig::Medium;
+    auto designation = HPWH::FirstHourRating::Designation::Medium;
     if (sCustomDrawProfile != "")
     {
         bool foundProfile = false;
@@ -134,7 +134,7 @@ void make(const std::string& sSpecType,
         {
             if (value == sCustomDrawProfile)
             {
-                desig = key;
+                designation = key;
                 foundProfile = true;
                 results.append(fmt::format("\tCustom Draw Profile: {}\n", sCustomDrawProfile));
                 break;
@@ -149,14 +149,14 @@ void make(const std::string& sSpecType,
     else
     {
         auto firstHourRating = hpwh.findFirstHourRating();
-        desig = firstHourRating.desig;
+        designation = firstHourRating.designation;
         results.append(firstHourRating.report());
     }
 
-    hpwh.makeGenericEF(targetEF, testConfiguration, desig);
+    hpwh.makeGenericEF(targetEF, testConfiguration, designation);
 
     std::ofstream outputFile;
-    auto testSummary = hpwh.run24hrTest(testConfiguration, desig, saveTestData);
+    auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
         std::string sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
