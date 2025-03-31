@@ -4,6 +4,20 @@
 #include "HPWH.hh"
 #include "HPWHFitter.hh"
 
+// evaluate the current metric using provided single-parameter value
+double HPWH::Fitter::getMetricSingleParameter(double x)
+{
+    auto nParameters = parameters.size();
+    auto nMetrics = metrics.size();
+
+    if ((nParameters == 1) && (nMetrics == 1))
+    {
+        *parameters[0]->data_ptr = x;
+        return metrics[0]->evaluate();
+    }
+    return 1.e12;
+}
+
 //-----------------------------------------------------------------------------
 ///	@brief	target function used by secant
 //-----------------------------------------------------------------------------
@@ -139,11 +153,9 @@ void HPWH::Fitter::performLeastSquaresMinimization()
     bool success = false;
     const int maxIters = 20;
 
-    std::vector<double> increments;
-
-    auto metric = metrics[0];
+    auto metric = metrics[0]; // currently, one metric onlu
     auto nParameters = parameters.size();
-    double nu = 0.001;
+    double nu = 0.001; // damping term
     for (auto iter = 0; iter < maxIters; ++iter)
     {
         std::string iter_msg = fmt::format("iter {:d}: ", iter);
@@ -162,14 +174,14 @@ void HPWH::Fitter::performLeastSquaresMinimization()
 
         std::vector<double> jacobiV(nParameters); // 1 x 2
         for (std::size_t i = 0; i < nParameters; ++i)
-        { // get jacobi
+        { // get jacobian
             *parameters[i]->data_ptr = parameterV[i] + (parameters[i]->increment);
             jacobiV[i] = (metric->findError() - error) / (parameters[i]->increment);
             *parameters[i]->data_ptr = parameterV[i]; // restore
         }
 
         bool improved = false;
-        std::vector<double> inverseJacobiV; // invert jacobi using nu
+        std::vector<double> inverseJacobiV; // invert jacobian using damping nu
         if (getLeftDampedInverse(nu, jacobiV, inverseJacobiV))
         {
             // check incremented parameters
@@ -194,7 +206,7 @@ void HPWH::Fitter::performLeastSquaresMinimization()
                 for (std::size_t i = 0; i < nParameters; ++i)
                 {
                     *parameters[i]->data_ptr = parameterV[i] + incrementParamV[i];
-                    (parameters[i]->increment) = incrementParamV[i] / 1.e3;
+                    (parameters[i]->increment) = fabs(incrementParamV[i]) / 1.e3;
                     FOM = incFOM;
                 }
                 nu /= 10.;
@@ -237,13 +249,11 @@ void HPWH::Fitter::fit()
         auto metric = metrics[0];
 
         double value0 = *parameter->data_ptr;
-        metric->evaluate();
-        double f0 = metric->currentValue;
+        double f0 = metric->evaluate();
 
         double value1 = value0 + parameter->increment;
         *parameter->data_ptr = value1;
-        metric->evaluate();
-        double f1 = metric->currentValue;
+        double f1 = metric->evaluate();
 
         *parameter->data_ptr = value0;
 

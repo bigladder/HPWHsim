@@ -139,19 +139,17 @@ struct HPWH::Fitter : public Sender
     /// i.e., a target value to match by varying parameters
     struct Metric : public Sender
     {
-        double targetValue;  // value to be matched
-        double currentValue; // current value
-        double tolerance;    // tolerance
+        double targetValue; // value to be matched
+        double tolerance;   // tolerance
 
         Metric(double targetValue_in, std::shared_ptr<Courier::Courier> courier)
             : Sender("MetricInput", "metricInput", courier)
             , targetValue(targetValue_in)
-            , currentValue(0.)
             , tolerance(1.e-6)
         {
         }
 
-        virtual void evaluate() = 0;
+        virtual double evaluate() = 0;
         virtual double findError() = 0;
     };
 
@@ -178,17 +176,16 @@ struct HPWH::Fitter : public Sender
         virtual ~EF_Metric() = default;
 
         /// get current EF
-        void evaluate() override
+        double evaluate() override
         {
             testSummary = hpwh->run24hrTest(testConfiguration, designation, false);
-            currentValue = testSummary.EF;
+            return testSummary.EF;
         }
 
         /// find error ratio
         double findError() override
         {
-            evaluate();
-            return (currentValue - targetValue) / tolerance;
+            return (evaluate() - targetValue) / tolerance;
         }
 
         TestSummary getTestSummary() const { return testSummary; }
@@ -210,22 +207,7 @@ struct HPWH::Fitter : public Sender
     }
 
     // evaluate the current metric using provided single-parameter value
-    double getMetricSingleParameter(double x)
-    {
-        auto nParameters = parameters.size();
-        auto nMetrics = metrics.size();
-
-        if ((nParameters == 1) && (nMetrics == 1))
-        {
-            auto parameter = parameters[0];
-            auto metric = metrics[0];
-
-            *parameter->data_ptr = x;
-            metric->evaluate();
-            return metric->currentValue;
-        }
-        return 1.e12;
-    }
+    double getMetricSingleParameter(double x);
 
     [[nodiscard]] std::string showParameters() const
     {
