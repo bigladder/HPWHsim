@@ -5638,51 +5638,17 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     return testSummary;
 }
 
-HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
-                                       HPWH::FirstHourRating::Designation designation)
-{
-    auto& compressor = heatSources[compressorIndex];
-
-    // pick the nearest temperature index
-    int i_ambientT = compressor.getAmbientT_index(testConfiguration_UEF.ambientT_C);
-
-    auto originalCoef = compressor.perfMap[i_ambientT].COP_coeffs[0];
-    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
-
-    double dCOP_coef = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoef;
-
-    int nPerfPts = static_cast<int>(compressor.perfMap.size());
-    for (int i = 0; i < nPerfPts; ++i)
-    {
-        if (i != i_ambientT)
-            compressor.perfMap[i].COP_coeffs[0] += dCOP_coef;
-    }
-
-    return testSummary;
-}
-
-//-----------------------------------------------------------------------------
-///	@brief	Modify *this hpwh to meet target metrics
-//-----------------------------------------------------------------------------
-void HPWH::makeGenericE50_UEF_E95(double targetE50,
-                                  double targetUEF,
-                                  double targetE95,
-                                  FirstHourRating::Designation designation)
-{
-    // return test summaries unused
-    makeGenericEF(targetE50, testConfiguration_E50, designation);
-    makeGenericEF(targetUEF, testConfiguration_UEF, designation);
-    makeGenericEF(targetE95, testConfiguration_E95, designation);
-}
-
 //-----------------------------------------------------------------------------
 ///	@brief	first-hour rating as a verbose string
 //-----------------------------------------------------------------------------
 std::string HPWH::FirstHourRating::report()
 {
     std::string results = "\tFirst-Hour Rating:\n";
+
     results.append(fmt::format("\t\tVolume Drawn (L): {:g}\n", drawVolume_L));
+
     results.append(fmt::format("\t\tDesignation: {}\n", sDesigMap[designation]));
+
     return results;
 }
 
@@ -5748,15 +5714,16 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     int i_ambientT = compressor.getAmbientT_index(testConfiguration.ambientT_C);
 
     // set up parameters
-    std::vector<std::shared_ptr<Fitter::Parameter>> params;
-    auto copCoeff0 =
+    std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
+    auto copCoefficient0 =
         std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), this);
-    params.push_back(copCoeff0);
+    parameters.push_back(copCoefficient0);
 
-    // auto copCoeff1 = std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1,
-    // get_courier(), this); pParams.push_back(copCoeff1);
+    // auto copCoefficient1 = std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1,
+    //  get_courier(), this);
+    // parameters.push_back(copCoefficient1);
 
-    Fitter fitter(metrics, params, get_courier());
+    Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
@@ -5779,4 +5746,41 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
         send_error("COP slope is positive.");
 
     return ef_metric->getTestSummary();
+}
+
+HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
+                                       HPWH::FirstHourRating::Designation designation)
+{
+    auto& compressor = heatSources[compressorIndex];
+
+    // pick the nearest temperature index
+    int i_ambientT = compressor.getAmbientT_index(testConfiguration_UEF.ambientT_C);
+
+    auto originalCoefficient = compressor.perfMap[i_ambientT].COP_coeffs[0];
+    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
+
+    double dCOP_Coefficient = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
+
+    int nPerfPts = static_cast<int>(compressor.perfMap.size());
+    for (int i = 0; i < nPerfPts; ++i)
+    {
+        if (i != i_ambientT)
+            compressor.perfMap[i].COP_coeffs[0] += dCOP_Coefficient;
+    }
+
+    return testSummary;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Modify *this hpwh to meet target metrics
+//-----------------------------------------------------------------------------
+void HPWH::makeGenericE50_UEF_E95(double targetE50,
+                                  double targetUEF,
+                                  double targetE95,
+                                  FirstHourRating::Designation designation)
+{
+    // return test summaries unused
+    makeGenericEF(targetE50, testConfiguration_E50, designation);
+    makeGenericEF(targetUEF, testConfiguration_UEF, designation);
+    makeGenericEF(targetE95, testConfiguration_E95, designation);
 }

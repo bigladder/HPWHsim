@@ -268,31 +268,31 @@ void HPWH::Fitter::performLeastSquaresMinimization()
 //-----------------------------------------------------------------------------
 void HPWH::Fitter::fit()
 {
-    auto nParams = parameters.size();
+    auto nParameters = parameters.size();
     auto nMetrics = metrics.size();
 
-    if ((nParams == 1) && (nMetrics == 1))
+    if ((nParameters == 1) && (nMetrics == 1))
     { // use secant
-        auto param = parameters[0];
+        auto parameter = parameters[0];
         auto metric = metrics[0];
 
-        double val0 = *param->data_ptr;
+        double val0 = *parameter->data_ptr;
         metric->evaluate();
         double f0 = metric->currentValue;
 
-        double val1 = val0 + param->increment;
-        *param->data_ptr = val1;
+        double val1 = val0 + parameter->increment;
+        *parameter->data_ptr = val1;
         metric->evaluate();
         double f1 = metric->currentValue;
 
-        *param->data_ptr = val0;
+        *parameter->data_ptr = val0;
 
         int iters =
             secant(targetFunc, this, metric->targetValue, 1.e-12, val0, f0, val1, f1, 1.e-12);
         if (iters < 0)
             send_error("Failure in makeGenericModel using secant");
     }
-    else if ((nParams == 2) && (nMetrics == 1))
+    else if ((nParameters == 2) && (nMetrics == 1))
     { // use least-squares
         performLeastSquaresMinimization();
     }

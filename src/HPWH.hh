@@ -1149,7 +1149,8 @@ class HPWH : public Courier::Sender
 
     void makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
     {
-        return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, findFirstHourRating().designation);
+        return makeGenericE50_UEF_E95(
+            targetE50, targetUEF, targetE95, findFirstHourRating().designation);
     }
 
     // fit using UEF config, then adjust E50, E95 coeff's
