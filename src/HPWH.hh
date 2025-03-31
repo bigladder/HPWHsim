@@ -1004,7 +1004,7 @@ class HPWH : public Courier::Sender
             High
         } designation;
 
-        static inline std::unordered_map<Designation, std::string> sDesigMap = {
+        static inline std::unordered_map<Designation, std::string> DesignationMap = {
             {Designation::VerySmall, "Very Small"},
             {Designation::Low, "Low"},
             {Designation::Medium, "Medium"},

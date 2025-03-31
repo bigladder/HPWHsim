@@ -130,7 +130,7 @@ void make(const std::string& sSpecType,
             sCustomDrawProfile[0] =
                 static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
         }
-        for (const auto& [key, value] : HPWH::FirstHourRating::sDesigMap)
+        for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
         {
             if (value == sCustomDrawProfile)
             {

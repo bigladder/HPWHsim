@@ -5649,7 +5649,7 @@ std::string HPWH::FirstHourRating::report()
 
     results.append(fmt::format("\t\tVolume Drawn (L): {:g}\n", drawVolume_L));
 
-    results.append(fmt::format("\t\tDesignation: {}\n", sDesigMap[designation]));
+    results.append(fmt::format("\t\tDesignation: {}\n", DesignationMap[designation]));
 
     return results;
 }
