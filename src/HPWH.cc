@@ -4884,11 +4884,11 @@ void HPWH::initFromFile(string modelName)
 #endif
 
 //-----------------------------------------------------------------------------
-///	@brief	Performs a draw/heat cycle to prep for test
+///	@brief	Performs a draw/heat cycle to prepare for test
 ///         Draw until heating begins, wait for recovery.
 /// @note	see EERE-2019-BT-TP-0032-0058, p. 40479 (5.2.4)
 //-----------------------------------------------------------------------------
-void HPWH::prepForTest(const TestConfiguration& testConfiguration)
+void HPWH::prepareForTest(const TestConfiguration& testConfiguration)
 {
     // apply first-hour-rating criterion EERE-2019-BT-TP-0032-0058, p. 40479
     double flowRate_Lper_min = GAL_TO_L(3.);
@@ -5007,7 +5007,7 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
     bool done = false;
     int step = 0;
 
-    prepForTest(testConfiguration_UEF);
+    prepareForTest(testConfiguration_UEF);
 
     bool firstDraw = true;
     isDrawing = true;
@@ -5160,7 +5160,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
             setSetpoint(maxAllowedSetpointT_C);
     }
 
-    prepForTest(testConfiguration);
+    prepareForTest(testConfiguration);
 
     const int nTestTCouples = 6;
     TestSummary testSummary;
