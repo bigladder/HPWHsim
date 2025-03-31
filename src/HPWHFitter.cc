@@ -153,7 +153,7 @@ void HPWH::Fitter::performLeastSquaresMinimization()
     bool success = false;
     const int maxIters = 20;
 
-    auto metric = metrics[0]; // currently, one metric onlu
+    auto metric = metrics[0]; // currently, one metric only
     auto nParameters = parameters.size();
     double nu = 0.001; // damping term
     for (auto iter = 0; iter < maxIters; ++iter)
@@ -181,7 +181,7 @@ void HPWH::Fitter::performLeastSquaresMinimization()
         }
 
         bool improved = false;
-        std::vector<double> inverseJacobiV; // invert jacobian using damping nu
+        std::vector<double> inverseJacobiV; // invert jacobian using nu
         if (getLeftDampedInverse(nu, jacobiV, inverseJacobiV))
         {
             // find error using incremented parameters
