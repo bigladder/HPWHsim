@@ -113,8 +113,8 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
         << "Could not make generic model.";
 
     { // verify UEF
-        EXPECT_NO_THROW(testSummary =
-                            hpwh.run24hrTest(HPWH::testConfiguration_UEF, firstHourRating.designation))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(HPWH::testConfiguration_UEF,
+                                                       firstHourRating.designation))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, UEF, 1.e-12) << "Did not measure expected UEF";
     }
@@ -152,20 +152,20 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
         << "Could not make generic model.";
 
     { // verify E50
-        EXPECT_NO_THROW(testSummary =
-                            hpwh.run24hrTest(HPWH::testConfiguration_E50, firstHourRating.designation))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(HPWH::testConfiguration_E50,
+                                                       firstHourRating.designation))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, E50, 1.e-12) << "Did not measure expected E50";
     }
     { // verify UEF
-        EXPECT_NO_THROW(testSummary =
-                            hpwh.run24hrTest(HPWH::testConfiguration_UEF, firstHourRating.designation))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(HPWH::testConfiguration_UEF,
+                                                       firstHourRating.designation))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, UEF, 1.e-12) << "Did not measure expected UEF";
     }
     { // verify E95
-        EXPECT_NO_THROW(testSummary =
-                            hpwh.run24hrTest(HPWH::testConfiguration_E95, firstHourRating.designation))
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(HPWH::testConfiguration_E95,
+                                                       firstHourRating.designation))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, E95, 1.e-12) << "Did not measure expected E95";
     }
