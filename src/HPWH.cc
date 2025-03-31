@@ -5756,7 +5756,6 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 
     Fitter fitter(metrics, params, get_courier());
     fitter.fit();
-    send_info(fitter.showParameters());
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
     compressor.getCapacity(testConfiguration.ambientT_C,
