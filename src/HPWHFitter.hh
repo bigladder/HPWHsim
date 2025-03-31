@@ -27,7 +27,7 @@ struct HPWH::Fitter : public Sender
     };
 
     /// performance coefficient
-    struct PerfCoef : public Parameter
+    struct PerformanceCoefficient : public Parameter
     {
       private:
         HPWH* hpwh;
@@ -35,10 +35,10 @@ struct HPWH::Fitter : public Sender
         unsigned exponent;
 
       public:
-        PerfCoef(unsigned temperatureIndex_in,
-                 unsigned exponent_in,
-                 std::shared_ptr<Courier::Courier> courier,
-                 HPWH* hpwh_in = nullptr)
+        PerformanceCoefficient(unsigned temperatureIndex_in,
+                               unsigned exponent_in,
+                               std::shared_ptr<Courier::Courier> courier,
+                               HPWH* hpwh_in = nullptr)
             : Parameter(courier)
             , hpwh(hpwh_in)
             , temperatureIndex(temperatureIndex_in)
@@ -46,8 +46,12 @@ struct HPWH::Fitter : public Sender
         {
         }
 
-        PerfCoef(PerfCoef& perfCoef, HPWH* hpwh_in = nullptr)
-            : PerfCoef(perfCoef.temperatureIndex, perfCoef.exponent, perfCoef.courier, hpwh_in)
+        PerformanceCoefficient(PerformanceCoefficient& performanceCoefficient,
+                               HPWH* hpwh_in = nullptr)
+            : PerformanceCoefficient(performanceCoefficient.temperatureIndex,
+                                     performanceCoefficient.exponent,
+                                     performanceCoefficient.courier,
+                                     hpwh_in)
         {
         }
 
@@ -85,13 +89,13 @@ struct HPWH::Fitter : public Sender
     };
 
     /// input-power coefficient parameter
-    struct PinCoef : public PerfCoef
+    struct InputPowerCoefficient : public PerformanceCoefficient
     {
-        PinCoef(unsigned temperatureIndex_in,
-                unsigned exponent_in,
-                std::shared_ptr<Courier::Courier> courier,
-                HPWH* hpwh_in)
-            : PerfCoef(temperatureIndex_in, exponent_in, courier, hpwh_in)
+        InputPowerCoefficient(unsigned temperatureIndex_in,
+                              unsigned exponent_in,
+                              std::shared_ptr<Courier::Courier> courier,
+                              HPWH* hpwh_in)
+            : PerformanceCoefficient(temperatureIndex_in, exponent_in, courier, hpwh_in)
         {
             assign();
             increment = 1.e-5;
@@ -107,13 +111,13 @@ struct HPWH::Fitter : public Sender
     };
 
     ///	coefficient-of-performance coefficient parameter
-    struct COP_Coef : public PerfCoef
+    struct COP_Coefficient : public PerformanceCoefficient
     {
-        COP_Coef(unsigned temperatureIndex_in,
-                 unsigned exponent_in,
-                 std::shared_ptr<Courier::Courier> courier,
-                 HPWH* hpwh_in)
-            : PerfCoef(temperatureIndex_in, exponent_in, courier, hpwh_in)
+        COP_Coefficient(unsigned temperatureIndex_in,
+                        unsigned exponent_in,
+                        std::shared_ptr<Courier::Courier> courier,
+                        HPWH* hpwh_in)
+            : PerformanceCoefficient(temperatureIndex_in, exponent_in, courier, hpwh_in)
         {
             assign();
             increment = 1.e-9;
