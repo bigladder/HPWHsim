@@ -5696,8 +5696,9 @@ std::string HPWH::TestSummary::report()
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Make a generic model with target EF from the current model
-/// by varying COP coef's
+///	@brief	    Make a generic model at specified configuration by varying C
+///             COP coefficients of the current model
+/// @returns	Test summary using UEF configuration
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
                                       TestConfiguration testConfiguration,
@@ -5748,6 +5749,11 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     return ef_metric->getTestSummary();
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	    Modify *this hpwh using UEF configuration, then adjust E50 and E95
+///             coefficients
+/// @returns	Test summary using UEF configuration
+//-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
                                        HPWH::FirstHourRating::Designation designation)
 {
@@ -5772,7 +5778,7 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Modify *this hpwh to meet target metrics
+///	@brief	Modify *this hpwh to meet at E50, UEF, and E95 configurations
 //-----------------------------------------------------------------------------
 void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,

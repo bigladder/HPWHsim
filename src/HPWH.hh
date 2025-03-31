@@ -1134,6 +1134,8 @@ class HPWH : public Courier::Sender
     static std::unordered_map<FirstHourRating::Designation, DrawPattern> drawPatterns;
 
     struct Fitter;
+
+    /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
                               FirstHourRating::Designation designation);
@@ -1142,6 +1144,7 @@ class HPWH : public Courier::Sender
         return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().designation);
     }
 
+    /// fit using each of three configurations, independently
     void makeGenericE50_UEF_E95(double targetE50,
                                 double targetUEF,
                                 double targetE95,
@@ -1153,7 +1156,7 @@ class HPWH : public Courier::Sender
             targetE50, targetUEF, targetE95, findFirstHourRating().designation);
     }
 
-    // fit using UEF config, then adjust E50, E95 coeff's
+    /// fit using UEF config, then adjust E50, E95 coefficients
     TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Designation designation);
     TestSummary makeGenericUEF(double targetUEF)
     {
