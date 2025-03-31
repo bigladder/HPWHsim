@@ -14,7 +14,7 @@ static void measure(const std::string& sSpecType,
                     std::string sOutputDir,
                     bool sSupressOutput,
                     std::string sResultsFilename,
-                    std::string sCustomDrawProfile,
+                    std::string customDrawProfile,
                     std::string sTestConfig);
 
 CLI::App* add_measure(CLI::App& app)
@@ -36,8 +36,8 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sResultsFilename = "";
     subcommand->add_option("-r,--results", sResultsFilename, "Results filename");
 
-    static std::string sCustomDrawProfile = "";
-    subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
+    static std::string drawProfileName = "";
+    subcommand->add_option("-p,--profile", drawProfileName, "Draw profile");
 
     static std::string sTestConfig = "UEF";
     subcommand->add_option("-c,--config", sTestConfig, "test configuration");
@@ -50,7 +50,7 @@ CLI::App* add_measure(CLI::App& app)
                     sOutputDir,
                     saveTestData,
                     sResultsFilename,
-                    sCustomDrawProfile,
+                    drawProfileName,
                     sTestConfig);
         });
 
@@ -62,7 +62,7 @@ void measure(const std::string& sSpecType,
              std::string sOutputDir,
              bool saveTestData,
              std::string sResultsFilename,
-             std::string sCustomDrawProfile,
+             std::string drawProfileName,
              std::string sTestConfig)
 {
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
@@ -95,28 +95,28 @@ void measure(const std::string& sSpecType,
     auto designation = HPWH::FirstHourRating::Designation::Medium;
 
     // set draw profile
-    if (sCustomDrawProfile != "")
+    if (drawProfileName != "")
     {
         bool foundProfile = false;
-        if (sCustomDrawProfile.length() > 0)
+        if (drawProfileName.length() > 0)
         {
             // make lowercase
-            for (auto& c : sCustomDrawProfile)
+            for (auto& c : drawProfileName)
             {
                 c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             }
 
             // make first char upper
-            sCustomDrawProfile[0] =
-                static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
+            drawProfileName[0] =
+                static_cast<char>(std::toupper(static_cast<unsigned char>(drawProfileName[0])));
         }
         for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
         {
-            if (value == sCustomDrawProfile)
+            if (value == drawProfileName)
             {
                 designation = key;
                 foundProfile = true;
-                results.append(fmt::format("\tCustom Draw Profile: {}\n", sCustomDrawProfile));
+                results.append(fmt::format("\tCustom Draw Profile: {}\n", drawProfileName));
                 break;
             }
         }

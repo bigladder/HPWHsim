@@ -18,7 +18,7 @@ static void make(const std::string& sSpecType,
                  std::string sOutputDir,
                  bool saveTestData,
                  std::string sResultsFilename,
-                 std::string sCustomDrawProfile);
+                 std::string drawProfileName);
 
 CLI::App* add_make(CLI::App& app)
 {
@@ -45,8 +45,8 @@ CLI::App* add_make(CLI::App& app)
     static std::string sResultsFilename = "";
     subcommand->add_option("-r,--results", sResultsFilename, "Results filename");
 
-    static std::string sCustomDrawProfile = "";
-    subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
+    static std::string drawProfileName = "";
+    subcommand->add_option("-p,--profile", drawProfileName, "Draw profile");
 
     subcommand->callback(
         [&]()
@@ -58,7 +58,7 @@ CLI::App* add_make(CLI::App& app)
                  sOutputDir,
                  saveTestData,
                  sResultsFilename,
-                 sCustomDrawProfile);
+                 drawProfileName);
         });
 
     return subcommand;
@@ -71,7 +71,7 @@ void make(const std::string& sSpecType,
           std::string sOutputDir,
           bool saveTestData,
           std::string sResultsFilename,
-          std::string sCustomDrawProfile)
+          std::string drawProfileName)
 {
     // select test configuration
     transform(sTestConfig.begin(),
@@ -118,25 +118,25 @@ void make(const std::string& sSpecType,
     results.append(fmt::format("\tModel Name: {}\n", modelName));
 
     auto designation = HPWH::FirstHourRating::Designation::Medium;
-    if (sCustomDrawProfile != "")
+    if (drawProfileName != "")
     {
         bool foundProfile = false;
-        for (auto& c : sCustomDrawProfile)
+        for (auto& c : drawProfileName)
         {
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
         }
-        if (sCustomDrawProfile.length() > 0)
+        if (drawProfileName.length() > 0)
         {
-            sCustomDrawProfile[0] =
-                static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
+            drawProfileName[0] =
+                static_cast<char>(std::toupper(static_cast<unsigned char>(drawProfileName[0])));
         }
         for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
         {
-            if (value == sCustomDrawProfile)
+            if (value == drawProfileName)
             {
                 designation = key;
                 foundProfile = true;
-                results.append(fmt::format("\tCustom Draw Profile: {}\n", sCustomDrawProfile));
+                results.append(fmt::format("\tCustom Draw Profile: {}\n", drawProfileName));
                 break;
             }
         }
