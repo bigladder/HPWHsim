@@ -1113,14 +1113,14 @@ class HPWH : public Courier::Sender
     {
         double startTime_min;
         double volume_L;
-        double flowRate_Lper_min;
+        double flowRate_L_per_min;
 
         Draw(const double startTime_min_in,
              const double volume_L_in,
              const double flowRate_Lper_min_in)
             : startTime_min(startTime_min_in)
             , volume_L(volume_L_in)
-            , flowRate_Lper_min(flowRate_Lper_min_in)
+            , flowRate_L_per_min(flowRate_Lper_min_in)
         {
         }
     };
@@ -1463,14 +1463,14 @@ class HPWH::HeatSource : public Courier::Sender
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
-    struct PerfPoint
+    struct PerformancePoint
     {
         double T_F;
         std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
         std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
     };
 
-    std::vector<PerfPoint> perfMap;
+    std::vector<PerformancePoint> performanceMap;
     /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
     int getAmbientT_index(double ambientT_C);

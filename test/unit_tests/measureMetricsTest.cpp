@@ -103,8 +103,7 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
     hpwh.getNthHeatSource(hpwh.getCompressorIndex(), compressor);
 
     std::vector<double> COP_Coeffs0 = {};
-    auto& perfMap = compressor->perfMap;
-    for (auto& perfPoint : compressor->perfMap)
+    for (auto& perfPoint : compressor->performanceMap)
         COP_Coeffs0.push_back(perfPoint.COP_coeffs[0]);
 
     constexpr double UEF = 4.3;
@@ -121,10 +120,12 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
     {
         // verify the COP 0 coefficient offset
         int i_ambientT = compressor->getAmbientT_index(HPWH::testConfiguration_UEF.ambientT_C);
-        double dCOP_coef = compressor->perfMap[i_ambientT].COP_coeffs[0] - COP_Coeffs0[i_ambientT];
-        for (int i = 0; i < compressor->perfMap.size(); ++i)
+        double dCOP_coef =
+            compressor->performanceMap[i_ambientT].COP_coeffs[0] - COP_Coeffs0[i_ambientT];
+        for (int i = 0; i < compressor->performanceMap.size(); ++i)
         {
-            EXPECT_NEAR(compressor->perfMap[i].COP_coeffs[0], COP_Coeffs0[i] + dCOP_coef, 1.e-12)
+            EXPECT_NEAR(
+                compressor->performanceMap[i].COP_coeffs[0], COP_Coeffs0[i] + dCOP_coef, 1.e-12)
                 << "Did not measure expected COP coefficient";
         }
     }

@@ -2610,7 +2610,7 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
         send_error("Can not scale the HPWH Capacity or COP to 0 or less than 0.");
     }
 
-    for (auto& perfP : heatSources[compressorIndex].perfMap)
+    for (auto& perfP : heatSources[compressorIndex].performanceMap)
     {
         scaleVector(perfP.inputPower_coeffs, scaleCapacity);
         scaleVector(perfP.COP_coeffs, scaleCOP);
@@ -2712,7 +2712,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (heatSources[i].isAResistance())
             {
-                returnPower += heatSources[i].perfMap[0].inputPower_coeffs[0];
+                returnPower += heatSources[i].performanceMap[0].inputPower_coeffs[0];
             }
         }
     }
@@ -2720,7 +2720,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     {
         // get the power from "which" element by height
         returnPower +=
-            heatSources[resistanceHeightMap[which].index].perfMap[0].inputPower_coeffs[0];
+            heatSources[resistanceHeightMap[which].index].performanceMap[0].inputPower_coeffs[0];
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2728,8 +2728,9 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                returnPower +=
-                    heatSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs[0];
+                returnPower += heatSources[resistanceHeightMap[i].index]
+                                   .performanceMap[0]
+                                   .inputPower_coeffs[0];
             }
         }
     }
@@ -3606,8 +3607,8 @@ void HPWH::checkInputs()
         // that ;
         if (heatSources[i].useBtwxtGrid)
         {
-            // If useBtwxtGrid is true that the perfMap is empty
-            if (heatSources[i].perfMap.size() != 0)
+            // If useBtwxtGrid is true that the performanceMap is empty
+            if (heatSources[i].performanceMap.size() != 0)
             {
                 error_msgs.push(
                     "\n\tUsing the grid lookups but a regression-based performance map is given.");
@@ -3640,10 +3641,10 @@ void HPWH::checkInputs()
         else
         {
             // Check that perfmap only has 1 point if config_external and multipass
-            if (heatSources[i].isExternalMultipass() && heatSources[i].perfMap.size() != 1)
+            if (heatSources[i].isExternalMultipass() && heatSources[i].performanceMap.size() != 1)
             {
                 error_msgs.push(
-                    "External multipass heat sources must have a perfMap of only one point "
+                    "External multipass heat sources must have a performanceMap of only one point "
                     "with regression equations.");
             }
         }
@@ -4711,14 +4712,14 @@ void HPWH::initFromFile(string modelName)
             else if (token == "nTemps")
             {
                 line_ss >> nTemps;
-                heatSources[heatsource].perfMap.resize(nTemps);
+                heatSources[heatsource].performanceMap.resize(nTemps);
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
                 nTemps = std::stoi(match[1].str());
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource].performanceMap.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -4751,7 +4752,7 @@ void HPWH::initFromFile(string modelName)
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
 
-                heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
+                heatSources[heatsource].performanceMap[nTemps - 1].T_F = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -4778,7 +4779,7 @@ void HPWH::initFromFile(string modelName)
                 }
                 */
 
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource].performanceMap.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -4804,12 +4805,13 @@ void HPWH::initFromFile(string modelName)
 
                 if (var == "inPow")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs.push_back(
+                    heatSources[heatsource].performanceMap[nTemps - 1].inputPower_coeffs.push_back(
                         tempDouble);
                 }
                 else if (var == "cop")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
+                    heatSources[heatsource].performanceMap[nTemps - 1].COP_coeffs.push_back(
+                        tempDouble);
                 }
             }
             else if (token == "hysteresis")
@@ -4891,9 +4893,9 @@ void HPWH::initFromFile(string modelName)
 void HPWH::prepareForTest(const TestConfiguration& testConfiguration)
 {
     // apply first-hour-rating criterion EERE-2019-BT-TP-0032-0058, p. 40479
-    double flowRate_Lper_min = GAL_TO_L(3.);
+    double flowRate_L_per_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
-        flowRate_Lper_min = GAL_TO_L(1.5);
+        flowRate_L_per_min = GAL_TO_L(1.5);
 
     const double inletT_C = testConfiguration.inletT_C;
     const double ambientT_C = testConfiguration.ambientT_C;
@@ -4939,7 +4941,7 @@ void HPWH::prepareForTest(const TestConfiguration& testConfiguration)
         }
 
         // limit draw-volume increment to tank volume
-        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
+        double incrementalDrawVolume_L = isDrawing ? flowRate_L_per_min * (1.) : 0.;
         if (incrementalDrawVolume_L > tankVolume_L)
         {
             incrementalDrawVolume_L = tankVolume_L;
@@ -4963,9 +4965,9 @@ void HPWH::prepareForTest(const TestConfiguration& testConfiguration)
 //-----------------------------------------------------------------------------
 HPWH::FirstHourRating HPWH::findFirstHourRating()
 {
-    double flowRate_Lper_min = GAL_TO_L(3.);
+    double flowRate_L_per_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
-        flowRate_Lper_min = GAL_TO_L(1.5);
+        flowRate_L_per_min = GAL_TO_L(1.5);
 
     const double inletT_C = testConfiguration_UEF.inletT_C;
     const double ambientT_C = testConfiguration_UEF.ambientT_C;
@@ -5017,7 +5019,7 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
     while (!done)
     {
         // limit draw-volume increment to tank volume
-        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
+        double incrementalDrawVolume_L = isDrawing ? flowRate_L_per_min * (1.) : 0.;
         if (incrementalDrawVolume_L > tankVolume_L)
         {
             incrementalDrawVolume_L = tankVolume_L;
@@ -5291,7 +5293,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
             if (runTime_min >= draw.startTime_min)
             {
                 // limit draw-volume step to tank volume
-                stepDrawVolume_L = draw.flowRate_Lper_min * (1.);
+                stepDrawVolume_L = draw.flowRate_L_per_min * (1.);
                 if (stepDrawVolume_L > tankVolume_L)
                 {
                     stepDrawVolume_L = tankVolume_L;
@@ -5762,16 +5764,17 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
     // pick the nearest temperature index
     int i_ambientT = compressor.getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    auto originalCoefficient = compressor.perfMap[i_ambientT].COP_coeffs[0];
+    auto originalCoefficient = compressor.performanceMap[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
-    double dCOP_Coefficient = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
+    double dCOP_Coefficient =
+        compressor.performanceMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>(compressor.perfMap.size());
+    int nPerfPts = static_cast<int>(compressor.performanceMap.size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            compressor.perfMap[i].COP_coeffs[0] += dCOP_Coefficient;
+            compressor.performanceMap[i].COP_coeffs[0] += dCOP_Coefficient;
     }
 
     return testSummary;

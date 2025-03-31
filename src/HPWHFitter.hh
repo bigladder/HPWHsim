@@ -61,7 +61,7 @@ struct HPWH::Fitter : public Sender
         }
 
       protected:
-        virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) = 0;
+        virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerformancePoint& perfPoint) = 0;
 
         /// check validity and retain pointer to HPWH member variable
         void assign()
@@ -69,13 +69,13 @@ struct HPWH::Fitter : public Sender
             HPWH::HeatSource* heatSource;
             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
 
-            auto& perfMap = heatSource->perfMap;
-            if (temperatureIndex >= perfMap.size())
+            auto& performanceMap = heatSource->performanceMap;
+            if (temperatureIndex >= performanceMap.size())
             {
                 send_error("Invalid heat-source performance-map temperature index.");
             }
 
-            auto& perfPoint = perfMap[temperatureIndex];
+            auto& perfPoint = performanceMap[temperatureIndex];
             auto& perfCoeffs = getCoeffs(perfPoint);
             if (exponent >= perfCoeffs.size())
             {
@@ -104,7 +104,7 @@ struct HPWH::Fitter : public Sender
       private:
         [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
 
-        std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
+        std::vector<double>& getCoeffs(HPWH::HeatSource::PerformancePoint& perfPoint) override
         {
             return perfPoint.inputPower_coeffs;
         }
@@ -126,7 +126,7 @@ struct HPWH::Fitter : public Sender
       private:
         [[nodiscard]] std::string getFormat() const override { return "COP[{}]: {}"; }
 
-        std::vector<double>& getCoeffs(HPWH::HeatSource::PerfPoint& perfPoint) override
+        std::vector<double>& getCoeffs(HPWH::HeatSource::PerformancePoint& perfPoint) override
         {
             return perfPoint.COP_coeffs;
         }
