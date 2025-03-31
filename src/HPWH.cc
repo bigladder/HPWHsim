@@ -2610,10 +2610,10 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
         send_error("Can not scale the HPWH Capacity or COP to 0 or less than 0.");
     }
 
-    for (auto& perfP : heatSources[compressorIndex].performanceMap)
+    for (auto& performancePoint : heatSources[compressorIndex].performanceMap)
     {
-        scaleVector(perfP.inputPower_coeffs, scaleCapacity);
-        scaleVector(perfP.COP_coeffs, scaleCOP);
+        scaleVector(performancePoint.inputPower_coeffs, scaleCapacity);
+        scaleVector(performancePoint.COP_coeffs, scaleCOP);
     }
 }
 
@@ -5722,9 +5722,9 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
         std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), this);
     parameters.push_back(copCoefficient0);
 
-    // auto copCoefficient1 = std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1,
-    //  get_courier(), this);
-    // parameters.push_back(copCoefficient1);
+    //auto copCoefficient1 =
+    //    std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1, get_courier(), this);
+    //parameters.push_back(copCoefficient1);
 
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();

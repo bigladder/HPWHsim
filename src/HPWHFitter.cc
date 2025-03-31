@@ -143,118 +143,78 @@ void HPWH::Fitter::performLeastSquaresMinimization()
 
     auto metric = metrics[0];
     auto nParameters = parameters.size();
-    double nu = 0.1;
+    double nu = 0.001;
     for (auto iter = 0; iter < maxIters; ++iter)
     {
         std::string iter_msg = fmt::format("iter {:d}: ", iter);
 
-        double dMetric0 = metric->findError();
-        double FOM0 = dMetric0 * dMetric0; // figure of merit
+        double error = metric->findError();
+        double FOM = error * error; // figure of merit
 
-        double FOM1 = 0., FOM2 = 0.;
-        iter_msg.append(fmt::format(", FOM: {:g}", FOM0));
-        courier->send_info(iter_msg);
+        iter_msg.append(fmt::format(", FOM: {:g}", FOM));
+        // courier->send_info(iter_msg);
 
-        std::vector<double> paramV(nParameters);
+        std::vector<double> parameterV(nParameters);
         for (std::size_t i = 0; i < nParameters; ++i)
         {
-            paramV[i] = *parameters[i]->data_ptr;
+            parameterV[i] = *parameters[i]->data_ptr;
         }
 
         std::vector<double> jacobiV(nParameters); // 1 x 2
-        for (std::size_t j = 0; j < nParameters; ++j)
-        {
-            *parameters[j]->data_ptr = paramV[j] + (parameters[j]->increment);
-            double dMetric = metric->findError();
-            jacobiV[j] = (dMetric - dMetric0) / (parameters[j]->increment);
-            *parameters[j]->data_ptr = paramV[j];
+        for (std::size_t i = 0; i < nParameters; ++i)
+        { // get jacobi
+            *parameters[i]->data_ptr = parameterV[i] + (parameters[i]->increment);
+            jacobiV[i] = (metric->findError() - error) / (parameters[i]->increment);
+            *parameters[i]->data_ptr = parameterV[i]; // restore
         }
 
-        // try nu
-        std::vector<double> invJacobiV1;
-        bool got1 = getLeftDampedInverse(nu, jacobiV, invJacobiV1);
-
-        std::vector<double> inc1ParamV(2);
-        std::vector<double> paramV1 = paramV;
-        if (got1)
+        bool improved = false;
+        std::vector<double> inverseJacobiV; // invert jacobi using nu
+        if (getLeftDampedInverse(nu, jacobiV, inverseJacobiV))
         {
+            // check incremented parameters
+            std::vector<double> incrementParamV(2);
+            for (std::size_t i = 0; i < nParameters; ++i)
+            {
+                incrementParamV[i] = -inverseJacobiV[i] * error;
+                *parameters[i]->data_ptr = parameterV[i] + incrementParamV[i]; // increment
+            }
+            double incError = metric->findError();
+            double incFOM = incError * incError; // FOM with increments applied
+
+            // restore parameters
             for (std::size_t j = 0; j < nParameters; ++j)
             {
-                inc1ParamV[j] = -invJacobiV1[j] * dMetric0;
-                paramV1[j] += inc1ParamV[j];
-                *parameters[j]->data_ptr = paramV1[j];
+                *parameters[j]->data_ptr = parameterV[j];
             }
-            double dMetric = metric->findError();
-            FOM1 = dMetric * dMetric;
 
-            // restore
-            for (std::size_t j = 0; j < nParameters; ++j)
+            if (incFOM < FOM)
             {
-                *parameters[j]->data_ptr = paramV[j];
-            }
-        }
-
-        // try nu / 2
-        std::vector<double> invJacobiV2;
-        bool got2 = getLeftDampedInverse(nu / 2., jacobiV, invJacobiV2);
-
-        std::vector<double> inc2ParamV(2);
-        std::vector<double> paramV2 = paramV;
-        if (got2)
-        {
-            for (std::size_t j = 0; j < nParameters; ++j)
-            {
-                inc2ParamV[j] = -invJacobiV2[j] * dMetric0;
-                paramV2[j] += inc2ParamV[j];
-                *parameters[j]->data_ptr = paramV2[j];
-            }
-            double dMetric = metric->findError();
-            FOM2 = dMetric * dMetric;
-
-            // restore
-            for (std::size_t j = 0; j < nParameters; ++j)
-            {
-                *parameters[j]->data_ptr = paramV[j];
-            }
-        }
-
-        // check for improvement
-        if (got1 && got2)
-        {
-            if ((FOM1 < FOM0) || (FOM2 < FOM0))
-            { // at least one improved
-                if (FOM1 < FOM2)
-                { // pick 1
-                    for (std::size_t i = 0; i < nParameters; ++i)
-                    {
-                        *parameters[i]->data_ptr = paramV1[i];
-                        (parameters[i]->increment) = inc1ParamV[i] / 1.e3;
-                        FOM0 = FOM1;
-                    }
+                // improved, so apply increments and reduce nu
+                for (std::size_t i = 0; i < nParameters; ++i)
+                {
+                    *parameters[i]->data_ptr = parameterV[i] + incrementParamV[i];
+                    (parameters[i]->increment) = incrementParamV[i] / 1.e3;
+                    FOM = incFOM;
                 }
-                else
-                { // pick 2
-                    for (std::size_t i = 0; i < nParameters; ++i)
-                    {
-                        *parameters[i]->data_ptr = paramV2[i];
-                        (parameters[i]->increment) = inc2ParamV[i] / 1.e3;
-                        FOM0 = FOM2;
-                    }
-                }
+                nu /= 10.;
+                improved = true;
             }
         }
-        else
-        { // no improvement
+
+        // no improvement, increase nu or fail
+        if (!improved)
+        {
             nu *= 10.;
             if (nu > 1.e6)
             {
-                send_error("Failure in makeGenericModel using leastSquares");
+                send_error("Failure in performLeastSquaresMinimization");
             }
         }
 
-        if (FOM0 < 1.e-13)
+        if (FOM < 1.e-12)
         {
-            send_info("Fit converged.");
+            // send_info("Fit converged.");
             success = true;
             break;
         }
@@ -276,19 +236,19 @@ void HPWH::Fitter::fit()
         auto parameter = parameters[0];
         auto metric = metrics[0];
 
-        double val0 = *parameter->data_ptr;
+        double value0 = *parameter->data_ptr;
         metric->evaluate();
         double f0 = metric->currentValue;
 
-        double val1 = val0 + parameter->increment;
-        *parameter->data_ptr = val1;
+        double value1 = value0 + parameter->increment;
+        *parameter->data_ptr = value1;
         metric->evaluate();
         double f1 = metric->currentValue;
 
-        *parameter->data_ptr = val0;
+        *parameter->data_ptr = value0;
 
         int iters =
-            secant(targetFunc, this, metric->targetValue, 1.e-12, val0, f0, val1, f1, 1.e-12);
+            secant(targetFunc, this, metric->targetValue, 1.e-12, value0, f0, value1, f1, 1.e-12);
         if (iters < 0)
             send_error("Failure in makeGenericModel using secant");
     }

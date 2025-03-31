@@ -61,7 +61,8 @@ struct HPWH::Fitter : public Sender
         }
 
       protected:
-        virtual std::vector<double>& getCoeffs(HPWH::HeatSource::PerformancePoint& perfPoint) = 0;
+        virtual std::vector<double>&
+        getCoefficients(HPWH::HeatSource::PerformancePoint& perfPoint) = 0;
 
         /// check validity and retain pointer to HPWH member variable
         void assign()
@@ -75,8 +76,8 @@ struct HPWH::Fitter : public Sender
                 send_error("Invalid heat-source performance-map temperature index.");
             }
 
-            auto& perfPoint = performanceMap[temperatureIndex];
-            auto& perfCoeffs = getCoeffs(perfPoint);
+            auto& performancePoint = performanceMap[temperatureIndex];
+            auto& perfCoeffs = getCoefficients(performancePoint);
             if (exponent >= perfCoeffs.size())
             {
                 send_error("Invalid heat-source performance-map coefficient exponent.");
@@ -104,9 +105,10 @@ struct HPWH::Fitter : public Sender
       private:
         [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
 
-        std::vector<double>& getCoeffs(HPWH::HeatSource::PerformancePoint& perfPoint) override
+        std::vector<double>&
+        getCoefficients(HPWH::HeatSource::PerformancePoint& performancePoint) override
         {
-            return perfPoint.inputPower_coeffs;
+            return performancePoint.inputPower_coeffs;
         }
     };
 
@@ -126,9 +128,10 @@ struct HPWH::Fitter : public Sender
       private:
         [[nodiscard]] std::string getFormat() const override { return "COP[{}]: {}"; }
 
-        std::vector<double>& getCoeffs(HPWH::HeatSource::PerformancePoint& perfPoint) override
+        std::vector<double>&
+        getCoefficients(HPWH::HeatSource::PerformancePoint& performancePoint) override
         {
-            return perfPoint.COP_coeffs;
+            return performancePoint.COP_coeffs;
         }
     };
 
@@ -162,13 +165,13 @@ struct HPWH::Fitter : public Sender
 
         EF_Metric(double targetEF,
                   TestConfiguration testConfiguration_in,
-                  FirstHourRating::Designation desig_in,
+                  FirstHourRating::Designation designation_in,
                   std::shared_ptr<Courier::Courier> courier,
                   HPWH* hpwh_in = nullptr)
             : Metric(targetEF, courier)
             , hpwh(hpwh_in)
             , testConfiguration(testConfiguration_in)
-            , designation(desig_in)
+            , designation(designation_in)
         {
         }
 
