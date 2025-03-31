@@ -183,10 +183,7 @@ struct HPWH::Fitter : public Sender
         }
 
         /// find error ratio
-        double findError() override
-        {
-            return (evaluate() - targetValue) / tolerance;
-        }
+        double findError() override { return (evaluate() - targetValue) / tolerance; }
 
         TestSummary getTestSummary() const { return testSummary; }
     };
