@@ -619,11 +619,11 @@ class HPWH : public Courier::Sender
     };
     void setMinutesPerStep(double newMinutesPerStep);
 
-    int WriteCSVHeading(std::ofstream& outFILE,
+    int writeCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
                         int nTCouples = 6,
                         int options = CSVOPT_NONE) const;
-    int WriteCSVRow(std::ofstream& outFILE,
+    int writeCSVRow(std::ofstream& outFILE,
                     const char* preamble = "",
                     int nTCouples = 6,
                     int options = CSVOPT_NONE) const;

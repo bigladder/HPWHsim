@@ -110,11 +110,11 @@ void run(const std::string& sSpecType,
         HPWH_doTempDepress = false;
     }
 
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
     // Parse the model
     newSetpoint = 0;
-    if (sPresetOrFile == "Preset")
+    if (presetOrFile == "Preset")
     {
 
         hpwh.initPreset(modelName);
@@ -124,13 +124,13 @@ void run(const std::string& sSpecType,
             newSetpoint = (149 - 32) / 1.8;
         }
     }
-    else if (sPresetOrFile == "File")
+    else if (presetOrFile == "File")
     {
         hpwh.initFromFile(modelName);
     }
     else
     {
-        cout << "Invalid argument, received '" << sPresetOrFile
+        cout << "Invalid argument, received '" << presetOrFile
              << "', expected 'Preset' or 'File'.\n";
         exit(1);
     }
@@ -168,7 +168,7 @@ void run(const std::string& sSpecType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    cout << "Running: " << modelName << ", " << sPresetOrFile << ", " << sFullTestName << endl;
+    cout << "Running: " << modelName << ", " << presetOrFile << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -317,7 +317,7 @@ void run(const std::string& sSpecType,
     }
     else
     {
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + sPresetOrFile + "_" + modelName + ".csv";
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + presetOrFile + "_" + modelName + ".csv";
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -335,7 +335,7 @@ void run(const std::string& sSpecType,
             header += strHeadSoC;
         }
         int csvOptions = HPWH::CSVOPT_NONE;
-        hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
+        hpwh.writeCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
     }
 
     // ------------------------------------- Simulate --------------------------------------- //
@@ -456,7 +456,7 @@ void run(const std::string& sSpecType,
             {
                 csvOptions |= HPWH::CSVOPT_IS_DRAWING;
             }
-            hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
+            hpwh.writeCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
         }
         else
         {
@@ -470,7 +470,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = sTestName + "," + sPresetOrFile + "," + modelName;
+        firstCol = sTestName + "," + presetOrFile + "," + modelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)

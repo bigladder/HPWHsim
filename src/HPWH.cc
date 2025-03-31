@@ -899,7 +899,7 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
 }
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(std::ofstream& outFILE,
+int HPWH::writeCSVHeading(std::ofstream& outFILE,
                           const char* preamble,
                           int nTCouples,
                           int options) const
@@ -926,7 +926,7 @@ int HPWH::WriteCSVHeading(std::ofstream& outFILE,
     return 0;
 }
 
-int HPWH::WriteCSVRow(std::ofstream& outFILE,
+int HPWH::writeCSVRow(std::ofstream& outFILE,
                       const char* preamble,
                       int nTCouples,
                       int options) const

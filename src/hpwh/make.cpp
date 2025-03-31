@@ -88,19 +88,19 @@ void make(const std::string& sSpecType,
         testConfiguration = HPWH::testConfiguration_UEF;
 
     // process command line arguments
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sPresetOrFile)
+    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : presetOrFile)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (sPresetOrFile.length() > 0)
+    if (presetOrFile.length() > 0)
     {
-        sPresetOrFile[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+        presetOrFile[0] =
+            static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
     }
 
     HPWH hpwh;
-    if (sPresetOrFile == "Preset")
+    if (presetOrFile == "Preset")
     {
         hpwh.initPreset(modelName);
     }
@@ -110,11 +110,11 @@ void make(const std::string& sSpecType,
         hpwh.initFromFile(sInputFile);
     }
 
-    sPresetOrFile[0] = // capitalize first char
-        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+    presetOrFile[0] = // capitalize first char
+        static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
 
     std::string results = "";
-    results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
+    results.append(fmt::format("\tSpecification Type: {}\n", presetOrFile));
     results.append(fmt::format("\tModel Name: {}\n", modelName));
 
     auto designation = HPWH::FirstHourRating::Designation::Medium;
@@ -159,7 +159,7 @@ void make(const std::string& sSpecType,
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
-        std::string sOutputFilename = "test24hr_" + sPresetOrFile + "_" + modelName + ".csv";
+        std::string sOutputFilename = "test24hr_" + presetOrFile + "_" + modelName + ".csv";
         if (sOutputDir != "")
             sOutputFilename = sOutputDir + "/" + sOutputFilename;
         outputFile.open(sOutputFilename.c_str(), std::ifstream::out);

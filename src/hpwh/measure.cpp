@@ -65,20 +65,20 @@ void measure(const std::string& sSpecType,
              std::string drawProfileName,
              std::string sTestConfig)
 {
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
-    for (auto& c : sPresetOrFile)
+    for (auto& c : presetOrFile)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (sPresetOrFile.length() > 0)
+    if (presetOrFile.length() > 0)
     {
-        sPresetOrFile[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+        presetOrFile[0] =
+            static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
     }
 
     HPWH hpwh;
-    if (sPresetOrFile == "Preset")
+    if (presetOrFile == "Preset")
     {
         hpwh.initPreset(modelName);
     }
@@ -88,8 +88,8 @@ void measure(const std::string& sSpecType,
         hpwh.initFromFile(inputFile);
     }
 
-    sPresetOrFile[0] = // capitalize first char
-        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+    presetOrFile[0] = // capitalize first char
+        static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
 
     std::string results = "";
     auto designation = HPWH::FirstHourRating::Designation::Medium;
