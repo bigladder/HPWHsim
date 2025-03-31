@@ -5638,7 +5638,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     return testSummary;
 }
 
-HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::Designation designation)
+HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
+                                       HPWH::FirstHourRating::Designation designation)
 {
     auto& compressor = heatSources[compressorIndex];
 
@@ -5748,11 +5749,12 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Parameter>> params;
-    auto copCoeff0 = std::make_shared<HPWH::Fitter::COP_Coef>(i_ambientT, 0, get_courier(), this);
+    auto copCoeff0 =
+        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), this);
     params.push_back(copCoeff0);
 
-    // auto copCoeff1 = std::make_shared<HPWH::Fitter::COP_Coef>(i_ambientT, 1, get_courier(),
-    // this); pParams.push_back(copCoeff1);
+    // auto copCoeff1 = std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1,
+    // get_courier(), this); pParams.push_back(copCoeff1);
 
     Fitter fitter(metrics, params, get_courier());
     fitter.fit();
