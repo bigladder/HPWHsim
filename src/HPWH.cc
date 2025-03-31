@@ -5722,9 +5722,9 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
         std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), this);
     parameters.push_back(copCoefficient0);
 
-    auto copCoefficient1 =
-        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1, get_courier(), this);
-    parameters.push_back(copCoefficient1);
+    //auto copCoefficient1 =
+    //    std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1, get_courier(), this);
+    //parameters.push_back(copCoefficient1);
 
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
