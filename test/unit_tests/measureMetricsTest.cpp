@@ -19,8 +19,8 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AquaThermAire";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AquaThermAire";
+    hpwh.initPreset(modelName);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
@@ -44,8 +44,8 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AOSmithHPTS50";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AOSmithHPTS50";
+    hpwh.initPreset(modelName);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
@@ -69,8 +69,8 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AOSmithHPTS80";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AOSmithHPTS80";
+    hpwh.initPreset(modelName);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
@@ -93,8 +93,8 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AWHSTier4Generic50";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AWHSTier4Generic50";
+    hpwh.initPreset(modelName);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
@@ -137,8 +137,8 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AWHSTier4Generic50";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AWHSTier4Generic50";
+    hpwh.initPreset(modelName);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";

@@ -57,8 +57,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_15_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_15_SP";
+    hpwh.initPreset(modelName);
 
     double capacity_kW, capacity_BTUperHr;
 
@@ -112,8 +112,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_30_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_30_SP";
+    hpwh.initPreset(modelName);
 
     double capacity_kW, capacity_BTUperHr;
 
@@ -167,8 +167,8 @@ TEST_F(PerformanceMapTest, ColmacCxV_5_MP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxV_5_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxV_5_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -196,8 +196,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_10_MP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_10_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_10_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -228,8 +228,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_MP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_15_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_15_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -260,8 +260,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_20_MP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_20_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_20_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -292,8 +292,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_25_MP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_25_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_25_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -324,8 +324,8 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_MP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxA_30_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxA_30_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -358,8 +358,8 @@ TEST_F(PerformanceMapTest, RheemHPHD60)
     // MODELS_RHEEM_HPHD60VNU_201_MP
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "RheemHPHD60";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "RheemHPHD60";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -382,8 +382,8 @@ TEST_F(PerformanceMapTest, RheemHPHD135)
     // MODELS_RHEEM_HPHD135HNU_483_MP
     // MODELS_RHEEM_HPHD135VNU_483_MP
     HPWH hpwh;
-    const std::string sModelName = "RheemHPHD135";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "RheemHPHD135";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -404,8 +404,8 @@ TEST_F(PerformanceMapTest, RheemHPHD135)
 TEST_F(PerformanceMapTest, NyleC60A_MP)
 {
     HPWH hpwh;
-    const std::string sModelName = "NyleC60A_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "NyleC60A_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -424,8 +424,8 @@ TEST_F(PerformanceMapTest, NyleC60A_MP)
 TEST_F(PerformanceMapTest, NyleC90A_MP)
 {
     HPWH hpwh;
-    const std::string sModelName = "NyleC90A_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "NyleC90A_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -444,8 +444,8 @@ TEST_F(PerformanceMapTest, NyleC90A_MP)
 TEST_F(PerformanceMapTest, NyleC125A_MP)
 {
     HPWH hpwh;
-    const std::string sModelName = "NyleC125A_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "NyleC125A_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -464,8 +464,8 @@ TEST_F(PerformanceMapTest, NyleC125A_MP)
 TEST_F(PerformanceMapTest, NyleC185A_MP)
 {
     HPWH hpwh;
-    const std::string sModelName = "NyleC185A_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "NyleC185A_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -484,8 +484,8 @@ TEST_F(PerformanceMapTest, NyleC185A_MP)
 TEST_F(PerformanceMapTest, NyleC250A_MP)
 {
     HPWH hpwh;
-    const std::string sModelName = "NyleC250A_MP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "NyleC250A_MP";
+    hpwh.initPreset(modelName);
 
     performancePointMP checkPoint;
 
@@ -504,8 +504,8 @@ TEST_F(PerformanceMapTest, NyleC250A_MP)
 TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
 {
     HPWH hpwh;
-    const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
     double outputBTUH;
@@ -589,8 +589,8 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
     // water temperatures!
 
     HPWH hpwh;
-    const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
@@ -675,8 +675,8 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
 TEST_F(PerformanceMapTest, Sanden120)
 {
     HPWH hpwh;
-    const std::string sModelName = "Sanden120";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "Sanden120";
+    hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
     double outputBTUH;

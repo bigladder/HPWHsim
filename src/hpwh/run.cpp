@@ -22,7 +22,7 @@ namespace hpwh_cli
 
 /// run
 static void run(const std::string& sSpecType,
-                const std::string& sModelName,
+                const std::string& modelName,
                 std::string sTestName,
                 std::string sOutputDir,
                 double airTemp);
@@ -34,8 +34,8 @@ CLI::App* add_run(CLI::App& app)
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
 
-    static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+    static std::string modelName = "";
+    subcommand->add_option("-m,--model", modelName, "Model name")->required();
 
     static std::string sTestName = "";
     subcommand->add_option("-t,--test", sTestName, "Test name")->required();
@@ -46,7 +46,7 @@ CLI::App* add_run(CLI::App& app)
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
-    subcommand->callback([&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+    subcommand->callback([&]() { run(sSpecType, modelName, sTestName, sOutputDir, airTemp); });
 
     return subcommand;
 }
@@ -54,7 +54,7 @@ CLI::App* add_run(CLI::App& app)
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
 void run(const std::string& sSpecType,
-         const std::string& sModelName,
+         const std::string& modelName,
          std::string sFullTestName,
          std::string sOutputDir,
          double airTemp)
@@ -117,7 +117,7 @@ void run(const std::string& sSpecType,
     if (sPresetOrFile == "Preset")
     {
 
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
         model = static_cast<HPWH::MODELS>(hpwh.getModel());
         if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
         {
@@ -126,7 +126,7 @@ void run(const std::string& sSpecType,
     }
     else if (sPresetOrFile == "File")
     {
-        hpwh.initFromFile(sModelName);
+        hpwh.initFromFile(modelName);
     }
     else
     {
@@ -168,7 +168,7 @@ void run(const std::string& sSpecType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    cout << "Running: " << sModelName << ", " << sPresetOrFile << ", " << sFullTestName << endl;
+    cout << "Running: " << modelName << ", " << sPresetOrFile << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -317,7 +317,7 @@ void run(const std::string& sSpecType,
     }
     else
     {
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + sPresetOrFile + "_" + sModelName + ".csv";
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + sPresetOrFile + "_" + modelName + ".csv";
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -470,7 +470,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = sTestName + "," + sPresetOrFile + "," + sModelName;
+        firstCol = sTestName + "," + sPresetOrFile + "," + modelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
