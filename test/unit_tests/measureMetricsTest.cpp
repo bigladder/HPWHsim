@@ -9,7 +9,6 @@
 struct MeasureMetricsTest : public testing::Test
 {
     HPWH::FirstHourRating firstHourRating;
-    HPWH::TestConfiguration testOptions;
     HPWH::TestSummary testSummary;
 };
 
