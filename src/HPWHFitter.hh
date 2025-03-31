@@ -198,11 +198,11 @@ struct HPWH::Fitter : public Sender
 
   public:
     Fitter(std::vector<std::shared_ptr<Fitter::Metric>> metrics_in,
-           std::vector<std::shared_ptr<Fitter::Parameter>> params_in,
+           std::vector<std::shared_ptr<Fitter::Parameter>> parameters_in,
            std::shared_ptr<Courier::Courier> courier)
         : Sender("Fitter", "fitter", courier)
         , metrics(std::move(metrics_in))
-        , parameters(std::move(params_in))
+        , parameters(std::move(parameters_in))
     {
     }
 
@@ -214,10 +214,10 @@ struct HPWH::Fitter : public Sender
 
         if ((nParameters == 1) && (nMetrics == 1))
         {
-            auto param = parameters[0];
+            auto parameter = parameters[0];
             auto metric = metrics[0];
 
-            *param->data_ptr = x;
+            *parameter->data_ptr = x;
             metric->evaluate();
             return metric->currentValue;
         }
