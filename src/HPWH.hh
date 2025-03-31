@@ -1094,7 +1094,7 @@ class HPWH : public Courier::Sender
     static double testSetpointT_C;
 
     /// perform a draw/heat cycle to prepare for test
-    void prepForTest(const TestConfiguration& test_configuration);
+    void prepareForTest(const TestConfiguration& test_configuration);
 
     /// determine first-hour rating
     FirstHourRating findFirstHourRating();
