@@ -1469,6 +1469,8 @@ class HPWH::HeatSource : public Courier::Sender
     std::vector<PerfPoint> perfMap;
     /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
+    int getAmbientT_index(double ambientT_C);
+
   private:
     // start with a few type definitions
     enum COIL_CONFIG

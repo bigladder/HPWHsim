@@ -88,9 +88,54 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
 }
 
 /*
+ * make Tier-4 from UEF only
+ */
+TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
+{
+    // get preset model
+    HPWH hpwh;
+    const std::string sModelName = "AWHSTier4Generic50";
+    hpwh.initPreset(sModelName);
+
+    EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
+        << "Could not complete first-hour rating test.";
+
+    HPWH::HeatSource* compressor;
+    hpwh.getNthHeatSource(hpwh.getCompressorIndex(), compressor);
+
+    std::vector<double> COP_Coeffs0 = {};
+    auto &perfMap = compressor->perfMap;
+    for (auto& perfPoint:compressor->perfMap)
+        COP_Coeffs0.push_back(perfPoint.COP_coeffs[0]);
+
+    constexpr double UEF = 4.3;
+    EXPECT_NO_THROW(hpwh.makeGenericUEF(UEF, firstHourRating.desig))
+        << "Could not make generic model.";
+
+    { // verify UEF
+        EXPECT_NO_THROW(testSummary =
+                            hpwh.run24hrTest(HPWH::testConfiguration_UEF, firstHourRating.desig))
+            << "Could not complete complete 24-hr test.";
+        EXPECT_NEAR(testSummary.EF, UEF, 1.e-12) << "Did not measure expected UEF";
+    }
+
+    {
+        // verify the COP 0 coefficient offset
+        int i_ambientT = compressor->getAmbientT_index(HPWH::testConfiguration_UEF.ambientT_C);
+        double dCOP_coef = compressor->perfMap[i_ambientT].COP_coeffs[0] - COP_Coeffs0[i_ambientT];
+        for (int i = 0; i< compressor->perfMap.size(); ++i)
+        {
+            EXPECT_NEAR(compressor->perfMap[i].COP_coeffs[0], COP_Coeffs0[i] + dCOP_coef, 1.e-12) << "Did not measure expected COP coefficient";
+        }
+
+    }
+
+}
+
+/*
  * make Tier-4
  */
-TEST_F(MeasureMetricsTest, MakeGenericTier4)
+TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
 {
     // get preset model
     HPWH hpwh;
@@ -126,3 +171,4 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4)
         EXPECT_NEAR(testSummary.EF, E95, 1.e-12) << "Did not measure expected E95";
     }
 }
+

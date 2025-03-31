@@ -5643,28 +5643,14 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF, HPWH::FirstHourRating::
     auto& compressor = heatSources[compressorIndex];
 
     // pick the nearest temperature index
-    int nPerfPts = static_cast<int>(compressor.perfMap.size());
-    int i0 = 0, i1 = 0;
-    for (auto& perfPoint : compressor.perfMap)
-    {
-        if (testConfiguration_UEF.ambientT_C < F_TO_C(perfPoint.T_F))
-            break;
-        i0 = i1;
-        ++i1;
-    }
-    double ratio = 0.;
-    if ((i1 > i0) && (i1 < nPerfPts))
-    {
-        ratio = (testConfiguration_UEF.ambientT_C - compressor.perfMap[i0].T_F) /
-                (compressor.perfMap[i1].T_F - compressor.perfMap[i0].T_F);
-    }
-    int i_ambientT = (ratio < 0.5) ? i0 : i1;
+    int i_ambientT = compressor.getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
     auto originalCoef = compressor.perfMap[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, desig);
 
     double dCOP_coef = compressor.perfMap[i_ambientT].COP_coeffs[0] - originalCoef;
 
+    int nPerfPts = static_cast<int>(compressor.perfMap.size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
@@ -5758,23 +5744,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 
     auto& compressor = heatSources[compressorIndex];
 
-    // pick the nearest temperature index
-    int nPerfPts = static_cast<int>(compressor.perfMap.size());
-    int i0 = 0, i1 = 0;
-    for (auto& perfPoint : compressor.perfMap)
-    {
-        if (testConfiguration.ambientT_C < F_TO_C(perfPoint.T_F))
-            break;
-        i0 = i1;
-        ++i1;
-    }
-    double ratio = 0.;
-    if ((i1 > i0) && (i1 < nPerfPts))
-    {
-        ratio = (testConfiguration.ambientT_C - compressor.perfMap[i0].T_F) /
-                (compressor.perfMap[i1].T_F - compressor.perfMap[i0].T_F);
-    }
-    int i_ambientT = (ratio < 0.5) ? i0 : i1;
+    int i_ambientT = compressor.getAmbientT_index(testConfiguration.ambientT_C);
 
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Parameter>> params;
