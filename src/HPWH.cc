@@ -4998,9 +4998,9 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
     double sumOutletVolumeT_LC = 0.;
     double sumOutletVolume_L = 0.;
 
-    double avgOutletT_C = 0.;
+    double averageOutletT_C = 0.;
     double minOutletT_C = 0.;
-    double prevAvgOutletT_C = 0.;
+    double previousAverageOutletT_C = 0.;
     double prevMinOutletT_C = 0.;
 
     bool isDrawing = false;
@@ -5045,15 +5045,15 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
             if (outletTemp_C <
                 maxOutletT_C - dF_TO_dC(15.)) // outletT has dropped by 15 degF below max T
             {
-                avgOutletT_C = sumOutletVolumeT_LC / sumOutletVolume_L;
+                averageOutletT_C = sumOutletVolumeT_LC / sumOutletVolume_L;
                 minOutletT_C = outletTemp_C;
                 if (elapsedTime_min >= 60)
                 {
                     double fac = 1;
                     if (!firstDraw)
                     {
-                        fac = (avgOutletT_C - prevMinOutletT_C) /
-                              (prevAvgOutletT_C - prevMinOutletT_C);
+                        fac = (averageOutletT_C - prevMinOutletT_C) /
+                              (previousAverageOutletT_C - prevMinOutletT_C);
                     }
                     firstHourRating.drawVolume_L += fac * drawVolume_L;
                     done = true;
@@ -5066,7 +5066,7 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
                     drMode = DR_ALLOW;
                     maxTankT_C = tankT_C;        // initialize for next pass
                     maxOutletT_C = outletTemp_C; // initialize for next pass
-                    prevAvgOutletT_C = avgOutletT_C;
+                    previousAverageOutletT_C = averageOutletT_C;
                     prevMinOutletT_C = minOutletT_C;
                     ++step;
                 }
@@ -5505,8 +5505,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
         standbyEndT_C = tankT_C;                             // Tsu,0
     }
 
-    testSummary.avgOutletT_C = sumOutletVolumeT_LC / testSummary.removedVolume_L;
-    testSummary.avgInletT_C = sumInletVolumeT_LC / testSummary.removedVolume_L;
+    testSummary.averageOutletT_C = sumOutletVolumeT_LC / testSummary.removedVolume_L;
+    testSummary.averageInletT_C = sumInletVolumeT_LC / testSummary.removedVolume_L;
 
     constexpr double standardSetpointT_C = 51.7;
     constexpr double standardInletT_C = 14.4;
@@ -5670,9 +5670,9 @@ std::string HPWH::TestSummary::report()
 
     results.append(fmt::format("\t\tEF: {:g}\n", EF));
 
-    results.append(fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n", avgInletT_C));
+    results.append(fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n", averageInletT_C));
 
-    results.append(fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n", avgOutletT_C));
+    results.append(fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n", averageOutletT_C));
 
     results.append(fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", removedVolume_L));
 
