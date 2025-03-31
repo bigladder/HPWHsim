@@ -13,8 +13,8 @@ TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
     {
         // get preset model
         HPWH hpwh;
-        const std::string sModelName = "ColmacCxA_30_SP";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "ColmacCxA_30_SP";
+        hpwh.initPreset(modelName);
 
         EXPECT_ANY_THROW(hpwh.setResistanceCapacity(100.)); // Needs to be scalable
     }
@@ -22,8 +22,8 @@ TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
     {
         // get preset model
         HPWH hpwh;
-        const std::string sModelName = "restankRealistic";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "restankRealistic";
+        hpwh.initPreset(modelName);
 
         EXPECT_ANY_THROW(hpwh.setResistanceCapacity(-100.));
         EXPECT_ANY_THROW(hpwh.setResistanceCapacity(100., 3));
@@ -118,8 +118,8 @@ TEST(ResistanceFunctionsTest, getResistancePositionInCompressorTank)
 
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "TamScalable_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "TamScalable_SP";
+    hpwh.initPreset(modelName);
 
     EXPECT_EQ(hpwh.getResistancePosition(0), 9);        // Check top elements
     EXPECT_EQ(hpwh.getResistancePosition(1), 0);        // Check bottom elements

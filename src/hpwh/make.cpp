@@ -12,7 +12,7 @@ namespace hpwh_cli
 
 /// make
 static void make(const std::string& sSpecType,
-                 const std::string& sModelName,
+                 const std::string& modelName,
                  double targetEF,
                  std::string sTestConfig,
                  std::string sOutputDir,
@@ -27,8 +27,8 @@ CLI::App* add_make(CLI::App& app)
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "specification type (Preset, File)");
 
-    static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "model name")->required();
+    static std::string modelName = "";
+    subcommand->add_option("-m,--model", modelName, "model name")->required();
 
     static double targetUEF = -1.;
     subcommand->add_option("-e,--ef", targetUEF, "target EF")->required();
@@ -52,7 +52,7 @@ CLI::App* add_make(CLI::App& app)
         [&]()
         {
             make(sSpecType,
-                 sModelName,
+                 modelName,
                  targetUEF,
                  sTestConfig,
                  sOutputDir,
@@ -65,7 +65,7 @@ CLI::App* add_make(CLI::App& app)
 }
 
 void make(const std::string& sSpecType,
-          const std::string& sModelName,
+          const std::string& modelName,
           double targetEF,
           std::string sTestConfig,
           std::string sOutputDir,
@@ -102,11 +102,11 @@ void make(const std::string& sSpecType,
     HPWH hpwh;
     if (sPresetOrFile == "Preset")
     {
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
     }
     else
     {
-        std::string sInputFile = sModelName;
+        std::string sInputFile = modelName;
         hpwh.initFromFile(sInputFile);
     }
 
@@ -115,7 +115,7 @@ void make(const std::string& sSpecType,
 
     std::string results = "";
     results.append(fmt::format("\tSpecification Type: {}\n", sPresetOrFile));
-    results.append(fmt::format("\tModel Name: {}\n", sModelName));
+    results.append(fmt::format("\tModel Name: {}\n", modelName));
 
     auto designation = HPWH::FirstHourRating::Designation::Medium;
     if (sCustomDrawProfile != "")
@@ -159,7 +159,7 @@ void make(const std::string& sSpecType,
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
-        std::string sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+        std::string sOutputFilename = "test24hr_" + sPresetOrFile + "_" + modelName + ".csv";
         if (sOutputDir != "")
             sOutputFilename = sOutputDir + "/" + sOutputFilename;
         outputFile.open(sOutputFilename.c_str(), std::ifstream::out);

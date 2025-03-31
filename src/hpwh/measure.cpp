@@ -10,7 +10,7 @@ namespace hpwh_cli
 
 /// measure
 static void measure(const std::string& sSpecType,
-                    const std::string& sModelName,
+                    const std::string& modelName,
                     std::string sOutputDir,
                     bool sSupressOutput,
                     std::string sResultsFilename,
@@ -24,8 +24,8 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
 
-    static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+    static std::string modelName = "";
+    subcommand->add_option("-m,--model", modelName, "Model name")->required();
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -46,7 +46,7 @@ CLI::App* add_measure(CLI::App& app)
         [&]()
         {
             measure(sSpecType,
-                    sModelName,
+                    modelName,
                     sOutputDir,
                     saveTestData,
                     sResultsFilename,
@@ -58,7 +58,7 @@ CLI::App* add_measure(CLI::App& app)
 }
 
 void measure(const std::string& sSpecType,
-             const std::string& sModelName,
+             const std::string& modelName,
              std::string sOutputDir,
              bool saveTestData,
              std::string sResultsFilename,
@@ -80,11 +80,11 @@ void measure(const std::string& sSpecType,
     HPWH hpwh;
     if (sPresetOrFile == "Preset")
     {
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
     }
     else
     {
-        std::string inputFile = sModelName;
+        std::string inputFile = modelName;
         hpwh.initFromFile(inputFile);
     }
 

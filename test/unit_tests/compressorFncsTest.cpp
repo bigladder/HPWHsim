@@ -12,7 +12,7 @@ struct CompressorFncsTest : public testing::Test
 
     struct ModelSpecs
     {
-        std::string sModelName;
+        std::string modelName;
         bool hasCompressor;
         int coilConfig; // 1: Wrapped, 2: External
         int isMultipass;
@@ -47,27 +47,27 @@ TEST_F(CompressorFncsTest, compressorSpecs)
     {
         // get preset model
         HPWH hpwh;
-        hpwh.initPreset(modelSpec.sModelName);
+        hpwh.initPreset(modelSpec.modelName);
 
-        EXPECT_EQ(hpwh.hasACompressor(), modelSpec.hasCompressor) << modelSpec.sModelName;
+        EXPECT_EQ(hpwh.hasACompressor(), modelSpec.hasCompressor) << modelSpec.modelName;
         if (modelSpec.hasCompressor)
         {
-            EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.sModelName;
-            EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.modelName;
+            EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.modelName;
             EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
-                << modelSpec.sModelName;
+                << modelSpec.modelName;
             EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
-                << modelSpec.sModelName;
+                << modelSpec.modelName;
             EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
-                << modelSpec.sModelName;
+                << modelSpec.modelName;
         }
         else
         {
-            EXPECT_ANY_THROW(hpwh.getCompressorCoilConfig()) << modelSpec.sModelName;
-            EXPECT_ANY_THROW(hpwh.isCompressorMultipass()) << modelSpec.sModelName;
-            EXPECT_ANY_THROW(hpwh.isCompressorExternalMultipass()) << modelSpec.sModelName;
-            EXPECT_ANY_THROW(hpwh.getMaxCompressorSetpoint()) << modelSpec.sModelName;
-            EXPECT_ANY_THROW(hpwh.getMinOperatingTemp(HPWH::UNITS_F)) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getCompressorCoilConfig()) << modelSpec.modelName;
+            EXPECT_ANY_THROW(hpwh.isCompressorMultipass()) << modelSpec.modelName;
+            EXPECT_ANY_THROW(hpwh.isCompressorExternalMultipass()) << modelSpec.modelName;
+            EXPECT_ANY_THROW(hpwh.getMaxCompressorSetpoint()) << modelSpec.modelName;
+            EXPECT_ANY_THROW(hpwh.getMinOperatingTemp(HPWH::UNITS_F)) << modelSpec.modelName;
         }
     }
 }
