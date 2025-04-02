@@ -22,7 +22,7 @@
             "schema_author": "none",
             "schema_name": "RSAIRTOWATERHEATPUMP",
             "schema_version": "0.1.0",
-            "time_of_creation": "UTC: 19:13:37 2025"
+            "time_of_creation": "UTC: 19:47:57 2025"
           },
           "performance": {
             "compressor_lockout_temperature_hysteresis": 4.0,
@@ -1189,7 +1189,7 @@
       "schema_author": "none",
       "schema_name": "CentralWaterHeatingSystem",
       "schema_version": "0.1.0",
-      "time_of_creation": "UTC: 19:13:37 2025"
+      "time_of_creation": "UTC: 19:47:57 2025"
     },
     "primary_heat_source_id": "compressor",
     "secondary_heat_exchanger": {
@@ -1204,7 +1204,7 @@
         "schema_author": "none",
         "schema_name": "RSTANK",
         "schema_version": "0.1.0",
-        "time_of_creation": "UTC: 19:13:37 2025"
+        "time_of_creation": "UTC: 19:47:57 2025"
       },
       "performance": {
         "bottom_fraction_of_tank_mixing_on_draw": 0.0,
@@ -1222,7 +1222,7 @@
     "schema_author": "none",
     "schema_name": "HPWHSimInput",
     "schema_version": "0.1.0",
-    "time_of_creation": "UTC: 19:13:37 2025"
+    "time_of_creation": "UTC: 19:47:57 2025"
   },
   "number_of_nodes": 96,
   "standard_setpoint": 338.15,
