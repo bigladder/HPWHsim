@@ -8,7 +8,7 @@
       "schema_author": "none",
       "schema_name": "RSINTEGRATEDWATERHEATER",
       "schema_version": "0.1.0",
-      "time_of_creation": "UTC: 19:47:51 2025"
+      "time_of_creation": "UTC: 22:08:12 2025"
     },
     "performance": {
       "heat_source_configurations": [
@@ -34,7 +34,7 @@
               "schema_author": "none",
               "schema_name": "RSRESISTANCEWATERHEATSOURCE",
               "schema_version": "0.1.0",
-              "time_of_creation": "UTC: 19:47:51 2025"
+              "time_of_creation": "UTC: 22:08:12 2025"
             },
             "performance": {
               "input_power": 5000.0
@@ -82,7 +82,7 @@
               "schema_author": "none",
               "schema_name": "RSRESISTANCEWATERHEATSOURCE",
               "schema_version": "0.1.0",
-              "time_of_creation": "UTC: 19:47:51 2025"
+              "time_of_creation": "UTC: 22:08:12 2025"
             },
             "performance": {
               "input_power": 5000.0
@@ -112,7 +112,7 @@
               "schema_author": "none",
               "schema_name": "RSCONDENSERWATERHEATSOURCE",
               "schema_version": "0.1.0",
-              "time_of_creation": "UTC: 19:47:51 2025"
+              "time_of_creation": "UTC: 22:08:12 2025"
             },
             "performance": {
               "coil_configuration": "WRAPPED",
@@ -200,7 +200,7 @@
           "schema_author": "none",
           "schema_name": "RSTANK",
           "schema_version": "0.1.0",
-          "time_of_creation": "UTC: 19:47:51 2025"
+          "time_of_creation": "UTC: 22:08:12 2025"
         },
         "performance": {
           "bottom_fraction_of_tank_mixing_on_draw": 0.0,
@@ -217,7 +217,7 @@
     "schema_author": "none",
     "schema_name": "HPWHSimInput",
     "schema_version": "0.1.0",
-    "time_of_creation": "UTC: 19:47:51 2025"
+    "time_of_creation": "UTC: 22:08:12 2025"
   },
   "number_of_nodes": 12,
   "standard_setpoint": 324.81666666666666,
