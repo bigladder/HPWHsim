@@ -534,15 +534,17 @@ static void autofill_metadata(nlohmann::json& j)
     j["description"] = "representation of embedded HPWH element";
     j["schema_version"] = T::schema_version;
     time_t t = time(NULL);
-#if !defined(WIN32)
-    struct tm ts;
-    auto ptm = gmtime_r(&t, &ts);
+    char buf[100];
+
+#if defined(WIN32)
+    struct tm gmt;
+    gmtime_s(&gmt, &t);
+    std::strftime(buf, sizeof(buf), "UTC: %H:%M:%S %Y", &gmt);
 #else
-    auto ptm = gmtime(&t);
+    auto ts = gmtime(&t);
+    std::strftime(buf, 100, "UTC: %H:%M:%S %Y", ts);
 #endif
-    char outtime[100];
-    std::strftime(outtime, 100, "UTC: %H:%M:%S %Y", ptm);
-    j["time_of_creation"] = outtime;
+    j["time_of_creation"] = buf;
 }
 
 /*static*/
