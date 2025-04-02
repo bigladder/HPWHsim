@@ -602,11 +602,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     }
     if (cop < 0.)
     {
-        send_warning("Warning: COP is Negative!");
+        send_error(fmt::format("COP ({:0.2f}) is negative. External temperature is {:0.1f}F. Condenser temperature is {:0.1F}F.", cop, externalT_F, condenserTemp_F));
     }
     if (cop < 1.)
     {
-        send_warning("Warning: COP is Less than 1!");
+        send_warning(fmt::format("COP ({:0.2f}) is less than 1. External temperature is {:0.1f}F. Condenser temperature is {:0.1F}F.", cop, externalT_F, condenserTemp_F));
     }
 }
 
