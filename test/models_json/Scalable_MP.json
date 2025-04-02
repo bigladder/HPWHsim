@@ -27,7 +27,7 @@
             "schema_author": "none",
             "schema_name": "RSRESISTANCEWATERHEATSOURCE",
             "schema_version": "0.1.0",
-            "time_of_creation": "UTC: 19:13:37 2025"
+            "time_of_creation": "UTC: 19:47:57 2025"
           },
           "performance": {
             "input_power": 30000.0
@@ -75,7 +75,7 @@
             "schema_author": "none",
             "schema_name": "RSRESISTANCEWATERHEATSOURCE",
             "schema_version": "0.1.0",
-            "time_of_creation": "UTC: 19:13:37 2025"
+            "time_of_creation": "UTC: 19:47:57 2025"
           },
           "performance": {
             "input_power": 30000.0
@@ -105,7 +105,7 @@
             "schema_author": "none",
             "schema_name": "RSAIRTOWATERHEATPUMP",
             "schema_version": "0.1.0",
-            "time_of_creation": "UTC: 19:13:37 2025"
+            "time_of_creation": "UTC: 19:47:57 2025"
           },
           "performance": {
             "compressor_lockout_temperature_hysteresis": 0.0,
@@ -2244,7 +2244,7 @@
       "schema_author": "none",
       "schema_name": "CentralWaterHeatingSystem",
       "schema_version": "0.1.0",
-      "time_of_creation": "UTC: 19:13:37 2025"
+      "time_of_creation": "UTC: 19:47:57 2025"
     },
     "primary_heat_source_id": "compressor",
     "tank": {
@@ -2254,7 +2254,7 @@
         "schema_author": "none",
         "schema_name": "RSTANK",
         "schema_version": "0.1.0",
-        "time_of_creation": "UTC: 19:13:37 2025"
+        "time_of_creation": "UTC: 19:47:57 2025"
       },
       "performance": {
         "bottom_fraction_of_tank_mixing_on_draw": 0.0,
@@ -2272,7 +2272,7 @@
     "schema_author": "none",
     "schema_name": "HPWHSimInput",
     "schema_version": "0.1.0",
-    "time_of_creation": "UTC: 19:13:37 2025"
+    "time_of_creation": "UTC: 19:47:57 2025"
   },
   "number_of_nodes": 24,
   "standard_setpoint": 330.3722222222222,
