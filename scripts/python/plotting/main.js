@@ -458,3 +458,68 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	async function fit()	{
 
 	}
+
+	async function FillGeneralTable(model_data) {
+		let tableHTML = '<table>'
+		
+		const tableHeaders = ['parameter', 'value'];
+		tableHTML += '<thead><tr>';
+		tableHeaders.forEach(header => {
+		    tableHTML += `<th>${header}</th>`;
+		  });
+		tableHTML += '</tr></thead>';
+
+		const tableEntries = ['number_of_nodes', 'standard_setpoint'];
+		tableHTML += '<tbody>';
+		tableEntries.forEach(entry => {	
+			if (entry in model_data)
+				tableHTML += '<tr> <th>' + entry + '</th> <td>' + model_data[entry] + '</td> </tr>';
+		});
+		tableHTML += '</tbody>';
+
+		tableHTML += '</table>';
+		document.getElementById('general_table').innerHTML = tableHTML;
+	}
+
+	async function FillTankTable(model_data) {
+		let tableHTML = '<table>'
+		
+		var tableHeaders = ['parameter', 'value'];
+		tableHTML += '<thead><tr>';
+		tableHeaders.forEach(header => {
+		    tableHTML += `<th>${header}</th>`;
+		  });
+		tableHTML += '</tr></thead>';
+
+		var perf;
+		if("integrated_system" in model_data)
+		{
+			wh = model_data["integrated_system"];
+			perf = wh["performance"];
+		}
+		else
+			perf = model_data["central_system"]			
+
+		let tank_perf = perf["tank"]["performance"]
+
+		tableEntries = ['volume', 'ua', 'fittings_ua', 'bottom_fraction_of_tank_mixing_on_draw'];
+		tableHTML += '<tbody>';
+		tableEntries.forEach(entry => {	
+			if (entry in tank_perf)
+				tableHTML += '<tr> <th>' + entry + '</th> <td>' + tank_perf[entry] + '</td> </tr>';
+		});
+		tableHTML += '</tbody>';
+
+		tableHTML += '</table>';
+		document.getElementById('tank_table').innerHTML = tableHTML;
+	}
+
+	async function FillPropertiesTables() {
+		var prefs = await read_json_file("./prefs.json")
+		const model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+		var model_data = await read_json_file(model_data_filepath)
+
+		await FillGeneralTable(model_data);
+		await FillTankTable(model_data);
+
+	}

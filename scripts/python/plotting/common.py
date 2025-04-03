@@ -16,7 +16,7 @@ def write_file(filename, json_data):
 	except:
 			print(f"failed to write {filename}")
 			return
-	
+
 def get_perf_map(model_data):
 	if "integrated_system" in model_data:
 		wh = model_data["integrated_system"]

@@ -55,7 +55,7 @@
 <body>
 	<script src="main.js"></script>
 
-	<!-- content -->
+	<!-- model -->
 	<form id="model_form">
 		<label for="model_name">model name:</label>
 		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();">
@@ -69,33 +69,34 @@
 		</select><br><br>
 	</form>
 
-	<!-- content -->
+	<!-- build dir -->
 	<form id="build_form">
 		<label for="build_dir">build directory:</label>
 		<input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
 	</form>
 
-	<!-- content -->
-	<button id="fit_tab" class="collapsible">Fitting</button>
+	<!-- Properties -->
+	<button id="properties_tab" class="collapsible">Properties</button>
 	<div class="content">
 		<table>
 		<tr>
 			<td>
-				<table id="params_table"></table>
-				<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
+				<table id="general_table"></table>
 			</td>
 
-			<td padding="30px">
-				<table id="metrics_table"></table>
-				<button type="button" id="clear_metrics_btn" onclick="clear_metrics();">clear metrics</button>
+			<td>
+				<table id="tank_table"></table>
+			</td>
+
+			<td>
+				<table id="heat_sources_table"></table>
 			</td>
 		</tr>
 		</table>
 		<br>
-		<button type="button" id="fit_btn" onclick="launch_fit_proc();">fit</button>
 	</div>
 
-	<!-- content -->
+	<!-- Performance -->
 	<button id="perf_tab" class="collapsible">Performance</button>
 	<div class="content">
 		<form id="perf_form">
@@ -107,7 +108,7 @@
 		</div>
 	</div>
 
-	<!-- content -->
+	<!-- Test -->
 	<button id="test_tab" class="collapsible">Test</button>
 	<div class="content">
 		<form id="test_form">
@@ -137,7 +138,26 @@
 		<iframe title="plots" src="" id="test-plots" width=1200 height=1000 style="display:none;"></iframe>
 
 		<p "" id="measure_results" width=800 height=1800 style="display:none;"></object>
+	</div>
 
+	<!-- Fitting -->
+	<button id="fit_tab" class="collapsible">Fitting</button>
+	<div class="content">
+		<table>
+		<tr>
+			<td>
+				<table id="params_table"></table>
+				<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
+			</td>
+
+			<td padding="30px">
+				<table id="metrics_table"></table>
+				<button type="button" id="clear_metrics_btn" onclick="clear_metrics();">clear metrics</button>
+			</td>
+		</tr>
+		</table>
+		<br>
+		<button type="button" id="fit_btn" onclick="launch_fit_proc();">fit</button>
 	</div>
 
 	<script>
@@ -151,7 +171,9 @@
 				if (content.style.maxHeight) {
 					content.style.maxHeight = null;
 				} else {
-					if (this.id == "test_tab")
+					if (this.id == "properties_tab")
+						content.style.maxHeight = "1100px";
+					else if (this.id == "test_tab")
 						content.style.maxHeight = "2200px";
 					else if (this.id == "fit_tab")
 						content.style.maxHeight = "1200px";
@@ -168,6 +190,7 @@
 	init_websocket().then({}, {})
 	init_elements().then({}, {})
 	FillFitTables().then({}, {})
+	FillPropertiesTables().then({}, {})
 </script>
 
 </html>
