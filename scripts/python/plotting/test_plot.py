@@ -328,18 +328,19 @@ def plot(data):
 	plotter.draw({'show': 3})
 	return plotter
 
-def write_plot(measured_path, simulated_filepath, plot_filepath):
-	plotter = TestPlotter()
-	plotter.read_measured(measured_filepath)
-	plotter.read_simulated(simulated_filepath)
-	plotter.draw({'show': 3})
-	plotter.plot.write_html_plot(plot_filepath)
+def write_plot(data):
+	plotter = plot(data)
+	if "plot_filepath" in data:
+		plotter.plot.write_html_plot(plot_filepath)
 	
 # main
 if __name__ == "__main__":
 	n_args = len(sys.argv) - 1
-	if n_args > 2:
-			measured_filepath = sys.argv[1]
-			simulated_filepath = sys.argv[2]
-			plot_filepath = sys.argv[3]
-			write_plot(measured_filepath, simulated_filepath, plot_filepath)
+	if n_args > 4:
+			data = {}
+			data['model_id'] = sys.argv[1]
+			data['test_id'] = sys.argv[2]
+			data['measured_filepath'] = sys.argv[3]
+			data['simulated_filepath'] = sys.argv[4]
+			data['plot_filepath'] = sys.argv[5]
+			write_plot(data)
