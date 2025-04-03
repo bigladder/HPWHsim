@@ -1,12 +1,13 @@
 {
-  "model_id": "BradfordWhiteAeroThermRE2H65",
+  "model_id": "LG_APHWC80",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "Tests with data",
-  "test_id": "RE2H65_UEF67",
-  "show_simulated": true,
-  "show_measured": true,
+  "test_id": "",
+  "show_simulated": false,
+  "show_measured": false,
   "draw_profile": "Medium",
+  "heat_source_id": "resistiveElementTop",
   "performance_plots": {
     "contour_variable": 1,
     "contour_coloring": 1,

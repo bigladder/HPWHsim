@@ -58,7 +58,7 @@
 	<!-- model -->
 	<form id="model_form">
 		<label for="model_name">model name:</label>
-		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();">
+		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();FillPropertiesTables();">
 		</select><br><br>
 
 		<label for="model_spec">model spec:</label>
@@ -83,15 +83,23 @@
 			<td>
 				<table id="general_table"></table>
 			</td>
+		</tr>
 
+		<tr>
 			<td>
 				<table id="tank_table"></table>
-			</td>
+			</td><br>
+		</tr>
 
+		<tr>
 			<td>
+				<label for="heat_source">heat source:</label>
+				<select name="heat_source" id="heat_source" style="width: 400px" onchange="change_menu_value();FillPropertiesTables();">
+				</select><br><br>
 				<table id="heat_sources_table"></table>
 			</td>
 		</tr>
+
 		</table>
 		<br>
 	</div>
