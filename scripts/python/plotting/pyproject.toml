@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "HPWHsim-python-scripts"
+name = "server"
 version = "0.0.0"
 description = ""
 authors = []
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0" #"^3.8"
+python = ">=3.10,<4.0"
 pandas = "*"
 plotly = "*"
 koozie = "*"
@@ -13,6 +13,7 @@ dimes = { git = "https://github.com/bigladder/dimes" }
 dash-extensions = "^1.0.19"
 websockets = "^14.2"
 quart = "^0.20.0"
+scipy = "^1.15.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
