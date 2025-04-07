@@ -297,7 +297,7 @@ class HPWH : public Courier::Sender
     } productInformation;
 
     /// identify product info from model
-    static ProductInformation findProductInformation(const MODELS model);
+    void findProductInformation();
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);

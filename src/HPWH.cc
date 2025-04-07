@@ -2889,8 +2889,7 @@ void HPWH::checkInputs()
     }
 }
 
-/*static*/
-HPWH::ProductInformation HPWH::findProductInformation(const HPWH::MODELS model)
+void HPWH::findProductInformation()
 {
     std::string manufacturer = "";
     std::string model_number = "";
@@ -2946,8 +2945,7 @@ HPWH::ProductInformation HPWH::findProductInformation(const HPWH::MODELS model)
     {
     }
     }
-
-    return {manufacturer, model_number};
+    productInformation = {manufacturer, model_number};
 }
 
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
