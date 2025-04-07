@@ -551,13 +551,6 @@ static void autofill_metadata(nlohmann::json& j)
 /*static*/
 void HPWH::to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohmann::json& j)
 {
-    nlohmann::json j_metadata;
-    autofill_metadata<hpwh_data_model::hpwh_sim_input::Schema>(j_metadata);
-    j_metadata["schema_name"] = "HPWHSimInput";
-    j_metadata["schema_url"] =
-        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml";
-    j["metadata"] = j_metadata;
-
     j["number_of_nodes"] = hsi.number_of_nodes;
     j["fixed_volume"] = hsi.fixed_volume;
     j["depresses_temperature"] = hsi.depresses_temperature;
@@ -707,13 +700,6 @@ void HPWH::to_json(
     const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs,
     nlohmann::json& j)
 {
-    nlohmann::json j_metadata;
-    autofill_metadata<hpwh_data_model::central_water_heating_system::Schema>(j_metadata);
-    j_metadata["schema_name"] = "CentralWaterHeatingSystem";
-    j_metadata["schema_url"] = "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                               "CentralWaterHeatingSystem.schema.yaml";
-    j["metadata"] = j_metadata;
-
     nlohmann::json j_tank;
     to_json(cwhs.tank, j_tank);
     j["tank"] = j_tank;
