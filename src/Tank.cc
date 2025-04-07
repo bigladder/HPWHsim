@@ -55,6 +55,27 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
     auto& metadata = rstank.metadata;
     checkTo(std::string("RSTANK"), metadata.schema_name_is_set, metadata.schema_name);
 
+    // assign description/product_information
+    auto& desc = rstank.description;
+    auto& prod_info = desc.product_information;
+
+    bool manufacturer_set = productInformation.manufacturer != "";
+    bool model_number_set = productInformation.model_number != "";
+    checkTo(productInformation.manufacturer,
+            prod_info.manufacturer_is_set,
+            prod_info.manufacturer,
+            manufacturer_set);
+    checkTo(productInformation.model_number,
+            prod_info.model_number_is_set,
+            prod_info.model_number,
+            model_number_set);
+
+    bool prod_info_set = manufacturer_set || model_number_set;
+    bool desc_set = prod_info_set;
+
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
+    checkTo(desc, rstank.description_is_set, rstank.description, desc_set);
+
     auto& perf = rstank.performance;
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
     checkTo(1000. * UA_kJperHrC / 3600., perf.ua_is_set, perf.ua);

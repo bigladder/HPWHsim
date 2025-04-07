@@ -268,6 +268,23 @@ void HPWH::Condenser::from(
 void HPWH::Condenser::from(
     const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs)
 {
+    if (hs.description_is_set)
+    {
+        auto& desc = hs.description;
+        if (desc.product_information_is_set)
+        {
+            auto& info = desc.product_information;
+            checkFrom(productInformation.manufacturer,
+                      info.manufacturer_is_set,
+                      info.manufacturer,
+                      std::string(""));
+            checkFrom(productInformation.model_number,
+                      info.model_number_is_set,
+                      info.model_number,
+                      std::string(""));
+        }
+    }
+
     auto& perf = hs.performance;
 
     switch (perf.coil_configuration)
@@ -359,6 +376,23 @@ void HPWH::Condenser::from(
 
 void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
+    if (hs.description_is_set)
+    {
+        auto& desc = hs.description;
+        if (desc.product_information_is_set)
+        {
+            auto& info = desc.product_information;
+            checkFrom(productInformation.manufacturer,
+                      info.manufacturer_is_set,
+                      info.manufacturer,
+                      std::string(""));
+            checkFrom(productInformation.model_number,
+                      info.model_number_is_set,
+                      info.model_number,
+                      std::string(""));
+        }
+    }
+
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
 
     auto& perf = hs.performance;
@@ -479,9 +513,31 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
         return to(*hsp);
     }
 }
+
 void HPWH::Condenser::to(
     hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
+    // assign description/product_information
+    auto& desc = hs.description;
+    auto& prod_info = desc.product_information;
+
+    bool manufacturer_set = productInformation.manufacturer != "";
+    bool model_number_set = productInformation.model_number != "";
+    checkTo(productInformation.manufacturer,
+            prod_info.manufacturer_is_set,
+            prod_info.manufacturer,
+            manufacturer_set);
+    checkTo(productInformation.model_number,
+            prod_info.model_number_is_set,
+            prod_info.model_number,
+            model_number_set);
+
+    bool prod_info_set = manufacturer_set || model_number_set;
+    bool desc_set = prod_info_set;
+
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
+    checkTo(desc, hs.description_is_set, hs.description, desc_set);
+
     auto& perf = hs.performance;
     switch (configuration)
     {
@@ -606,6 +662,27 @@ void HPWH::Condenser::to(
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
 {
+    // assign description/product_information
+    auto& desc = hs.description;
+    auto& prod_info = desc.product_information;
+
+    bool manufacturer_set = productInformation.manufacturer != "";
+    bool model_number_set = productInformation.model_number != "";
+    checkTo(productInformation.manufacturer,
+            prod_info.manufacturer_is_set,
+            prod_info.manufacturer,
+            manufacturer_set);
+    checkTo(productInformation.model_number,
+            prod_info.model_number_is_set,
+            prod_info.model_number,
+            model_number_set);
+
+    bool prod_info_set = manufacturer_set || model_number_set;
+    bool desc_set = prod_info_set;
+
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
+    checkTo(desc, hs.description_is_set, hs.description, desc_set);
+
     auto& perf = hs.performance;
     checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 

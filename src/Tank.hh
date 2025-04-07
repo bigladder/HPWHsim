@@ -30,6 +30,8 @@ class HPWH::Tank : public Sender
     void from(hpwh_data_model::rstank::RSTANK& rstank);
     void to(hpwh_data_model::rstank::RSTANK& rstank) const;
 
+    ProductInformation productInformation;
+
     void setAllDefaults();
 
     void calcSizeConstants();

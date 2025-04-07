@@ -92,51 +92,6 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
-    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
-    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
-
-    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
-    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
-
-    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
-    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
-
-    static void to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi,
-                        nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
-            nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs,
-            nlohmann::json& j);
-
-    static void to_json(const hpwh_data_model::rstank::RSTANK& rshs, nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs,
-            nlohmann::json& j);
-
-    static void to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs,
-                        nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE& rshs,
-            nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic,
-            nlohmann::json& j);
-
-    static void to_json(
-        const hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic& soclogic,
-        nlohmann::json& j);
-
-    static void to_json(
-        const hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic& templogic,
-        nlohmann::json& j);
-
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
     enum DRMODES
@@ -334,6 +289,66 @@ class HPWH : public Courier::Sender
     };
 
     // static std::unordered_map<MODELS, std::string> modelMap;
+
+    struct ProductInformation
+    {
+        std::string manufacturer = "";
+        std::string model_number = "";
+    } productInformation;
+
+    /// identify product info from model
+    static ProductInformation findProductInformation(const MODELS model);
+
+    template <typename T>
+    static void description_to_json(const T& desc, nlohmann::json& j);
+
+    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
+    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
+
+    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
+    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
+
+    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
+    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
+
+    void from(hpwh_data_model::rsintegratedwaterheater::Description& desc);
+    void to(hpwh_data_model::rsintegratedwaterheater::Description& desc) const;
+
+    static void to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi,
+                        nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
+            nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs,
+            nlohmann::json& j);
+
+    static void to_json(const hpwh_data_model::rstank::RSTANK& rshs, nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs,
+            nlohmann::json& j);
+
+    static void to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs,
+                        nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE& rshs,
+            nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic,
+            nlohmann::json& j);
+
+    static void to_json(
+        const hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic& soclogic,
+        nlohmann::json& j);
+
+    static void to_json(
+        const hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic& templogic,
+        nlohmann::json& j);
 
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
