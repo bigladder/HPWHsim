@@ -6,12 +6,8 @@
 #include "HPWHHeatSource.hh"
 #include <fmt/format.h>
 
-#include <stdarg.h>
-#include <fstream>
-#include <iostream>
 #include <algorithm>
 #include <regex>
-#include <time.h>
 
 /*static*/
 double HPWH::getResampledValue(const std::vector<double>& sampleValues,
