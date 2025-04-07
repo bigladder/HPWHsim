@@ -78,6 +78,113 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			});
 	}
 
+	async function FillGeneralTable(model_data) {
+		let tableHTML = '<table>'
+		
+		const tableHeaders = ['parameter', 'value'];
+		tableHTML += '<thead><tr>';
+		tableHeaders.forEach(header => {
+		    tableHTML += `<th>${header}</th>`;
+		  });
+		tableHTML += '</tr></thead>';
+
+		const tableEntries = ['number_of_nodes', 'standard_setpoint'];
+		tableHTML += '<tbody>';
+		tableEntries.forEach(entry => {	
+			if (entry in model_data)
+				tableHTML += '<tr> <th>' + entry + '</th> <td>' + model_data[entry] + '</td> </tr>';
+		});
+		tableHTML += '</tbody>';
+
+		tableHTML += '</table>';
+		document.getElementById('general_table').innerHTML = tableHTML;
+	}
+
+	async function FillTankTable(model_data) {
+		let tableHTML = '<table>'
+		
+		var tableHeaders = ['parameter', 'value'];
+		tableHTML += '<thead><tr>';
+		tableHeaders.forEach(header => {
+		    tableHTML += `<th>${header}</th>`;
+		  });
+		tableHTML += '</tr></thead>';
+
+		var perf;
+		if("integrated_system" in model_data)
+		{
+			wh = model_data["integrated_system"];
+			perf = wh["performance"];
+		}
+		else
+			perf = model_data["central_system"]			
+
+		let tank_perf = perf["tank"]["performance"]
+
+		const tableEntries = ['volume', 'ua', 'fittings_ua', 'bottom_fraction_of_tank_mixing_on_draw'];
+		tableHTML += '<tbody>';
+		tableEntries.forEach(entry => {	
+			if (entry in tank_perf)
+				tableHTML += '<tr> <th>' + entry + '</th> <td>' + tank_perf[entry] + '</td> </tr>';
+		});
+		tableHTML += '</tbody>';
+
+		tableHTML += '</table>';
+		document.getElementById('tank_table').innerHTML = tableHTML;
+	}
+
+	async function FillHeatSourceTable(heat_source_config) {
+		let tableHTML = '<table>'
+			
+		var tableHeaders = ['parameter', 'value'];
+		tableHTML += '<thead><tr>';
+		tableHeaders.forEach(header => {
+		    tableHTML += `<th>${header}</th>`;
+		  });
+		tableHTML += '</tr></thead>';
+
+		const tableEntries = ['heat_source_type'];
+		tableHTML += '<tbody>';
+		tableEntries.forEach(entry => {	
+			if (entry in heat_source_config)
+				tableHTML += '<tr> <th>' + entry + '</th> <td>' + heat_source_config[entry] + '</td> </tr>';
+		});
+
+		let heat_source = heat_source_config["heat_source"];
+		let heat_source_perf = heat_source["performance"]
+
+		tableHTML += '</tbody>';
+
+		tableHTML += '</table>';
+		document.getElementById('heat_source_table').innerHTML = tableHTML;
+	}
+
+	async function FillPropertiesTables(prefs) {
+		const model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+		var model_data = await read_json_file(model_data_filepath)
+
+		await FillGeneralTable(model_data);
+		await FillTankTable(model_data);
+
+		var perf;
+		if("integrated_system" in model_data)
+		{
+			wh = model_data["integrated_system"];
+			perf = wh["performance"];
+		}
+		else
+			perf = model_data["central_system"]	;		
+
+		var hscs = perf["heat_source_configurations"];
+		hscs.forEach(hsc => {	
+			if (hsc["id"] == prefs["heat_source_id"])
+			{
+					FillHeatSourceTable(hsc);
+			}
+		}
+		);
+
+	}
 	function set_menu_values(prefs) {
 		const model_form = document.getElementById('model_form');
 		const build_form = document.getElementById('build_form');
@@ -294,6 +401,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
 
+		await FillPropertiesTables(prefs);
+
 		{// send perf info
 			model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 			var msg = {
@@ -487,113 +596,5 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	}
 
 	async function fit()	{
-
-	}
-
-	async function FillGeneralTable(model_data) {
-		let tableHTML = '<table>'
-		
-		const tableHeaders = ['parameter', 'value'];
-		tableHTML += '<thead><tr>';
-		tableHeaders.forEach(header => {
-		    tableHTML += `<th>${header}</th>`;
-		  });
-		tableHTML += '</tr></thead>';
-
-		const tableEntries = ['number_of_nodes', 'standard_setpoint'];
-		tableHTML += '<tbody>';
-		tableEntries.forEach(entry => {	
-			if (entry in model_data)
-				tableHTML += '<tr> <th>' + entry + '</th> <td>' + model_data[entry] + '</td> </tr>';
-		});
-		tableHTML += '</tbody>';
-
-		tableHTML += '</table>';
-		document.getElementById('general_table').innerHTML = tableHTML;
-	}
-
-	async function FillTankTable(model_data) {
-		let tableHTML = '<table>'
-		
-		var tableHeaders = ['parameter', 'value'];
-		tableHTML += '<thead><tr>';
-		tableHeaders.forEach(header => {
-		    tableHTML += `<th>${header}</th>`;
-		  });
-		tableHTML += '</tr></thead>';
-
-		var perf;
-		if("integrated_system" in model_data)
-		{
-			wh = model_data["integrated_system"];
-			perf = wh["performance"];
-		}
-		else
-			perf = model_data["central_system"]			
-
-		let tank_perf = perf["tank"]["performance"]
-
-		const tableEntries = ['volume', 'ua', 'fittings_ua', 'bottom_fraction_of_tank_mixing_on_draw'];
-		tableHTML += '<tbody>';
-		tableEntries.forEach(entry => {	
-			if (entry in tank_perf)
-				tableHTML += '<tr> <th>' + entry + '</th> <td>' + tank_perf[entry] + '</td> </tr>';
-		});
-		tableHTML += '</tbody>';
-
-		tableHTML += '</table>';
-		document.getElementById('tank_table').innerHTML = tableHTML;
-	}
-
-	async function FillHeatSourceTable(heat_source_config) {
-		let tableHTML = '<table>'
-			
-		var tableHeaders = ['parameter', 'value'];
-		tableHTML += '<thead><tr>';
-		tableHeaders.forEach(header => {
-		    tableHTML += `<th>${header}</th>`;
-		  });
-		tableHTML += '</tr></thead>';
-
-		let heat_source = heat_source_config["heat_source"];
-
-		const tableEntries = ['heat_source_type'];
-		tableHTML += '<tbody>';
-		tableEntries.forEach(entry => {	
-			if (entry in tank_perf)
-				tableHTML += '<tr> <th>' + entry + '</th> <td>' + heat_source_config[entry] + '</td> </tr>';
-		});
-		tableHTML += '</tbody>';
-
-		tableHTML += '</table>';
-		document.getElementById('heat_source_table').innerHTML = tableHTML;
-	}
-
-	async function FillPropertiesTables() {
-		var prefs = await read_json_file("./prefs.json")
-		const model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-		var model_data = await read_json_file(model_data_filepath)
-
-		await FillGeneralTable(model_data);
-		await FillTankTable(model_data);
-
-		var perf;
-		if("integrated_system" in model_data)
-		{
-			wh = model_data["integrated_system"];
-			perf = wh["performance"];
-		}
-		else
-			perf = model_data["central_system"]	;		
-
-		var hscs = perf["heat_source_configurations"];
-		for (hsc in hscs)
-		{
-			if (hsc["id"] == prefs["heat_source_id"])
-			{
-					await FillHeatSourceTable(hsc);
-					break;
-			}
-		}
 
 	}

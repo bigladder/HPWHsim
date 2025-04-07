@@ -7,7 +7,7 @@
   "show_simulated": false,
   "show_measured": false,
   "draw_profile": "Medium",
-  "heat_source_id": "resistiveElementTop",
+  "heat_source_id": "resistiveElementBottom",
   "performance_plots": {
     "contour_variable": 1,
     "contour_coloring": 1,
