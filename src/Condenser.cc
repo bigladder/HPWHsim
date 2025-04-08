@@ -246,6 +246,20 @@ void HPWH::Condenser::makeBtwxt()
     useBtwxtGrid = true;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Set condenser product information based on HPWH model
+/// @note	Add entries, as needed
+//-----------------------------------------------------------------------------
+void HPWH::Condenser::findProductInformation()
+{
+    switch (hpwh->getModel())
+    {
+    default:
+    {
+    }
+    }
+}
+
 void HPWH::Condenser::from(
     const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs)
 {
@@ -274,14 +288,8 @@ void HPWH::Condenser::from(
         if (desc.product_information_is_set)
         {
             auto& info = desc.product_information;
-            checkFrom(productInformation.manufacturer,
-                      info.manufacturer_is_set,
-                      info.manufacturer,
-                      std::string(""));
-            checkFrom(productInformation.model_number,
-                      info.model_number_is_set,
-                      info.model_number,
-                      std::string(""));
+            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
+            productInformation.model_number = {info.model_number, info.model_number_is_set};
         }
     }
 
@@ -382,14 +390,8 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         if (desc.product_information_is_set)
         {
             auto& info = desc.product_information;
-            checkFrom(productInformation.manufacturer,
-                      info.manufacturer_is_set,
-                      info.manufacturer,
-                      std::string(""));
-            checkFrom(productInformation.model_number,
-                      info.model_number_is_set,
-                      info.model_number,
-                      std::string(""));
+            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
+            productInformation.model_number = {info.model_number, info.model_number_is_set};
         }
     }
 
@@ -517,27 +519,23 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
 void HPWH::Condenser::to(
     hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
-    // assign description/product_information
+    // description/product_information
     auto& desc = hs.description;
     auto& prod_info = desc.product_information;
 
-    bool manufacturer_set = productInformation.manufacturer != "";
-    bool model_number_set = productInformation.model_number != "";
-    checkTo(productInformation.manufacturer,
-            prod_info.manufacturer_is_set,
-            prod_info.manufacturer,
-            manufacturer_set);
-    checkTo(productInformation.model_number,
-            prod_info.model_number_is_set,
-            prod_info.model_number,
-            model_number_set);
+    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
+    prod_info.manufacturer = productInformation.manufacturer();
 
-    bool prod_info_set = manufacturer_set || model_number_set;
-    bool desc_set = prod_info_set;
+    prod_info.model_number_is_set = productInformation.model_number.isSet();
+    prod_info.model_number = productInformation.model_number();
 
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
-    checkTo(desc, hs.description_is_set, hs.description, desc_set);
+    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
 
+    bool desc_is_set = prod_info_is_set;
+    checkTo(desc, hs.description_is_set, hs.description, desc_is_set);
+
+    //
     auto& perf = hs.performance;
     switch (configuration)
     {
@@ -662,27 +660,24 @@ void HPWH::Condenser::to(
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
 {
-    // assign description/product_information
+
+    // description/product_information
     auto& desc = hs.description;
     auto& prod_info = desc.product_information;
 
-    bool manufacturer_set = productInformation.manufacturer != "";
-    bool model_number_set = productInformation.model_number != "";
-    checkTo(productInformation.manufacturer,
-            prod_info.manufacturer_is_set,
-            prod_info.manufacturer,
-            manufacturer_set);
-    checkTo(productInformation.model_number,
-            prod_info.model_number_is_set,
-            prod_info.model_number,
-            model_number_set);
+    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
+    prod_info.manufacturer = productInformation.manufacturer();
 
-    bool prod_info_set = manufacturer_set || model_number_set;
-    bool desc_set = prod_info_set;
+    prod_info.model_number_is_set = productInformation.model_number.isSet();
+    prod_info.model_number = productInformation.model_number();
 
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
-    checkTo(desc, hs.description_is_set, hs.description, desc_set);
+    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
 
+    bool desc_is_set = prod_info_is_set;
+    checkTo(desc, hs.description_is_set, hs.description, desc_is_set);
+
+    //
     auto& perf = hs.performance;
     checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 

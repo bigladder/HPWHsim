@@ -85,6 +85,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 
     lowestNode = hSource.lowestNode;
 
+    productInformation = hSource.productInformation;
+
     return *this;
 }
 
