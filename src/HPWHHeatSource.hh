@@ -30,6 +30,9 @@ class HPWH::HeatSource : public Sender
 
     ProductInformation productInformation;
 
+    /// identify product info from HPWH model
+    virtual void findProductInformation() = 0;
+
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 
     bool isACompressor() const { return typeOfHeatSource() == TYPE_compressor; }

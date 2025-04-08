@@ -288,12 +288,36 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC80 = 601
     };
 
-    // static std::unordered_map<MODELS, std::string> modelMap;
+    template <typename T>
+    class Information
+    {
+      private:
+        T t;
+        bool is_set = false;
+
+      public:
+        Information(const T& t_in) : t(t_in), is_set(true) {}
+        Information(const T& t_in, bool is_set_in) : is_set(is_set_in)
+        {
+            if (is_set)
+                t = t_in;
+            else
+                t = T();
+        }
+        Information() : Information(T(), false) {}
+        T operator()() const { return is_set ? t : T(); }
+        bool isSet() const { return is_set; }
+    };
 
     struct ProductInformation
     {
-        std::string manufacturer = "";
-        std::string model_number = "";
+        Information<std::string> manufacturer;
+        Information<std::string> model_number;
+        ProductInformation() : manufacturer("", false), model_number("", false) {}
+        ProductInformation(std::string manufacturer_in, std::string model_number_in)
+            : manufacturer(manufacturer_in), model_number(model_number_in)
+        {
+        }
     } productInformation;
 
     /// identify product info from model

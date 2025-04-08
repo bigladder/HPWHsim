@@ -19,6 +19,7 @@ class HPWH::Tank : public Sender
          const std::string& name_in = "tank")
         : Sender("HeatSource", name_in, courier), hpwh(hpwh_in)
     {
+        findProductInformation();
     }
 
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
@@ -26,6 +27,9 @@ class HPWH::Tank : public Sender
     Tank& operator=(const Tank& tank); /// assignment operator
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
+
+    /// identify product info from HPWH model
+    void findProductInformation();
 
     void from(hpwh_data_model::rstank::RSTANK& rstank);
     void to(hpwh_data_model::rstank::RSTANK& rstank) const;

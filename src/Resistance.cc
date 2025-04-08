@@ -10,6 +10,7 @@ HPWH::Resistance::Resistance(HPWH* hpwh_in,
                              const std::string& name_in)
     : HPWH::HeatSource(hpwh_in, courier_in, name_in), power_kW(0.)
 {
+    findProductInformation();
 }
 
 HPWH::Resistance::Resistance(const Resistance& r_in) : HeatSource(r_in), power_kW(r_in.power_kW) {}
@@ -27,66 +28,69 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
     return *this;
 }
 
-void HPWH::Resistance::from(
-    const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr)
+//-----------------------------------------------------------------------------
+///	@brief	Set resistance product information based on HPWH model
+/// @note	Add entries, as needed
+//-----------------------------------------------------------------------------
+void HPWH::Resistance::findProductInformation()
 {
-    auto res_ptr = reinterpret_cast<
-        hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(rshs_ptr.get());
-
-    if (res_ptr->description_is_set)
+    switch (hpwh->getModel())
     {
-        auto& desc = res_ptr->description;
+    default:
+    {
+    }
+    }
+}
+
+void HPWH::Resistance::from(
+    const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs)
+{
+    auto hsp = reinterpret_cast<
+        hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
+
+    if (hsp->description_is_set)
+    {
+        auto& desc = hsp->description;
         if (desc.product_information_is_set)
         {
             auto& info = desc.product_information;
-            checkFrom(productInformation.manufacturer,
-                      info.manufacturer_is_set,
-                      info.manufacturer,
-                      std::string(""));
-            checkFrom(productInformation.model_number,
-                      info.model_number_is_set,
-                      info.model_number,
-                      std::string(""));
+            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
+            productInformation.model_number = {info.model_number, info.model_number_is_set};
         }
     }
 
-    auto& perf = res_ptr->performance;
+    auto& perf = hsp->performance;
     power_kW = perf.input_power / 1000.;
 }
 
-void HPWH::Resistance::to(
-    std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const
+void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs) const
 {
-    auto res_ptr = reinterpret_cast<
-        hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(rshs_ptr.get());
+    auto hsp = reinterpret_cast<
+        hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    auto& metadata = res_ptr->metadata;
+    auto& metadata = hsp->metadata;
     checkTo(std::string("RSRESISTANCEWATERHEATSOURCE"),
             metadata.schema_name_is_set,
             metadata.schema_name);
 
-    // assign description/product_information
-    auto& desc = res_ptr->description;
+    // description/product_information
+    auto& desc = hsp->description;
     auto& prod_info = desc.product_information;
 
-    bool manufacturer_set = productInformation.manufacturer != "";
-    bool model_number_set = productInformation.model_number != "";
-    checkTo(productInformation.manufacturer,
-            prod_info.manufacturer_is_set,
-            prod_info.manufacturer,
-            manufacturer_set);
-    checkTo(productInformation.model_number,
-            prod_info.model_number_is_set,
-            prod_info.model_number,
-            model_number_set);
+    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
+    prod_info.manufacturer = productInformation.manufacturer();
 
-    bool prod_info_set = manufacturer_set || model_number_set;
-    bool desc_set = prod_info_set;
+    prod_info.model_number_is_set = productInformation.model_number.isSet();
+    prod_info.model_number = productInformation.model_number();
 
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
-    checkTo(desc, res_ptr->description_is_set, res_ptr->description, desc_set);
+    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
 
-    auto& perf = res_ptr->performance;
+    bool desc_is_set = prod_info_is_set;
+    checkTo(desc, hsp->description_is_set, hsp->description, desc_is_set);
+
+    //
+    auto& perf = hsp->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
 }
 

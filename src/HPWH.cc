@@ -2889,63 +2889,54 @@ void HPWH::checkInputs()
     }
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Set HPWH product information based on model
+/// @note	Add entries, as needed
+//-----------------------------------------------------------------------------
 void HPWH::findProductInformation()
 {
-    std::string manufacturer = "";
-    std::string model_number = "";
-
     switch (model)
     {
     case MODELS_LG_APHWC50:
-        manufacturer = "LG";
-        model_number = "APHWC50";
+        productInformation = {"LG", "APHWC50"};
         break;
 
     case MODELS_LG_APHWC80:
-        manufacturer = "LG";
-        model_number = "APHWC80";
+        productInformation = {"LG", "APHWC80"};
         break;
 
     case MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP:
-        manufacturer = "Mitsubishi";
-        model_number = "QAHV_N136TAU_HPB_SP";
+        productInformation = {"Mitsubishi", "QAHV_N136TAU_HPB_SP"};
         break;
 
     case MODELS_BradfordWhiteAeroThermRE2H50:
-        manufacturer = "BradfordWhite";
-        model_number = "AeroThermRE2H50";
+        productInformation = {"BradfordWhite", "AeroThermRE2H50"};
         break;
 
     case MODELS_BradfordWhiteAeroThermRE2H65:
-        manufacturer = "BradfordWhite";
-        model_number = "AeroThermRE2H65";
+        productInformation = {"BradfordWhite", "AeroThermRE2H65"};
         break;
 
     case MODELS_BradfordWhiteAeroThermRE2H80:
-        manufacturer = "BradfordWhite";
-        model_number = "AeroThermRE2H80";
+        productInformation = {"BradfordWhite", "AeroThermRE2H80"};
         break;
 
     case MODELS_AOSmithHPTU80_DR:
-        manufacturer = "AOSmith";
-        model_number = "HPTU80_DR";
+        productInformation = {"AOSmith", "HPTU80_DR"};
         break;
 
     case MODELS_AquaThermAire:
-        manufacturer = "Villara";
-        model_number = "AquaThermAire";
+        productInformation = {"Villara", "AquaThermAire"};
         break;
 
     case MODELS_RheemHB50:
-        manufacturer = "Rheem";
-        model_number = "HB50";
+        productInformation = {"Rheem", "HB50"};
         break;
 
     default:
     {
     }
     }
-    productInformation = {manufacturer, model_number};
 }
 
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
@@ -4562,14 +4553,8 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATE
         if (desc.product_information_is_set)
         {
             auto& info = desc.product_information;
-            checkFrom(productInformation.manufacturer,
-                      info.manufacturer_is_set,
-                      info.manufacturer,
-                      std::string(""));
-            checkFrom(productInformation.model_number,
-                      info.model_number_is_set,
-                      info.model_number,
-                      std::string(""));
+            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
+            productInformation.model_number = {info.model_number, info.model_number_is_set};
         }
     }
 
@@ -4823,27 +4808,23 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
     checkTo(
         std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
 
-    // assign description/product_information
+    // description/product_information
     auto& desc = rswh.description;
     auto& prod_info = desc.product_information;
 
-    bool manufacturer_set = productInformation.manufacturer != "";
-    bool model_number_set = productInformation.model_number != "";
-    checkTo(productInformation.manufacturer,
-            prod_info.manufacturer_is_set,
-            prod_info.manufacturer,
-            manufacturer_set);
-    checkTo(productInformation.model_number,
-            prod_info.model_number_is_set,
-            prod_info.model_number,
-            model_number_set);
+    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
+    prod_info.manufacturer = productInformation.manufacturer();
 
-    bool prod_info_set = manufacturer_set || model_number_set;
-    bool desc_set = prod_info_set;
+    prod_info.model_number_is_set = productInformation.model_number.isSet();
+    prod_info.model_number = productInformation.model_number();
 
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_set);
-    checkTo(desc, rswh.description_is_set, rswh.description, desc_set);
+    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
+    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
 
+    bool desc_is_set = prod_info_is_set;
+    checkTo(desc, rswh.description_is_set, rswh.description, desc_is_set);
+
+    //
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;
