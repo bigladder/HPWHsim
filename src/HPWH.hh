@@ -296,7 +296,6 @@ class HPWH : public Courier::Sender
         bool is_set = false;
 
       public:
-        Information(const T& t_in) : t(t_in), is_set(true) {}
         Information(const T& t_in, bool is_set_in) : is_set(is_set_in)
         {
             if (is_set)
@@ -304,7 +303,9 @@ class HPWH : public Courier::Sender
             else
                 t = T();
         }
-        Information() : Information(T(), false) {}
+        Information(const T& t_in) : t(t_in), is_set(true) {}
+        Information() : T(T()), is_set(false) {}
+
         T operator()() const { return is_set ? t : T(); }
         bool isSet() const { return is_set; }
     };
