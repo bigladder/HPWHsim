@@ -321,8 +321,10 @@ class HPWH : public Courier::Sender
         }
     } productInformation;
 
+    static std::unordered_map<MODELS, ProductInformation> productsInformation;
+
     /// identify product info from model
-    void findProductInformation();
+    static ProductInformation getProductInformation(const MODELS model);
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);

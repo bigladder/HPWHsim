@@ -126,6 +126,21 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
 
+std::unordered_map<HPWH::MODELS, HPWH::ProductInformation> HPWH::productsInformation = {
+    {MODELS_AOSmithCAHP120, {"AOSmith", "CAHP120"}},
+    {MODELS_AOSmithHPTS40, {"AOSmith", "HPTS40"}},
+    {MODELS_AOSmithHPTS66, {"AOSmith", "HPTS66"}},
+    {MODELS_LG_APHWC50, {"LG", "APHWC50"}},
+    {MODELS_LG_APHWC80, {"LG", "APHWC80"}},
+    {MODELS_BradfordWhiteAeroThermRE2H50, {"BradfordWhite", "AeroThermRE2H50"}},
+    {MODELS_BradfordWhiteAeroThermRE2H65, {"BradfordWhite", "AeroThermRE2H65"}},
+    {MODELS_BradfordWhiteAeroThermRE2H80, {"BradfordWhite", "AeroThermRE2H80"}},
+    {MODELS_AOSmithHPTU80_DR, {"AOSmith", "HPTU80_DR"}},
+    {MODELS_AquaThermAire, {"Villara", "AquaThermAire"}},
+    {MODELS_RheemHB50, {"Rheem", "HB50"}},
+
+    {MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP, {"MITSUBISHI", "QAHV_N136TAU_HPB_SP"}}};
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
@@ -2890,52 +2905,16 @@ void HPWH::checkInputs()
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Set HPWH product information based on model
-/// @note	Add entries, as needed
+///	@brief	Set HPWH product information based on model id
+/// @notes	static
+///         refers to HPWH::productsInformation
 //-----------------------------------------------------------------------------
-void HPWH::findProductInformation()
+HPWH::ProductInformation HPWH::getProductInformation(const MODELS model)
 {
-    switch (model)
-    {
-    case MODELS_LG_APHWC50:
-        productInformation = {"LG", "APHWC50"};
-        break;
-
-    case MODELS_LG_APHWC80:
-        productInformation = {"LG", "APHWC80"};
-        break;
-
-    case MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP:
-        productInformation = {"Mitsubishi", "QAHV_N136TAU_HPB_SP"};
-        break;
-
-    case MODELS_BradfordWhiteAeroThermRE2H50:
-        productInformation = {"BradfordWhite", "AeroThermRE2H50"};
-        break;
-
-    case MODELS_BradfordWhiteAeroThermRE2H65:
-        productInformation = {"BradfordWhite", "AeroThermRE2H65"};
-        break;
-
-    case MODELS_BradfordWhiteAeroThermRE2H80:
-        productInformation = {"BradfordWhite", "AeroThermRE2H80"};
-        break;
-
-    case MODELS_AOSmithHPTU80_DR:
-        productInformation = {"AOSmith", "HPTU80_DR"};
-        break;
-
-    case MODELS_AquaThermAire:
-        productInformation = {"Villara", "AquaThermAire"};
-        break;
-
-    case MODELS_RheemHB50:
-        productInformation = {"Rheem", "HB50"};
-        break;
-
-    default:
-        break;
-    }
+    auto entry = productsInformation.find(model);
+    if (entry != productsInformation.end())
+        return entry->second;
+    return ProductInformation();
 }
 
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)

@@ -4530,7 +4530,7 @@ void HPWH::initPreset(MODELS presetNum)
         resetTankToSetpoint();
 
     model = presetNum;
-    findProductInformation();
+    productInformation = getProductInformation(model);
     calcDerivedValues();
 
     checkInputs();
