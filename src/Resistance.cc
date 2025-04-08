@@ -36,9 +36,10 @@ void HPWH::Resistance::findProductInformation()
 {
     switch (hpwh->getModel())
     {
+    case MODELS_LG_APHWC50: // supress empty-switch warning
+        break;
     default:
-    {
-    }
+        break;
     }
 }
 

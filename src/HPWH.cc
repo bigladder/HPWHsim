@@ -2934,8 +2934,7 @@ void HPWH::findProductInformation()
         break;
 
     default:
-    {
-    }
+        break;
     }
 }
 
