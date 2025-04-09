@@ -29,7 +29,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 
 void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
-    productInformation.to(rstank);
+    productInformation.from(rstank);
 
     auto& perf = rstank.performance;
     checkFrom(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
@@ -58,21 +58,7 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
     auto& metadata = rstank.metadata;
     checkTo(std::string("RSTANK"), metadata.schema_name_is_set, metadata.schema_name);
 
-    // description/product_information
-    auto& desc = rstank.description;
-    auto& prod_info = desc.product_information;
-
-    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
-    prod_info.manufacturer = productInformation.manufacturer();
-
-    prod_info.model_number_is_set = productInformation.model_number.isSet();
-    prod_info.model_number = productInformation.model_number();
-
-    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
-
-    bool desc_is_set = prod_info_is_set;
-    checkTo(desc, rstank.description_is_set, rstank.description, desc_is_set);
+    productInformation.to(rstank);
 
     //
     auto& perf = rstank.performance;
