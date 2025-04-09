@@ -29,14 +29,58 @@ namespace hpwh_data_model  {
 
 		const std::string_view ProductInformation::model_number_name = "model_number";
 
+		void from_json(const nlohmann::json& j, Rating10CFR430& x) {
+			json_get<std::string>(j, logger.get(), "certified_reference_number", x.certified_reference_number, x.certified_reference_number_is_set, false);
+			json_get<double>(j, logger.get(), "nominal_tank_volume", x.nominal_tank_volume, x.nominal_tank_volume_is_set, false);
+			json_get<double>(j, logger.get(), "tested_first_hour_rating", x.tested_first_hour_rating, x.tested_first_hour_rating_is_set, false);
+			json_get<double>(j, logger.get(), "tested_recovery_efficiency", x.tested_recovery_efficiency, x.tested_recovery_efficiency_is_set, false);
+			json_get<double>(j, logger.get(), "tested_uniform_energy_factor", x.tested_uniform_energy_factor, x.tested_uniform_energy_factor_is_set, false);
+		}
+		const std::string_view Rating10CFR430::certified_reference_number_units = "";
+
+		const std::string_view Rating10CFR430::certified_reference_number_description = "AHRI certified reference number";
+
+		const std::string_view Rating10CFR430::certified_reference_number_name = "certified_reference_number";
+
+		const std::string_view Rating10CFR430::nominal_tank_volume_units = "";
+
+		const std::string_view Rating10CFR430::nominal_tank_volume_description = "Nominal tank volume";
+
+		const std::string_view Rating10CFR430::nominal_tank_volume_name = "nominal_tank_volume";
+
+		const std::string_view Rating10CFR430::tested_first_hour_rating_units = "";
+
+		const std::string_view Rating10CFR430::tested_first_hour_rating_description = "Tested first-hour rating";
+
+		const std::string_view Rating10CFR430::tested_first_hour_rating_name = "tested_first_hour_rating";
+
+		const std::string_view Rating10CFR430::tested_recovery_efficiency_units = "";
+
+		const std::string_view Rating10CFR430::tested_recovery_efficiency_description = "Tested recovery efficiency";
+
+		const std::string_view Rating10CFR430::tested_recovery_efficiency_name = "tested_recovery_efficiency";
+
+		const std::string_view Rating10CFR430::tested_uniform_energy_factor_units = "";
+
+		const std::string_view Rating10CFR430::tested_uniform_energy_factor_description = "Tested uniform energy factor";
+
+		const std::string_view Rating10CFR430::tested_uniform_energy_factor_name = "tested_uniform_energy_factor";
+
 		void from_json(const nlohmann::json& j, Description& x) {
 			json_get<rsintegratedwaterheater::ProductInformation>(j, logger.get(), "product_information", x.product_information, x.product_information_is_set, false);
+			json_get<rsintegratedwaterheater::Rating10CFR430>(j, logger.get(), "rating_10_cfr_430", x.rating_10_cfr_430, x.rating_10_cfr_430_is_set, false);
 		}
 		const std::string_view Description::product_information_units = "";
 
 		const std::string_view Description::product_information_description = "Data group describing product information";
 
 		const std::string_view Description::product_information_name = "product_information";
+
+		const std::string_view Description::rating_10_cfr_430_units = "";
+
+		const std::string_view Description::rating_10_cfr_430_description = "Data group containing information relevant to products rated under AHRI 10 CFR Part 430";
+
+		const std::string_view Description::rating_10_cfr_430_name = "rating_10_cfr_430";
 
 		void from_json(const nlohmann::json& j, Performance& x) {
 			json_get<rstank::RSTANK>(j, logger.get(), "tank", x.tank, x.tank_is_set, true);

@@ -43,7 +43,7 @@ def generate(repo_dir):
 	result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 	print(result.stdout)
  
-	cmd = ["git", "checkout", "add-required-fields"]
+	cmd = ["git", "checkout", "add-rating-info"]
 	result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 	print(result.stdout)
   
