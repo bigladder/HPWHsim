@@ -268,21 +268,11 @@ void HPWH::Condenser::from(
 }
 
 void HPWH::Condenser::from(
-    const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs)
+    const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs)
 {
-    if (hs.description_is_set)
-    {
-        auto& desc = hs.description;
-        if (desc.product_information_is_set)
-        {
-            auto& info = desc.product_information;
-            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
-            productInformation.model_number = {info.model_number, info.model_number_is_set};
-        }
-    }
+    productInformation.from(rshs);
 
-    auto& perf = hs.performance;
-
+    auto& perf = rshs.performance;
     switch (perf.coil_configuration)
     {
     case hpwh_data_model::rscondenserwaterheatsource::CoilConfiguration::SUBMERGED:
@@ -483,15 +473,16 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
 {
     if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
     {
-        auto prshs = reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
-            hs.get());
-        return to(*prshs);
+        auto p_rshs =
+            reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
+                hs.get());
+        return to(*p_rshs);
     }
     else
     {
-        auto prshs = reinterpret_cast<
+        auto p_rshs = reinterpret_cast<
             hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(hs.get());
-        return to(*prshs);
+        return to(*p_rshs);
     }
 }
 
