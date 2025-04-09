@@ -3,11 +3,12 @@ name = "hpwh-data-model"
 version = "0.1.0"
 description = ""
 authors = ["Big Ladder Software"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
 #lattice = {path = "../../../lattice", develop = true}
-lattice = {git = "https://github.com/bigladder/lattice.git", branch = "add-required-fields"}
+lattice = {git = "https://github.com/bigladder/lattice.git", branch = "validation-fixes"}
 
 [tool.poetry.dev-dependencies]
 doit = "0.36.0"
