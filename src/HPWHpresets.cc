@@ -4371,6 +4371,7 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
             productInformation = {"BradfordWhite", "AeroThermRE2H50"};
+            rating10CFR430["certified_reference_number"] = "test";
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 6.8373;
         }
