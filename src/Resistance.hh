@@ -23,10 +23,9 @@ class HPWH::Resistance : public HPWH::HeatSource
     ProductInformation productInformation;
 
     void
-    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) override;
+    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_rshs) override;
 
-    void
-    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const override;
+    void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_rshs) const override;
 
     void setup(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
 

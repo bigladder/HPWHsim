@@ -1,4 +1,5 @@
 ﻿#include "HPWH.hh"
+#include "HPWHUtils.hh"
 #include "Tank.hh"
 
 HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Sender(tank_in) { *this = tank_in; }
@@ -28,19 +29,9 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 
 void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
-    if (rstank.description_is_set)
-    {
-        auto& desc = rstank.description;
-        if (desc.product_information_is_set)
-        {
-            auto& info = desc.product_information;
-            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
-            productInformation.model_number = {info.model_number, info.model_number_is_set};
-        }
-    }
+    productInformation.to(rstank);
 
     auto& perf = rstank.performance;
-
     checkFrom(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
     checkFrom(UA_kJperHrC, perf.ua_is_set, 3600. * perf.ua / 1000., 0.);
     checkFrom(fittingsUA_kJperHrC, perf.fittings_ua_is_set, 3600. * perf.fittings_ua / 1000., 0.);
