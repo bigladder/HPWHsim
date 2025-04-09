@@ -38,17 +38,23 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "HPWHsim.hh"
-#include "HPWHUtils.hh"
-#include <btwxt/btwxt.h>
-#include <fmt/format.h>
-
-#include <stdarg.h>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <regex>
 #include <queue>
+
+#include <fmt/format.h>
+
+#include <btwxt/btwxt.h>
+
+#include "HPWH.hh"
+#include "HPWHUtils.hh"
+#include "HPWHHeatingLogic.hh"
+#include "HPWHHeatSource.hh"
+#include "Tank.hh"
+#include "Condenser.hh"
+#include "Resistance.hh"
 
 using std::cout;
 using std::endl;

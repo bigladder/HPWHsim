@@ -2,10 +2,14 @@
 Initialize all presets available in HPWHsim
 */
 
-#include "HPWHsim.hh"
+#include <algorithm>
+
 #include <btwxt/btwxt.h>
 
-#include <algorithm>
+#include "HPWH.hh"
+#include "HPWHHeatingLogic.hh"
+#include "Condenser.hh"
+#include "Resistance.hh"
 
 void HPWH::initResistanceTank()
 {
