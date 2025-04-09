@@ -26,21 +26,6 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Set tank product information based on HPWH model
-/// @note	Add entries, as needed
-//-----------------------------------------------------------------------------
-void HPWH::Tank::findProductInformation()
-{
-    switch (hpwh->getModel())
-    {
-    case MODELS_LG_APHWC50: // supress empty-switch warning
-        break;
-    default:
-        break;
-    }
-}
-
 void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
     if (rstank.description_is_set)

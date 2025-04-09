@@ -28,9 +28,6 @@ class HPWH::HeatSource : public Sender
     virtual void
     from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) = 0;
 
-    /// identify product info from HPWH model
-    virtual void findProductInformation() = 0;
-
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 
     bool isACompressor() const { return typeOfHeatSource() == TYPE_compressor; }

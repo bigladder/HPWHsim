@@ -27,13 +27,10 @@ class HPWH::Tank : public Sender
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    /// identify product info from HPWH model
-    void findProductInformation();
+    ProductInformation productInformation;
 
     void from(hpwh_data_model::rstank::RSTANK& rstank);
     void to(hpwh_data_model::rstank::RSTANK& rstank) const;
-
-    Descriptor<HPWH::Tank>::ProductInformation productInformation;
 
     void setAllDefaults();
 
