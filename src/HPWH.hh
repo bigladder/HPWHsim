@@ -288,43 +288,56 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC80 = 601
     };
 
-    template <typename T>
-    class Information
+
+    template <typename Owner>
+    class Descriptor
     {
-      private:
-        T t;
-        bool is_set = false;
-
       public:
-        Information(const T& t_in, bool is_set_in) : is_set(is_set_in)
+        template <typename T>
+        class Information
         {
-            if (is_set)
-                t = t_in;
-            else
-                t = T();
-        }
-        Information(const T& t_in) : t(t_in), is_set(true) {}
-        Information() : T(T()), is_set(false) {}
+          private:
+            T t;
+            bool is_set = false;
 
-        T operator()() const { return is_set ? t : T(); }
-        bool isSet() const { return is_set; }
+          public:
+            Information(const T& t_in, bool is_set_in) : is_set(is_set_in)
+            {
+                if (is_set)
+                    t = t_in;
+                else
+                    t = T();
+            }
+            Information(const T& t_in) : t(t_in), is_set(true) {}
+            Information() : T(T()), is_set(false) {}
+
+            T operator()() const { return is_set ? t : T(); }
+            bool isSet() const { return is_set; }
+        };
+
+        struct ProductInformation
+        {
+            Information<std::string> manufacturer;
+            Information<std::string> model_number;
+            ProductInformation() : manufacturer("", false), model_number("", false) {}
+            ProductInformation(std::string manufacturer_in, std::string model_number_in)
+                : manufacturer(manufacturer_in), model_number(model_number_in)
+            {
+            }
+        };
+
+        static std::unordered_map<MODELS, ProductInformation> productsInformation;
+
+        ProductInformation getProductInformation(const MODELS model_in)
+        {
+            auto entry = productsInformation.find(model_in);
+            if (entry != productsInformation.end())
+                return entry->second;
+            return ProductInformation();
+        }
     };
 
-    struct ProductInformation
-    {
-        Information<std::string> manufacturer;
-        Information<std::string> model_number;
-        ProductInformation() : manufacturer("", false), model_number("", false) {}
-        ProductInformation(std::string manufacturer_in, std::string model_number_in)
-            : manufacturer(manufacturer_in), model_number(model_number_in)
-        {
-        }
-    } productInformation;
-
-    static std::unordered_map<MODELS, ProductInformation> productsInformation;
-
-    /// identify product info from model
-    static ProductInformation getProductInformation(const MODELS model);
+    Descriptor<HPWH>::ProductInformation productInformation;
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);

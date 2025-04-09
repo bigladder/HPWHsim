@@ -20,7 +20,7 @@ class HPWH::Resistance : public HPWH::HeatSource
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return HPWH::TYPE_resistance; }
 
-    void findProductInformation() override;
+    Descriptor<HPWH::Resistance>::ProductInformation productInformation;
 
     void
     from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) override;
