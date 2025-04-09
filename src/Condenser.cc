@@ -11,6 +11,11 @@
 #include "HPWH.hh"
 #include "Condenser.hh"
 
+/*static*/
+template <>
+std::unordered_map<HPWH::MODELS, HPWH::Descriptor<HPWH::Condenser>::ProductInformation>
+    HPWH::Descriptor<HPWH::Condenser>::productsInformation = {};
+
 HPWH::Condenser::Condenser(HPWH* hpwh_in,
                            const std::shared_ptr<Courier::Courier> courier,
                            const std::string& name_in)
@@ -244,21 +249,6 @@ void HPWH::Condenser::makeBtwxt()
         grid_axes, perfGridValues, "RegularGridInterpolator", get_courier()));
 
     useBtwxtGrid = true;
-}
-
-//-----------------------------------------------------------------------------
-///	@brief	Set condenser product information based on HPWH model
-/// @note	Add entries, as needed
-//-----------------------------------------------------------------------------
-void HPWH::Condenser::findProductInformation()
-{
-    switch (hpwh->getModel())
-    {
-    case MODELS_LG_APHWC50: // supress empty-switch warning
-        break;
-    default:
-        break;
-    }
 }
 
 void HPWH::Condenser::from(

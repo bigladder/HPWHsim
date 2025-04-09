@@ -10,7 +10,6 @@ HPWH::Resistance::Resistance(HPWH* hpwh_in,
                              const std::string& name_in)
     : HPWH::HeatSource(hpwh_in, courier_in, name_in), power_kW(0.)
 {
-    findProductInformation();
 }
 
 HPWH::Resistance::Resistance(const Resistance& r_in) : HeatSource(r_in), power_kW(r_in.power_kW) {}
@@ -28,20 +27,10 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
     return *this;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Set resistance product information based on HPWH model
-/// @note	Add entries, as needed
-//-----------------------------------------------------------------------------
-void HPWH::Resistance::findProductInformation()
-{
-    switch (hpwh->getModel())
-    {
-    case MODELS_LG_APHWC50: // supress empty-switch warning
-        break;
-    default:
-        break;
-    }
-}
+/*static*/
+template <>
+std::unordered_map<HPWH::MODELS, HPWH::Descriptor<HPWH::Resistance>::ProductInformation>
+    HPWH::Descriptor<HPWH::Resistance>::productsInformation = {};
 
 void HPWH::Resistance::from(
     const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs)

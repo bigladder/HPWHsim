@@ -126,7 +126,9 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
 
-std::unordered_map<HPWH::MODELS, HPWH::ProductInformation> HPWH::productsInformation = {
+/*static*/
+template <>
+std::unordered_map<HPWH::MODELS, HPWH::Descriptor<HPWH>::ProductInformation> HPWH::Descriptor<HPWH>::productsInformation = {
     {MODELS_AOSmithCAHP120, {"AOSmith", "CAHP120"}},
     {MODELS_AOSmithHPTS40, {"AOSmith", "HPTS40"}},
     {MODELS_AOSmithHPTS66, {"AOSmith", "HPTS66"}},
@@ -2904,18 +2906,6 @@ void HPWH::checkInputs()
     }
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Set HPWH product information based on model id
-/// @notes	static
-///         refers to HPWH::productsInformation
-//-----------------------------------------------------------------------------
-HPWH::ProductInformation HPWH::getProductInformation(const MODELS model)
-{
-    auto entry = productsInformation.find(model);
-    if (entry != productsInformation.end())
-        return entry->second;
-    return ProductInformation();
-}
 
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
 {
