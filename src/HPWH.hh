@@ -313,16 +313,26 @@ class HPWH : public Courier::Sender
         bool isSet() const { return is_set; }
     };
 
-    struct ProductInformation
+    template <typename... Args>
+    using EntryGroup = std::unordered_map<std::string, Entry<std::variant<Args...>>>;
+
+    struct ProductInformation : EntryGroup<std::string>
     {
-        Entry<std::string> manufacturer;
-        Entry<std::string> model_number;
-        ProductInformation() : manufacturer("", false), model_number("", false) {}
-        ProductInformation(std::string manufacturer_in, std::string model_number_in)
-            : manufacturer(manufacturer_in), model_number(model_number_in)
+        using EntryGroup<std::string>::insert;
+        using EntryGroup<std::string>::at;
+        using EntryGroup<std::string>::empty;
+
+        ProductInformation()
         {
+            insert({{"manufacturer"}, {"", false}});
+            insert({{"model_number"}, {"", false}});
         }
-        bool empty() const { return !(manufacturer.isSet() || model_number.isSet()); }
+        ProductInformation(std::string manufacturer_in, std::string model_number_in)
+        {
+            insert({{"manufacturer"}, {manufacturer_in, true}});
+            insert({{"model_number"}, {model_number_in, true}});
+        }
+        bool empty() const { return EntryGroup<std::string>::empty(); }
 
         //-----------------------------------------------------------------------------
         ///	@brief	Transfer ProductInformation fields from schema
@@ -336,8 +346,8 @@ class HPWH : public Courier::Sender
                 if (desc.product_information_is_set)
                 {
                     auto& info = desc.product_information;
-                    manufacturer = {info.manufacturer, info.manufacturer_is_set};
-                    model_number = {info.model_number, info.model_number_is_set};
+                    insert({{"manufacturer"}, {info.manufacturer, info.manufacturer_is_set}});
+                    insert({{"model_number"}, {info.model_number, info.model_number_is_set}});
                 }
             }
         }
@@ -351,11 +361,11 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& prod_info = desc.product_information;
 
-            prod_info.manufacturer_is_set = manufacturer.isSet();
-            prod_info.manufacturer = manufacturer();
+            prod_info.manufacturer_is_set = at("manufacturer").isSet();
+            prod_info.manufacturer = std::get<std::string>(at("manufacturer")());
 
-            prod_info.model_number_is_set = model_number.isSet();
-            prod_info.model_number = model_number();
+            prod_info.model_number_is_set = at("model_number").isSet();
+            prod_info.model_number = std::get<std::string>(at("model_number")());
 
             bool set_prod_info = !empty();
             checkTo(prod_info,
