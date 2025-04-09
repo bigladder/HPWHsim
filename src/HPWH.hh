@@ -299,7 +299,7 @@ class HPWH : public Courier::Sender
         bool is_set = false;
 
       public:
-        Entry(const T& t_in, bool is_set_in) : is_set(is_set_in)
+        Entry(const T& t_in, const bool is_set_in) : is_set(is_set_in)
         {
             if (is_set)
                 t = t_in;
@@ -314,8 +314,19 @@ class HPWH : public Courier::Sender
     };
 
     template <typename... Args>
-    using EntryGroup = std::unordered_map<std::string, Entry<std::variant<Args...>>>;
+    struct EntryGroup: public std::unordered_map<std::string, Entry<std::variant<Args...>>>
+    {
+        template <typename T>
+        void set(const std::string& key, const T& data)
+        {
+            if (std::unordered_map<std::string, Entry<std::variant<Args...>>>::contains(key))
+                std::unordered_map<std::string, Entry<std::variant<Args...>>>::at(key) = {data, true};
+            else
+                std::unordered_map<std::string, Entry<std::variant<Args...>>>::insert(key, {data, true});
+        }
+    };
 
+    //
     struct ProductInformation : EntryGroup<std::string>
     {
         using EntryGroup<std::string>::insert;
@@ -335,7 +346,7 @@ class HPWH : public Courier::Sender
         bool empty() const { return EntryGroup<std::string>::empty(); }
 
         //-----------------------------------------------------------------------------
-        ///	@brief	Transfer ProductInformation fields from schema
+        ///	@brief	Transfer fields from schema
         //-----------------------------------------------------------------------------
         template <typename RSTYPE>
         void from(const RSTYPE& rs)
@@ -346,14 +357,14 @@ class HPWH : public Courier::Sender
                 if (desc.product_information_is_set)
                 {
                     auto& info = desc.product_information;
-                    insert({{"manufacturer"}, {info.manufacturer, info.manufacturer_is_set}});
-                    insert({{"model_number"}, {info.model_number, info.model_number_is_set}});
+                    at("manufacturer") = {info.manufacturer, info.manufacturer_is_set};
+                    at("model_number") = {info.model_number, info.model_number_is_set};
                 }
             }
         }
 
         //-----------------------------------------------------------------------------
-        ///	@brief	Transfer ProductInformation fields to schema
+        ///	@brief	Transfer fields to schema
         //-----------------------------------------------------------------------------
         template <typename RSTYPE>
         void to(RSTYPE& rs) const
@@ -378,6 +389,71 @@ class HPWH : public Courier::Sender
         }
 
     } productInformation;
+
+    //
+    struct Rating10CFR430 : EntryGroup<std::string, double>
+    {
+        using EntryGroup<std::string, double>::insert;
+        using EntryGroup<std::string, double>::at;
+        using EntryGroup<std::string, double>::empty;
+
+        Rating10CFR430()
+        {
+            insert({{"certified_reference_number"}, {"", false}});
+            insert({{"nominal_tank_volume"}, {0., false}});
+            insert({{"first_hour_rating"}, {0., false}});
+            insert({{"recovery_efficiency"}, {0., false}});
+            insert({{"uniform_energy_factor"}, {0., false}});
+        }
+
+        bool empty() const { return EntryGroup<std::string, double>::empty(); }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer fields from schema
+        //-----------------------------------------------------------------------------
+        void from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
+        {
+            if (rswh.description_is_set)
+            {
+                auto& desc = rswh.description;
+                if (desc.rating_10_cfr_430_is_set)
+                {
+                    auto& data = desc.rating_10_cfr_430;
+                    at("certified_reference_number") = {data.certified_reference_number, data.certified_reference_number_is_set};
+                    at("nominal_tank_volume") = {data.nominal_tank_volume, data.nominal_tank_volume_is_set};
+                    at("first_hour_rating") = {data.first_hour_rating, data.first_hour_rating_is_set};
+                    at("recovery_efficiency") = {data.recovery_efficiency, data.recovery_efficiency_is_set};
+                    at("uniform_energy_factor") = {data.uniform_energy_factor, data.uniform_energy_factor_is_set};
+                }
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer fields to schema
+        //-----------------------------------------------------------------------------
+        void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
+        {
+            auto& desc = rswh.description;
+            auto& data = desc.rating_10_cfr_430;
+
+            data.certified_reference_number_is_set = at("certified_reference_number").isSet();
+            data.certified_reference_number = std::get<std::string>(at("certified_reference_number")());
+
+            data.nominal_tank_volume_is_set = at("nominal_tank_volume").isSet();
+            data.nominal_tank_volume = std::get<double>(at("nominal_tank_volume")());
+            data.first_hour_rating = std::get<double>(at("first_hour_rating")());
+            data.recovery_efficiency = std::get<double>(at("recovery_efficiency")());
+            data.uniform_energy_factor = std::get<double>(at("uniform_energy_factor")());
+
+            checkTo(data,
+                    desc.rating_10_cfr_430_is_set,
+                    desc.rating_10_cfr_430,
+                    !empty());
+
+            checkTo(desc, rswh.description_is_set, rswh.description, !empty());
+        }
+
+    } rating10CFR430;
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);
