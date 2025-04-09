@@ -11,11 +11,6 @@
 #include "HPWH.hh"
 #include "Condenser.hh"
 
-/*static*/
-template <>
-std::unordered_map<HPWH::MODELS, HPWH::Descriptor<HPWH::Condenser>::ProductInformation>
-    HPWH::Descriptor<HPWH::Condenser>::productsInformation = {};
-
 HPWH::Condenser::Condenser(HPWH* hpwh_in,
                            const std::shared_ptr<Courier::Courier> courier,
                            const std::string& name_in)
@@ -64,6 +59,7 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     hysteresis_dC = cond_in.hysteresis_dC;
     maxSetpoint_C = cond_in.maxSetpoint_C;
 
+    productInformation = cond_in.productInformation;
     return *this;
 }
 

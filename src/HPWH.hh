@@ -288,56 +288,38 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC80 = 601
     };
 
-
-    template <typename Owner>
-    class Descriptor
+    template <typename T>
+    class Entry
     {
+      private:
+        T t;
+        bool is_set = false;
+
       public:
-        template <typename T>
-        class Information
+        Entry(const T& t_in, bool is_set_in) : is_set(is_set_in)
         {
-          private:
-            T t;
-            bool is_set = false;
-
-          public:
-            Information(const T& t_in, bool is_set_in) : is_set(is_set_in)
-            {
-                if (is_set)
-                    t = t_in;
-                else
-                    t = T();
-            }
-            Information(const T& t_in) : t(t_in), is_set(true) {}
-            Information() : T(T()), is_set(false) {}
-
-            T operator()() const { return is_set ? t : T(); }
-            bool isSet() const { return is_set; }
-        };
-
-        struct ProductInformation
-        {
-            Information<std::string> manufacturer;
-            Information<std::string> model_number;
-            ProductInformation() : manufacturer("", false), model_number("", false) {}
-            ProductInformation(std::string manufacturer_in, std::string model_number_in)
-                : manufacturer(manufacturer_in), model_number(model_number_in)
-            {
-            }
-        };
-
-        static std::unordered_map<MODELS, ProductInformation> productsInformation;
-
-        ProductInformation getProductInformation(const MODELS model_in)
-        {
-            auto entry = productsInformation.find(model_in);
-            if (entry != productsInformation.end())
-                return entry->second;
-            return ProductInformation();
+            if (is_set)
+                t = t_in;
+            else
+                t = T();
         }
+        Entry(const T& t_in) : t(t_in), is_set(true) {}
+        Entry() : T(T()), is_set(false) {}
+
+        T operator()() const { return is_set ? t : T(); }
+        bool isSet() const { return is_set; }
     };
 
-    Descriptor<HPWH>::ProductInformation productInformation;
+    struct ProductInformation
+    {
+        Entry<std::string> manufacturer;
+        Entry<std::string> model_number;
+        ProductInformation() : manufacturer("", false), model_number("", false) {}
+        ProductInformation(std::string manufacturer_in, std::string model_number_in)
+            : manufacturer(manufacturer_in), model_number(model_number_in)
+        {
+        }
+    } productInformation;
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);

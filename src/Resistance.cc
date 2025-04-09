@@ -12,7 +12,10 @@ HPWH::Resistance::Resistance(HPWH* hpwh_in,
 {
 }
 
-HPWH::Resistance::Resistance(const Resistance& r_in) : HeatSource(r_in), power_kW(r_in.power_kW) {}
+HPWH::Resistance::Resistance(const Resistance& r_in)
+    : HeatSource(r_in), power_kW(r_in.power_kW), productInformation(r_in.productInformation)
+{
+}
 
 HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 {
@@ -23,14 +26,10 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 
     HeatSource::operator=(r_in);
     power_kW = r_in.power_kW;
+    productInformation = r_in.productInformation;
 
     return *this;
 }
-
-/*static*/
-template <>
-std::unordered_map<HPWH::MODELS, HPWH::Descriptor<HPWH::Resistance>::ProductInformation>
-    HPWH::Descriptor<HPWH::Resistance>::productsInformation = {};
 
 void HPWH::Resistance::from(
     const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs)
