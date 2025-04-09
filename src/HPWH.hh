@@ -19,6 +19,7 @@
 
 #include <nlohmann/json.hpp>
 #include "hpwh-data-model.h"
+#include "HPWHUtils.hh"
 
 namespace Btwxt
 {
@@ -288,6 +289,7 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC80 = 601
     };
 
+    /// data entry to/from schema
     template <typename T>
     class Entry
     {
@@ -319,6 +321,51 @@ class HPWH : public Courier::Sender
             : manufacturer(manufacturer_in), model_number(model_number_in)
         {
         }
+        bool empty() const { return !(manufacturer.isSet() || model_number.isSet()); }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer ProductInformation fields from schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void from(const RSTYPE& rs)
+        {
+            if (rs.description_is_set)
+            {
+                auto& desc = rs.description;
+                if (desc.product_information_is_set)
+                {
+                    auto& info = desc.product_information;
+                    manufacturer = {info.manufacturer, info.manufacturer_is_set};
+                    model_number = {info.model_number, info.model_number_is_set};
+                }
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer ProductInformation fields to schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void to(RSTYPE& rs) const
+        {
+            auto& desc = rs.description;
+            auto& prod_info = desc.product_information;
+
+            prod_info.manufacturer_is_set = manufacturer.isSet();
+            prod_info.manufacturer = manufacturer();
+
+            prod_info.model_number_is_set = model_number.isSet();
+            prod_info.model_number = model_number();
+
+            bool set_prod_info = !empty();
+            checkTo(prod_info,
+                    desc.product_information_is_set,
+                    desc.product_information,
+                    set_prod_info);
+
+            bool set_desc = set_prod_info;
+            checkTo(desc, rs.description_is_set, rs.description, set_desc);
+        }
+
     } productInformation;
 
     template <typename T>
@@ -1480,36 +1527,4 @@ inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, con
     return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
 }
 
-template <typename T>
-void checkFrom(T& t, const bool is_set, const T t_new, const T t_default)
-{
-    if (is_set)
-        t = t_new;
-    else
-        t = t_default;
-}
-
-template <typename T>
-void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
-{
-    is_set = has_value;
-    if (has_value)
-    {
-        t_new = t;
-    }
-}
-
-template <typename T>
-bool checkFrom(T& t, nlohmann::json& j, std::string_view key, const T t_default)
-{
-    bool has_key = false;
-    if (j.contains(key))
-    {
-        has_key = true;
-        t = j[key];
-    }
-    else
-        t = t_default;
-    return has_key;
-}
 #endif

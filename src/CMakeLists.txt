@@ -13,26 +13,25 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 
 set(headers
         HPWHversion.in.hh
-        HPWHsim.hh
         HPWH.hh
+		HPWHUtils.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
-
+        HPWHsim.hh
         Tank.hh
         Condenser.hh
         Resistance.hh
-
+ 
         hpwh-data-model.h
         )
 
 set(sources
         HPWHversion.cc
+        HPWH.cc
         HPWHUtils.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
-        HPWH.cc
         HPWHpresets.cc
-
         Tank.cc
         Condenser.cc
         Resistance.cc

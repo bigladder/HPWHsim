@@ -20,17 +20,14 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     ProductInformation productInformation;
 
-    void
-    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const override;
-    void
-    to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& cond_ptr) const;
-    void to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& atwhp_ptr) const;
+    void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) const override;
+    void to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs) const;
+    void to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& p_rshs) const;
 
+    void from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) override;
     void
-    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) override;
-    void
-    from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& cond_ptr);
-    void from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& atwhp_ptr);
+    from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs);
+    void from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& p_rshs);
 
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 

@@ -9,6 +9,7 @@
 #include <btwxt/btwxt.h>
 
 #include "HPWH.hh"
+#include "HPWHUtils.hh"
 #include "Condenser.hh"
 
 HPWH::Condenser::Condenser(HPWH* hpwh_in,
@@ -369,22 +370,13 @@ void HPWH::Condenser::from(
     }
 }
 
-void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
+void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs)
 {
-    if (hs.description_is_set)
-    {
-        auto& desc = hs.description;
-        if (desc.product_information_is_set)
-        {
-            auto& info = desc.product_information;
-            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
-            productInformation.model_number = {info.model_number, info.model_number_is_set};
-        }
-    }
+    productInformation.from(rshs);
 
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
 
-    auto& perf = hs.performance;
+    auto& perf = rshs.performance;
 
     checkFrom(maxSetpoint_C,
               perf.maximum_refrigerant_temperature_is_set,
@@ -491,39 +483,25 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
 {
     if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
     {
-        auto hsp = reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
+        auto prshs = reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
             hs.get());
-        return to(*hsp);
+        return to(*prshs);
     }
     else
     {
-        auto hsp = reinterpret_cast<
+        auto prshs = reinterpret_cast<
             hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(hs.get());
-        return to(*hsp);
+        return to(*prshs);
     }
 }
 
 void HPWH::Condenser::to(
-    hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
+    hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs) const
 {
-    // description/product_information
-    auto& desc = hs.description;
-    auto& prod_info = desc.product_information;
-
-    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
-    prod_info.manufacturer = productInformation.manufacturer();
-
-    prod_info.model_number_is_set = productInformation.model_number.isSet();
-    prod_info.model_number = productInformation.model_number();
-
-    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
-
-    bool desc_is_set = prod_info_is_set;
-    checkTo(desc, hs.description_is_set, hs.description, desc_is_set);
+    productInformation.to(rshs);
 
     //
-    auto& perf = hs.performance;
+    auto& perf = rshs.performance;
     switch (configuration)
     {
     case COIL_CONFIG::CONFIG_SUBMERGED:
@@ -645,27 +623,12 @@ void HPWH::Condenser::to(
     }
 }
 
-void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
+void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs) const
 {
-
-    // description/product_information
-    auto& desc = hs.description;
-    auto& prod_info = desc.product_information;
-
-    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
-    prod_info.manufacturer = productInformation.manufacturer();
-
-    prod_info.model_number_is_set = productInformation.model_number.isSet();
-    prod_info.model_number = productInformation.model_number();
-
-    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
-
-    bool desc_is_set = prod_info_is_set;
-    checkTo(desc, hs.description_is_set, hs.description, desc_is_set);
+    productInformation.to(rshs);
 
     //
-    auto& perf = hs.performance;
+    auto& perf = rshs.performance;
     checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 
     checkTo(hysteresis_dC,

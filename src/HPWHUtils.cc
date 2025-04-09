@@ -3,6 +3,7 @@
  */
 
 #include "HPWH.hh"
+#include "HPWHUtils.hh"
 #include "HPWHHeatSource.hh"
 #include <fmt/format.h>
 

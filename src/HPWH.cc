@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "HPWHsim.hh"
+#include "HPWHUtils.hh"
 #include <btwxt/btwxt.h>
 #include <fmt/format.h>
 
@@ -4497,16 +4498,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    if (rswh.description_is_set)
-    {
-        auto& desc = rswh.description;
-        if (desc.product_information_is_set)
-        {
-            auto& info = desc.product_information;
-            productInformation.manufacturer = {info.manufacturer, info.manufacturer_is_set};
-            productInformation.model_number = {info.model_number, info.model_number_is_set};
-        }
-    }
+    productInformation.from(rswh);
 
     auto& performance = rswh.performance;
 
