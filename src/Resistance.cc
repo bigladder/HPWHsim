@@ -28,7 +28,6 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
     HeatSource::operator=(r_in);
     power_kW = r_in.power_kW;
     productInformation = r_in.productInformation;
-
     return *this;
 }
 

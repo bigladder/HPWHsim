@@ -17,7 +17,6 @@ set(headers
 		HPWHUtils.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
-        HPWHsim.hh
         Tank.hh
         Condenser.hh
         Resistance.hh
