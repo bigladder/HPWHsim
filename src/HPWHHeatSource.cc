@@ -229,7 +229,6 @@ void HPWH::HeatSource::to(
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 {
-
     heatDist = {{}, {}};
     // double prev_height = 0.;
     // double prev_weight = 0.;

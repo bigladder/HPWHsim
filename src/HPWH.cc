@@ -4750,23 +4750,8 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
     checkTo(
         std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
 
-    // description/product_information
-    auto& desc = rswh.description;
-    auto& prod_info = desc.product_information;
+    productInformation.to(rswh);
 
-    prod_info.manufacturer_is_set = productInformation.manufacturer.isSet();
-    prod_info.manufacturer = productInformation.manufacturer();
-
-    prod_info.model_number_is_set = productInformation.model_number.isSet();
-    prod_info.model_number = productInformation.model_number();
-
-    bool prod_info_is_set = prod_info.manufacturer_is_set || prod_info.model_number_is_set;
-    checkTo(prod_info, desc.product_information_is_set, desc.product_information, prod_info_is_set);
-
-    bool desc_is_set = prod_info_is_set;
-    checkTo(desc, rswh.description_is_set, rswh.description, desc_is_set);
-
-    //
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;
