@@ -291,7 +291,6 @@ class HPWH : public Courier::Sender
     };
 
     nlohmann::json productInformation;
-    nlohmann::json rating10CFR430;
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);
