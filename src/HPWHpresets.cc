@@ -1774,8 +1774,6 @@ void HPWH::initPreset(MODELS presetNum)
 
     else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
-        productInformation = {"MITSUBISHI", "QAHV_N136TAU_HPB_SP"};
-
         setNumNodes(96);
         setpoint_C = 65;
 
@@ -4475,12 +4473,20 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_LG_APHWC50)
         {
             productInformation["model_number"] = "APHWC50";
+            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(58.) / 1000.;
+            rating10CFR430["first_hour_rating"] = GAL_TO_L(76.) / 1000.;
+            rating10CFR430["recovery_efficiency"] = 4.10;
+            rating10CFR430["uniform_energy_factor"] = 3.93;
             tank->volume_L = GAL_TO_L(52.8);
             tank->UA_kJperHrC = 7.78;
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
             productInformation["model_number"] = "APHWC80";
+            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
+            rating10CFR430["first_hour_rating"] = GAL_TO_L(94.) / 1000.;
+            rating10CFR430["recovery_efficiency"] = 4.10;
+            rating10CFR430["uniform_energy_factor"] = 3.90;
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
         }
