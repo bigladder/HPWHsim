@@ -292,9 +292,6 @@ class HPWH : public Courier::Sender
 
     nlohmann::json productInformation;
 
-    template <typename T>
-    static void description_to_json(const T& desc, nlohmann::json& j);
-
     void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
 

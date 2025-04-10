@@ -573,20 +573,6 @@ void HPWH::to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlo
 }
 
 /*static*/
-template <typename T>
-void HPWH::description_to_json(const T& desc, nlohmann::json& j)
-{
-    if (desc.product_information_is_set)
-    {
-        auto& prod_info = desc.product_information;
-        if (prod_info.manufacturer_is_set)
-            j["manufacturer"] = prod_info.manufacturer;
-        if (prod_info.model_number_is_set)
-            j["model_number"] = prod_info.model_number;
-    }
-}
-
-/*static*/
 void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
                    nlohmann::json& j)
 {
@@ -597,12 +583,7 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDW
                                "RSINTEGRATEDWATERHEATER.schema.yaml";
     j["metadata"] = j_metadata;
 
-    if (rswh.description_is_set)
-    {
-        nlohmann::json j_desc;
-        description_to_json(rswh.description, j_desc);
-        j["description"] = j_desc;
-    }
+    productInformation_to_json(rswh, j);
 
     auto& perf = rswh.performance;
     nlohmann::json j_perf;
@@ -866,12 +847,7 @@ void HPWH::to_json(const hpwh_data_model::rstank::RSTANK& rstank, nlohmann::json
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml";
     j["metadata"] = j_metadata;
 
-    if (rstank.description_is_set)
-    {
-        nlohmann::json j_desc;
-        description_to_json(rstank.description, j_desc);
-        j["description"] = j_desc;
-    }
+    productInformation_to_json(rstank, j);
 
     auto& perf = rstank.performance;
     nlohmann::json j_perf;
@@ -899,12 +875,7 @@ void HPWH::to_json(
                                "RSCONDENSERWATERHEATSOURCE.schema.yaml";
     j["metadata"] = j_metadata;
 
-    if (rshs.description_is_set)
-    {
-        nlohmann::json j_desc;
-        description_to_json(rshs.description, j_desc);
-        j["description"] = j_desc;
-    }
+    productInformation_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -993,12 +964,7 @@ void HPWH::to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                                "RSAIRTOWATERHEATPUMP.schema.yaml";
     j["metadata"] = j_metadata;
 
-    if (rshs.description_is_set)
-    {
-        nlohmann::json j_desc;
-        description_to_json(rshs.description, j_desc);
-        j["description"] = j_desc;
-    }
+    productInformation_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -1074,12 +1040,7 @@ void HPWH::to_json(
                                "RSRESISTANCEWATERHEATSOURCE.schema.yaml";
     j["metadata"] = j_metadata;
 
-    if (rshs.description_is_set)
-    {
-        nlohmann::json j_desc;
-        description_to_json(rshs.description, j_desc);
-        j["description"] = j_desc;
-    }
+    productInformation_to_json(rshs, j);
 
     auto& perf = rshs.performance;
 
