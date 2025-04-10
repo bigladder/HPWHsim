@@ -102,15 +102,15 @@ void fromRating10CFR430(nlohmann::json& rating10CFR430, const RSTYPE& rs)
         if (desc.rating_10_cfr_430_is_set)
         {
             auto& data = desc.rating_10_cfr_430;
-            if(data.certified_reference_number_is_set)
+            if (data.certified_reference_number_is_set)
                 rating10CFR430["certified_reference_number"] = data.certified_reference_number;
-            if(data.nominal_tank_volume_is_set)
+            if (data.nominal_tank_volume_is_set)
                 rating10CFR430["nominal_tank_volume"] = data.nominal_tank_volume;
-            if(data.first_hour_rating_is_set)
+            if (data.first_hour_rating_is_set)
                 rating10CFR430["first_hour_rating"] = data.first_hour_rating;
-            if(data.recovery_efficiency_is_set)
+            if (data.recovery_efficiency_is_set)
                 rating10CFR430["recovery_efficiency"] = data.recovery_efficiency;
-            if(data.uniform_energy_factor_is_set)
+            if (data.uniform_energy_factor_is_set)
                 rating10CFR430["uniform_energy_factor"] = data.uniform_energy_factor;
         }
     }
@@ -125,19 +125,20 @@ void toRating10CFR430(const nlohmann::json& rating10CFR430, RSTYPE& rs)
     auto& desc = rs.description;
     auto& data = desc.rating_10_cfr_430;
 
-    if((data.certified_reference_number_is_set = rating10CFR430.contains("certified_reference_number")))
+    if ((data.certified_reference_number_is_set =
+             rating10CFR430.contains("certified_reference_number")))
         data.certified_reference_number = rating10CFR430["certified_reference_number"];
 
-    if((data.nominal_tank_volume_is_set = rating10CFR430.contains("nominal_tank_volume")))
+    if ((data.nominal_tank_volume_is_set = rating10CFR430.contains("nominal_tank_volume")))
         data.nominal_tank_volume = rating10CFR430["nominal_tank_volume"];
 
-    if((data.first_hour_rating_is_set = rating10CFR430.contains("first_hour_rating")))
+    if ((data.first_hour_rating_is_set = rating10CFR430.contains("first_hour_rating")))
         data.first_hour_rating = rating10CFR430["first_hour_rating"];
 
-    if((data.recovery_efficiency_is_set = rating10CFR430.contains("recovery_efficiency")))
+    if ((data.recovery_efficiency_is_set = rating10CFR430.contains("recovery_efficiency")))
         data.recovery_efficiency = rating10CFR430["recovery_efficiency"];
 
-    if((data.uniform_energy_factor_is_set = rating10CFR430.contains("uniform_energy_factor")))
+    if ((data.uniform_energy_factor_is_set = rating10CFR430.contains("uniform_energy_factor")))
         data.uniform_energy_factor = rating10CFR430["uniform_energy_factor"];
 
     desc.rating_10_cfr_430_is_set |= !rating10CFR430.empty();

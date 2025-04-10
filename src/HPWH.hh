@@ -293,8 +293,12 @@ class HPWH : public Courier::Sender
     nlohmann::json productInformation;
     nlohmann::json rating10CFR430;
 
-    template <typename T>
-    static void description_to_json(const T& desc, nlohmann::json& j);
+    template <typename RSTYPE>
+    static void productInformation_to_json(const RSTYPE& rs, nlohmann::json& j);
+
+    static void rating10CFR430_to_json(
+        const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
+        nlohmann::json& j);
 
     void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
