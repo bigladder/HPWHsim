@@ -88,4 +88,33 @@ void toProductInformation(const nlohmann::json& productInformation, RSTYPE& rs)
     bool desc_set = prod_info_set;
     checkTo(desc, rs.description_is_set, rs.description, desc_set);
 }
+
+//-----------------------------------------------------------------------------
+///	@brief	Transfer ProductInformation fields to JSON
+//-----------------------------------------------------------------------------
+template <typename RSTYPE>
+void productInformation_to_json(const RSTYPE& rs, nlohmann::json& j)
+{
+    if (rs.description_is_set)
+    {
+        auto& desc = rs.description;
+        if (desc.product_information_is_set)
+        {
+            nlohmann::json j_prod_info = {};
+            auto& prod_info = desc.product_information;
+            if (prod_info.manufacturer_is_set)
+                j_prod_info["manufacturer"] = prod_info.manufacturer;
+            if (prod_info.model_number_is_set)
+                j_prod_info["model_number"] = prod_info.model_number;
+
+            if (!j_prod_info.empty())
+            {
+                if (!j.contains("description"))
+                    j["description"] = {};
+                j["description"]["product_information"] = j_prod_info;
+            }
+        }
+    }
+}
+
 #endif
