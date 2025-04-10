@@ -270,7 +270,7 @@ void HPWH::Condenser::from(
 void HPWH::Condenser::from(
     const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs)
 {
-    productInformation.from(rshs);
+    fromProductInformation(productInformation, rshs);
 
     auto& perf = rshs.performance;
     switch (perf.coil_configuration)
@@ -362,7 +362,7 @@ void HPWH::Condenser::from(
 
 void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs)
 {
-    productInformation.from(rshs);
+    fromProductInformation(productInformation, rshs);
 
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
 
@@ -489,7 +489,7 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
 void HPWH::Condenser::to(
     hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs) const
 {
-    productInformation.to(rshs);
+    toProductInformation(productInformation, rshs);
 
     //
     auto& perf = rshs.performance;
@@ -616,7 +616,7 @@ void HPWH::Condenser::to(
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs) const
 {
-    productInformation.to(rshs);
+    toProductInformation(productInformation, rshs);
 
     //
     auto& perf = rshs.performance;
