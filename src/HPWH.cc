@@ -4504,7 +4504,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    productInformation.from(rswh);
+    fromProductInformation(productInformation, rswh);
 
     auto& performance = rswh.performance;
 
@@ -4756,7 +4756,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
     checkTo(
         std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
 
-    productInformation.to(rswh);
+    toProductInformation(productInformation, rswh);
 
     auto& performance = rswh.performance;
 
