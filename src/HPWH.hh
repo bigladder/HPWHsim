@@ -290,84 +290,8 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC80 = 601
     };
 
-    /// data entry to/from schema
-    template <typename T>
-    class Entry
-    {
-      private:
-        T t;
-        bool is_set = false;
-
-      public:
-        Entry(const T& t_in, bool is_set_in) : is_set(is_set_in)
-        {
-            if (is_set)
-                t = t_in;
-            else
-                t = T();
-        }
-        Entry(const T& t_in) : t(t_in), is_set(true) {}
-        Entry() : T(T()), is_set(false) {}
-
-        T operator()() const { return is_set ? t : T(); }
-        bool isSet() const { return is_set; }
-    };
-
-    struct ProductInformation
-    {
-        Entry<std::string> manufacturer;
-        Entry<std::string> model_number;
-        ProductInformation() : manufacturer("", false), model_number("", false) {}
-        ProductInformation(std::string manufacturer_in, std::string model_number_in)
-            : manufacturer(manufacturer_in), model_number(model_number_in)
-        {
-        }
-        bool empty() const { return !(manufacturer.isSet() || model_number.isSet()); }
-
-        //-----------------------------------------------------------------------------
-        ///	@brief	Transfer ProductInformation fields from schema
-        //-----------------------------------------------------------------------------
-        template <typename RSTYPE>
-        void from(const RSTYPE& rs)
-        {
-            if (rs.description_is_set)
-            {
-                auto& desc = rs.description;
-                if (desc.product_information_is_set)
-                {
-                    auto& info = desc.product_information;
-                    manufacturer = {info.manufacturer, info.manufacturer_is_set};
-                    model_number = {info.model_number, info.model_number_is_set};
-                }
-            }
-        }
-
-        //-----------------------------------------------------------------------------
-        ///	@brief	Transfer ProductInformation fields to schema
-        //-----------------------------------------------------------------------------
-        template <typename RSTYPE>
-        void to(RSTYPE& rs) const
-        {
-            auto& desc = rs.description;
-            auto& prod_info = desc.product_information;
-
-            prod_info.manufacturer_is_set = manufacturer.isSet();
-            prod_info.manufacturer = manufacturer();
-
-            prod_info.model_number_is_set = model_number.isSet();
-            prod_info.model_number = model_number();
-
-            bool set_prod_info = !empty();
-            checkTo(prod_info,
-                    desc.product_information_is_set,
-                    desc.product_information,
-                    set_prod_info);
-
-            bool set_desc = set_prod_info;
-            checkTo(desc, rs.description_is_set, rs.description, set_desc);
-        }
-
-    } productInformation;
+    nlohmann::json productInformation;
+    nlohmann::json rating10CFR430;
 
     template <typename T>
     static void description_to_json(const T& desc, nlohmann::json& j);

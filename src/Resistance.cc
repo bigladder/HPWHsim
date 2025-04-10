@@ -37,7 +37,7 @@ void HPWH::Resistance::from(
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    productInformation.from(*p_rshs);
+    fromProductInformation(productInformation, *p_rshs);
 
     auto& perf = p_rshs->performance;
     power_kW = perf.input_power / 1000.;
@@ -53,7 +53,7 @@ void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSource
             metadata.schema_name_is_set,
             metadata.schema_name);
 
-    productInformation.to(*p_rshs);
+    toProductInformation(productInformation, *p_rshs);
 
     auto& perf = p_rshs->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
