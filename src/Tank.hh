@@ -27,6 +27,7 @@ class HPWH::Tank : public Sender
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
+    nlohmann::json metadata;
     nlohmann::json productInformation;
 
     void from(hpwh_data_model::rstank::RSTANK& rstank);

@@ -29,7 +29,8 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 
 void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
-    fromProductInformation(productInformation, rstank);
+    metadata_to_json(rstank, metadata);
+    productInformation_to_json(rstank, productInformation);
 
     auto& perf = rstank.performance;
     checkFrom(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
@@ -55,10 +56,8 @@ void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 
 void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
 {
-    auto& metadata = rstank.metadata;
-    checkTo(std::string("RSTANK"), metadata.schema_name_is_set, metadata.schema_name);
-
-    toProductInformation(productInformation, rstank);
+    metadata_from_json(rstank, metadata);
+    productInformation_from_json(rstank, productInformation);
 
     //
     auto& perf = rstank.performance;
