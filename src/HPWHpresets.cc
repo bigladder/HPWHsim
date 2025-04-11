@@ -4153,8 +4153,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AquaThermAire)
     {
-        productInformation["manufacturer"] = "Villara";
-        productInformation["model_number"] = "AquaThermAire";
+        j_productInformation["manufacturer"] = "Villara";
+        j_productInformation["model_number"] = "AquaThermAire";
 
         setNumNodes(12);
         setpoint_C = 50.;
@@ -4367,41 +4367,41 @@ void HPWH::initPreset(MODELS presetNum)
     else if ((MODELS_BradfordWhiteAeroThermRE2H50 <= presetNum) &&
              (presetNum <= MODELS_BradfordWhiteAeroThermRE2H80))
     {
-        productInformation["manufacturer"] = "BRADFORD WHITE";
+        j_productInformation["manufacturer"] = "BRADFORD WHITE";
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
-            productInformation["model_number"] = "RE2H50S*-*****";
-            rating10CFR430["certified_reference_number"] = "200094643";
-            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(50.) / 1000.;
-            rating10CFR430["first_hour_rating"] = GAL_TO_L(65.) / 1000.;
-            rating10CFR430["recovery_efficiency"] = 4.06;
-            rating10CFR430["uniform_energy_factor"] = 3.44;
+            j_productInformation["model_number"] = "RE2H50S*-*****";
+            j_rating10CFR430["certified_reference_number"] = "200094643";
+            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(50.) / 1000.;
+            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(65.) / 1000.;
+            j_rating10CFR430["recovery_efficiency"] = 4.06;
+            j_rating10CFR430["uniform_energy_factor"] = 3.44;
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 6.8373;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
-            productInformation["model_number"] = "RE2H65T**-*****";
-            rating10CFR430["certified_reference_number"] = "204835481";
-            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(65.) / 1000.;
-            rating10CFR430["first_hour_rating"] = GAL_TO_L(79.) / 1000.;
-            rating10CFR430["recovery_efficiency"] = 3.91;
-            rating10CFR430["uniform_energy_factor"] = 3.64;
+            j_productInformation["model_number"] = "RE2H65T**-*****";
+            j_rating10CFR430["certified_reference_number"] = "204835481";
+            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(65.) / 1000.;
+            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(79.) / 1000.;
+            j_rating10CFR430["recovery_efficiency"] = 3.91;
+            j_rating10CFR430["uniform_energy_factor"] = 3.64;
             tank->volume_L = GAL_TO_L(64.0);
             tank->UA_kJperHrC = 6.7292;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
-            productInformation["model_number"] = "RE2H80T*-*****";
-            rating10CFR430["certified_reference_number"] = "200094645";
-            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
-            rating10CFR430["first_hour_rating"] = GAL_TO_L(88.) / 1000.;
-            rating10CFR430["recovery_efficiency"] = 3.92;
-            rating10CFR430["uniform_energy_factor"] = 3.59;
+            j_productInformation["model_number"] = "RE2H80T*-*****";
+            j_rating10CFR430["certified_reference_number"] = "200094645";
+            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
+            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(88.) / 1000.;
+            j_rating10CFR430["recovery_efficiency"] = 3.92;
+            j_rating10CFR430["uniform_energy_factor"] = 3.59;
             tank->volume_L = GAL_TO_L(75.0);
             tank->UA_kJperHrC = 7.2217;
         }
@@ -4472,21 +4472,21 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_LG_APHWC50)
         {
-            productInformation["model_number"] = "APHWC50";
-            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(58.) / 1000.;
-            rating10CFR430["first_hour_rating"] = GAL_TO_L(76.) / 1000.;
-            rating10CFR430["recovery_efficiency"] = 4.10;
-            rating10CFR430["uniform_energy_factor"] = 3.93;
+            j_productInformation["model_number"] = "APHWC50";
+            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(58.) / 1000.;
+            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(76.) / 1000.;
+            j_rating10CFR430["recovery_efficiency"] = 4.10;
+            j_rating10CFR430["uniform_energy_factor"] = 3.93;
             tank->volume_L = GAL_TO_L(52.8);
             tank->UA_kJperHrC = 7.78;
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
-            productInformation["model_number"] = "APHWC80";
-            rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
-            rating10CFR430["first_hour_rating"] = GAL_TO_L(94.) / 1000.;
-            rating10CFR430["recovery_efficiency"] = 4.10;
-            rating10CFR430["uniform_energy_factor"] = 3.90;
+            j_productInformation["model_number"] = "APHWC80";
+            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
+            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(94.) / 1000.;
+            j_rating10CFR430["recovery_efficiency"] = 4.10;
+            j_rating10CFR430["uniform_energy_factor"] = 3.90;
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
         }
@@ -4601,11 +4601,10 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (!isCompressorExternal())
         {
-            generate_json_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(
+            j_metadata = generate_metadata_as_json<hpwh_data_model::rsintegratedwaterheater::Schema>(
                 "RSINTEGRATEDWATERHEATER",
                 "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                "RSINTEGRATEDWATERHEATER.schema.yaml",
-                metadata);
+                "RSINTEGRATEDWATERHEATER.schema.yaml");
         }
 
         for (auto heatSource : heatSources)
@@ -4615,29 +4614,27 @@ void HPWH::initPreset(MODELS presetNum)
                 auto condenser = reinterpret_cast<Condenser*>(heatSource.get());
                 if (condenser->configuration == Condenser::CONFIG_EXTERNAL)
                 {
-                    generate_metadata_json<hpwh_data_model::rsairtowaterheatpump::Schema>(
+                    condenser->j_metadata = generate_metadata_json_as_json<hpwh_data_model::rsairtowaterheatpump::Schema>(
                         "RSINTEGRATEDWATERHEATER",
                         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                        "RSINTEGRATEDWATERHEATER.schema.yaml",
-                        condenser->metadata);
+                        "RSINTEGRATEDWATERHEATER.schema.yaml");
                 }
                 else
                 {
-                    generate_metadata_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
+                    condenser->metadata = generate_metadata_as_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
                         "RSCONDENSERWATERHEATSOURCE",
                         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                        "RSAIRTOWATERHEATPUMP.schema.yaml",
-                        condenser->metadata);
+                        "RSAIRTOWATERHEATPUMP.schema.yaml");
                 }
             }
             else
             {
                 auto resistance = reinterpret_cast<Resistance*>(heatSource.get());
-                generate_metadata_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
+                resistance->metadata = generate_metadata_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
                     "RSRESISTANCEWATERHEATSOURCE",
                     "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                    "RSRESISTANCEWATERHEATSOURCE.schema.yaml",
-                    resistance->metadata);
+                    "RSRESISTANCEWATERHEATSOURCE.schema.yaml"
+                    );
             }
         }
         generate_metadata_json<hpwh_data_model::rstank::Schema>(

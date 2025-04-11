@@ -18,8 +18,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
 
-    nlohmann::json metadata;
-    nlohmann::json productInformation;
+    nlohmann::json j_productInformation;
 
     void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) const override;
     void to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs) const;

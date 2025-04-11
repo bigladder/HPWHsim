@@ -60,7 +60,8 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     hysteresis_dC = cond_in.hysteresis_dC;
     maxSetpoint_C = cond_in.maxSetpoint_C;
 
-    productInformation = cond_in.productInformation;
+    j_metadata = cond_in..j_metadata;
+    j_productInformation = cond_in.j_productInformation;
     return *this;
 }
 

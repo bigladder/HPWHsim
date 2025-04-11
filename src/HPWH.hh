@@ -289,10 +289,9 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC50 = 600,
         MODELS_LG_APHWC80 = 601
     };
-
-    nlohmann::json j_metadata;
-    nlohmann::json productInformation;
-    nlohmann::json rating10CFR430;
+    
+    nlohmann::json j_productInformation;
+    nlohmann::json j_rating10CFR430;
 
     void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
