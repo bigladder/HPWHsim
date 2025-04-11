@@ -4504,8 +4504,8 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    fromProductInformation(productInformation, rswh);
-    fromRating10CFR430(rating10CFR430, rswh);
+    productInformation_to_json(rswh, productInformation);
+    json_from_rating10CFR430(rswh, rating10CFR430);
 
     auto& performance = rswh.performance;
 
@@ -4753,12 +4753,9 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
-    auto& metadata = rswh.metadata;
-    checkTo(
-        std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
-
-    toProductInformation(productInformation, rswh);
-    toRating10CFR430(rating10CFR430, rswh);
+    json_to_metadata(j_metadata, rswh);
+    json_to_productInformation(j_productInformation, rswh);
+    json_to_rating10CFR430(j_rating10CFR430, rswh);
 
     auto& performance = rswh.performance;
 

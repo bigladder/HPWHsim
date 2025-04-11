@@ -4597,4 +4597,54 @@ void HPWH::initPreset(MODELS presetNum)
         }
     }
 
+    if (hasACompressor())
+    {
+        if (!isCompressorExternal())
+        {
+            generate_json_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(
+                "RSINTEGRATEDWATERHEATER",
+                "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+                "RSINTEGRATEDWATERHEATER.schema.yaml",
+                metadata);
+        }
+
+        for (auto heatSource : heatSources)
+        {
+            if (heatSource->isACompressor())
+            {
+                auto condenser = reinterpret_cast<Condenser*>(heatSource.get());
+                if (condenser->configuration == Condenser::CONFIG_EXTERNAL)
+                {
+                    generate_metadata_json<hpwh_data_model::rsairtowaterheatpump::Schema>(
+                        "RSINTEGRATEDWATERHEATER",
+                        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+                        "RSINTEGRATEDWATERHEATER.schema.yaml",
+                        condenser->metadata);
+                }
+                else
+                {
+                    generate_metadata_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
+                        "RSCONDENSERWATERHEATSOURCE",
+                        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+                        "RSAIRTOWATERHEATPUMP.schema.yaml",
+                        condenser->metadata);
+                }
+            }
+            else
+            {
+                auto resistance = reinterpret_cast<Resistance*>(heatSource.get());
+                generate_metadata_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
+                    "RSRESISTANCEWATERHEATSOURCE",
+                    "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+                    "RSRESISTANCEWATERHEATSOURCE.schema.yaml",
+                    resistance->metadata);
+            }
+        }
+        generate_metadata_json<hpwh_data_model::rstank::Schema>(
+            "RSTANK",
+            "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+            "RSTANK.schema.yaml",
+            tank->metadata);
+    }
+
 } // end HPWHinit_presets
