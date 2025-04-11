@@ -210,6 +210,9 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
+    j_productInformation = hpwh.j_productInformation;
+    j_rating10CFR430 = hpwh.j_rating10CFR430;
+
     return *this;
 }
 

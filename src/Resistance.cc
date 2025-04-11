@@ -19,7 +19,7 @@ HPWH::Resistance::Resistance(HPWH* hpwh_in,
 }
 
 HPWH::Resistance::Resistance(const Resistance& r_in)
-    : HeatSource(r_in), power_kW(r_in.power_kW), productInformation(r_in.productInformation)
+    : HeatSource(r_in), power_kW(r_in.power_kW), j_productInformation(r_in.j_productInformation)
 {
 }
 
