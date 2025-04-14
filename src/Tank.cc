@@ -1,4 +1,5 @@
 ﻿#include "HPWH.hh"
+#include "HPWHUtils.hh"
 #include "Tank.hh"
 
 HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Sender(tank_in) { *this = tank_in; }
@@ -52,8 +53,10 @@ void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 
 void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
 {
-    auto& metadata = rstank.metadata;
-    checkTo(std::string("RSTANK"), metadata.schema_name_is_set, metadata.schema_name);
+    generate_metadata<hpwh_data_model::rstank::Schema>(
+        rstank,
+        "RSTANK",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml");
 
     auto& perf = rstank.performance;
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
