@@ -489,6 +489,8 @@ void HPWH::Condenser::to(
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSCONDENSERWATERHEATSOURCE.schema.yaml");
 
+    productInformation.to(hs);
+
     auto& perf = hs.performance;
     switch (configuration)
     {
@@ -613,10 +615,16 @@ void HPWH::Condenser::to(
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
 {
-    productInformation.to(rshs);
+    generate_metadata<hpwh_data_model::rsairtowaterheatpump::Schema>(
+        hs,
+        "RSAIRTOWATERHEATPUMP",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSAIRTOWATERHEATPUMP.schema.yaml");
+
+    productInformation.to(hs);
 
     //
-    auto& perf = rshs.performance;
+    auto& perf = hs.performance;
     checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 
     checkTo(hysteresis_dC,

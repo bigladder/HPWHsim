@@ -44,23 +44,18 @@ void HPWH::Resistance::from(
 
 void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs) const
 {
-    auto p_rshs = reinterpret_cast<
+    auto p_hs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
     generate_metadata<hpwh_data_model::rstank::Schema>(
-        *res_ptr,
+        *p_hs,
         "RSRESISTANCEWATERHEATSOURCE",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSRESISTANCEWATERHEATSOURCE.schema.yaml");
-    auto& perf = res_ptr->performance;
-    auto& metadata = p_rshs->metadata;
-    checkTo(std::string("RSRESISTANCEWATERHEATSOURCE"),
-            metadata.schema_name_is_set,
-            metadata.schema_name);
 
-    productInformation.to(*p_rshs);
+    productInformation.to(*p_hs);
 
-    auto& perf = p_rshs->performance;
+    auto& perf = p_hs->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
 }
 
