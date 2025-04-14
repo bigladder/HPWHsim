@@ -242,24 +242,6 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 
 //
 template <typename T>
-void setValue(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_object())
-        {
-            T value = jp.at("value");
-            jp = value;
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-//
-template <typename T>
 void setValue(nlohmann::json& j, std::string_view sLabel, std::function<T(T, const std::string&)> f)
 {
     try
@@ -406,26 +388,6 @@ void setPowerCoeffs(nlohmann::json& j, std::string_view sLabel)
 
 void setCOP_Coeffs(nlohmann::json& j, std::string_view sLabel) { setVector<double>(j, sLabel); }
 
-void setPerformancePoints(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_array())
-        {
-            for (auto& point : jp)
-            {
-                setTemp_K(point, "heat_source_temperature");
-                setPowerCoeffs(point, "input_power_coefficients");
-                setCOP_Coeffs(point, "cop_coefficients");
-            }
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
 void setPerformanceMap(nlohmann::json& j, std::string_view sLabel)
 {
     try
@@ -459,64 +421,6 @@ void setSoC_BasedHeatingLogic(nlohmann::json& j, std::string_view sLabel)
     {
         auto& jp = j.at(sLabel);
         setTemp_K(jp, "minimum_useful_temperature");
-    }
-    catch (...)
-    {
-    }
-}
-
-void setHeatingLogic(nlohmann::json& j, std::string_view sLabel)
-{
-
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_array())
-        {
-            for (auto& element : jp)
-            {
-                auto& heating_logic_type = element.at("heating_logic_type");
-                if (heating_logic_type == "TEMP_BASED")
-                    setTempBasedHeatingLogic(element, "heating_logic");
-
-                if (heating_logic_type == "SOC_BASED")
-                    setSoC_BasedHeatingLogic(element, "heating_logic");
-            }
-        }
-        else
-        {
-            auto& heating_logic_type = jp.at("heating_logic_type");
-            if (heating_logic_type == "TEMP_BASED")
-                setTempBasedHeatingLogic(jp, "heating_logic");
-
-            if (heating_logic_type == "SOC_BASED")
-                setSoC_BasedHeatingLogic(jp, "heating_logic");
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-void setResistanceHeatSource(nlohmann::json& j)
-{
-    try
-    {
-        auto& heat_source_perf = j.at("performance");
-        setPower_W(heat_source_perf, "input_power");
-    }
-    catch (...)
-    {
-    }
-}
-
-void setCondenserHeatSource(nlohmann::json& j)
-{
-    try
-    {
-        auto& heat_source_perf = j.at("performance");
-        setPerformanceMap(heat_source_perf, "performance_map");
-        setPower_W(heat_source_perf, "standby_power");
     }
     catch (...)
     {
