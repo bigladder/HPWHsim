@@ -4753,8 +4753,9 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
+
     checkTo(
-        std::string("RSINTEGRATEDWATERHEATER"), metadata.schema_name_is_set, metadata.schema_name);
+        {"RSINTEGRATEDWATERHEATER"}, metadata.schema_name_is_set, metadata.schema_name);
 
     productInformation.to(rswh);
 
