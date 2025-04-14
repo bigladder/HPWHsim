@@ -82,7 +82,7 @@ void convert(const std::string& sSpecType,
     hpwh.to(hsi);
 
     nlohmann::json j;
-    ::to_json(hsi, j);
+    add_to_json(hsi, j);
 
     std::ofstream outputFile;
     if (sOutputFilename == "")
