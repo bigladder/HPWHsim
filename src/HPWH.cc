@@ -4504,8 +4504,6 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    productInformation.from(rswh);
-
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;
@@ -4722,6 +4720,11 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
 
 void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 {
+    generate_metadata<hpwh_data_model::hpwh_sim_input::Schema>(
+        hsi,
+        "HPWHSimInput",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml");
+
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
     checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
@@ -4752,12 +4755,11 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
-    auto& metadata = rswh.metadata;
-
-    checkTo(
-        {"RSINTEGRATEDWATERHEATER"}, metadata.schema_name_is_set, metadata.schema_name);
-
-    productInformation.to(rswh);
+    generate_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(
+        rswh,
+        "RSINTEGRATEDWATERHEATER",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSINTEGRATEDWATERHEATER.schema.yaml");
 
     auto& performance = rswh.performance;
 

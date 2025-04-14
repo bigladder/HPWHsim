@@ -3,7 +3,6 @@
  */
 
 #include "HPWH.hh"
-#include "HPWHUtils.hh"
 #include "Resistance.hh"
 
 HPWH::Resistance::Resistance(HPWH* hpwh_in,
@@ -48,6 +47,12 @@ void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSource
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
+    generate_metadata<hpwh_data_model::rstank::Schema>(
+        *res_ptr,
+        "RSRESISTANCEWATERHEATSOURCE",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSRESISTANCEWATERHEATSOURCE.schema.yaml");
+    auto& perf = res_ptr->performance;
     auto& metadata = p_rshs->metadata;
     checkTo(std::string("RSRESISTANCEWATERHEATSOURCE"),
             metadata.schema_name_is_set,
