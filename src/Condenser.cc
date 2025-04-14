@@ -9,6 +9,7 @@
 #include <btwxt/btwxt.h>
 
 #include "HPWH.hh"
+#include "HPWHUtils.hh"
 #include "Condenser.hh"
 
 HPWH::Condenser::Condenser(HPWH* hpwh_in,
@@ -482,6 +483,12 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
 void HPWH::Condenser::to(
     hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
+    generate_metadata<hpwh_data_model::rscondenserwaterheatsource::Schema>(
+        hs,
+        "RSCONDENSERWATERHEATSOURCE",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSCONDENSERWATERHEATSOURCE.schema.yaml");
+
     auto& perf = hs.performance;
     switch (configuration)
     {
@@ -606,6 +613,12 @@ void HPWH::Condenser::to(
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
 {
+    generate_metadata<hpwh_data_model::rsairtowaterheatpump::Schema>(
+        hs,
+        "RSAIRTOWATERHEATPUMP",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSAIRTOWATERHEATPUMP.schema.yaml");
+
     auto& perf = hs.performance;
     checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 

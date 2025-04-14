@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "HPWHsim.hh"
+#include "HPWHUtils.hh"
 #include <btwxt/btwxt.h>
 #include <fmt/format.h>
 
@@ -4713,6 +4714,11 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
 
 void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 {
+    generate_metadata<hpwh_data_model::hpwh_sim_input::Schema>(
+        hsi,
+        "HPWHSimInput",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml");
+
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
     checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
@@ -4743,6 +4749,12 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
+    generate_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(
+        rswh,
+        "RSINTEGRATEDWATERHEATER",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSINTEGRATEDWATERHEATER.schema.yaml");
+
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;

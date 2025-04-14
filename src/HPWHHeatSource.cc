@@ -9,6 +9,7 @@
 #include <btwxt/btwxt.h>
 
 #include "HPWH.hh"
+#include "HPWHUtils.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
 #include "Tank.hh"
