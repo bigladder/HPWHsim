@@ -2701,32 +2701,32 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
-        productInformation.manufacturer = "AOSmith";
+        productInformation.manufacturer = {"AOSmith"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
         {
-            productInformation.model_number = "HPTS40";
+            productInformation.model_number = {"HPTS40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
-            productInformation.model_number = "HPTS50";
+            productInformation.model_number = {"HPTS50"};
             tank->volume_L = GAL_TO_L(45.6);
             tank->UA_kJperHrC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            productInformation.model_number = "HPTS66";
+            productInformation.model_number = {"HPTS66"};
             tank->volume_L = GAL_TO_L(67.63);
             tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            productInformation.model_number = "HPTS80";
+            productInformation.model_number = {"HPTS80"};
             tank->volume_L = GAL_TO_L(81.94);
             tank->UA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
@@ -4365,25 +4365,25 @@ void HPWH::initPreset(MODELS presetNum)
     else if ((MODELS_BradfordWhiteAeroThermRE2H50 <= presetNum) &&
              (presetNum <= MODELS_BradfordWhiteAeroThermRE2H80))
     {
-        productInformation.manufacturer = "Bradford White";
+        productInformation.manufacturer = {"Bradford White"};
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
-            productInformation.model_number = "AeroThermRE2H50";
+            productInformation.model_number = {"AeroThermRE2H50"};
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 6.8373;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
-            productInformation.model_number = "AeroThermRE2H65";
+            productInformation.model_number = {"AeroThermRE2H65"};
             tank->volume_L = GAL_TO_L(64.0);
             tank->UA_kJperHrC = 6.7292;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
-            productInformation.model_number = "AeroThermRE2H80";
+            productInformation.model_number = {"AeroThermRE2H80"};
             tank->volume_L = GAL_TO_L(75.0);
             tank->UA_kJperHrC = 7.2217;
         }
@@ -4447,20 +4447,20 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if ((presetNum == MODELS_LG_APHWC50) || (presetNum == MODELS_LG_APHWC80))
     { //
-        productInformation.manufacturer = "LG";
+        productInformation.manufacturer = {"LG"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
 
         if (presetNum == MODELS_LG_APHWC50)
         {
-            productInformation.model_number = "APHWC50";
+            productInformation.model_number = {"APHWC50"};
             tank->volume_L = GAL_TO_L(52.8);
             tank->UA_kJperHrC = 7.78;
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
-            productInformation.model_number = "APHWC80";
+            productInformation.model_number = {"APHWC80"};
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
         }
