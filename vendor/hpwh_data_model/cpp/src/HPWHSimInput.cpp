@@ -14,6 +14,7 @@ namespace hpwh_data_model  {
 		const std::string_view Schema::schema_description = "Input required to describe a heat pump water heating system in HPWHsim";
 
 		void from_json(const nlohmann::json& j, HPWHSimInput& x) {
+			json_get<core::Metadata>(j, logger.get(), "metadata", x.metadata, x.metadata_is_set, true);
 			json_get<int>(j, logger.get(), "number_of_nodes", x.number_of_nodes, x.number_of_nodes_is_set, false);
 			json_get<bool>(j, logger.get(), "depresses_temperature", x.depresses_temperature, x.depresses_temperature_is_set, false);
 			json_get<bool>(j, logger.get(), "fixed_volume", x.fixed_volume, x.fixed_volume_is_set, false);
@@ -22,6 +23,12 @@ namespace hpwh_data_model  {
 			json_get<rsintegratedwaterheater::RSINTEGRATEDWATERHEATER>(j, logger.get(), "integrated_system", x.integrated_system, x.integrated_system_is_set, true);
 			json_get<central_water_heating_system::CentralWaterHeatingSystem>(j, logger.get(), "central_system", x.central_system, x.central_system_is_set, true);
 		}
+		const std::string_view HPWHSimInput::metadata_units = "";
+
+		const std::string_view HPWHSimInput::metadata_description = "Metadata data group";
+
+		const std::string_view HPWHSimInput::metadata_name = "metadata";
+
 		const std::string_view HPWHSimInput::number_of_nodes_units = "";
 
 		const std::string_view HPWHSimInput::number_of_nodes_description = "Number of tank nodes used for simulation";

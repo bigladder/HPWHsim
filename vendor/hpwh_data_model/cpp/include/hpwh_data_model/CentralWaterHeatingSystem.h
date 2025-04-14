@@ -87,11 +87,6 @@ namespace hpwh_data_model {
 			const static std::string_view fixed_flow_rate_units;
 			const static std::string_view fixed_flow_rate_description;
 			const static std::string_view fixed_flow_rate_name;
-			double fixed_outlet_temperature;
-			bool fixed_outlet_temperature_is_set;
-			const static std::string_view fixed_outlet_temperature_units;
-			const static std::string_view fixed_outlet_temperature_description;
-			const static std::string_view fixed_outlet_temperature_name;
 			central_water_heating_system::SecondaryHeatExchanger secondary_heat_exchanger;
 			bool secondary_heat_exchanger_is_set;
 			const static std::string_view secondary_heat_exchanger_units;
