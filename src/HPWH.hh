@@ -325,7 +325,7 @@ class HPWH : public Courier::Sender
         bool empty() const { return !(manufacturer.isSet() || model_number.isSet()); }
 
         //-----------------------------------------------------------------------------
-        ///	@brief	Transfer ProductInformation fields from schema
+        ///	@brief	Transfer fields from schema
         //-----------------------------------------------------------------------------
         template <typename RSTYPE>
         void from(const RSTYPE& rs)
@@ -343,7 +343,7 @@ class HPWH : public Courier::Sender
         }
 
         //-----------------------------------------------------------------------------
-        ///	@brief	Transfer ProductInformation fields to schema
+        ///	@brief	Transfer fields to schema
         //-----------------------------------------------------------------------------
         template <typename RSTYPE>
         void to(RSTYPE& rs) const
