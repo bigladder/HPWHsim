@@ -60,7 +60,6 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     hysteresis_dC = cond_in.hysteresis_dC;
     maxSetpoint_C = cond_in.maxSetpoint_C;
 
-    productInformation = cond_in.productInformation;
     return *this;
 }
 
@@ -268,11 +267,10 @@ void HPWH::Condenser::from(
 }
 
 void HPWH::Condenser::from(
-    const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs)
+    const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs)
 {
-    productInformation.from(rshs);
+    auto& perf = hs.performance;
 
-    auto& perf = rshs.performance;
     switch (perf.coil_configuration)
     {
     case hpwh_data_model::rscondenserwaterheatsource::CoilConfiguration::SUBMERGED:
@@ -360,13 +358,11 @@ void HPWH::Condenser::from(
     }
 }
 
-void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs)
+void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
-    productInformation.from(rshs);
-
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
 
-    auto& perf = rshs.performance;
+    auto& perf = hs.performance;
 
     checkFrom(maxSetpoint_C,
               perf.maximum_refrigerant_temperature_is_set,
@@ -473,26 +469,27 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
 {
     if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
     {
-        auto p_rshs =
-            reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
-                hs.get());
-        return to(*p_rshs);
+        auto hsp = reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
+            hs.get());
+        return to(*hsp);
     }
     else
     {
-        auto p_rshs = reinterpret_cast<
+        auto hsp = reinterpret_cast<
             hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(hs.get());
-        return to(*p_rshs);
+        return to(*hsp);
     }
 }
-
 void HPWH::Condenser::to(
-    hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs) const
+    hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
-    productInformation.to(rshs);
+    generate_metadata<hpwh_data_model::rscondenserwaterheatsource::Schema>(
+        hs,
+        "RSCONDENSERWATERHEATSOURCE",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSCONDENSERWATERHEATSOURCE.schema.yaml");
 
-    //
-    auto& perf = rshs.performance;
+    auto& perf = hs.performance;
     switch (configuration)
     {
     case COIL_CONFIG::CONFIG_SUBMERGED:
@@ -614,7 +611,7 @@ void HPWH::Condenser::to(
     }
 }
 
-void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs) const
+void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
 {
     productInformation.to(rshs);
 

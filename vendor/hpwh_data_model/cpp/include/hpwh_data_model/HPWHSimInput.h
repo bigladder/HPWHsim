@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 #include <enum-info.h>
 #include <courier/courier.h>
+#include <core.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -31,6 +32,11 @@ namespace hpwh_data_model {
 			const static std::string_view schema_description;
 		};
 		struct HPWHSimInput {
+			core::Metadata metadata;
+			bool metadata_is_set;
+			const static std::string_view metadata_units;
+			const static std::string_view metadata_description;
+			const static std::string_view metadata_name;
 			int number_of_nodes;
 			bool number_of_nodes_is_set;
 			const static std::string_view number_of_nodes_units;

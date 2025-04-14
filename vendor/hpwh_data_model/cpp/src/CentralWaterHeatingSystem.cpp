@@ -45,7 +45,6 @@ namespace hpwh_data_model  {
 			json_get<double>(j, logger.get(), "external_outlet_height", x.external_outlet_height, x.external_outlet_height_is_set, false);
 			json_get<central_water_heating_system::ControlType>(j, logger.get(), "control_type", x.control_type, x.control_type_is_set, true);
 			json_get<double>(j, logger.get(), "fixed_flow_rate", x.fixed_flow_rate, x.fixed_flow_rate_is_set, true);
-			json_get<double>(j, logger.get(), "fixed_outlet_temperature", x.fixed_outlet_temperature, x.fixed_outlet_temperature_is_set, true);
 			json_get<central_water_heating_system::SecondaryHeatExchanger>(j, logger.get(), "secondary_heat_exchanger", x.secondary_heat_exchanger, x.secondary_heat_exchanger_is_set, false);
 		}
 		const std::string_view CentralWaterHeatingSystem::tank_units = "";
@@ -95,12 +94,6 @@ namespace hpwh_data_model  {
 		const std::string_view CentralWaterHeatingSystem::fixed_flow_rate_description = "Flow rate, if multipass system";
 
 		const std::string_view CentralWaterHeatingSystem::fixed_flow_rate_name = "fixed_flow_rate";
-
-		const std::string_view CentralWaterHeatingSystem::fixed_outlet_temperature_units = "K";
-
-		const std::string_view CentralWaterHeatingSystem::fixed_outlet_temperature_description = "Fixed Outlet Temperature";
-
-		const std::string_view CentralWaterHeatingSystem::fixed_outlet_temperature_name = "fixed_outlet_temperature";
 
 		const std::string_view CentralWaterHeatingSystem::secondary_heat_exchanger_units = "";
 
