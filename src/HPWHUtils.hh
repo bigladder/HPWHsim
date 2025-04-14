@@ -67,7 +67,7 @@ static void generate_metadata(RSTYPE& rs, std::string_view schema_name, std::str
 #if defined(WIN32)
     struct tm gmt;
     gmtime_s(&gmt, &t);
-    strftime(buf, sizeof(buf), "%FT%TZ", &gmt);
+    strftime(time_of_creation, sizeof(time_of_creation), "%FT%TZ", &gmt);
 #else
     auto ts = gmtime(&t);
     std::strftime(time_of_creation, sizeof(time_of_creation), "%FT%RZ", ts);
