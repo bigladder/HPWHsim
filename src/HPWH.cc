@@ -4756,9 +4756,10 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
-    json_to_metadata(j_metadata, rswh);
-    json_to_productInformation(j_productInformation, rswh);
-    json_to_rating10CFR430(j_rating10CFR430, rswh);
+    std::string_view s = "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSINTEGRATEDWATERHEATER.schema.yaml";
+    generate_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(rswh, s);
+    set_productInformation_from_json(j_productInformation, rswh);
+    set_rating10CFR430_from_json(j_rating10CFR430, rswh);
 
     auto& performance = rswh.performance;
 
