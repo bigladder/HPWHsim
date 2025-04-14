@@ -554,9 +554,10 @@ void HPWH::to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlo
 void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
                    nlohmann::json& j)
 {
-    metadata_to_json(rswh, j);
-    productInformation_to_json(rswh, j);
-    json_from_rating10CFR430(rswh, j);
+    std::string_view s = "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSINTEGRATEDWATERHEATER.schema.yaml";
+    generate_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(rswh, s);
+    auto j_productInformation = get_productInformation_as_json(rswh);
+    auto j_rating10CFR430 = get_rating10CFR430_as_json(rswh);
 
     auto& perf = rswh.performance;
     nlohmann::json j_perf;

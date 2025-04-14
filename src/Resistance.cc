@@ -11,11 +11,10 @@ HPWH::Resistance::Resistance(HPWH* hpwh_in,
                              const std::string& name_in)
     : HPWH::HeatSource(hpwh_in, courier_in, name_in), power_kW(0.)
 {
-    generate_json_metadata<hpwh_data_model::rsresistancewaterheatsource::Schema>(
+    generate_metadata<hpwh_data_model::rsresistancewaterheatsource::Schema>(
         "RSRESISTANCEWATERHEATSOURCE",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-        "RSRESISTANCEWATERHEATSOURCE.schema.yaml",
-        metadata);
+        "RSRESISTANCEWATERHEATSOURCE.schema.yaml",);
 }
 
 HPWH::Resistance::Resistance(const Resistance& r_in)
@@ -32,7 +31,7 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 
     HeatSource::operator=(r_in);
     power_kW = r_in.power_kW;
-    productInformation = r_in.productInformation;
+    j_productInformation = r_in.j_productInformation;
     return *this;
 }
 
@@ -42,8 +41,7 @@ void HPWH::Resistance::from(
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    metadata_to_json(metadata, *p_rshs);
-    productInformation_to_json(productInformation, *p_rshs);
+    set_productInformation_from_json(j_productInformation, *p_rshs);
 
     auto& perf = p_rshs->performance;
     power_kW = perf.input_power / 1000.;
@@ -54,7 +52,7 @@ void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSource
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    metadata_from_json(metadata, *p_rshs);
+    generate_metadata<hpwh_data_model::rsresistancewaterheatsource::Schema>(*p_rshs, "");
     productInformation_from_json(productInformation, *p_rshs);
 
     auto& perf = p_rshs->performance;

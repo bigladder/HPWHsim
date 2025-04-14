@@ -2613,8 +2613,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
-        productInformation["manufacturer"] = "AOSmith";
-        productInformation["model_number"] = "CAHP120";
+        j_productInformation["manufacturer"] = "AOSmith";
+        j_productInformation["model_number"] = "CAHP120";
 
         setNumNodes(24);
         setpoint_C = F_TO_C(150.0);
@@ -2702,31 +2702,31 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
-        productInformation["manufacturer"] = "AOSmith";
+        j_productInformation["manufacturer"] = "AOSmith";
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
         {
-            productInformation["model_number"] = "HPTS40";
+            j_productInformation["model_number"] = "HPTS40";
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
-            productInformation["model_number"] = "HPTS50";
+            j_productInformation["model_number"] = "HPTS50";
             tank->volume_L = GAL_TO_L(45.6);
             tank->UA_kJperHrC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            productInformation["model_number"] = "HPTS66";
+            j_productInformation["model_number"] = "HPTS66";
             tank->volume_L = GAL_TO_L(67.63);
             tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            productInformation["model_number"] = "HPTS80";
+            j_productInformation["model_number"] = "HPTS80";
             tank->volume_L = GAL_TO_L(81.94);
             tank->UA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
@@ -3485,8 +3485,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_RheemHB50)
     {
-        productInformation["manufacturer"] = "Rheem";
-        productInformation["model_number"] = "HB50";
+        j_productInformation["manufacturer"] = "Rheem";
+        j_productInformation["model_number"] = "HB50";
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -4465,7 +4465,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if ((presetNum == MODELS_LG_APHWC50) || (presetNum == MODELS_LG_APHWC80))
     { //
-        productInformation["manufacturer"] = "LG";
+        j_productInformation["manufacturer"] = "LG";
 
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
@@ -4595,53 +4595,6 @@ void HPWH::initPreset(MODELS presetNum)
         {
             reinterpret_cast<Condenser*>(heatSources[i].get())->sortPerformanceMap();
         }
-    }
-
-    if (hasACompressor())
-    {
-        if (!isCompressorExternal())
-        {
-            j_metadata = generate_metadata_as_json<hpwh_data_model::rsintegratedwaterheater::Schema>(
-                "RSINTEGRATEDWATERHEATER",
-                "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                "RSINTEGRATEDWATERHEATER.schema.yaml");
-        }
-
-        for (auto heatSource : heatSources)
-        {
-            if (heatSource->isACompressor())
-            {
-                auto condenser = reinterpret_cast<Condenser*>(heatSource.get());
-                if (condenser->configuration == Condenser::CONFIG_EXTERNAL)
-                {
-                    condenser->j_metadata = generate_metadata_json_as_json<hpwh_data_model::rsairtowaterheatpump::Schema>(
-                        "RSINTEGRATEDWATERHEATER",
-                        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                        "RSINTEGRATEDWATERHEATER.schema.yaml");
-                }
-                else
-                {
-                    condenser->metadata = generate_metadata_as_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
-                        "RSCONDENSERWATERHEATSOURCE",
-                        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                        "RSAIRTOWATERHEATPUMP.schema.yaml");
-                }
-            }
-            else
-            {
-                auto resistance = reinterpret_cast<Resistance*>(heatSource.get());
-                resistance->metadata = generate_metadata_json<hpwh_data_model::rscondenserwaterheatsource::Schema>(
-                    "RSRESISTANCEWATERHEATSOURCE",
-                    "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-                    "RSRESISTANCEWATERHEATSOURCE.schema.yaml"
-                    );
-            }
-        }
-        generate_metadata_json<hpwh_data_model::rstank::Schema>(
-            "RSTANK",
-            "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-            "RSTANK.schema.yaml",
-            tank->metadata);
     }
 
 } // end HPWHinit_presets
