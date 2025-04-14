@@ -240,299 +240,16 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
     return (tHot - tCold) / (tMix - tCold);
 }
 
-//
-template <typename T>
-void setValue(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_object())
-        {
-            T value = jp.at("value");
-            jp = value;
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-//
-template <typename T>
-void setValue(nlohmann::json& j, std::string_view sLabel, std::function<T(T, const std::string&)> f)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_object())
-        {
-            T value = f(jp.at("value"), jp.at("units"));
-            jp = value;
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-//
-template <typename T>
-void setVector(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_object())
-        {
-            std::vector<T> values = {};
-            for (auto& value : jp.at("value"))
-                values.push_back(value);
-            jp = values;
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-//
-template <typename T>
-void setVector(nlohmann::json& j,
-               std::string_view sLabel,
-               std::function<T(T, const std::string&)> f)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_object())
-        {
-            std::vector<T> values = {};
-            for (auto& value : jp.at("value"))
-                values.push_back(f(value, jp.at("units")));
-            jp = values;
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-double convertTemp_K(double value, const std::string& units)
-{
-    if (units == "F")
-    {
-        value = F_TO_K(value);
-    }
-    else if (units == "C")
-    {
-        value = C_TO_K(value);
-    }
-    return value;
-}
-
-double convertTempDiff_K(double value, const std::string& units)
-{
-    if (units == "F")
-    {
-        value = dF_TO_dC(value);
-    }
-    else if (units == "C")
-    {
-    }
-    return value;
-}
-
-double convertVolume_m3(double value, const std::string& units)
-{
-    if (units == "L")
-    {
-        value = value / 1000.;
-    }
-    else if (units == "gal")
-    {
-        value = GAL_TO_L(value) / 1000.;
-    }
-    return value;
-}
-
-double convertUA_WperK(double value, const std::string& units)
-{
-    if (units == "kJ_per_hC")
-    {
-        value = 1000. * value / 3600.;
-    }
-    return value;
-}
-
-double convertPower_W(double value, const std::string& units)
-{
-    if (units == "kW")
-    {
-        value = 1000. * value;
-    }
-    return value;
-}
-
-void setTemp_K(nlohmann::json& j, std::string_view sLabel)
-{
-    setValue<double>(j, sLabel, &convertTemp_K);
-}
-
-void setTempDiff_K(nlohmann::json& j, std::string_view sLabel)
-{
-    setValue<double>(j, sLabel, &convertTempDiff_K);
-}
-
-void setVolume_m3(nlohmann::json& j, std::string_view sLabel)
-{
-    setValue<double>(j, sLabel, &convertVolume_m3);
-}
-
-void setUA_WperK(nlohmann::json& j, std::string_view sLabel)
-{
-    setValue<double>(j, sLabel, &convertUA_WperK);
-}
-
-void setPower_W(nlohmann::json& j, std::string_view sLabel)
-{
-    setValue<double>(j, sLabel, &convertPower_W);
-}
-
-void setPowerCoeffs(nlohmann::json& j, std::string_view sLabel)
-{
-    setVector<double>(j, sLabel, &convertPower_W);
-}
-
-void setCOP_Coeffs(nlohmann::json& j, std::string_view sLabel) { setVector<double>(j, sLabel); }
-
-void setPerformancePoints(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_array())
-        {
-            for (auto& point : jp)
-            {
-                setTemp_K(point, "heat_source_temperature");
-                setPowerCoeffs(point, "input_power_coefficients");
-                setCOP_Coeffs(point, "cop_coefficients");
-            }
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-void setPerformanceMap(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        setPowerCoeffs(jp, "input_power_coefficients");
-        setCOP_Coeffs(jp, "cop_coefficients");
-    }
-    catch (...)
-    {
-    }
-}
-
-void setTempBasedHeatingLogic(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-
-        setTempDiff_K(jp, "differential_temperature");
-        setTemp_K(jp, "absolute_temperature");
-    }
-    catch (...)
-    {
-    }
-}
-
-void setSoC_BasedHeatingLogic(nlohmann::json& j, std::string_view sLabel)
-{
-    try
-    {
-        auto& jp = j.at(sLabel);
-        setTemp_K(jp, "minimum_useful_temperature");
-    }
-    catch (...)
-    {
-    }
-}
-
-void setHeatingLogic(nlohmann::json& j, std::string_view sLabel)
-{
-
-    try
-    {
-        auto& jp = j.at(sLabel);
-        if (jp.is_array())
-        {
-            for (auto& element : jp)
-            {
-                auto& heating_logic_type = element.at("heating_logic_type");
-                if (heating_logic_type == "TEMP_BASED")
-                    setTempBasedHeatingLogic(element, "heating_logic");
-
-                if (heating_logic_type == "SOC_BASED")
-                    setSoC_BasedHeatingLogic(element, "heating_logic");
-            }
-        }
-        else
-        {
-            auto& heating_logic_type = jp.at("heating_logic_type");
-            if (heating_logic_type == "TEMP_BASED")
-                setTempBasedHeatingLogic(jp, "heating_logic");
-
-            if (heating_logic_type == "SOC_BASED")
-                setSoC_BasedHeatingLogic(jp, "heating_logic");
-        }
-    }
-    catch (...)
-    {
-    }
-}
-
-void setResistanceHeatSource(nlohmann::json& j)
-{
-    try
-    {
-        auto& heat_source_perf = j.at("performance");
-        setPower_W(heat_source_perf, "input_power");
-    }
-    catch (...)
-    {
-    }
-}
-
-void setCondenserHeatSource(nlohmann::json& j)
-{
-    try
-    {
-        auto& heat_source_perf = j.at("performance");
-        setPerformanceMap(heat_source_perf, "performance_map");
-        setPower_W(heat_source_perf, "standby_power");
-    }
-    catch (...)
-    {
-    }
-}
-
 template <typename RSTYPE>
-void product_information_to_json(const RSTYPE& rs, nlohmann::json& j)
+void add_product_information_to_json(const RSTYPE& rs, nlohmann::json& j)
 {
     if (rs.description_is_set)
     {
-        if(!j.contains("description"))
+        if (!j.contains("description"))
             j["description"] = {};
         if (rs.description.product_information_is_set)
         {
-            if(!j["description"].contains("product_information"))
+            if (!j["description"].contains("product_information"))
                 j["description"]["product_information"] = {};
             auto& prod_info = rs.description.product_information;
             if (prod_info.manufacturer_is_set)
@@ -577,7 +294,7 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDW
 {
     j["metadata"] = get_metadata_as_json(rswh);
 
-    product_information_to_json(rswh, j);
+    add_product_information_to_json(rswh, j);
 
     auto& perf = rswh.performance;
     nlohmann::json j_perf;
@@ -836,7 +553,7 @@ void HPWH::to_json(const hpwh_data_model::rstank::RSTANK& rstank, nlohmann::json
 {
     j["metadata"] = get_metadata_as_json(rstank);
 
-    product_information_to_json(rstank, j);
+    add_product_information_to_json(rstank, j);
 
     auto& perf = rstank.performance;
     nlohmann::json j_perf;
@@ -859,7 +576,7 @@ void HPWH::to_json(
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    product_information_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -943,7 +660,7 @@ void HPWH::to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    product_information_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -1013,7 +730,7 @@ void HPWH::to_json(
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    product_information_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
