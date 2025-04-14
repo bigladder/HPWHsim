@@ -4504,6 +4504,8 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
+    productInformation.from(rswh);
+
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;
@@ -4760,6 +4762,8 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         "RSINTEGRATEDWATERHEATER",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSINTEGRATEDWATERHEATER.schema.yaml");
+
+    productInformation.to(rswh);
 
     auto& performance = rswh.performance;
 
