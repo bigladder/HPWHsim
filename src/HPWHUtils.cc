@@ -260,7 +260,9 @@ void add_product_information_to_json(const RSTYPE& rs, nlohmann::json& j)
     }
 }
 
-void add_rating_10_cfr_430_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh, nlohmann::json& j)
+void add_rating_10_cfr_430_to_json(
+    const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
+    nlohmann::json& j)
 {
     if (rswh.description_is_set)
     {
@@ -274,15 +276,20 @@ void add_rating_10_cfr_430_to_json(const hpwh_data_model::rsintegratedwaterheate
 
             auto& rating = rswh.description.rating_10_cfr_430;
             if (rating.certified_reference_number_is_set)
-                j["description"]["rating_10_cfr_430"]["certified_reference_number"] = rating.certified_reference_number;
+                j["description"]["rating_10_cfr_430"]["certified_reference_number"] =
+                    rating.certified_reference_number;
             if (rating.nominal_tank_volume_is_set)
-                j["description"]["rating_10_cfr_430"]["nominal_tank_volume"] = rating.nominal_tank_volume;
+                j["description"]["rating_10_cfr_430"]["nominal_tank_volume"] =
+                    rating.nominal_tank_volume;
             if (rating.first_hour_rating_is_set)
-                j["description"]["rating_10_cfr_430"]["first_hour_rating"] = rating.first_hour_rating;
+                j["description"]["rating_10_cfr_430"]["first_hour_rating"] =
+                    rating.first_hour_rating;
             if (rating.recovery_efficiency_is_set)
-                j["description"]["rating_10_cfr_430"]["recovery_efficiency"] = rating.recovery_efficiency;
+                j["description"]["rating_10_cfr_430"]["recovery_efficiency"] =
+                    rating.recovery_efficiency;
             if (rating.uniform_energy_factor_is_set)
-                j["description"]["rating_10_cfr_430"]["uniform_energy_factor"] = rating.uniform_energy_factor;
+                j["description"]["rating_10_cfr_430"]["uniform_energy_factor"] =
+                    rating.uniform_energy_factor;
         }
     }
 }
