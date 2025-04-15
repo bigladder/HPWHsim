@@ -4647,7 +4647,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_LG_APHWC50)
         {
-            productInformation.model_number = {"APHWC50"};
+            productInformation.model_number = {"APHWC501M"};
+            rating10CFR430.certified_reference_number = {"213352429"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(58.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(76.) / 1000.;
             rating10CFR430.recovery_efficiency = 4.10;
@@ -4657,7 +4658,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
-            productInformation.model_number = {"APHWC80"};
+            productInformation.model_number = {"APHWC801M"};
+            rating10CFR430.certified_reference_number = {"213363354"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(94.) / 1000.;
             rating10CFR430.recovery_efficiency = 4.10;
