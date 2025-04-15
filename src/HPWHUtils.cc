@@ -241,7 +241,7 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 }
 
 template <typename RSTYPE>
-void add_product_information_add_to_json(const RSTYPE& rs, nlohmann::json& j)
+void add_product_information_to_json(const RSTYPE& rs, nlohmann::json& j)
 {
     if (rs.description_is_set)
     {
@@ -292,7 +292,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
 {
     j["metadata"] = get_metadata_as_json(rswh);
 
-    add_product_information_add_to_json(rswh, j);
+    add_product_information_to_json(rswh, j);
 
     auto& perf = rswh.performance;
     nlohmann::json j_perf;
@@ -549,7 +549,7 @@ void add_to_json(const hpwh_data_model::rstank::RSTANK& rstank, nlohmann::json& 
 {
     j["metadata"] = get_metadata_as_json(rstank);
 
-    add_product_information_add_to_json(rstank, j);
+    add_product_information_to_json(rstank, j);
 
     auto& perf = rstank.performance;
     nlohmann::json j_perf;
@@ -571,7 +571,7 @@ void add_to_json(
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    add_product_information_add_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -654,7 +654,7 @@ void add_to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPU
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    add_product_information_add_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -723,7 +723,7 @@ void add_to_json(
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    add_product_information_add_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
