@@ -439,10 +439,10 @@ class HPWH : public Courier::Sender
                     rating.first_hour_rating,
                     first_hour_rating.isSet());
 
-            checkTo(first_hour_rating(),
-                    rating.first_hour_rating_is_set,
-                    rating.first_hour_rating,
-                    first_hour_rating.isSet());
+            checkTo(recovery_efficiency(),
+                    rating.recovery_efficiency_is_set,
+                    rating.recovery_efficiency,
+                    recovery_efficiency.isSet());
 
             checkTo(uniform_energy_factor(),
                     rating.uniform_energy_factor_is_set,
