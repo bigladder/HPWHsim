@@ -53,6 +53,9 @@ void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
     }
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	fill metadata fields of a schema object
+//-----------------------------------------------------------------------------
 template <typename RSSCHEMA, typename RSTYPE>
 static void generate_metadata(RSTYPE& rs, std::string_view schema_name, std::string_view schema_url)
 {
@@ -86,6 +89,9 @@ static void generate_metadata(RSTYPE& rs, std::string_view schema_name, std::str
     rs.metadata_is_set = true;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	transfer metadata to json dict
+//-----------------------------------------------------------------------------
 template <typename RSTYPE>
 nlohmann::json get_metadata_as_json(const RSTYPE& rs)
 {
@@ -110,6 +116,7 @@ nlohmann::json get_metadata_as_json(const RSTYPE& rs)
     return j_metadata;
 }
 
+/// add fields from various schema objects to json
 void add_to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohmann::json& j);
 
 void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
