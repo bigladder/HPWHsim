@@ -2339,7 +2339,14 @@ void HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4550)
     {
         if (presetNum == MODELS_AOSmithHPTU50)
-            productInformation = {"AOSmith", "HPTU50"};
+        {
+            productInformation = {"AOSmith", "HPTU-50N 1**"};
+            rating10CFR430.certified_reference_number = {"206428769"};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(66.) / 1000.;
+            rating10CFR430.recovery_efficiency = 4.07;
+            rating10CFR430.uniform_energy_factor = 3.45;
+        }
         if (presetNum == MODELS_RheemHBDR2250)
             productInformation = {"Rheem", "HBDR2250"};
         if (presetNum == MODELS_RheemHBDR4550)
@@ -2443,23 +2450,29 @@ void HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4565)
     {
         if (presetNum == MODELS_AOSmithHPTU66)
-            productInformation = {"AOSmith", "HPTU66"};
-        if (presetNum == MODELS_RheemHBDR2265)
+        {
+            productInformation = {"AOSmith", "HPTU-66N 1**"};
+            rating10CFR430.certified_reference_number = {"206428770"};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.recovery_efficiency = 2.65;
+            rating10CFR430.uniform_energy_factor = 3.45;
+            tank->volume_L = 244.6;
+        }
+        else if (presetNum == MODELS_RheemHBDR2265)
+        {
             productInformation = {"Rheem", "HBDR2265"};
-        if (presetNum == MODELS_RheemHBDR4565)
+            tank->volume_L = 221.4;
+        }
+        else if (presetNum == MODELS_RheemHBDR4565)
+        {
             productInformation = {"Rheem", "HBDR4565"};
+            tank->volume_L = 221.4;
+        }
 
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AOSmithHPTU66)
-        {
-            tank->volume_L = 244.6;
-        }
-        else
-        {
-            tank->volume_L = 221.4;
-        }
         tank->UA_kJperHrC = 8;
 
         doTempDepression = false;
@@ -2554,7 +2567,14 @@ void HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4580)
     {
         if (presetNum == MODELS_AOSmithHPTU80)
-            productInformation = {"AOSmith", "HPTU80"};
+        {
+            productInformation = {"AOSmith", "HPTU-80N 1**"};
+            rating10CFR430.certified_reference_number = {"206428771"};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+            rating10CFR430.recovery_efficiency = 2.33;
+            rating10CFR430.uniform_energy_factor = 3.45;
+        }
         if (presetNum == MODELS_RheemHBDR2280)
             productInformation = {"Rheem", "HBDR2280"};
         if (presetNum == MODELS_RheemHBDR4580)
@@ -2657,7 +2677,12 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithHPTU80_DR)
     {
-        productInformation = {"AOSmith", "HPTU80_DR"};
+        productInformation = {"AOSmith", "HPTU-80DR 1**"};
+        rating10CFR430.certified_reference_number = {"206428809"};
+        rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
+        rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+        rating10CFR430.recovery_efficiency = 2.33;
+        rating10CFR430.uniform_energy_factor = 3.45;
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -2830,7 +2855,12 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
-            productInformation.model_number = {"HPTS50"};
+            productInformation.model_number = {"HPTS-50 2**"};
+            rating10CFR430.certified_reference_number = {"208531033"};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.recovery_efficiency = 4.52;
+            rating10CFR430.uniform_energy_factor = 3.80;
             tank->volume_L = GAL_TO_L(45.6);
             tank->UA_kJperHrC = 6.403;
         }
@@ -4520,7 +4550,6 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
             productInformation.model_number = {"AeroThermRE2H50"};
-
             rating10CFR430.certified_reference_number = {"200094643"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
