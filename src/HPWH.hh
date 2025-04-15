@@ -351,23 +351,103 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& prod_info = desc.product_information;
 
-            prod_info.manufacturer_is_set = manufacturer.isSet();
-            prod_info.manufacturer = manufacturer();
+            checkTo(manufacturer(),
+                    prod_info.manufacturer_is_set,
+                    prod_info.manufacturer,
+                    manufacturer.isSet());
 
-            prod_info.model_number_is_set = model_number.isSet();
-            prod_info.model_number = model_number();
+            checkTo(model_number(),
+                    prod_info.model_number_is_set,
+                    prod_info.model_number,
+                    model_number.isSet());
 
-            bool set_prod_info = !empty();
             checkTo(prod_info,
                     desc.product_information_is_set,
                     desc.product_information,
-                    set_prod_info);
+                    !empty());
 
-            bool set_desc = set_prod_info;
-            checkTo(desc, rs.description_is_set, rs.description, set_desc);
+            checkTo(desc, rs.description_is_set, rs.description, !empty());
         }
 
     } productInformation;
+
+    struct Rating10CFR430
+    {
+        Entry<std::string> certified_reference_number;
+        Entry<double> nominal_tank_volume;
+        Entry<double> first_hour_rating;
+        Entry<double> recovery_efficiency;
+        Entry<double> uniform_energy_factor;
+
+        Rating10CFR430() : certified_reference_number("", false), nominal_tank_volume(0., false),
+            first_hour_rating(0., false), recovery_efficiency(0., false), uniform_energy_factor(0., false){}
+
+        bool empty() const { return !(certified_reference_number.isSet() || nominal_tank_volume.isSet()
+                     || first_hour_rating.isSet()  || recovery_efficiency.isSet()
+                     || uniform_energy_factor.isSet()); }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer fields from schema
+        //-----------------------------------------------------------------------------
+        void from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rs)
+        {
+            if (rs.description_is_set)
+            {
+                auto& desc = rs.description;
+                if (desc.rating_10_cfr_430_is_set)
+                {
+                    auto& info = desc.rating_10_cfr_430;
+                    certified_reference_number = {info.certified_reference_number, info.certified_reference_number_is_set};
+                    nominal_tank_volume = {info.nominal_tank_volume, info.nominal_tank_volume_is_set};
+                    first_hour_rating = {info.first_hour_rating, info.first_hour_rating_is_set};
+                    recovery_efficiency = {info.recovery_efficiency, info.recovery_efficiency_is_set};
+                    uniform_energy_factor = {info.uniform_energy_factor, info.uniform_energy_factor_is_set};
+                }
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer fields to schema
+        //-----------------------------------------------------------------------------
+        void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rs) const
+        {
+            auto& desc = rs.description;
+            auto& rating = desc.rating_10_cfr_430;
+
+            checkTo(certified_reference_number(),
+                    rating.certified_reference_number_is_set,
+                    rating.certified_reference_number,
+                    certified_reference_number.isSet());
+
+            checkTo(nominal_tank_volume(),
+                    rating.nominal_tank_volume_is_set,
+                    rating.nominal_tank_volume,
+                    nominal_tank_volume.isSet());
+
+            checkTo(first_hour_rating(),
+                    rating.first_hour_rating_is_set,
+                    rating.first_hour_rating,
+                    first_hour_rating.isSet());
+
+            checkTo(first_hour_rating(),
+                    rating.first_hour_rating_is_set,
+                    rating.first_hour_rating,
+                    first_hour_rating.isSet());
+
+            checkTo(uniform_energy_factor(),
+                    rating.uniform_energy_factor_is_set,
+                    rating.uniform_energy_factor,
+                    uniform_energy_factor.isSet());
+
+            checkTo(rating,
+                    desc.rating_10_cfr_430_is_set,
+                    desc.rating_10_cfr_430,
+                    !empty());
+
+            checkTo(desc, rs.description_is_set, rs.description, !empty());
+        }
+
+    } rating10CFR430;
 
     void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;

@@ -241,7 +241,7 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 }
 
 template <typename RSTYPE>
-void add_product_information_add_to_json(const RSTYPE& rs, nlohmann::json& j)
+void add_product_information_to_json(const RSTYPE& rs, nlohmann::json& j)
 {
     if (rs.description_is_set)
     {
@@ -260,6 +260,32 @@ void add_product_information_add_to_json(const RSTYPE& rs, nlohmann::json& j)
     }
 }
 
+void add_rating_10_cfr_430_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh, nlohmann::json& j)
+{
+    if (rswh.description_is_set)
+    {
+        if (!j.contains("description"))
+            j["description"] = {};
+
+        if (rswh.description.rating_10_cfr_430_is_set)
+        {
+            if (!j["description"].contains("rating_10_cfr_430"))
+                j["description"]["rating_10_cfr_430"] = {};
+
+            auto& rating = rswh.description.rating_10_cfr_430;
+            if (rating.certified_reference_number_is_set)
+                j["description"]["rating_10_cfr_430"]["certified_reference_number"] = rating.certified_reference_number;
+            if (rating.nominal_tank_volume_is_set)
+                j["description"]["rating_10_cfr_430"]["nominal_tank_volume"] = rating.nominal_tank_volume;
+            if (rating.first_hour_rating_is_set)
+                j["description"]["rating_10_cfr_430"]["first_hour_rating"] = rating.first_hour_rating;
+            if (rating.recovery_efficiency_is_set)
+                j["description"]["rating_10_cfr_430"]["recovery_efficiency"] = rating.recovery_efficiency;
+            if (rating.uniform_energy_factor_is_set)
+                j["description"]["rating_10_cfr_430"]["uniform_energy_factor"] = rating.uniform_energy_factor;
+        }
+    }
+}
 void add_to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohmann::json& j)
 {
     j["metadata"] = get_metadata_as_json(hsi);
@@ -292,7 +318,8 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
 {
     j["metadata"] = get_metadata_as_json(rswh);
 
-    add_product_information_add_to_json(rswh, j);
+    add_product_information_to_json(rswh, j);
+    add_rating_10_cfr_430_to_json(rswh, j);
 
     auto& perf = rswh.performance;
     nlohmann::json j_perf;
@@ -549,7 +576,7 @@ void add_to_json(const hpwh_data_model::rstank::RSTANK& rstank, nlohmann::json& 
 {
     j["metadata"] = get_metadata_as_json(rstank);
 
-    add_product_information_add_to_json(rstank, j);
+    add_product_information_to_json(rstank, j);
 
     auto& perf = rstank.performance;
     nlohmann::json j_perf;
@@ -571,7 +598,7 @@ void add_to_json(
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    add_product_information_add_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -654,7 +681,7 @@ void add_to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPU
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    add_product_information_add_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -723,7 +750,7 @@ void add_to_json(
 {
     j["metadata"] = get_metadata_as_json(rshs);
 
-    add_product_information_add_to_json(rshs, j);
+    add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
