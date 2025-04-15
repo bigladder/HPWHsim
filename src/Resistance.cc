@@ -3,7 +3,6 @@
  */
 
 #include "HPWH.hh"
-#include "HPWHUtils.hh"
 #include "Resistance.hh"
 
 HPWH::Resistance::Resistance(HPWH* hpwh_in,
@@ -11,14 +10,10 @@ HPWH::Resistance::Resistance(HPWH* hpwh_in,
                              const std::string& name_in)
     : HPWH::HeatSource(hpwh_in, courier_in, name_in), power_kW(0.)
 {
-    generate_metadata<hpwh_data_model::rsresistancewaterheatsource::Schema>(
-        "RSRESISTANCEWATERHEATSOURCE",
-        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
-        "RSRESISTANCEWATERHEATSOURCE.schema.yaml",);
 }
 
 HPWH::Resistance::Resistance(const Resistance& r_in)
-    : HeatSource(r_in), power_kW(r_in.power_kW), j_productInformation(r_in.j_productInformation)
+    : HeatSource(r_in), power_kW(r_in.power_kW), productInformation(r_in.productInformation)
 {
 }
 
@@ -31,7 +26,7 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 
     HeatSource::operator=(r_in);
     power_kW = r_in.power_kW;
-    j_productInformation = r_in.j_productInformation;
+    productInformation = r_in.productInformation;
     return *this;
 }
 
@@ -41,7 +36,7 @@ void HPWH::Resistance::from(
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    set_productInformation_from_json(j_productInformation, *p_rshs);
+    productInformation.from(*p_rshs);
 
     auto& perf = p_rshs->performance;
     power_kW = perf.input_power / 1000.;
@@ -49,13 +44,18 @@ void HPWH::Resistance::from(
 
 void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs) const
 {
-    auto p_rshs = reinterpret_cast<
+    auto p_hs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    generate_metadata<hpwh_data_model::rsresistancewaterheatsource::Schema>(*p_rshs, "");
-    productInformation_from_json(productInformation, *p_rshs);
+    generate_metadata<hpwh_data_model::rstank::Schema>(
+        *p_hs,
+        "RSRESISTANCEWATERHEATSOURCE",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSRESISTANCEWATERHEATSOURCE.schema.yaml");
 
-    auto& perf = p_rshs->performance;
+    productInformation.to(*p_hs);
+
+    auto& perf = p_hs->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
 }
 

@@ -584,6 +584,8 @@ void HPWH::initPreset(MODELS presetNum)
     // voltex 60 gallon
     else if (presetNum == MODELS_AOSmithPHPT60)
     {
+        productInformation = {"AOSmith", "PHPT60"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -656,6 +658,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithPHPT80)
     {
+        productInformation = {"AOSmith", "PHPT80"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -729,6 +733,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2012)
     {
+        productInformation = {"GE", "2012"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -808,6 +814,8 @@ void HPWH::initPreset(MODELS presetNum)
     // If a Colmac single pass preset cold weather or not
     else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
     {
+        productInformation.manufacturer = {"AOSmith"};
+
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -850,6 +858,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_SP)
         {
+            productInformation.model_number = {"CxV_5_SP"};
             setTankSize_adjustUA(200., UNITS_GAL);
             // logic conditions
             compressor->minT = F_TO_C(-4.0);
@@ -891,6 +900,7 @@ void HPWH::initPreset(MODELS presetNum)
 
             if (presetNum == MODELS_ColmacCxA_10_SP)
             {
+                productInformation.model_number = {"CxA_10_SP"};
                 setTankSize_adjustUA(500., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -923,6 +933,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_15_SP)
             {
+                productInformation.model_number = {"CxA_15_SP"};
                 setTankSize_adjustUA(600., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -955,6 +966,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_20_SP)
             {
+                productInformation.model_number = {"CxA_20_SP"};
                 setTankSize_adjustUA(800., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -987,6 +999,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_25_SP)
             {
+                productInformation.model_number = {"CxA_25_SP"};
                 setTankSize_adjustUA(1000., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -1019,6 +1032,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_30_SP)
             {
+                productInformation.model_number = {"CxA_30_SP"};
                 setTankSize_adjustUA(1200., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -1055,6 +1069,7 @@ void HPWH::initPreset(MODELS presetNum)
     // if colmac multipass
     else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
     {
+        productInformation.manufacturer = {"Colmac"};
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1095,6 +1110,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_MP)
         {
+            productInformation.model_number = {"CxV_5_MP"};
             setTankSize_adjustUA(200., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(
                 9.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
@@ -1130,6 +1146,7 @@ void HPWH::initPreset(MODELS presetNum)
 
             if (presetNum == MODELS_ColmacCxA_10_MP)
             {
+                productInformation.model_number = {"CxA_10_MP"};
                 setTankSize_adjustUA(500., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(18.);
                 compressor->perfMap.push_back({
@@ -1152,6 +1169,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_15_MP)
             {
+                productInformation.model_number = {"CxA_15_MP"};
                 setTankSize_adjustUA(600., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(26.);
                 compressor->perfMap.push_back({
@@ -1175,6 +1193,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_20_MP)
             {
+                productInformation.model_number = {"CxA_20_MP"};
                 setTankSize_adjustUA(800., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(
                     36.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
@@ -1199,6 +1218,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_25_MP)
             {
+                productInformation.model_number = {"CxA_25_MP"};
                 setTankSize_adjustUA(1000., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(32.);
                 compressor->perfMap.push_back({
@@ -1221,6 +1241,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_30_MP)
             {
+                productInformation.model_number = {"CxA_30_MP"};
                 setTankSize_adjustUA(1200., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(41.);
                 compressor->perfMap.push_back({
@@ -1246,6 +1267,8 @@ void HPWH::initPreset(MODELS presetNum)
     // If Nyle single pass preset
     else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
     {
+        productInformation.manufacturer = {"Nyle"};
+
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1304,6 +1327,7 @@ void HPWH::initPreset(MODELS presetNum)
         // Perfmaps for each compressor size
         if (presetNum == MODELS_NyleC25A_SP)
         {
+            productInformation.model_number = {"C25A_SP"};
             setTankSize_adjustUA(200., UNITS_GAL);
             compressor->perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1335,6 +1359,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
         {
+            if (presetNum == MODELS_NyleC60A_SP)
+                productInformation.model_number = {"C60A_SP"};
+            else if (presetNum == MODELS_NyleC60A_SP)
+                productInformation.model_number = {"C60A_C_SP"};
+
             setTankSize_adjustUA(300., UNITS_GAL);
             compressor->perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1366,6 +1395,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
         {
+            if (presetNum == MODELS_NyleC90A_SP)
+                productInformation.model_number = {"C90A_SP"};
+            else if (presetNum == MODELS_NyleC90A_C_SP)
+                productInformation.model_number = {"C90A_C_SP"};
+
             setTankSize_adjustUA(400., UNITS_GAL);
             compressor->perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1397,6 +1431,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
         {
+            if (presetNum == MODELS_NyleC125A_SP)
+                productInformation.model_number = {"C125A_SP"};
+            else if (presetNum == MODELS_NyleC125A_C_SP)
+                productInformation.model_number = {"C125A_C_SP"};
+
             setTankSize_adjustUA(500., UNITS_GAL);
             compressor->perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1428,6 +1467,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
         {
+            if (presetNum == MODELS_NyleC185A_SP)
+                productInformation.model_number = {"C185A_SP"};
+            else if (presetNum == MODELS_NyleC185A_C_SP)
+                productInformation.model_number = {"C185A_C_SP"};
+
             setTankSize_adjustUA(800., UNITS_GAL);
             compressor->perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1459,6 +1503,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
         {
+            if (presetNum == MODELS_NyleC250A_SP)
+                productInformation.model_number = {"C250A_SP"};
+            else if (presetNum == MODELS_NyleC250A_C_SP)
+                productInformation.model_number = {"C250A_C_SP"};
+
             setTankSize_adjustUA(800., UNITS_GAL);
 
             compressor->perfMap.push_back({
@@ -1494,6 +1543,8 @@ void HPWH::initPreset(MODELS presetNum)
     // If Nyle multipass presets
     else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
     {
+        productInformation.manufacturer = {"Nyle"};
+
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1554,6 +1605,11 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
+            if (presetNum == MODELS_NyleC60A_MP)
+                productInformation.model_number = {"NyleC60A_MP"};
+            else if (presetNum == MODELS_NyleC60A_C_MP)
+                productInformation.model_number = {"NyleC60A_C_MP"};
+
             setTankSize_adjustUA(360., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(13.);
             if (presetNum == MODELS_NyleC60A_C_MP)
@@ -1577,6 +1633,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
         {
+            if (presetNum == MODELS_NyleC90A_MP)
+                productInformation.model_number = {"NyleC90A_MP"};
+            else if (presetNum == MODELS_NyleC90A_C_MP)
+                productInformation.model_number = {"NyleC90A_C_MP"};
+
             setTankSize_adjustUA(480., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(20.);
             if (presetNum == MODELS_NyleC90A_C_MP)
@@ -1600,6 +1661,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
         {
+            if (presetNum == MODELS_NyleC125A_MP)
+                productInformation.model_number = {"NyleC125A_MP"};
+            else if (presetNum == MODELS_NyleC125A_C_MP)
+                productInformation.model_number = {"NyleC125A_C_MP"};
+
             setTankSize_adjustUA(600., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(28.);
             if (presetNum == MODELS_NyleC125A_C_MP)
@@ -1623,6 +1689,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
         {
+            if (presetNum == MODELS_NyleC185A_MP)
+                productInformation.model_number = {"NyleC185A_MP"};
+            else if (presetNum == MODELS_NyleC185A_C_MP)
+                productInformation.model_number = {"NyleC185A_C_MP"};
+
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(40.);
             if (presetNum == MODELS_NyleC185A_C_MP)
@@ -1646,6 +1717,11 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
         {
+            if (presetNum == MODELS_NyleC250A_MP)
+                productInformation.model_number = {"NyleC250A_MP"};
+            if (presetNum == MODELS_NyleC250A_C_MP)
+                productInformation.model_number = {"NyleC250A_C_MP"};
+
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(50.);
             if (presetNum == MODELS_NyleC250A_C_MP)
@@ -1682,6 +1758,8 @@ void HPWH::initPreset(MODELS presetNum)
     else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum &&
              presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
     {
+        productInformation.manufacturer = {"Rheem"};
+
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1727,6 +1805,11 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
             presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
         {
+            if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP)
+                productInformation.model_number = {"HPHD60HNU_201_MP"};
+            else if (presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
+                productInformation.model_number = {"HPHD60VNU_201_MP"};
+
             setTankSize_adjustUA(250., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(17.4);
             compressor->perfMap.push_back({
@@ -1774,6 +1857,8 @@ void HPWH::initPreset(MODELS presetNum)
 
     else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
+        productInformation = {"Mitsubishi", "QAHV_N136TAU_HPB_SP"};
+
         setNumNodes(96);
         setpoint_C = 65;
 
@@ -2055,9 +2140,17 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
              presetNum == MODELS_SANCO2_119)
     {
+        productInformation.manufacturer = {"SANCO2"};
         setNumNodes(96);
         setpoint_C = 65;
         setpointFixed = true;
+
+        if (presetNum == MODELS_SANCO2_83)
+            productInformation.model_number = {"83"};
+        else if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+            productInformation.model_number = {"GS3_45HPA_US_SP"};
+        else if (presetNum == MODELS_SANCO2_119)
+            productInformation.model_number = {"119"};
 
         if (presetNum == MODELS_SANCO2_119)
         {
@@ -2245,6 +2338,13 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 ||
              presetNum == MODELS_RheemHBDR4550)
     {
+        if (presetNum == MODELS_AOSmithHPTU50)
+            productInformation = {"AOSmith", "HPTU50"};
+        if (presetNum == MODELS_RheemHBDR2250)
+            productInformation = {"Rheem", "HBDR2250"};
+        if (presetNum == MODELS_RheemHBDR4550)
+            productInformation = {"Rheem", "HBDR4550"};
+
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
@@ -2342,6 +2442,13 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithHPTU66 || presetNum == MODELS_RheemHBDR2265 ||
              presetNum == MODELS_RheemHBDR4565)
     {
+        if (presetNum == MODELS_AOSmithHPTU66)
+            productInformation = {"AOSmith", "HPTU66"};
+        if (presetNum == MODELS_RheemHBDR2265)
+            productInformation = {"Rheem", "HBDR2265"};
+        if (presetNum == MODELS_RheemHBDR4565)
+            productInformation = {"Rheem", "HBDR4565"};
+
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
@@ -2446,6 +2553,13 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 ||
              presetNum == MODELS_RheemHBDR4580)
     {
+        if (presetNum == MODELS_AOSmithHPTU80)
+            productInformation = {"AOSmith", "HPTU80"};
+        if (presetNum == MODELS_RheemHBDR2280)
+            productInformation = {"Rheem", "HBDR2280"};
+        if (presetNum == MODELS_RheemHBDR4580)
+            productInformation = {"Rheem", "HBDR4580"};
+
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
@@ -2543,6 +2657,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithHPTU80_DR)
     {
+        productInformation = {"AOSmith", "HPTU80_DR"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -2613,8 +2729,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
-        j_productInformation["manufacturer"] = "AOSmith";
-        j_productInformation["model_number"] = "CAHP120";
+        productInformation = {"AOSmith", "CAHP120"};
 
         setNumNodes(24);
         setpoint_C = F_TO_C(150.0);
@@ -2702,31 +2817,32 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
-        j_productInformation["manufacturer"] = "AOSmith";
+        productInformation.manufacturer = {"AOSmith"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
         {
-            j_productInformation["model_number"] = "HPTS40";
+            productInformation.model_number = {"HPTS40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
-            j_productInformation["model_number"] = "HPTS50";
+            productInformation.model_number = {"HPTS50"};
             tank->volume_L = GAL_TO_L(45.6);
             tank->UA_kJperHrC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            j_productInformation["model_number"] = "HPTS66";
+            productInformation.model_number = {"HPTS66"};
             tank->volume_L = GAL_TO_L(67.63);
             tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            j_productInformation["model_number"] = "HPTS80";
+            productInformation.model_number = {"HPTS80"};
             tank->volume_L = GAL_TO_L(81.94);
             tank->UA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
@@ -2796,6 +2912,8 @@ void HPWH::initPreset(MODELS presetNum)
 
     else if (presetNum == MODELS_GE2014STDMode)
     {
+        productInformation = {"GE", "2014STDMode"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -2861,6 +2979,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2014STDMode_80)
     {
+        productInformation = {"GE", "2014STDMode_80"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -2922,6 +3042,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2014)
     {
+        productInformation = {"GE", "2014"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -2990,6 +3112,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2014_80)
     {
+        productInformation = {"GE", "2014_80"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -3059,6 +3183,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2014_80DR)
     {
+        productInformation = {"GE", "2014_80DR"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -3192,26 +3318,32 @@ void HPWH::initPreset(MODELS presetNum)
     // If Rheem Premium
     else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80)
     {
+        productInformation.manufacturer = {"Rheem"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_Rheem2020Prem40)
         {
+            productInformation.model_number = {"2020Prem40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Prem50)
         {
+            productInformation.model_number = {"2020Prem50"};
             tank->volume_L = GAL_TO_L(45.1);
             tank->UA_kJperHrC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Prem65)
         {
+            productInformation.model_number = {"2020Prem65"};
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Prem80)
         {
+            productInformation.model_number = {"2020Prem80"};
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
         }
@@ -3280,26 +3412,32 @@ void HPWH::initPreset(MODELS presetNum)
     // If Rheem Build
     else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80)
     {
+        productInformation.manufacturer = {"Rheem"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_Rheem2020Build40)
         {
+            productInformation.model_number = {"2020Build40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Build50)
         {
+            productInformation.model_number = {"2020Build50"};
             tank->volume_L = GAL_TO_L(45.1);
             tank->UA_kJperHrC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Build65)
         {
+            productInformation.model_number = {"2020Build65"};
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Build80)
         {
+            productInformation.model_number = {"2020Build80"};
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
         }
@@ -3365,28 +3503,33 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80)
     {
+        productInformation.manufacturer = {"Rheem"};
         setNumNodes(12);
 
         if (presetNum == MODELS_RheemPlugInShared40)
         {
+            productInformation.model_number = {"PlugInShared40"};
             tank->volume_L = GAL_TO_L(36.0);
             tank->UA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
         {
+            productInformation.model_number = {"PlugInShared50"};
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 8.55;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared65)
         {
+            productInformation.model_number = {"PlugInShared65"};
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
             setpoint_C = F_TO_C(127.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared80)
         {
+            productInformation.model_number = {"PlugInShared80"};
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
             setpoint_C = F_TO_C(127.0);
@@ -3433,15 +3576,18 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_RheemPlugInDedicated40 ||
              presetNum == MODELS_RheemPlugInDedicated50)
     {
+        productInformation.manufacturer = {"Rheem"};
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
         if (presetNum == MODELS_RheemPlugInDedicated40)
         {
+            productInformation.model_number = {"PlugInDedicated40"};
             tank->volume_L = GAL_TO_L(36);
             tank->UA_kJperHrC = 5.5;
         }
         else if (presetNum == MODELS_RheemPlugInDedicated50)
         {
+            productInformation.model_number = {"PlugInDedicated50"};
             tank->volume_L = GAL_TO_L(45);
             tank->UA_kJperHrC = 6.33;
         }
@@ -3485,8 +3631,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_RheemHB50)
     {
-        j_productInformation["manufacturer"] = "Rheem";
-        j_productInformation["model_number"] = "HB50";
+        productInformation = {"Rheem", "HB50"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3556,6 +3701,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_Stiebel220E)
     {
+        productInformation = {"Stiebel", "220E"};
+
         setNumNodes(12);
         setpoint_C = F_TO_C(127);
 
@@ -4153,8 +4300,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AquaThermAire)
     {
-        j_productInformation["manufacturer"] = "Villara";
-        j_productInformation["model_number"] = "AquaThermAire";
+        productInformation = {"Villara", "AquaThermAire"};
 
         setNumNodes(12);
         setpoint_C = 50.;
@@ -4367,41 +4513,25 @@ void HPWH::initPreset(MODELS presetNum)
     else if ((MODELS_BradfordWhiteAeroThermRE2H50 <= presetNum) &&
              (presetNum <= MODELS_BradfordWhiteAeroThermRE2H80))
     {
-        j_productInformation["manufacturer"] = "BRADFORD WHITE";
-
+        productInformation.manufacturer = {"Bradford White"};
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
-            j_productInformation["model_number"] = "RE2H50S*-*****";
-            j_rating10CFR430["certified_reference_number"] = "200094643";
-            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(50.) / 1000.;
-            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(65.) / 1000.;
-            j_rating10CFR430["recovery_efficiency"] = 4.06;
-            j_rating10CFR430["uniform_energy_factor"] = 3.44;
+            productInformation.model_number = {"AeroThermRE2H50"};
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 6.8373;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
-            j_productInformation["model_number"] = "RE2H65T**-*****";
-            j_rating10CFR430["certified_reference_number"] = "204835481";
-            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(65.) / 1000.;
-            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(79.) / 1000.;
-            j_rating10CFR430["recovery_efficiency"] = 3.91;
-            j_rating10CFR430["uniform_energy_factor"] = 3.64;
+            productInformation.model_number = {"AeroThermRE2H65"};
             tank->volume_L = GAL_TO_L(64.0);
             tank->UA_kJperHrC = 6.7292;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
-            j_productInformation["model_number"] = "RE2H80T*-*****";
-            j_rating10CFR430["certified_reference_number"] = "200094645";
-            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
-            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(88.) / 1000.;
-            j_rating10CFR430["recovery_efficiency"] = 3.92;
-            j_rating10CFR430["uniform_energy_factor"] = 3.59;
+            productInformation.model_number = {"AeroThermRE2H80"};
             tank->volume_L = GAL_TO_L(75.0);
             tank->UA_kJperHrC = 7.2217;
         }
@@ -4465,28 +4595,20 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if ((presetNum == MODELS_LG_APHWC50) || (presetNum == MODELS_LG_APHWC80))
     { //
-        j_productInformation["manufacturer"] = "LG";
+        productInformation.manufacturer = {"LG"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
 
         if (presetNum == MODELS_LG_APHWC50)
         {
-            j_productInformation["model_number"] = "APHWC50";
-            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(58.) / 1000.;
-            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(76.) / 1000.;
-            j_rating10CFR430["recovery_efficiency"] = 4.10;
-            j_rating10CFR430["uniform_energy_factor"] = 3.93;
+            productInformation.model_number = {"APHWC50"};
             tank->volume_L = GAL_TO_L(52.8);
             tank->UA_kJperHrC = 7.78;
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
-            j_productInformation["model_number"] = "APHWC80";
-            j_rating10CFR430["nominal_tank_volume"] = GAL_TO_L(80.) / 1000.;
-            j_rating10CFR430["first_hour_rating"] = GAL_TO_L(94.) / 1000.;
-            j_rating10CFR430["recovery_efficiency"] = 4.10;
-            j_rating10CFR430["uniform_energy_factor"] = 3.90;
+            productInformation.model_number = {"APHWC80"};
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
         }

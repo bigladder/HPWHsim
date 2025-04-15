@@ -210,9 +210,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
-    j_productInformation = hpwh.j_productInformation;
-    j_rating10CFR430 = hpwh.j_rating10CFR430;
-
     return *this;
 }
 
@@ -4507,8 +4504,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    productInformation_to_json(rswh, productInformation);
-    json_from_rating10CFR430(rswh, rating10CFR430);
+    productInformation.from(rswh);
 
     auto& performance = rswh.performance;
 
@@ -4726,6 +4722,11 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
 
 void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 {
+    generate_metadata<hpwh_data_model::hpwh_sim_input::Schema>(
+        hsi,
+        "HPWHSimInput",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml");
+
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
     checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
@@ -4756,10 +4757,13 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const
 {
-    std::string_view s = "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSINTEGRATEDWATERHEATER.schema.yaml";
-    generate_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(rswh, s);
-    set_productInformation_from_json(j_productInformation, rswh);
-    set_rating10CFR430_from_json(j_rating10CFR430, rswh);
+    generate_metadata<hpwh_data_model::rsintegratedwaterheater::Schema>(
+        rswh,
+        "RSINTEGRATEDWATERHEATER",
+        "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
+        "RSINTEGRATEDWATERHEATER.schema.yaml");
+
+    productInformation.to(rswh);
 
     auto& performance = rswh.performance;
 

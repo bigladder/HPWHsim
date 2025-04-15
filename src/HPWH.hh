@@ -289,9 +289,85 @@ class HPWH : public Courier::Sender
         MODELS_LG_APHWC50 = 600,
         MODELS_LG_APHWC80 = 601
     };
-    
-    nlohmann::json j_productInformation;
-    nlohmann::json j_rating10CFR430;
+
+    /// data entry to/from schema
+    template <typename T>
+    class Entry
+    {
+      private:
+        T t;
+        bool is_set = false;
+
+      public:
+        Entry(const T& t_in, bool is_set_in) : is_set(is_set_in)
+        {
+            if (is_set)
+                t = t_in;
+            else
+                t = T();
+        }
+        Entry(const T& t_in) : t(t_in), is_set(true) {}
+        Entry() : T(T()), is_set(false) {}
+
+        T operator()() const { return is_set ? t : T(); }
+        bool isSet() const { return is_set; }
+    };
+
+    struct ProductInformation
+    {
+        Entry<std::string> manufacturer;
+        Entry<std::string> model_number;
+        ProductInformation() : manufacturer("", false), model_number("", false) {}
+        ProductInformation(std::string manufacturer_in, std::string model_number_in)
+            : manufacturer(manufacturer_in), model_number(model_number_in)
+        {
+        }
+        bool empty() const { return !(manufacturer.isSet() || model_number.isSet()); }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer fields from schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void from(const RSTYPE& rs)
+        {
+            if (rs.description_is_set)
+            {
+                auto& desc = rs.description;
+                if (desc.product_information_is_set)
+                {
+                    auto& info = desc.product_information;
+                    manufacturer = {info.manufacturer, info.manufacturer_is_set};
+                    model_number = {info.model_number, info.model_number_is_set};
+                }
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer fields to schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void to(RSTYPE& rs) const
+        {
+            auto& desc = rs.description;
+            auto& prod_info = desc.product_information;
+
+            prod_info.manufacturer_is_set = manufacturer.isSet();
+            prod_info.manufacturer = manufacturer();
+
+            prod_info.model_number_is_set = model_number.isSet();
+            prod_info.model_number = model_number();
+
+            bool set_prod_info = !empty();
+            checkTo(prod_info,
+                    desc.product_information_is_set,
+                    desc.product_information,
+                    set_prod_info);
+
+            bool set_desc = set_prod_info;
+            checkTo(desc, rs.description_is_set, rs.description, set_desc);
+        }
+
+    } productInformation;
 
     void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
@@ -304,42 +380,6 @@ class HPWH : public Courier::Sender
 
     void from(hpwh_data_model::rsintegratedwaterheater::Description& desc);
     void to(hpwh_data_model::rsintegratedwaterheater::Description& desc) const;
-
-    static void to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi,
-                        nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
-            nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs,
-            nlohmann::json& j);
-
-    static void to_json(const hpwh_data_model::rstank::RSTANK& rshs, nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs,
-            nlohmann::json& j);
-
-    static void to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs,
-                        nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE& rshs,
-            nlohmann::json& j);
-
-    static void
-    to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic,
-            nlohmann::json& j);
-
-    static void to_json(
-        const hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic& soclogic,
-        nlohmann::json& j);
-
-    static void to_json(
-        const hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic& templogic,
-        nlohmann::json& j);
 
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant

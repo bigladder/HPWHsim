@@ -2,6 +2,7 @@
 File of the heating logics available in HPWHsim
 */
 
+#include "HPWHUtils.hh"
 #include "HPWHHeatingLogic.hh"
 #include "Tank.hh"
 
