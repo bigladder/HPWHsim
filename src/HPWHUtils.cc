@@ -1,5 +1,5 @@
 ﻿/*
- * Implementation of static HPWH utility functions
+ * Implementation of HPWH utility functions
  */
 
 #include "HPWH.hh"
@@ -274,12 +274,12 @@ void add_to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohm
     {
     case hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL:
         j["system_type"] = "CENTRAL";
-        ::add_to_json(hsi.central_system, j["central_system"]);
+        add_to_json(hsi.central_system, j["central_system"]);
         break;
 
     case hpwh_data_model::hpwh_sim_input::HPWHSystemType::INTEGRATED:
         j["system_type"] = "INTEGRATED";
-        ::add_to_json(hsi.integrated_system, j["integrated_system"]);
+        add_to_json(hsi.integrated_system, j["integrated_system"]);
         break;
 
     default:
@@ -300,7 +300,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
     auto& tank = perf.tank;
 
     nlohmann::json j_tank;
-    ::add_to_json(tank, j_tank);
+    add_to_json(tank, j_tank);
     j_perf["tank"] = j_tank;
 
     nlohmann::json j_heat_source_configs;
@@ -328,7 +328,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
             auto hs = reinterpret_cast<
                 hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(
                 heat_source.get());
-            ::add_to_json(*hs, j_heat_source);
+            add_to_json(*hs, j_heat_source);
         }
         if (heat_source_config.heat_source_type ==
             hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER)
@@ -337,7 +337,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
             auto hs = reinterpret_cast<
                 hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(
                 heat_source.get());
-            ::add_to_json(*hs, j_heat_source);
+            add_to_json(*hs, j_heat_source);
         }
         j_heat_source_config["heat_source"] = j_heat_source;
 
@@ -347,7 +347,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
             for (auto& logic : heat_source_config.turn_on_logic)
             {
                 nlohmann::json j_logic;
-                ::add_to_json(logic, j_logic);
+                add_to_json(logic, j_logic);
                 j_turn_on_logic.push_back(j_logic);
             }
             j_heat_source_config["turn_on_logic"] = j_turn_on_logic;
@@ -359,7 +359,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
             for (auto& logic : heat_source_config.shut_off_logic)
             {
                 nlohmann::json j_logic;
-                ::add_to_json(logic, j_logic);
+                add_to_json(logic, j_logic);
                 j_shut_off_logic.push_back(j_logic);
             }
             j_heat_source_config["shut_off_logic"] = j_shut_off_logic;
@@ -368,7 +368,7 @@ void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWAT
         if (heat_source_config.standby_logic_is_set)
         {
             nlohmann::json j_standby_logic;
-            ::add_to_json(heat_source_config.standby_logic, j_standby_logic);
+            add_to_json(heat_source_config.standby_logic, j_standby_logic);
             j_heat_source_config["standby_logic"] = j_standby_logic;
         }
 
@@ -408,7 +408,7 @@ void add_to_json(
     nlohmann::json& j)
 {
     nlohmann::json j_tank;
-    ::add_to_json(cwhs.tank, j_tank);
+    add_to_json(cwhs.tank, j_tank);
     j["tank"] = j_tank;
 
     nlohmann::json j_heat_source_configs;
@@ -436,7 +436,7 @@ void add_to_json(
             auto hs = reinterpret_cast<
                 hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(
                 heat_source.get());
-            ::add_to_json(*hs, j_heat_source);
+            add_to_json(*hs, j_heat_source);
         }
         if (heat_source_config.heat_source_type ==
             hpwh_data_model::heat_source_configuration::HeatSourceType::CONDENSER)
@@ -445,7 +445,7 @@ void add_to_json(
             auto hs = reinterpret_cast<
                 hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(
                 heat_source.get());
-            ::add_to_json(*hs, j_heat_source);
+            add_to_json(*hs, j_heat_source);
         }
         if (heat_source_config.heat_source_type ==
             hpwh_data_model::heat_source_configuration::HeatSourceType::AIRTOWATERHEATPUMP)
@@ -454,7 +454,7 @@ void add_to_json(
             auto hs =
                 reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
                     heat_source.get());
-            ::add_to_json(*hs, j_heat_source);
+            add_to_json(*hs, j_heat_source);
         }
         j_heat_source_config["heat_source"] = j_heat_source;
 
@@ -464,7 +464,7 @@ void add_to_json(
             for (auto& logic : heat_source_config.turn_on_logic)
             {
                 nlohmann::json j_logic;
-                ::add_to_json(logic, j_logic);
+                add_to_json(logic, j_logic);
                 j_turn_on_logic.push_back(j_logic);
             }
             j_heat_source_config["turn_on_logic"] = j_turn_on_logic;
@@ -476,7 +476,7 @@ void add_to_json(
             for (auto& logic : heat_source_config.shut_off_logic)
             {
                 nlohmann::json j_logic;
-                ::add_to_json(logic, j_logic);
+                add_to_json(logic, j_logic);
                 j_shut_off_logic.push_back(j_logic);
             }
             j_heat_source_config["shut_off_logic"] = j_shut_off_logic;
@@ -485,7 +485,7 @@ void add_to_json(
         if (heat_source_config.standby_logic_is_set)
         {
             nlohmann::json j_standby_logic;
-            ::add_to_json(heat_source_config.standby_logic, j_standby_logic);
+            add_to_json(heat_source_config.standby_logic, j_standby_logic);
             j_heat_source_config["standby_logic"] = j_standby_logic;
         }
 
@@ -822,10 +822,10 @@ void add_to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic&
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                ::add_to_json(*reinterpret_cast<hpwh_data_model::heat_source_configuration::
-                                                    StateOfChargeBasedHeatingLogic*>(
-                                  heating_logic.heating_logic.get()),
-                              j_logic);
+                add_to_json(*reinterpret_cast<hpwh_data_model::heat_source_configuration::
+                                                  StateOfChargeBasedHeatingLogic*>(
+                                heating_logic.heating_logic.get()),
+                            j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
@@ -836,7 +836,7 @@ void add_to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic&
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                ::add_to_json(
+                add_to_json(
                     *reinterpret_cast<
                         hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic*>(
                         heating_logic.heating_logic.get()),
