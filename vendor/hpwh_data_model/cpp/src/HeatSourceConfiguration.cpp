@@ -87,7 +87,7 @@ namespace hpwh_data_model  {
 			json_get<heat_source_configuration::WeightedDistribution>(j, logger.get(), "heat_distribution", x.heat_distribution, x.heat_distribution_is_set, true);
 			json_get<std::vector<heat_source_configuration::HeatingLogic>>(j, logger.get(), "turn_on_logic", x.turn_on_logic, x.turn_on_logic_is_set, true);
 			json_get<std::vector<heat_source_configuration::HeatingLogic>>(j, logger.get(), "shut_off_logic", x.shut_off_logic, x.shut_off_logic_is_set, false);
-			json_get<heat_source_configuration::HeatingLogic>(j, logger.get(), "standby_logic", x.standby_logic, x.standby_logic_is_set, false);
+			json_get<heat_source_configuration::HeatingLogic>(j, logger.get(), "standby_logic", x.standby_logic, x.standby_logic_is_set, true);
 			json_get<std::string>(j, logger.get(), "backup_heat_source_id", x.backup_heat_source_id, x.backup_heat_source_id_is_set, false);
 			json_get<std::string>(j, logger.get(), "followed_by_heat_source_id", x.followed_by_heat_source_id, x.followed_by_heat_source_id_is_set, false);
 			json_get<std::string>(j, logger.get(), "companion_heat_source_id", x.companion_heat_source_id, x.companion_heat_source_id_is_set, false);
