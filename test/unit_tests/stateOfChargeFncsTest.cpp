@@ -14,8 +14,8 @@ TEST(StateOfChargeFunctionsTest, getSoC)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "Sanden80";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "Sanden80";
+    hpwh.initPreset(modelName);
 
     const double mainsT_C = F_TO_C(55.);
     const double minUsefulT_C = F_TO_C(110.);
@@ -56,8 +56,8 @@ TEST(StateOfChargeFunctionsTest, chargeBelowSetpoint)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxV_5_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxV_5_SP";
+    hpwh.initPreset(modelName);
 
     const double mainsT_C = F_TO_C(60.);
     double minUsefulT_C = F_TO_C(110.);

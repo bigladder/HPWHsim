@@ -14,6 +14,7 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 set(headers
         HPWHversion.in.hh
         HPWH.hh
+        HPWHFitter.hh
         )
 
 set(sources
@@ -22,6 +23,7 @@ set(sources
         HPWHHeatSources.cc
         HPWHHeatingLogics.cc
         HPWHpresets.cc
+        HPWHFitter.cc
         )
 
 set(library_sources

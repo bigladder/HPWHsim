@@ -36,8 +36,8 @@ TEST(MaxSetpointTest, scalableCompressor)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "TamScalable_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "TamScalable_SP";
+    hpwh.initPreset(modelName);
 
     double num;
     std::string why;
@@ -59,8 +59,8 @@ TEST(MaxSetpointTest, NyleC90A_SP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "NyleC90A_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "NyleC90A_SP";
+    hpwh.initPreset(modelName);
 
     double num;
     std::string why;
@@ -84,8 +84,8 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxV_5_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxV_5_SP";
+    hpwh.initPreset(modelName);
 
     double num;
     std::string why;
@@ -109,8 +109,8 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    hpwh.initPreset(modelName);
 
     double num;
     std::string why;
@@ -141,8 +141,8 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AOSmithCAHP120"; // Hybrid unit with a compressor with R134A
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AOSmithCAHP120"; // Hybrid unit with a compressor with R134A
+    hpwh.initPreset(modelName);
 
     double num;
     std::string why;
@@ -165,8 +165,8 @@ TEST(MaxSetpointTest, StorageTank)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "StorageTank"; // Hybrid unit with a compressor with R134A
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "StorageTank"; // Hybrid unit with a compressor with R134A
+    hpwh.initPreset(modelName);
     ;
 
     double num;
@@ -189,8 +189,8 @@ TEST(MaxSetpointTest, Sanden80)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "Sanden80"; // Fixed setpoint model
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "Sanden80"; // Fixed setpoint model
+    hpwh.initPreset(modelName);
 
     double num, num1;
     std::string why;
@@ -242,8 +242,8 @@ TEST(UtilityTest, setTemperatures)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "Rheem2020Prem50"; // 12-node model
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "Rheem2020Prem50"; // 12-node model
+    hpwh.initPreset(modelName);
 
     // test 1
     {
