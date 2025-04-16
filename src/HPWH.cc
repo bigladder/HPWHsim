@@ -50,7 +50,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <btwxt/btwxt.h>
 #include <fmt/format.h>
 
-#include <stdarg.h>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -2329,7 +2328,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (heatSources[i]->isAResistance())
             {
-                 returnPower_W += reinterpret_cast<Resistance*>(heatSources[i].get())->getPower_W();
+                returnPower_W += reinterpret_cast<Resistance*>(heatSources[i].get())->getPower_W();
             }
         }
     }
@@ -3532,9 +3531,11 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    j_heatsourceconfigs[heatsource]["maximum_refrigerant_temperature_C"] = tempDouble;
+                    j_heatsourceconfigs[heatsource]["maximum_refrigerant_temperature_C"] =
+                        tempDouble;
                 else if (units == "F")
-                    j_heatsourceconfigs[heatsource]["maximum_refrigerant_temperature_C"] = F_TO_C(tempDouble);
+                    j_heatsourceconfigs[heatsource]["maximum_refrigerant_temperature_C"] =
+                        F_TO_C(tempDouble);
                 else
                     send_warning("Invalid units.");
             }
@@ -5021,7 +5022,7 @@ HPWH::FirstHourRating HPWH::findFirstHourRating()
                     drawVolume_L = 0.;
                     isDrawing = false;
                     drMode = DR_ALLOW;
-                    maxTankT_C = tankT_C;        // initialize for next pass
+                    maxTankT_C = tankT_C;                // initialize for next pass
                     maxOutletT_C = tank->getOutletT_C(); // initialize for next pass
                     previousAverageOutletT_C = averageOutletT_C;
                     prevMinOutletT_C = minOutletT_C;
@@ -5686,20 +5687,20 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
     compressor->getCapacity(testConfiguration.ambientT_C,
-                           compressor->maxSetpoint_C,
-                           getSetpoint(),
-                           input_BTUperHr,
-                           cap_BTUperHr,
-                           cop1);
+                            compressor->maxSetpoint_C,
+                            getSetpoint(),
+                            input_BTUperHr,
+                            cap_BTUperHr,
+                            cop1);
     if (cop1 < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
     compressor->getCapacity(testConfiguration.ambientT_C,
-                           0., /// low condenserT_C
-                           getSetpoint(),
-                           input_BTUperHr,
-                           cap_BTUperHr,
-                           cop);
+                            0., /// low condenserT_C
+                            getSetpoint(),
+                            input_BTUperHr,
+                            cap_BTUperHr,
+                            cop);
     if (cop < cop1)
         send_error("COP slope is positive.");
 

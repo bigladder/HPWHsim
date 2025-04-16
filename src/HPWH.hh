@@ -18,7 +18,7 @@
 #include <courier/courier.h>
 #include <nlohmann/json.hpp>
 
-#include "hpwh-data-model.h"
+#include "hpwh-data-model.hh"
 #include "HPWHUtils.hh"
 
 namespace Btwxt

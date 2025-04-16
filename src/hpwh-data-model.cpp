@@ -1,5 +1,5 @@
 
-#include <hpwh-data-model.h>
+#include <hpwh-data-model.hh>
 
 #define JSON_HAS_CPP_17
 
