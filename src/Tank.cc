@@ -47,8 +47,6 @@ void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
                   perf.heat_exchanger_effectiveness,
                   1.);
     }
-
-    // bool diameter_is_set;
 }
 
 void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
@@ -74,8 +72,6 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
 
     else
         perf.heat_exchanger_effectiveness_is_set = false;
-
-    // bool diameter_is_set;
 }
 
 void HPWH::Tank::setAllDefaults()
