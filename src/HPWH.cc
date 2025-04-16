@@ -230,6 +230,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
+    productInformation = hpwh.productInformation;
+
     return *this;
 }
 
