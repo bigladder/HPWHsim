@@ -16,7 +16,7 @@ jobs:
             cxx: g++-11
             experimental: false
           - os: ubuntu
-            os_ver: "20.04"
+            os_ver: "22.04"
             config: Release
             coverage: false
             cc: gcc-10
@@ -37,7 +37,7 @@ jobs:
             cxx: clang++
             experimental: false
           - os: ubuntu
-            os_ver: "20.04"
+            os_ver: "22.04"
             config: Debug
             coverage: true
             cc: gcc-10
