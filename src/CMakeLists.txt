@@ -23,6 +23,7 @@ set(headers
         Resistance.hh
 
         hpwh-data-model.h
+        HPWHFitter.hh
         )
 
 set(sources
@@ -38,6 +39,7 @@ set(sources
         Resistance.cc
 
         hpwh-data-model.cpp
+        HPWHFitter.cc
         )
 
 set(library_sources

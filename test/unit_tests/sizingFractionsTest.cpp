@@ -16,8 +16,8 @@ TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "TamScalable_SP"; // Just a compressor with R134A
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "TamScalable_SP"; // Just a compressor with R134A
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 4. / logicSize;
@@ -34,8 +34,8 @@ TEST(SizingFractionsTest, Sanden80_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "Sanden80";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "Sanden80";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 8. / logicSize;
@@ -52,8 +52,8 @@ TEST(SizingFractionsTest, ColmacCxV_5_SP_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "ColmacCxV_5_SP";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "ColmacCxV_5_SP";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 4. / logicSize;
@@ -70,8 +70,8 @@ TEST(SizingFractionsTest, AOSmithHPTU50_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "AOSmithHPTU50";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "AOSmithHPTU50";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
@@ -88,8 +88,8 @@ TEST(SizingFractionsTest, GE_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "GE";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "GE";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
@@ -106,8 +106,8 @@ TEST(SizingFractionsTest, Stiebel220e_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "Stiebel220e";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "Stiebel220e";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (5. + 6.) / 2. / logicSize;
@@ -124,8 +124,8 @@ TEST(SizingFractionsTest, resTankRealistic_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "restankRealistic";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "restankRealistic";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     EXPECT_ANY_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
@@ -138,8 +138,8 @@ TEST(SizingFractionsTest, storageTank_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "StorageTank";
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "StorageTank";
+    hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
     EXPECT_ANY_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
@@ -152,8 +152,8 @@ TEST(SizingFractionsTest, getCompressorMinRuntime)
 {
     // get preset model
     HPWH hpwh;
-    const std::string sModelName = "TamScalable_SP"; // Just a compressor with R134A
-    hpwh.initPreset(sModelName);
+    const std::string modelName = "TamScalable_SP"; // Just a compressor with R134A
+    hpwh.initPreset(modelName);
 
     double expectedRunTime_min = 10.;
     double expectedRunTime_sec = expectedRunTime_min * 60.;

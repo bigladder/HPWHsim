@@ -10,16 +10,16 @@
 
 struct FixedSizeTest : public testing::Test
 {
-    const std::vector<std::string> sModelNames = {"AOSmithHPTS50",
-                                                  "AOSmithPHPT60",
-                                                  "AOSmithHPTU80",
-                                                  "Sanden80",
-                                                  "RheemHB50",
-                                                  "Stiebel220e",
-                                                  "GE502014",
-                                                  "Rheem2020Prem40",
-                                                  "Rheem2020Prem50",
-                                                  "Rheem2020Build50"};
+    const std::vector<std::string> modelNames = {"AOSmithHPTS50",
+                                                 "AOSmithPHPT60",
+                                                 "AOSmithHPTU80",
+                                                 "Sanden80",
+                                                 "RheemHB50",
+                                                 "Stiebel220e",
+                                                 "GE502014",
+                                                 "Rheem2020Prem40",
+                                                 "Rheem2020Prem50",
+                                                 "Rheem2020Build50"};
 };
 
 /*
@@ -29,11 +29,11 @@ TEST_F(FixedSizeTest, tankSizeFixed)
 {
     constexpr double tol = 1.e-4;
 
-    for (auto& sModelName : sModelNames)
+    for (auto& modelName : modelNames)
     {
         // get preset model
         HPWH hpwh;
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
 
         // get the initial tank size
         double intitialTankSize_gal = hpwh.getTankSize(HPWH::UNITS_GAL);

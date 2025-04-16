@@ -24,7 +24,7 @@ namespace hpwh_cli
 
 /// run
 static void run(const std::string& sSpecType,
-                const std::string& sModelName,
+                const std::string& modelName,
                 std::string sTestName,
                 std::string sOutputDir,
                 double airTemp);
@@ -36,8 +36,8 @@ CLI::App* add_run(CLI::App& app)
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File, JSON)");
 
-    static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+    static std::string modelName = "";
+    subcommand->add_option("-m,--model", modelName, "Model name")->required();
 
     static std::string sTestName = "";
     subcommand->add_option("-t,--test", sTestName, "Test name")->required();
@@ -48,7 +48,7 @@ CLI::App* add_run(CLI::App& app)
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
-    subcommand->callback([&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+    subcommand->callback([&]() { run(sSpecType, modelName, sTestName, sOutputDir, airTemp); });
 
     return subcommand;
 }
@@ -56,7 +56,7 @@ CLI::App* add_run(CLI::App& app)
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
 void run(const std::string& sSpecType,
-         const std::string& sModelName,
+         const std::string& modelName,
          std::string sFullTestName,
          std::string sOutputDir,
          double airTemp)
@@ -128,15 +128,15 @@ void run(const std::string& sSpecType,
     // Parse the model
     if (sSpecType_mod == "Preset")
     {
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
     }
     else if (sSpecType_mod == "File")
     {
-        hpwh.initFromFile(sModelName);
+        hpwh.initFromFile(modelName);
     }
     else if (sSpecType_mod == "JSON")
     {
-        hpwh.initFromJSON(sModelName);
+        hpwh.initFromJSON(modelName);
     }
     else
     {
@@ -184,7 +184,8 @@ void run(const std::string& sSpecType,
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
-    cout << "Running: " << sModelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
+
+    cout << "Running: " << modelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -353,7 +354,7 @@ void run(const std::string& sSpecType,
             header += strHeadSoC;
         }
         int csvOptions = HPWH::CSVOPT_NONE;
-        hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
+        hpwh.writeCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
     }
 
     // ------------------------------------- Simulate --------------------------------------- //
@@ -473,7 +474,7 @@ void run(const std::string& sSpecType,
             {
                 csvOptions |= HPWH::CSVOPT_IS_DRAWING;
             }
-            hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
+            hpwh.writeCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
         }
         else
         {
@@ -487,8 +488,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-
-        firstCol = sTestName + "," + sSpecType_mod + "," + sModelName;
+        firstCol = sTestName + "," + sSpecType_mod + "," + modelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
