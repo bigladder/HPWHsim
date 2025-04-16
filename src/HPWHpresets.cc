@@ -2453,8 +2453,8 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU66)
         {
-            productInformation = {"A. O. Smith", "HPTU-66N 1.."};
-            rating10CFR430.certified_reference_number = {"206428770"};
+            productInformation = {"A. O. Smith", "HPTU-66(?:N:DR:CTA) 1.."};
+            rating10CFR430.certified_reference_number = {"2064287(?:70|86|98)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
             rating10CFR430.recovery_efficiency = 2.65;
@@ -2569,9 +2569,9 @@ void HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4580)
     {
         if (presetNum == MODELS_AOSmithHPTU80)
-        {
-            productInformation = {"A. O. Smith", "HPTU-80N 1.."};
-            rating10CFR430.certified_reference_number = {"206428771"};
+        {   // note: HPTU-80DR initialized separately (see below)
+            productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
+            rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
             rating10CFR430.recovery_efficiency = 2.33;
@@ -2603,7 +2603,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-        // double split = 1.0 / 3.0;
         compressor->setCondensity({1., 0., 0., 0.});
 
         compressor->performanceMap.reserve(3);
@@ -2756,6 +2755,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
+        // discontinued?
         productInformation = {"A. O. Smith", "CAHP-120"};
 
         setNumNodes(24);
@@ -2850,7 +2850,7 @@ void HPWH::initPreset(MODELS presetNum)
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
-        {
+        {   // discontinued?
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
