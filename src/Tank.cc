@@ -454,22 +454,6 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
         else
         {
             double remainingDrawVolume_N = drawVolume_N;
-            if (drawVolume_L > volume_L)
-            {
-                for (int i = 0; i < getNumNodes(); i++)
-                {
-                    outletT_C += nodeTs_C[i];
-                    nodeTs_C[i] =
-                        (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) /
-                        drawVolume_L;
-                }
-                outletT_C = (outletT_C / getNumNodes() * volume_L +
-                             nodeTs_C[0] * (drawVolume_L - volume_L)) /
-                            drawVolume_L * remainingDrawVolume_N;
-
-                remainingDrawVolume_N = 0.;
-            }
-
             double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
             {
