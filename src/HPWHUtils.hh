@@ -12,6 +12,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "hpwh-data-model.h"
+
 template <typename T>
 void checkFrom(T& t, const bool is_set, const T t_new, const T t_default)
 {
@@ -101,5 +103,39 @@ nlohmann::json get_metadata_as_json(const RSTYPE& rs)
         j_metadata["time_of_creation"] = rs.metadata.time_of_creation;
     return j_metadata;
 }
+
+/// add fields from various schema objects to json
+void add_to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohmann::json& j);
+
+void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
+                 nlohmann::json& j);
+
+void add_to_json(
+    const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs,
+    nlohmann::json& j);
+
+void add_to_json(const hpwh_data_model::rstank::RSTANK& rshs, nlohmann::json& j);
+
+void add_to_json(
+    const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs,
+    nlohmann::json& j);
+
+void add_to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs,
+                 nlohmann::json& j);
+
+void add_to_json(
+    const hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE& rshs,
+    nlohmann::json& j);
+
+void add_to_json(const hpwh_data_model::heat_source_configuration::HeatingLogic& heating_logic,
+                 nlohmann::json& j);
+
+void add_to_json(
+    const hpwh_data_model::heat_source_configuration::StateOfChargeBasedHeatingLogic& soclogic,
+    nlohmann::json& j);
+
+void add_to_json(
+    const hpwh_data_model::heat_source_configuration::TemperatureBasedHeatingLogic& templogic,
+    nlohmann::json& j);
 
 #endif
