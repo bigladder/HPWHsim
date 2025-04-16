@@ -146,11 +146,10 @@ class HPWH::Condenser : public HPWH::HeatSource
         double coldSideTemperatureOffset_dC;
         double hotSideTemperatureOffset_dC;
         double extraPumpPower_W;
-    };
-
-    SecondaryHeatExchanger secondaryHeatExchanger; /**< adjustments for a approximating a secondary
-      heat exchanger by adding extra input energy for the pump and an increaes in the water to the
-      incoming waater temperature to the heatpump*/
+    } secondaryHeatExchanger;
+    /**< adjustments for a approximating a secondary
+    heat exchanger by adding extra input energy for the pump and an increaes in the water to the
+    incoming waater temperature to the heatpump*/
 
     /// Polynomials for evaluating input power and COP.
     /// Three different representations of the temperature variations are used:
