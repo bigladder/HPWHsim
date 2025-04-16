@@ -10,11 +10,12 @@ namespace hpwh_cli
 
 /// measure
 static void measure(const std::string& sSpecType,
-                    const std::string& sModelName,
+                    const std::string& modelName,
                     std::string sOutputDir,
                     bool sSupressOutput,
                     std::string sResultsFilename,
-                    std::string sCustomDrawProfile);
+                    std::string customDrawProfile,
+                    std::string sTestConfig);
 
 CLI::App* add_measure(CLI::App& app)
 {
@@ -23,132 +24,143 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
 
-    static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+    static std::string modelName = "";
+    subcommand->add_option("-m,--model", modelName, "Model name")->required();
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
-    static bool noData = false;
-    subcommand->add_flag("-n,--no_data", noData, "Suppress data output");
+    static bool saveTestData = true;
+    subcommand->add_flag("-v,--save_data", saveTestData, "Save test data");
 
     static std::string sResultsFilename = "";
     subcommand->add_option("-r,--results", sResultsFilename, "Results filename");
 
-    static std::string sCustomDrawProfile = "";
-    subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
+    static std::string drawProfileName = "";
+    subcommand->add_option("-p,--profile", drawProfileName, "Draw profile");
+
+    static std::string sTestConfig = "UEF";
+    subcommand->add_option("-c,--config", sTestConfig, "test configuration");
 
     subcommand->callback(
-        [&]() {
-            measure(
-                sSpecType, sModelName, sOutputDir, noData, sResultsFilename, sCustomDrawProfile);
+        [&]()
+        {
+            measure(sSpecType,
+                    modelName,
+                    sOutputDir,
+                    saveTestData,
+                    sResultsFilename,
+                    drawProfileName,
+                    sTestConfig);
         });
 
     return subcommand;
 }
 
 void measure(const std::string& sSpecType,
-             const std::string& sModelName,
+             const std::string& modelName,
              std::string sOutputDir,
-             bool sSupressOutput,
+             bool saveTestData,
              std::string sResultsFilename,
-             std::string sCustomDrawProfile)
+             std::string drawProfileName,
+             std::string sTestConfig)
 {
-    HPWH::StandardTestSummary standardTestSummary;
+    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
-    HPWH::StandardTestOptions standardTestOptions;
-    standardTestOptions.saveOutput = false;
-    standardTestOptions.sOutputFilename = "";
-    standardTestOptions.sOutputDirectory = "";
-    standardTestOptions.outputStream = &std::cout;
-    standardTestOptions.changeSetpoint = true;
-    standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
-
-    bool useResultsFile = false;
-
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
-    if (sOutputDir != "")
-    {
-        standardTestOptions.saveOutput = true;
-        standardTestOptions.sOutputDirectory = sOutputDir;
-
-        if (sResultsFilename != "")
-        {
-            std::ostream* tempStream = new std::ofstream;
-            std::ofstream* resultsFile = static_cast<std::ofstream*>(tempStream);
-            resultsFile->open(sResultsFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
-            if (resultsFile->is_open())
-            {
-                standardTestOptions.outputStream = resultsFile;
-                useResultsFile = true;
-            }
-        }
-    }
-    standardTestOptions.saveOutput = !sSupressOutput;
-    bool useCustomDrawProfile = (sCustomDrawProfile != "");
-
-    for (auto& c : sPresetOrFile)
+    for (auto& c : presetOrFile)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (sPresetOrFile.length() > 0)
+    if (presetOrFile.length() > 0)
     {
-        sPresetOrFile[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+        presetOrFile[0] =
+            static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
     }
 
     HPWH hpwh;
-    if (sPresetOrFile == "Preset")
+    if (presetOrFile == "Preset")
     {
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
     }
     else
     {
-        std::string inputFile = sModelName;
+        std::string inputFile = modelName;
         hpwh.initFromFile(inputFile);
     }
 
-    if (useCustomDrawProfile)
+    presetOrFile[0] = // capitalize first char
+        static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
+
+    std::string results = "";
+    auto designation = HPWH::FirstHourRating::Designation::Medium;
+
+    // set draw profile
+    if (drawProfileName != "")
     {
         bool foundProfile = false;
-        for (auto& c : sCustomDrawProfile)
+        if (drawProfileName.length() > 0)
         {
-            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
-        if (sCustomDrawProfile.length() > 0)
-        {
-            sCustomDrawProfile[0] =
-                static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
-        }
-        for (const auto& [key, value] : HPWH::FirstHourRating::sDesigMap)
-        {
-            if (value == sCustomDrawProfile)
+            // make lowercase
+            for (auto& c : drawProfileName)
             {
-                hpwh.customTestOptions.overrideFirstHourRating = true;
-                hpwh.customTestOptions.desig = key;
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
+
+            // make first char upper
+            drawProfileName[0] =
+                static_cast<char>(std::toupper(static_cast<unsigned char>(drawProfileName[0])));
+        }
+        for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
+        {
+            if (value == drawProfileName)
+            {
+                designation = key;
                 foundProfile = true;
+                results.append(fmt::format("\tCustom Draw Profile: {}\n", drawProfileName));
                 break;
             }
         }
         if (!foundProfile)
         {
-            std::cout << "Invalid input: Draw profile name not found.\n";
+            hpwh.get_courier()->send_error("Invalid input: Draw profile name not found.");
             exit(1);
         }
     }
-
-    *standardTestOptions.outputStream << "Spec type: " << sPresetOrFile << "\n";
-    *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
-
-    standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
-
-    HPWH::FirstHourRating firstHourRating;
-    hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
-
-    if (useResultsFile)
+    else
     {
-        delete standardTestOptions.outputStream;
+        auto firstHourRating = hpwh.findFirstHourRating();
+        designation = firstHourRating.designation;
+        results.append(firstHourRating.report());
+    }
+
+    // select test configuration
+    transform(sTestConfig.begin(),
+              sTestConfig.end(),
+              sTestConfig.begin(),
+              ::toupper); // make uppercase
+    HPWH::TestConfiguration testConfiguration = HPWH::testConfiguration_UEF;
+    if (sTestConfig == "E50")
+        testConfiguration = HPWH::testConfiguration_E50;
+    else if (sTestConfig == "E95")
+        testConfiguration = HPWH::testConfiguration_E95;
+
+    auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
+    if (saveTestData)
+    {
+    }
+    results.append(testSummary.report());
+
+    hpwh.get_courier()->send_info("\n" + results);
+    if (sResultsFilename != "")
+    {
+        auto resultsStream = std::make_shared<std::ofstream>();
+        if (sOutputDir != "")
+            sResultsFilename = sOutputDir + "/" + sResultsFilename;
+        resultsStream->open(sResultsFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
+        if (resultsStream->is_open())
+        {
+            *resultsStream << results;
+        }
     }
 }
 } // namespace hpwh_cli

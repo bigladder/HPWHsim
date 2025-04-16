@@ -19,8 +19,8 @@ TEST(EnergyBalanceTest, energyBalance)
     {
         // get preset model
         HPWH hpwh;
-        const std::string sModelName = "AOSmithHPTS50";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "AOSmithHPTS50";
+        hpwh.initPreset(modelName);
 
         const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
@@ -49,15 +49,15 @@ TEST(EnergyBalanceTest, energyBalance)
             ++i_min;
         } while (result && (i_min < testDuration_min));
 
-        EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
+        EXPECT_TRUE(result) << "Energy balance failed for model " << modelName;
     }
 
     /* storage tank with extra heat (solar) */
     {
         // get preset model
         HPWH hpwh;
-        const std::string sModelName = "StorageTank";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "StorageTank";
+        hpwh.initPreset(modelName);
 
         const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
@@ -88,7 +88,7 @@ TEST(EnergyBalanceTest, energyBalance)
             ++i_min;
         } while (result && (i_min < testDuration_min));
 
-        EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
+        EXPECT_TRUE(result) << "Energy balance failed for model " << modelName;
     }
 
     /* high draw */
