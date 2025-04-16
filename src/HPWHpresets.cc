@@ -1267,8 +1267,6 @@ void HPWH::initPreset(MODELS presetNum)
     // If Nyle single pass preset
     else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
     {
-        productInformation.manufacturer = {"Nyle"};
-
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1281,6 +1279,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+        compressor->productInformation.manufacturer = {"Nyle"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
