@@ -163,7 +163,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// 3.  two-dimensional polynomial (six terms each) wrt external and condenser
     ///     temperatures.The variation with external temperature
     ///     is clipped at the specified temperature.
-    struct PerfPoint
+    struct PerformancePoint
     {
         double T_F;
         std::vector<double> inputPower_coeffs;
@@ -174,7 +174,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// For case 1. above, the map typically contains multiple points, at various temperatures.
     /// Linear interpolation is applied to the collection of points.
     /// Only the first entry is used for cases 2. and 3.
-    std::vector<PerfPoint> perfMap;
+    std::vector<PerformancePoint> performanceMap;
 
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
@@ -187,6 +187,8 @@ class HPWH::Condenser : public HPWH::HeatSource
     static void
     regressedMethodMP(double& ynew, const std::vector<double>& coefficents, double x1, double x2);
     /**< Does a calculation based on the five term regression equation for MP split systems  */
+
+    int getAmbientT_index(double ambientT_C);
 
     void getCapacityFromMap(double environmentT_C,
                             double heatSourceT_C,
