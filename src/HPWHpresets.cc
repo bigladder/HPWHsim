@@ -584,7 +584,7 @@ void HPWH::initPreset(MODELS presetNum)
     // voltex 60 gallon
     else if (presetNum == MODELS_AOSmithPHPT60)
     {
-        productInformation = {"AOSmith", "PHPT60"};
+        productInformation = {"A. O. Smith", "PHPT60"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -658,7 +658,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithPHPT80)
     {
-        productInformation = {"AOSmith", "PHPT80"};
+        productInformation = {"A. O. Smith", "PHPT80"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -826,7 +826,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
-        compressor->productInformation.manufacturer = {"AOSmith"};
+        compressor->productInformation.manufacturer = {"A. O. Smith"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -2342,7 +2342,7 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU50)
         {
-            productInformation = {"AOSmith", "HPTU-50N 1**"};
+            productInformation = {"A. O. Smith", "HPTU-50N 1.."};
             rating10CFR430.certified_reference_number = {"206428769"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(66.) / 1000.;
@@ -2453,7 +2453,7 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU66)
         {
-            productInformation = {"AOSmith", "HPTU-66N 1**"};
+            productInformation = {"A. O. Smith", "HPTU-66N 1.."};
             rating10CFR430.certified_reference_number = {"206428770"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
@@ -2570,7 +2570,7 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU80)
         {
-            productInformation = {"AOSmith", "HPTU-80N 1**"};
+            productInformation = {"A. O. Smith", "HPTU-80N 1.."};
             rating10CFR430.certified_reference_number = {"206428771"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
@@ -2679,7 +2679,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithHPTU80_DR)
     {
-        productInformation = {"AOSmith", "HPTU-80DR 1**"};
+        productInformation = {"A. O. Smith", "HPTU-80DR 1.."};
         rating10CFR430.certified_reference_number = {"206428809"};
         rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
         rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
@@ -2756,7 +2756,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
-        productInformation = {"AOSmith", "CAHP120"};
+        productInformation = {"A. O. Smith", "CAHP120"};
 
         setNumNodes(24);
         setpoint_C = F_TO_C(150.0);
@@ -2844,20 +2844,19 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
-        productInformation.manufacturer = {"AOSmith"};
+        productInformation.manufacturer = {"A. O. Smith"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
         {
-            productInformation.model_number = {"HPTS40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
-            productInformation.model_number = {"HPTS-50 2**"};
+            productInformation.model_number = {"HPTS-50 2.."};
             rating10CFR430.certified_reference_number = {"208531033"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
@@ -2868,13 +2867,23 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            productInformation.model_number = {"HPTS66"};
+            productInformation.model_number = {"HPTS-66 2.."};
+            rating10CFR430.certified_reference_number = {"208531171"};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(82.) / 1000.;
+            rating10CFR430.recovery_efficiency = 4.25;
+            rating10CFR430.uniform_energy_factor = 3.70;
             tank->volume_L = GAL_TO_L(67.63);
             tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            productInformation.model_number = {"HPTS80"};
+            productInformation.model_number = {"HPTS-80 2.."};
+            rating10CFR430.certified_reference_number = {"208531171"};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(95.) / 1000.;
+            rating10CFR430.recovery_efficiency = 4.30;
+            rating10CFR430.uniform_energy_factor = 3.88;
             tank->volume_L = GAL_TO_L(81.94);
             tank->UA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
@@ -4564,7 +4573,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
-            productInformation.model_number = {"AeroThermRE2H50"};
+            productInformation.model_number = {"RE2H50S.-....."};
             rating10CFR430.certified_reference_number = {"200094643"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
@@ -4575,7 +4584,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
-            productInformation.model_number = {"AeroThermRE2H65"};
+            productInformation.model_number = {"RE2H65T..-....."};
             rating10CFR430.certified_reference_number = {"204835481"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
@@ -4586,7 +4595,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
-            productInformation.model_number = {"AeroThermRE2H80"};
+            productInformation.model_number = {"RE2H80T.-....."};
             rating10CFR430.certified_reference_number = {"200094645"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(88.) / 1000.;
@@ -4662,7 +4671,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_LG_APHWC50)
         {
-            productInformation.model_number = {"APHWC501M"};
+            productInformation.model_number = {"APHWC501."};
             rating10CFR430.certified_reference_number = {"213352429"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(58.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(76.) / 1000.;
@@ -4673,7 +4682,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
-            productInformation.model_number = {"APHWC801M"};
+            productInformation.model_number = {"APHWC801."};
             rating10CFR430.certified_reference_number = {"213363354"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(94.) / 1000.;
