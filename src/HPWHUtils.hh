@@ -12,7 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "hpwh-data-model.h"
+#include "hpwh-data-model.hh"
 
 //-----------------------------------------------------------------------------
 ///	@brief	assign t_new to t if is_set, else assign t_default

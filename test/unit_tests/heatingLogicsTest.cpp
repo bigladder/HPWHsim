@@ -45,11 +45,11 @@ struct HeatingLogicsTest : public testing::Test
  */
 TEST_F(HeatingLogicsTest, highShutOffSP)
 {
-    for (auto& sModelName : sHighShutOffSP_modelNames)
+    for (auto& modelName : sHighShutOffSP_modelNames)
     {
         // get preset model
         HPWH hpwh;
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
 
         { // testHasEnteringWaterShutOff
             int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
@@ -147,11 +147,11 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
  */
 TEST_F(HeatingLogicsTest, noShutOffMP_external)
 {
-    for (auto& sModelName : sNoHighShutOffMP_externalModelNames)
+    for (auto& modelName : sNoHighShutOffMP_externalModelNames)
     {
         // get preset model
         HPWH hpwh;
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
 
         { // testDoesNotHaveEnteringWaterShutOff
             int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
@@ -178,11 +178,11 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
     const double externalT_C = 20.;
     const double setpointT_C = F_TO_C(149.);
 
-    for (auto& sModelName : sCombinedModelNames)
+    for (auto& modelName : sCombinedModelNames)
     {
         // get preset model
         HPWH hpwh;
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
 
         if (!hpwh.isSetpointFixed())
         {
@@ -295,11 +295,11 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
  */
 TEST_F(HeatingLogicsTest, noHighShutOffIntegrated)
 {
-    for (auto& sModelName : sNoHighShutOffIntegratedModelNames)
+    for (auto& modelName : sNoHighShutOffIntegratedModelNames)
     {
         // get preset model
         HPWH hpwh;
-        hpwh.initPreset(sModelName);
+        hpwh.initPreset(modelName);
 
         int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
         { // testDoesNotHaveEnteringWaterShutOff
@@ -319,11 +319,11 @@ TEST(ExtraHeatTest, extraHeat)
 {
     constexpr double tol = 1.e-4;
 
-    const std::string sModelName = "StorageTank";
+    const std::string modelName = "StorageTank";
 
     // get preset model
     HPWH hpwh;
-    hpwh.initPreset(sModelName);
+    hpwh.initPreset(modelName);
 
     const double ambientT_C = 20.;
     const double externalT_C = 20.;

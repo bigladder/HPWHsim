@@ -20,8 +20,9 @@ set(headers
         Tank.hh
         Condenser.hh
         Resistance.hh
- 
-        hpwh-data-model.h
+
+        hpwh-data-model.hh
+        HPWHFitter.hh
         )
 
 set(sources
@@ -30,12 +31,15 @@ set(sources
         HPWHUtils.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
+        HPWH.cc
         HPWHpresets.cc
+
         Tank.cc
         Condenser.cc
         Resistance.cc
 
         hpwh-data-model.cpp
+        HPWHFitter.cc
         )
 
 set(library_sources

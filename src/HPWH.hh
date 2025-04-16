@@ -16,10 +16,9 @@
 #include <unordered_map>
 
 #include <courier/courier.h>
-
 #include <nlohmann/json.hpp>
 
-#include "hpwh-data-model.h"
+#include "hpwh-data-model.hh"
 #include "HPWHUtils.hh"
 
 namespace Btwxt
@@ -93,6 +92,15 @@ class HPWH : public Courier::Sender
     HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
+
+    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
+    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
+
+    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
+    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
+
+    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
+    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -368,18 +376,6 @@ class HPWH : public Courier::Sender
         }
 
     } productInformation;
-
-    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
-    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
-
-    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
-    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
-
-    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
-    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
-
-    void from(hpwh_data_model::rsintegratedwaterheater::Description& desc);
-    void to(hpwh_data_model::rsintegratedwaterheater::Description& desc) const;
 
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
@@ -737,11 +733,11 @@ class HPWH : public Courier::Sender
     };
     void setMinutesPerStep(double newMinutesPerStep);
 
-    int WriteCSVHeading(std::ofstream& outFILE,
+    int writeCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
                         int nTCouples = 6,
                         int options = CSVOPT_NONE) const;
-    int WriteCSVRow(std::ofstream& outFILE,
+    int writeCSVRow(std::ofstream& outFILE,
                     const char* preamble = "",
                     int nTCouples = 6,
                     int options = CSVOPT_NONE) const;
@@ -987,6 +983,9 @@ class HPWH : public Courier::Sender
       moving heat from the water to the space is the positive direction
       negative should occur seldom */
 
+    double getTankVolume_L() const;
+    /**< get the tank volume (L) */
+
     double getTankHeatContent_kJ() const;
     /**< get the heat content of the tank, relative to zero celsius
      * returns using kilojoules */
@@ -1120,26 +1119,41 @@ class HPWH : public Courier::Sender
     /// first-hour rating designations to determine draw pattern for 24-hr test
     struct FirstHourRating
     {
-        enum class Desig
+        enum class Designation
         {
             VerySmall,
             Low,
             Medium,
             High
-        };
+        } designation;
 
-        static inline std::unordered_map<Desig, std::string> sDesigMap = {
-            {Desig::VerySmall, "Very Small"},
-            {Desig::Low, "Low"},
-            {Desig::Medium, "Medium"},
-            {Desig::High, "High"}};
+        static inline std::unordered_map<Designation, std::string> DesignationMap = {
+            {Designation::VerySmall, "Very Small"},
+            {Designation::Low, "Low"},
+            {Designation::Medium, "Medium"},
+            {Designation::High, "High"}};
 
-        Desig desig;
         double drawVolume_L;
+        std::string report();
     };
 
-    /// collection of information derived from standard test
-    struct StandardTestSummary
+    /// fields for test output to csv
+    struct TestData
+    {
+        int time_min;
+        double ambientT_C;
+        double setpointT_C;
+        double inletT_C;
+        double drawVolume_L;
+        DRMODES drMode;
+        std::vector<double> h_srcIn_kWh;
+        std::vector<double> h_srcOut_kWh;
+        std::vector<double> thermocoupleT_C;
+        double outletT_C;
+    };
+
+    /// collection of information derived from standard 24-h test
+    struct TestSummary
     {
         // first recovery values
         double recoveryEfficiency = 0.; // eta_r
@@ -1166,8 +1180,8 @@ class HPWH : public Courier::Sender
         // 24-hr values
         double removedVolume_L = 0.;
         double waterHeatingEnergy_kJ = 0.; // Q_HW
-        double avgOutletT_C = 0.;          // <Tdel,i>
-        double avgInletT_C = 0.;           // <Tin,i>
+        double averageOutletT_C = 0.;      // <Tdel,i>
+        double averageInletT_C = 0.;       // <Tin,i>
 
         double usedFossilFuelEnergy_kJ = 0.;               // Q_f
         double usedElectricalEnergy_kJ = 0.;               // Q_e
@@ -1176,52 +1190,60 @@ class HPWH : public Courier::Sender
         double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
         double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
         double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
-        double UEF = 0.;
+        double EF = 0.;
 
         // (calculated) annual totals
         double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
         double annualConsumedEnergy_kJ = 0.;           // E_annual
 
         bool qualifies = false;
+
+        std::vector<TestData> testDataSet = {};
+
+        // return a verbose string summary
+        std::string report();
     };
 
-    struct StandardTestOptions
+    struct TestConfiguration
     {
-        bool saveOutput = false;
-        std::string sOutputDirectory = "";
-        std::string sOutputFilename = "";
-        std::ostream* outputStream = &std::cout;
-        bool changeSetpoint = false;
-        std::ofstream outputFile;
-        int nTestTCouples = 6;
-        double setpointT_C = 51.7;
+        double ambientT_C;
+        double inletT_C;
+        double externalT_C;
     };
+
+    static TestConfiguration testConfiguration_E50;
+    static TestConfiguration testConfiguration_UEF;
+    static TestConfiguration testConfiguration_E95;
+    static double testSetpointT_C;
 
     /// perform a draw/heat cycle to prepare for test
-    void prepForTest(StandardTestOptions& standardTestOptions);
+    void prepareForTest(const TestConfiguration& test_configuration);
 
     /// determine first-hour rating
-    void findFirstHourRating(FirstHourRating& firstHourRating,
-                             StandardTestOptions& standardTestOptions);
+    FirstHourRating findFirstHourRating();
 
-    /// run 24-hr draw pattern and compute metrics
-    void run24hrTest(const FirstHourRating firstHourRating,
-                     StandardTestSummary& standardTestSummary,
-                     StandardTestOptions& standardTestOptions);
+    /// run 24-hr draw pattern
+    TestSummary run24hrTest(TestConfiguration testConfiguration,
+                            FirstHourRating::Designation designation,
+                            bool saveOutput = false);
+    TestSummary run24hrTest(TestConfiguration testConfiguration, bool saveOutput = false)
+    {
+        return run24hrTest(testConfiguration, findFirstHourRating().designation, saveOutput);
+    }
 
     /// specific information for a single draw
     struct Draw
     {
         double startTime_min;
         double volume_L;
-        double flowRate_Lper_min;
+        double flowRate_L_per_min;
 
         Draw(const double startTime_min_in,
              const double volume_L_in,
              const double flowRate_Lper_min_in)
             : startTime_min(startTime_min_in)
             , volume_L(volume_L_in)
-            , flowRate_Lper_min(flowRate_Lper_min_in)
+            , flowRate_L_per_min(flowRate_Lper_min_in)
         {
         }
     };
@@ -1229,46 +1251,45 @@ class HPWH : public Courier::Sender
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
-    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes;
+    static std::unordered_map<FirstHourRating::Designation, std::size_t> firstDrawClusterSizes;
 
     /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
+    static std::unordered_map<FirstHourRating::Designation, DrawPattern> drawPatterns;
 
-    /// fields for test output to csv
-    struct OutputData
+    struct Fitter;
+
+    /// fit using a single configuration
+    TestSummary makeGenericEF(double targetEF,
+                              TestConfiguration testConfiguration,
+                              FirstHourRating::Designation designation);
+    TestSummary makeGenericEF(double targetEF, TestConfiguration testConfiguration)
     {
-        int time_min;
-        double ambientT_C;
-        double setpointT_C;
-        double inletT_C;
-        double drawVolume_L;
-        DRMODES drMode;
-        std::vector<double> h_srcIn_kWh;
-        std::vector<double> h_srcOut_kWh;
-        std::vector<double> thermocoupleT_C;
-        double outletT_C;
-    };
+        return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().designation);
+    }
 
-    int writeRowAsCSV(std::ofstream& outFILE,
-                      OutputData& outputData,
-                      const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
+    /// fit using each of three configurations, independently
+    void makeGenericE50_UEF_E95(double targetE50,
+                                double targetUEF,
+                                double targetE95,
+                                FirstHourRating::Designation designation);
 
-    void measureMetrics(FirstHourRating& firstHourRating,
-                        StandardTestOptions& standardTestOptions,
-                        StandardTestSummary& standardTestSummary);
-
-    struct CustomTestOptions
+    void makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
     {
-        bool overrideFirstHourRating = false;
-        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
-    } customTestOptions;
+        return makeGenericE50_UEF_E95(
+            targetE50, targetUEF, targetE95, findFirstHourRating().designation);
+    }
 
-    void makeGeneric(const double targetUEF);
+    /// fit using UEF config, then adjust E50, E95 coefficients
+    TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Designation designation);
+    TestSummary makeGenericUEF(double targetUEF)
+    {
+        return makeGenericUEF(targetUEF, findFirstHourRating().designation);
+    }
 
     void convertMapToGrid();
 
   private:
-    void setAllDefaults(); /**< sets all the defaults default */
+    void setAllDefaults(); /**< sets all the defaults */
 
     void updateSoCIfNecessary();
 
