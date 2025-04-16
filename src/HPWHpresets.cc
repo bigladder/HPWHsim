@@ -814,8 +814,6 @@ void HPWH::initPreset(MODELS presetNum)
     // If a Colmac single pass preset cold weather or not
     else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
     {
-        productInformation.manufacturer = {"AOSmith"};
-
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -828,6 +826,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+        compressor->productInformation.manufacturer = {"AOSmith"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -858,7 +857,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_SP)
         {
-            productInformation.model_number = {"CxV_5_SP"};
+            compressor->productInformation.model_number = {"CxV_5_SP"};
             setTankSize_adjustUA(200., UNITS_GAL);
             // logic conditions
             compressor->minT = F_TO_C(-4.0);
@@ -900,7 +899,7 @@ void HPWH::initPreset(MODELS presetNum)
 
             if (presetNum == MODELS_ColmacCxA_10_SP)
             {
-                productInformation.model_number = {"CxA_10_SP"};
+                compressor->productInformation.model_number = {"CxA_10_SP"};
                 setTankSize_adjustUA(500., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -933,7 +932,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_15_SP)
             {
-                productInformation.model_number = {"CxA_15_SP"};
+                compressor->productInformation.model_number = {"CxA_15_SP"};
                 setTankSize_adjustUA(600., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -966,7 +965,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_20_SP)
             {
-                productInformation.model_number = {"CxA_20_SP"};
+                compressor->productInformation.model_number = {"CxA_20_SP"};
                 setTankSize_adjustUA(800., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -999,7 +998,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_25_SP)
             {
-                productInformation.model_number = {"CxA_25_SP"};
+                compressor->productInformation.model_number = {"CxA_25_SP"};
                 setTankSize_adjustUA(1000., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -1032,7 +1031,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_30_SP)
             {
-                productInformation.model_number = {"CxA_30_SP"};
+                compressor->productInformation.model_number = {"CxA_30_SP"};
                 setTankSize_adjustUA(1200., UNITS_GAL);
 
                 compressor->perfMap.push_back({
@@ -1069,7 +1068,6 @@ void HPWH::initPreset(MODELS presetNum)
     // if colmac multipass
     else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
     {
-        productInformation.manufacturer = {"Colmac"};
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1082,6 +1080,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+        compressor->productInformation.manufacturer = {"Colmac"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -1110,7 +1109,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_MP)
         {
-            productInformation.model_number = {"CxV_5_MP"};
+            compressor->productInformation.model_number = {"CxV_5_MP"};
             setTankSize_adjustUA(200., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(
                 9.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
@@ -1146,7 +1145,7 @@ void HPWH::initPreset(MODELS presetNum)
 
             if (presetNum == MODELS_ColmacCxA_10_MP)
             {
-                productInformation.model_number = {"CxA_10_MP"};
+                compressor->productInformation.model_number = {"CxA_10_MP"};
                 setTankSize_adjustUA(500., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(18.);
                 compressor->perfMap.push_back({
@@ -1169,7 +1168,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_15_MP)
             {
-                productInformation.model_number = {"CxA_15_MP"};
+                compressor->productInformation.model_number = {"CxA_15_MP"};
                 setTankSize_adjustUA(600., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(26.);
                 compressor->perfMap.push_back({
@@ -1193,7 +1192,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_20_MP)
             {
-                productInformation.model_number = {"CxA_20_MP"};
+                compressor->productInformation.model_number = {"CxA_20_MP"};
                 setTankSize_adjustUA(800., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(
                     36.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
@@ -1218,7 +1217,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_25_MP)
             {
-                productInformation.model_number = {"CxA_25_MP"};
+                compressor->productInformation.model_number = {"CxA_25_MP"};
                 setTankSize_adjustUA(1000., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(32.);
                 compressor->perfMap.push_back({
@@ -1241,7 +1240,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_30_MP)
             {
-                productInformation.model_number = {"CxA_30_MP"};
+                compressor->productInformation.model_number = {"CxA_30_MP"};
                 setTankSize_adjustUA(1200., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(41.);
                 compressor->perfMap.push_back({
@@ -1326,7 +1325,7 @@ void HPWH::initPreset(MODELS presetNum)
         // Perfmaps for each compressor size
         if (presetNum == MODELS_NyleC25A_SP)
         {
-            productInformation.model_number = {"C25A_SP"};
+            compressor->productInformation.model_number = {"C25A_SP"};
             setTankSize_adjustUA(200., UNITS_GAL);
             compressor->perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1359,9 +1358,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
         {
             if (presetNum == MODELS_NyleC60A_SP)
-                productInformation.model_number = {"C60A_SP"};
+                compressor->productInformation.model_number = {"C60A_SP"};
             else if (presetNum == MODELS_NyleC60A_SP)
-                productInformation.model_number = {"C60A_C_SP"};
+                compressor->productInformation.model_number = {"C60A_C_SP"};
 
             setTankSize_adjustUA(300., UNITS_GAL);
             compressor->perfMap.push_back({
@@ -1395,9 +1394,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
         {
             if (presetNum == MODELS_NyleC90A_SP)
-                productInformation.model_number = {"C90A_SP"};
+                compressor->productInformation.model_number = {"C90A_SP"};
             else if (presetNum == MODELS_NyleC90A_C_SP)
-                productInformation.model_number = {"C90A_C_SP"};
+                compressor->productInformation.model_number = {"C90A_C_SP"};
 
             setTankSize_adjustUA(400., UNITS_GAL);
             compressor->perfMap.push_back({
@@ -1431,9 +1430,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
         {
             if (presetNum == MODELS_NyleC125A_SP)
-                productInformation.model_number = {"C125A_SP"};
+                compressor->productInformation.model_number = {"C125A_SP"};
             else if (presetNum == MODELS_NyleC125A_C_SP)
-                productInformation.model_number = {"C125A_C_SP"};
+                compressor->productInformation.model_number = {"C125A_C_SP"};
 
             setTankSize_adjustUA(500., UNITS_GAL);
             compressor->perfMap.push_back({
@@ -1467,9 +1466,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
         {
             if (presetNum == MODELS_NyleC185A_SP)
-                productInformation.model_number = {"C185A_SP"};
+                compressor->productInformation.model_number = {"C185A_SP"};
             else if (presetNum == MODELS_NyleC185A_C_SP)
-                productInformation.model_number = {"C185A_C_SP"};
+                compressor->productInformation.model_number = {"C185A_C_SP"};
 
             setTankSize_adjustUA(800., UNITS_GAL);
             compressor->perfMap.push_back({
@@ -1503,9 +1502,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
         {
             if (presetNum == MODELS_NyleC250A_SP)
-                productInformation.model_number = {"C250A_SP"};
+                compressor->productInformation.model_number = {"C250A_SP"};
             else if (presetNum == MODELS_NyleC250A_C_SP)
-                productInformation.model_number = {"C250A_C_SP"};
+                compressor->productInformation.model_number = {"C250A_C_SP"};
 
             setTankSize_adjustUA(800., UNITS_GAL);
 
@@ -1542,8 +1541,6 @@ void HPWH::initPreset(MODELS presetNum)
     // If Nyle multipass presets
     else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
     {
-        productInformation.manufacturer = {"Nyle"};
-
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1556,6 +1553,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+        compressor->productInformation.manufacturer = {"Nyle"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -1605,9 +1603,9 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
             if (presetNum == MODELS_NyleC60A_MP)
-                productInformation.model_number = {"NyleC60A_MP"};
+                compressor->productInformation.model_number = {"NyleC60A_MP"};
             else if (presetNum == MODELS_NyleC60A_C_MP)
-                productInformation.model_number = {"NyleC60A_C_MP"};
+                compressor->productInformation.model_number = {"NyleC60A_C_MP"};
 
             setTankSize_adjustUA(360., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(13.);
@@ -1633,9 +1631,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
         {
             if (presetNum == MODELS_NyleC90A_MP)
-                productInformation.model_number = {"NyleC90A_MP"};
+                compressor->productInformation.model_number = {"NyleC90A_MP"};
             else if (presetNum == MODELS_NyleC90A_C_MP)
-                productInformation.model_number = {"NyleC90A_C_MP"};
+                compressor->productInformation.model_number = {"NyleC90A_C_MP"};
 
             setTankSize_adjustUA(480., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(20.);
@@ -1661,9 +1659,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
         {
             if (presetNum == MODELS_NyleC125A_MP)
-                productInformation.model_number = {"NyleC125A_MP"};
+                compressor->productInformation.model_number = {"NyleC125A_MP"};
             else if (presetNum == MODELS_NyleC125A_C_MP)
-                productInformation.model_number = {"NyleC125A_C_MP"};
+                compressor->productInformation.model_number = {"NyleC125A_C_MP"};
 
             setTankSize_adjustUA(600., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(28.);
@@ -1689,9 +1687,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
         {
             if (presetNum == MODELS_NyleC185A_MP)
-                productInformation.model_number = {"NyleC185A_MP"};
+                compressor->productInformation.model_number = {"NyleC185A_MP"};
             else if (presetNum == MODELS_NyleC185A_C_MP)
-                productInformation.model_number = {"NyleC185A_C_MP"};
+                compressor->productInformation.model_number = {"NyleC185A_C_MP"};
 
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(40.);
@@ -1717,9 +1715,9 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
         {
             if (presetNum == MODELS_NyleC250A_MP)
-                productInformation.model_number = {"NyleC250A_MP"};
+                compressor->productInformation.model_number = {"NyleC250A_MP"};
             if (presetNum == MODELS_NyleC250A_C_MP)
-                productInformation.model_number = {"NyleC250A_C_MP"};
+                compressor->productInformation.model_number = {"NyleC250A_C_MP"};
 
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(50.);
@@ -1757,8 +1755,6 @@ void HPWH::initPreset(MODELS presetNum)
     else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum &&
              presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
     {
-        productInformation.manufacturer = {"Rheem"};
-
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
@@ -1771,6 +1767,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+        compressor->productInformation.manufacturer = {"Rheem"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -1805,9 +1802,9 @@ void HPWH::initPreset(MODELS presetNum)
             presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
         {
             if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP)
-                productInformation.model_number = {"HPHD60HNU_201_MP"};
+                compressor->productInformation.model_number = {"HPHD60HNU_201_MP"};
             else if (presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
-                productInformation.model_number = {"HPHD60VNU_201_MP"};
+                compressor->productInformation.model_number = {"HPHD60VNU_201_MP"};
 
             setTankSize_adjustUA(250., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(17.4);
@@ -1832,6 +1829,11 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
                  presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
         {
+            if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP)
+                compressor->productInformation.model_number = {"HPHD135HNU_483_MP"};
+            else if (presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
+                compressor->productInformation.model_number = {"HPHD135VNU_483_MP"};
+
             setTankSize_adjustUA(500., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(34.87);
             compressor->perfMap.push_back({
@@ -1856,8 +1858,6 @@ void HPWH::initPreset(MODELS presetNum)
 
     else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
-        productInformation = {"Mitsubishi", "QAHV_N136TAU_HPB_SP"};
-
         setNumNodes(96);
         setpoint_C = 65;
 
@@ -1870,6 +1870,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+        compressor->productInformation = {"Mitsubishi", "QAHV_N136TAU_HPB_SP"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -2139,17 +2140,9 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
              presetNum == MODELS_SANCO2_119)
     {
-        productInformation.manufacturer = {"SANCO2"};
         setNumNodes(96);
         setpoint_C = 65;
         setpointFixed = true;
-
-        if (presetNum == MODELS_SANCO2_83)
-            productInformation.model_number = {"83"};
-        else if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
-            productInformation.model_number = {"GS3_45HPA_US_SP"};
-        else if (presetNum == MODELS_SANCO2_119)
-            productInformation.model_number = {"119"};
 
         if (presetNum == MODELS_SANCO2_119)
         {
@@ -2171,6 +2164,14 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+
+        compressor->productInformation.manufacturer = {"SANCO2"};
+        if (presetNum == MODELS_SANCO2_83)
+            compressor->productInformation.model_number = {"83"};
+        else if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+            compressor->productInformation.model_number = {"GS3_45HPA_US_SP"};
+        else if (presetNum == MODELS_SANCO2_119)
+            compressor->productInformation.model_number = {"119"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -2262,6 +2263,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
+
+        compressor->productInformation = {"SANCO2", "43"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
