@@ -1262,7 +1262,8 @@ void HPWH::Condenser::sortPerformanceMap()
 {
     std::sort(performanceMap.begin(),
               performanceMap.end(),
-              [](const PerformancePoint& a, const PerformancePoint& b) -> bool { return a.T_F < b.T_F; });
+              [](const PerformancePoint& a, const PerformancePoint& b) -> bool
+              { return a.T_F < b.T_F; });
 }
 
 /*static*/
@@ -1304,7 +1305,8 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
 
     if (performanceMap.size() == 1) // central water-heater systems only
     {
-        if ((environmentT_C > F_TO_C(performanceMap[0].T_F)) && (extrapolationMethod == EXTRAP_NEAREST))
+        if ((environmentT_C > F_TO_C(performanceMap[0].T_F)) &&
+            (extrapolationMethod == EXTRAP_NEAREST))
         {
             environmentT_C = F_TO_C(performanceMap[0].T_F);
         }
@@ -1385,14 +1387,21 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
 
         inputPower_T1_W = performanceMap[i_prev].inputPower_coeffs[0];
         inputPower_T1_W += performanceMap[i_prev].inputPower_coeffs[1] * heatSourceT_F;
-        inputPower_T1_W += performanceMap[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+        inputPower_T1_W +=
+            performanceMap[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
         inputPower_T2_W = performanceMap[i_next].inputPower_coeffs[0];
         inputPower_T2_W += performanceMap[i_next].inputPower_coeffs[1] * heatSourceT_F;
-        inputPower_T2_W += performanceMap[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+        inputPower_T2_W +=
+            performanceMap[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
         // Interpolate to get COP and input power at the current ambient temperature
-        linearInterp(cop, environmentT_F, performanceMap[i_prev].T_F, performanceMap[i_next].T_F, COP_T1, COP_T2);
+        linearInterp(cop,
+                     environmentT_F,
+                     performanceMap[i_prev].T_F,
+                     performanceMap[i_next].T_F,
+                     COP_T1,
+                     COP_T2);
         linearInterp(input_BTUperHr,
                      environmentT_F,
                      performanceMap[i_prev].T_F,
