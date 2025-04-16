@@ -21,7 +21,7 @@ set(headers
         Condenser.hh
         Resistance.hh
 
-        hpwh-data-model.h
+        hpwh-data-model.hh
         HPWHFitter.hh
         )
 

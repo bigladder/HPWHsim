@@ -12,7 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "hpwh-data-model.h"
+#include "hpwh-data-model.hh"
 
 template <typename T>
 void checkFrom(T& t, const bool is_set, const T t_new, const T t_default)

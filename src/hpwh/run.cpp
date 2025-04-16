@@ -3,7 +3,7 @@
  */
 #include "HPWH.hh"
 #include "Condenser.hh"
-#include "hpwh-data-model.h"
+#include "hpwh-data-model.hh"
 #include <iostream>
 #include <fstream>
 #include <sstream>
