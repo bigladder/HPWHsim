@@ -40,8 +40,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include "HPWHFitter.hh"
-#include "HPWHsim.hh"
 #include "HPWHUtils.hh"
+#include "HPWHHeatingLogic.hh"
+#include "HPWHHeatSource.hh"
+#include "Tank.hh"
+#include "Condenser.hh"
+#include "Resistance.hh"
+
 #include <btwxt/btwxt.h>
 #include <fmt/format.h>
 
