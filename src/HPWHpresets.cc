@@ -584,7 +584,7 @@ void HPWH::initPreset(MODELS presetNum)
     // voltex 60 gallon
     else if (presetNum == MODELS_AOSmithPHPT60)
     {
-        productInformation = {"A. O. Smith", "PHPT60"};
+        productInformation = {"A. O. Smith", "PHPT-60"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -658,7 +658,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithPHPT80)
     {
-        productInformation = {"A. O. Smith", "PHPT80"};
+        productInformation = {"A. O. Smith", "PHPT-80"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -2342,8 +2342,8 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU50)
         {
-            productInformation = {"A. O. Smith", "HPTU-50N 1.."};
-            rating10CFR430.certified_reference_number = {"206428769"};
+            productInformation = {"A. O. Smith", "HPTU-50(?:N|DR|CTA) 1.."};
+            rating10CFR430.certified_reference_number = {"2064287(?:69|86|87)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
             rating10CFR430.first_hour_rating = GAL_TO_L(66.) / 1000.;
             rating10CFR430.recovery_efficiency = 4.07;
@@ -2756,7 +2756,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
-        productInformation = {"A. O. Smith", "CAHP120"};
+        productInformation = {"A. O. Smith", "CAHP-120"};
 
         setNumNodes(24);
         setpoint_C = F_TO_C(150.0);
@@ -3153,7 +3153,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2014_80)
     {
-        productInformation = {"GE", "2014_80"};
+        productInformation = {"GE", "2014-80"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3224,7 +3224,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_GE2014_80DR)
     {
-        productInformation = {"GE", "2014_80DR"};
+        productInformation = {"GE", "2014-80DR"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
