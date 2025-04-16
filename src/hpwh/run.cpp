@@ -335,7 +335,7 @@ void run(const std::string& sSpecType,
     else
     {
 
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + sSpecType_mod + "_" + sModelName + ".csv";
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + sSpecType_mod + "_" + modelName + ".csv";
 
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())

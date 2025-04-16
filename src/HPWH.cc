@@ -2024,6 +2024,8 @@ double HPWH::getAverageTankTemp_C(const Distribution& dist) const
 
 void HPWH::setTankToTemperature(double temp_C) { tank->setNodeT_C(temp_C); }
 
+double HPWH::getTankVolume_L() const { return tank->getVolume_L(); }
+
 double HPWH::getTankHeatContent_kJ() const { return tank->getHeatContent_kJ(); }
 
 int HPWH::getModel() const { return model; }
@@ -2757,7 +2759,7 @@ void HPWH::checkInputs()
             if (cond_ptr->useBtwxtGrid)
             {
                 // If useBtwxtGrid is true that the perfMap is empty
-                if (cond_ptr->perfMap.size() != 0)
+                if (cond_ptr->performanceMap.size() != 0)
                 {
                     error_msgs.push("\n\tUsing the grid lookups but a regression-based performance "
                                     "map is given.");
@@ -2790,7 +2792,7 @@ void HPWH::checkInputs()
             else
             {
                 // Check that perfmap only has 1 point if config_external and multipass
-                if (cond_ptr->isExternalMultipass() && cond_ptr->perfMap.size() != 1)
+                if (cond_ptr->isExternalMultipass() && cond_ptr->performanceMap.size() != 1)
                 {
                     error_msgs.push(
                         "External multipass heat sources must have a perfMap of only one point "
@@ -3446,9 +3448,6 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                 j_tank["initial_temperature"] = F_TO_C(tempDouble);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
-
-            initialTankT_C = tempDouble;
-            hasInitialTankTemp = true;
         }
         else if (token == "hasHeatExchanger")
         {
@@ -3528,9 +3527,9 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    heatSources[heatsource].maxSetpoint_C = tempDouble;
+                    j_heatsourceconfigs[heatsource]["maximum_refrigerant_temperature_C"] = tempDouble;
                 else if (units == "F")
-                    heatSources[heatsource].maxSetpoint_C = F_TO_C(tempDouble);
+                    j_heatsourceconfigs[heatsource]["maximum_refrigerant_temperature_C"] = F_TO_C(tempDouble);
                 else
                     send_warning("Invalid units.");
             }
@@ -4178,10 +4177,10 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
             element = reinterpret_cast<HeatSource*>(compressor);
 
             auto perfPoints = j_heatsourceconfig["performance_points"];
-            compressor->perfMap.reserve(perfPoints.size());
+            compressor->performanceMap.reserve(perfPoints.size());
             for (auto& perfPoint : perfPoints)
             {
-                compressor->perfMap.push_back({
+                compressor->performanceMap.push_back({
                     perfPoint["evaporator_temperature_F"], // Temperature (T_F)
                     perfPoint["power_coefficients"], // Input Power Coefficients (inputPower_coeffs)
                     perfPoint["cop_coefficients"]    // COP Coefficients (COP_coeffs)
@@ -5244,7 +5243,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
             if (runTime_min >= draw.startTime_min)
             {
                 // limit draw-volume step to tank volume
-                stepDrawVolume_L = draw.flowRate_Lper_min * (1.);
+                stepDrawVolume_L = draw.flowRate_L_per_min * (1.);
                 if (stepDrawVolume_L > tank->volume_L)
                 {
                     stepDrawVolume_L = tank->volume_L;
@@ -5322,7 +5321,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                 testData.thermocoupleT_C.push_back(
                     getNthSimTcouple(iTC + 1, nTestTCouples, UNITS_C));
             }
-            outputData.outletT_C = tank->getOutletT_C();
+            testData.outletT_C = tank->getOutletT_C();
 
             testSummary.testDataSet.push_back(testData);
         }
@@ -5663,9 +5662,9 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
         targetEF, testConfiguration, designation, get_courier(), this);
     metrics.push_back(ef_metric);
 
-    auto& compressor = heatSources[compressorIndex];
+    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
-    int i_ambientT = compressor.getAmbientT_index(testConfiguration.ambientT_C);
+    int i_ambientT = compressor->getAmbientT_index(testConfiguration.ambientT_C);
 
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
@@ -5681,8 +5680,8 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     fitter.fit();
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    compressor.getCapacity(testConfiguration.ambientT_C,
-                           compressor.maxSetpoint_C,
+    compressor->getCapacity(testConfiguration.ambientT_C,
+                           compressor->maxSetpoint_C,
                            getSetpoint(),
                            input_BTUperHr,
                            cap_BTUperHr,
@@ -5690,7 +5689,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     if (cop1 < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor.getCapacity(testConfiguration.ambientT_C,
+    compressor->getCapacity(testConfiguration.ambientT_C,
                            0., /// low condenserT_C
                            getSetpoint(),
                            input_BTUperHr,
@@ -5710,22 +5709,22 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
                                        HPWH::FirstHourRating::Designation designation)
 {
-    auto& compressor = heatSources[compressorIndex];
+    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
     // pick the nearest temperature index
-    int i_ambientT = compressor.getAmbientT_index(testConfiguration_UEF.ambientT_C);
+    int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    auto originalCoefficient = compressor.performanceMap[i_ambientT].COP_coeffs[0];
+    auto originalCoefficient = compressor->performanceMap[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
     double dCOP_Coefficient =
-        compressor.performanceMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
+        compressor->performanceMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>(compressor.performanceMap.size());
+    int nPerfPts = static_cast<int>(compressor->performanceMap.size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            compressor.performanceMap[i].COP_coeffs[0] += dCOP_Coefficient;
+            compressor->performanceMap[i].COP_coeffs[0] += dCOP_Coefficient;
     }
 
     return testSummary;
