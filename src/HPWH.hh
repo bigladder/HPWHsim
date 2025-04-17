@@ -342,10 +342,10 @@ class HPWH : public Courier::Sender
         void to(RSTYPE& rs) const
         {
             auto& metadata = rs.metadata;
-            checkTo(description(),
-                    metadata.description_is_set,
-                    metadata.description,
-                    description.isSet());
+            updateTo(description(),
+                     metadata.description_is_set,
+                     metadata.description,
+                     description.isSet());
         }
 
     } metadataDescription;
@@ -388,19 +388,20 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& prod_info = desc.product_information;
 
-            checkTo(manufacturer(),
-                    prod_info.manufacturer_is_set,
-                    prod_info.manufacturer,
-                    manufacturer.isSet());
+            updateTo(manufacturer(),
+                     prod_info.manufacturer_is_set,
+                     prod_info.manufacturer,
+                     manufacturer.isSet());
 
-            checkTo(model_number(),
-                    prod_info.model_number_is_set,
-                    prod_info.model_number,
-                    model_number.isSet());
+            updateTo(model_number(),
+                     prod_info.model_number_is_set,
+                     prod_info.model_number,
+                     model_number.isSet());
 
-            checkTo(prod_info, desc.product_information_is_set, desc.product_information, !empty());
+            updateTo(
+                prod_info, desc.product_information_is_set, desc.product_information, !empty());
 
-            checkTo(desc, rs.description_is_set, rs.description, !empty());
+            updateTo(desc, rs.description_is_set, rs.description, !empty());
         }
 
     } productInformation;
@@ -461,34 +462,34 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& rating = desc.rating_10_cfr_430;
 
-            checkTo(certified_reference_number(),
-                    rating.certified_reference_number_is_set,
-                    rating.certified_reference_number,
-                    certified_reference_number.isSet());
+            updateTo(certified_reference_number(),
+                     rating.certified_reference_number_is_set,
+                     rating.certified_reference_number,
+                     certified_reference_number.isSet());
 
-            checkTo(nominal_tank_volume(),
-                    rating.nominal_tank_volume_is_set,
-                    rating.nominal_tank_volume,
-                    nominal_tank_volume.isSet());
+            updateTo(nominal_tank_volume(),
+                     rating.nominal_tank_volume_is_set,
+                     rating.nominal_tank_volume,
+                     nominal_tank_volume.isSet());
 
-            checkTo(first_hour_rating(),
-                    rating.first_hour_rating_is_set,
-                    rating.first_hour_rating,
-                    first_hour_rating.isSet());
+            updateTo(first_hour_rating(),
+                     rating.first_hour_rating_is_set,
+                     rating.first_hour_rating,
+                     first_hour_rating.isSet());
 
-            checkTo(recovery_efficiency(),
-                    rating.recovery_efficiency_is_set,
-                    rating.recovery_efficiency,
-                    recovery_efficiency.isSet());
+            updateTo(recovery_efficiency(),
+                     rating.recovery_efficiency_is_set,
+                     rating.recovery_efficiency,
+                     recovery_efficiency.isSet());
 
-            checkTo(uniform_energy_factor(),
-                    rating.uniform_energy_factor_is_set,
-                    rating.uniform_energy_factor,
-                    uniform_energy_factor.isSet());
+            updateTo(uniform_energy_factor(),
+                     rating.uniform_energy_factor_is_set,
+                     rating.uniform_energy_factor,
+                     uniform_energy_factor.isSet());
 
-            checkTo(rating, desc.rating_10_cfr_430_is_set, desc.rating_10_cfr_430, !empty());
+            updateTo(rating, desc.rating_10_cfr_430_is_set, desc.rating_10_cfr_430, !empty());
 
-            checkTo(desc, rs.description_is_set, rs.description, !empty());
+            updateTo(desc, rs.description_is_set, rs.description, !empty());
         }
 
     } rating10CFR430;
