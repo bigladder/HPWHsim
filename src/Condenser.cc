@@ -60,6 +60,7 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     hysteresis_dC = cond_in.hysteresis_dC;
     maxSetpoint_C = cond_in.maxSetpoint_C;
 
+    metadataDescription = cond_in.metadataDescription;
     productInformation = cond_in.productInformation;
 
     return *this;
@@ -516,6 +517,7 @@ void HPWH::Condenser::to(
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSCONDENSERWATERHEATSOURCE.schema.yaml");
 
+    metadataDescription.to(hs);
     productInformation.to(hs);
 
     auto& perf = hs.performance;
@@ -648,6 +650,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSAIRTOWATERHEATPUMP.schema.yaml");
 
+    metadataDescription.to(hs);
     productInformation.to(hs);
 
     //
