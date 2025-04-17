@@ -46,6 +46,19 @@ bool checkFrom(T& t, nlohmann::json& j, std::string_view key, const T t_default)
 template <typename T>
 void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
 {
+    is_set = has_value;
+    if (has_value)
+    {
+        t_new = t;
+    }
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	update t_new to t if has_value, else retain t_new and is_set
+//-----------------------------------------------------------------------------
+template <typename T>
+void updateTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
+{
     is_set |= has_value;
     if (has_value)
     {
