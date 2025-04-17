@@ -312,6 +312,8 @@ class HPWH : public Courier::Sender
         bool isSet() const { return is_set; }
     };
 
+    Entry<std::string> description();
+
     struct ProductInformation
     {
         Entry<std::string> manufacturer;
