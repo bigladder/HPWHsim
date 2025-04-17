@@ -510,13 +510,19 @@ class HPWH : public Courier::Sender
         CSVOPT_IS_DRAWING = 1 << 1
     };
 
+    ///	@struct DistributionPoint
+    /// (height, weight) pair for weighted distributions
     struct DistributionPoint
     {
         double height, weight;
     };
+
+    ///	@struct WeightedDistribution
+    /// distribution specified by (height, weight) pairs
     struct WeightedDistribution : public std::vector<DistributionPoint>
     {
       public:
+        /// typical construction uses separate height, weight vectors
         WeightedDistribution(std::vector<double> heights = {}, std::vector<double> weights = {})
         {
             clear();
@@ -529,7 +535,17 @@ class HPWH : public Courier::Sender
                     ++weight;
                 }
         }
-        double heightRange() const { return back().height; }
+
+        double maximumHeight() const { return back().height; }
+        double maximumWeight() const
+        {
+            double res = 0.;
+            for (auto distPoint : (*this))
+                res = std::max(distPoint.weight, res);
+            return res;
+        }
+
+        /// find total weight (using normalized height)
         double totalWeight() const
         {
             double total = 0.;
@@ -543,38 +559,34 @@ class HPWH : public Courier::Sender
             }
             return total / prevHeight;
         }
-        double maxWeight() const
-        {
-            double res = 0.;
-            for (auto distPoint : (*this))
-                res = std::max(distPoint.weight, res);
-            return res;
-        }
-        double normHeight(std::size_t i) const { return (*this)[i].height / heightRange(); }
-        double normWeight(std::size_t i) const { return (*this)[i].weight / totalWeight(); }
-        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maxWeight(); }
+
+        /// find unitary values (fraction of maxima) by index
+        double unitaryHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
+        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
+
         bool isValid() const
         {
-            bool isNotEmpty = (size() > 0);
+            bool isNotEmpty = !empty();
             bool hasWeight = false;
             bool isSorted = true;
             double prevHeight = 0.;
-            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
+            for (auto& distPoint : (*this))
             {
-                if (distPoint->height <= prevHeight)
-                    isSorted = false;
-                if (distPoint->weight > 0.)
-                    hasWeight = true;
+                isSorted &= (distPoint.height > prevHeight);
+                hasWeight |= (distPoint.weight > 0.);
+                prevHeight = distPoint.height;
             }
             return isNotEmpty && hasWeight && isSorted;
         }
-        double normWeight(double beginFrac, double endFrac) const
+
+        /// @brief returns the normalized weight within a normalized height range
+        double normalizedWeight(double beginFrac, double endFrac) const
         {
             double res = 0.;
             double prevFrac = beginFrac;
             for (auto distPoint : (*this))
             {
-                double frac = distPoint.height / heightRange();
+                double frac = distPoint.height / maximumHeight();
                 if (frac < beginFrac)
                     continue;
                 if (frac > prevFrac)
@@ -591,27 +603,18 @@ class HPWH : public Courier::Sender
             }
             return res / totalWeight();
         }
-        double lowestNormHeight() const
+
+        /// @brief returns the lowest normalized height with non-zero weight
+        double lowestNormalizedHeight() const
         {
             double prev_height = 0.;
             for (auto distPoint = begin(); distPoint != end(); ++distPoint)
             {
                 if (distPoint->weight > 0.)
-                    return prev_height / heightRange();
+                    return prev_height / maximumHeight();
                 prev_height = distPoint->height;
             }
-
             return 0.;
-        }
-        double highestNormHeight() const
-        {
-            double height = 0.;
-            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
-            {
-                if (distPoint->weight > 0.)
-                    height = distPoint->height;
-            }
-            return height / heightRange();
         }
     };
     enum class DistributionType
@@ -624,23 +627,23 @@ class HPWH : public Courier::Sender
     struct Distribution
     {
       public:
-        DistributionType distribType;
-        WeightedDistribution weightedDist;
+        DistributionType distributionType;
+        WeightedDistribution weightedDistribution;
         Distribution(DistributionType distribType_in = DistributionType::Weighted,
-                     WeightedDistribution weightedDist_in = {{}, {}})
-            : distribType(distribType_in), weightedDist(weightedDist_in)
+                     WeightedDistribution weightedDistribution_in = {{}, {}})
+            : distributionType(distribType_in), weightedDistribution(weightedDistribution_in)
         {
         }
         bool isValid() const
         {
-            switch (distribType)
+            switch (distributionType)
             {
             case DistributionType::TopOfTank:
             case DistributionType::BottomOfTank:
                 return true;
 
             case DistributionType::Weighted:
-                return weightedDist.isValid();
+                return weightedDistribution.isValid();
             }
             return false;
         }
