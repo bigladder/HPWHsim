@@ -367,7 +367,16 @@ class HPWH : public Courier::Sender
                 }
         }
 
-        double heightRange() const { return back().height; }
+        double maximumHeight() const { return back().height; }
+        double maximumWeight() const
+        {
+            double res = 0.;
+            for (auto distPoint : (*this))
+                res = std::max(distPoint.weight, res);
+            return res;
+        }
+
+        /// find total weight (using normalized height)
         double totalWeight() const
         {
             double total = 0.;
@@ -381,17 +390,10 @@ class HPWH : public Courier::Sender
             }
             return total / prevHeight;
         }
-        double maximumWeight() const
-        {
-            double res = 0.;
-            for (auto distPoint : (*this))
-                res = std::max(distPoint.weight, res);
-            return res;
-        }
 
-        /// access normalized values by index
-        double normalizedHeight(std::size_t i) const { return (*this)[i].height / heightRange(); }
-        double normalizedWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
+        /// find unitary values (fraction of maxima) by index
+        double unitaryHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
+        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
 
         bool isValid() const
         {
@@ -415,7 +417,7 @@ class HPWH : public Courier::Sender
             double prevFrac = beginFrac;
             for (auto distPoint : (*this))
             {
-                double frac = distPoint.height / heightRange();
+                double frac = distPoint.height / maximumHeight();
                 if (frac < beginFrac)
                     continue;
                 if (frac > prevFrac)
@@ -440,7 +442,7 @@ class HPWH : public Courier::Sender
             for (auto distPoint = begin(); distPoint != end(); ++distPoint)
             {
                 if (distPoint->weight > 0.)
-                    return prev_height / heightRange();
+                    return prev_height / maximumHeight();
                 prev_height = distPoint->height;
             }
             return 0.;

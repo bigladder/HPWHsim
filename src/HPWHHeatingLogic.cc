@@ -266,7 +266,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             else
             {
                 double norm_dist_height =
-                    distPoint.height / dist.weightedDistribution.heightRange();
+                    distPoint.height / dist.weightedDistribution.maximumHeight();
                 firstNode = static_cast<int>(
                     norm_dist_height * hpwh->getNumNodes()); // first tank node with non-zero weight
                 calcNode =
@@ -516,8 +516,8 @@ void HPWH::TempBasedHeatingLogic::to(
         std::vector<double> heights = {}, weights = {};
         for (std::size_t i = 0; i < dist.weightedDistribution.size(); ++i)
         {
-            heights.push_back(dist.weightedDistribution.normalizedHeight(i));
-            weights.push_back(dist.weightedDistribution.normalizedWeight(i));
+            heights.push_back(dist.weightedDistribution.unitaryHeight(i));
+            weights.push_back(dist.weightedDistribution.unitaryWeight(i));
         }
 
         hpwh_data_model::heat_source_configuration::WeightedDistribution wd;

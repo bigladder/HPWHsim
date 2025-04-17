@@ -348,3 +348,23 @@ TEST(ExtraHeatTest, extraHeat)
 
     EXPECT_NEAR(dQ_actual_kJ, dQ_expected_kJ, tol);
 }
+
+/*
+ * weighted-distribution test
+ */
+TEST(WeightedDistributionTest, calculations)
+{
+    const std::vector<double> heights = {1., 2., 3., 4., 5.};
+    const std::vector<double> weights = {0., 2., 1.5, 1., 0.};
+
+    HPWH::WeightedDistribution weightedDistribution(heights, weights);
+
+    EXPECT_TRUE(weightedDistribution.isValid());
+    EXPECT_EQ(weightedDistribution.maximumHeight(), 5.);
+    EXPECT_EQ(weightedDistribution.totalWeight(), 0.9);
+    EXPECT_EQ(weightedDistribution.maximumWeight(), 2.);
+    EXPECT_EQ(weightedDistribution.unitaryHeight(3), 4. / 5.);
+    EXPECT_EQ(weightedDistribution.unitaryWeight(3), 1. / 2.);
+    EXPECT_EQ(weightedDistribution.normalizedWeight(0.4, 0.8), (1.5 + 1.) / 4.5);
+    EXPECT_EQ(weightedDistribution.lowestNormalizedHeight(), 0.2);
+}
