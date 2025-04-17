@@ -37,6 +37,7 @@ void HPWH::Resistance::from(
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
+    metadataDescription.from(*p_rshs);
     productInformation.from(*p_rshs);
 
     auto& perf = p_rshs->performance;
