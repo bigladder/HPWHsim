@@ -141,7 +141,7 @@ void HPWH::HeatSource::to(
     for (std::size_t i = 0; i < heatDist.size(); ++i)
     {
         heights.push_back(heatDist.normHeight(i));
-        weights.push_back(heatDist.unitaryWeight(i));
+        weights.push_back(heatDist.normalizedWeight(i));
     }
 
     hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
@@ -400,7 +400,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     for (auto& dist : heatDistribution)
     {
         double endFrac = static_cast<double>(i + 1) / numNodes;
-        dist = heatDist.normWeight(beginFrac, endFrac);
+        dist = heatDist.normalizedWeight(beginFrac, endFrac);
         beginFrac = endFrac;
         ++i;
         totalWeight += dist;

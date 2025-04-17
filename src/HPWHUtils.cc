@@ -150,7 +150,7 @@ int HPWH::findLowestNode(const WeightedDistribution& wdist, const int numTankNod
 {
     for (auto j = 0; j < numTankNodes; ++j)
     {
-        if (wdist.normWeight(j / numTankNodes, (j + 1.) / numTankNodes) > 0.)
+        if (wdist.normalizedWeight(j / numTankNodes, (j + 1.) / numTankNodes) > 0.)
             return j;
     }
 
@@ -166,7 +166,7 @@ double HPWH::findShrinkageT_C(const WeightedDistribution& wdist, const int numNo
     for (int iNode = 0; iNode < numNodes; ++iNode)
     {
         double fracEnd = static_cast<double>(iNode + 1) / numNodes;
-        double dist = wdist.normWeight(fracBegin, fracEnd);
+        double dist = wdist.normalizedWeight(fracBegin, fracEnd);
         if (dist > 0.)
         {
             condentropy -= dist * log(dist);

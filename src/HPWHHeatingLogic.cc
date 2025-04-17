@@ -146,7 +146,7 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
         }
         double height_front = node->nodeNum - 1;
         if (height_front > prev_height)
-            dist.weightedDist.push_back({height_front, 0.});
+            dist.weightedDistribution.push_back({height_front, 0.});
         while (node + 1 != n.end())
         {
             if ((node + 1)->weight == node->weight)
@@ -155,11 +155,11 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
                 break;
         }
         height_front = node->nodeNum - 1;
-        dist.weightedDist.push_back({height_front + 1., node->weight});
+        dist.weightedDistribution.push_back({height_front + 1., node->weight});
         prev_height = height_front + 1.;
     }
     if (prev_height < LOGIC_SIZE)
-        dist.weightedDist.push_back({LOGIC_SIZE, 0.});
+        dist.weightedDistribution.push_back({LOGIC_SIZE, 0.});
 }
 
 bool HPWH::TempBasedHeatingLogic::isValid()
@@ -196,7 +196,7 @@ void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
 
 double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 {
-    switch (dist.distribType)
+    switch (dist.distributionType)
     {
     case DistributionType::BottomOfTank:
         return 1. / (double)hpwh->getNumNodes();
@@ -208,7 +208,7 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
     {
         double tot_weight = 0., tot_weight_avg = 0.;
         double prev_height = 0.;
-        for (auto distPoint : dist.weightedDist)
+        for (auto distPoint : dist.weightedDistribution)
         {
             double weight = distPoint.weight * (distPoint.height - prev_height);
             double node_avg = 0.5 * (distPoint.height + prev_height);
@@ -235,7 +235,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
     double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
-    switch (dist.distribType)
+    switch (dist.distributionType)
     {
     case DistributionType::BottomOfTank:
     {
@@ -255,7 +255,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     case DistributionType::Weighted:
     {
-        for (auto& distPoint : dist.weightedDist)
+        for (auto& distPoint : dist.weightedDistribution)
         {
             if (distPoint.weight > 0.)
             {
@@ -265,7 +265,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             }
             else
             {
-                double norm_dist_height = distPoint.height / dist.weightedDist.heightRange();
+                double norm_dist_height = distPoint.height / dist.weightedDistribution.heightRange();
                 firstNode = static_cast<int>(
                     norm_dist_height * hpwh->getNumNodes()); // first tank node with non-zero weight
                 calcNode =
@@ -489,7 +489,7 @@ void HPWH::TempBasedHeatingLogic::to(
                 heating_logic.comparison_type);
     }
 
-    switch (dist.distribType)
+    switch (dist.distributionType)
     {
     case DistributionType::TopOfTank:
     {
@@ -513,10 +513,10 @@ void HPWH::TempBasedHeatingLogic::to(
     case DistributionType::Weighted:
     {
         std::vector<double> heights = {}, weights = {};
-        for (std::size_t i = 0; i < dist.weightedDist.size(); ++i)
+        for (std::size_t i = 0; i < dist.weightedDistribution.size(); ++i)
         {
-            heights.push_back(dist.weightedDist.normHeight(i));
-            weights.push_back(dist.weightedDist.unitaryWeight(i));
+            heights.push_back(dist.weightedDistribution.normHeight(i));
+            weights.push_back(dist.weightedDistribution.normalizedWeight(i));
         }
 
         hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
