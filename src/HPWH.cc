@@ -2378,7 +2378,7 @@ int HPWH::getResistancePosition(int elementIndex) const
         send_error("This index is not a resistance element.");
     }
     return static_cast<int>(HeatSource::CONDENSITY_SIZE *
-                            heatSources[elementIndex]->heatDist.lowestNormHeight());
+                            heatSources[elementIndex]->heatDist.lowestNormalizedHeight());
 }
 
 void HPWH::updateSoCIfNecessary()
@@ -2533,13 +2533,13 @@ void HPWH::calcDerivedHeatingValues()
                     send_warning("More than one resistance element is assigned to VIP.");
                 }
             }
-            double pos = heatSources[i]->heatDist.lowestNormHeight();
+            double pos = heatSources[i]->heatDist.lowestNormalizedHeight();
             if (pos < lowestPos)
             {
                 lowestElementIndex = i;
                 lowestPos = pos;
             }
-            pos = heatSources[i]->heatDist.lowestNormHeight();
+            pos = heatSources[i]->heatDist.lowestNormalizedHeight();
             if (pos >= highestPos)
             {
                 highestElementIndex = i;
@@ -4826,7 +4826,9 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
     }
 }
 
-// convert to grid
+//-----------------------------------------------------------------------------
+///	@brief	convert condenser performance map to grid representation
+//-----------------------------------------------------------------------------
 void HPWH::convertMapToGrid()
 {
     if (!hasACompressor())
