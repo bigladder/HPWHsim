@@ -140,7 +140,7 @@ void HPWH::HeatSource::to(
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
     {
-        heights.push_back(heatDist.normHeight(i));
+        heights.push_back(heatDist.unitaryHeight(i));
         weights.push_back(heatDist.unitaryWeight(i));
     }
 
@@ -399,7 +399,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     for (auto& dist : heatDistribution)
     {
         double endFrac = static_cast<double>(i + 1) / numNodes;
-        dist = heatDist.normWeight(beginFrac, endFrac);
+        dist = heatDist.normalizedWeight(beginFrac, endFrac);
         beginFrac = endFrac;
         ++i;
         totalWeight += dist;
