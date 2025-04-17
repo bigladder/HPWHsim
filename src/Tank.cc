@@ -30,6 +30,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 
 void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
+    metadataDescription.from(rstank);
     productInformation.from(rstank);
 
     auto& perf = rstank.performance;
