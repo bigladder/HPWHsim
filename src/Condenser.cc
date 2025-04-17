@@ -1432,7 +1432,9 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
         environmentT_C, heatSourceT_C, hpwh->getSetpoint(), input_BTUperHr, cop);
 }
 
-// convert to grid
+//-----------------------------------------------------------------------------
+///	@brief	compute a grid representation for performance map of this condenser
+//-----------------------------------------------------------------------------
 void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
                                       std::vector<std::vector<double>>& tempGridValues) const
 {
@@ -1447,7 +1449,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     std::vector<double> outletTemps_K = {};
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
-        { // environment temp
+        { // fill vector of environment temps, selected from tests
             std::vector<double> testEnvTemps_C = {
                 0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,       5.,   5.5,
                 6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,       10.5, 11.,
@@ -1463,7 +1465,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             arrangeGridVector(envTemps_K);
         }
 
-        { // outlet temp
+        { // fill vector of outlet temps
             if (isMultipass)
                 outletTemps_K = {
                     C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)};
@@ -1487,11 +1489,12 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             }
         }
 
-        { // heat source temp
+        { // fill vector of heat source temps
             const double minTemp_C = 0.;
             const double maxTemp_C = maxSetpoint_C;
             auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nSteps = static_cast<std::size_t>(std::max(51. * tempRange_dC / 100., 2.));
+            constexpr double steps_per_degC = 51. / 100.;
+            auto nSteps = static_cast<std::size_t>(std::max(steps_per_degC * tempRange_dC, 2.));
             auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nSteps);
             heatSourceTemps_K.reserve(nSteps + 1);
             for (std::size_t i = 0; i <= nSteps; ++i)
@@ -1502,12 +1505,13 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             arrangeGridVector(heatSourceTemps_K);
         }
 
-        // heat-source Ts
+        // fill grid axes
         tempGrid.reserve(3);
         tempGrid.push_back(envTemps_K);
         tempGrid.push_back(outletTemps_K); // not used
         tempGrid.push_back(heatSourceTemps_K);
 
+        // fill lookup variables by sampling
         std::size_t nVals = 1;
         for (auto& axis : tempGrid)
             nVals *= axis.size();
@@ -1528,15 +1532,15 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                     ++i;
                 }
 
-        // outlet Ts
         tempGridValues.push_back(inputPowers_W);
         tempGridValues.push_back(heatingCapacities_W);
     }
     else
     {
+        // fill envT axis
         double maxPowerCurvature = 0.; // curvature used to determine # of points
         double maxCOPCurvature = 0.;
-        envTemps_K.reserve(nEnvTempsOrig + 2);
+        envTemps_K.reserve(nEnvTempsOrig + 2); // # of map entries, plus endpoints
         envTemps_K.push_back(C_TO_K(minT));
         for (auto& perfPoint : performanceMap)
         {
@@ -1554,31 +1558,37 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         envTemps_K.push_back(C_TO_K(maxT));
         tempGrid.push_back(envTemps_K);
 
+        // fill outletT axis, if external (only used by Sanco)
         if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
         {
             tempGrid.push_back(
                 {C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)});
         }
 
-        // relate to reference values (from AOSmithPHPT60)
-        const double minHeatSourceTemp_C = 0.;
+        const double minHeatSourceTemp_C = 0.; // none specified in HPWH
         const double maxHeatSourceTemp_C = maxSetpoint_C;
         const double heatSourceTempRange_dC = maxHeatSourceTemp_C - minHeatSourceTemp_C;
         const double heatSourceTempRangeRef_dC = 100. - 0.;
         const double rangeFac = heatSourceTempRange_dC / heatSourceTempRangeRef_dC;
 
-        constexpr double minVals = 2;
-        constexpr double refPowerVals = 11;
-        constexpr double refCOP_vals = 11;
+        constexpr double minVals = 2.; // retain endpoints only, if no curvature
+
+        // relate to reference values (from AOSmithPHPT60)
+        constexpr double refPowerVals = 11.;
+        constexpr double refCOP_vals = 11.;
         constexpr double refPowerCurvature = 0.0176;
         constexpr double refCOP_curvature = 0.0002;
 
+        // find # of values needed along heat-sourceT axis for inputPower and COP;
+        // take the larger one
         auto nPowerVals = static_cast<std::size_t>(
             rangeFac * (maxPowerCurvature / refPowerCurvature) * (refPowerVals - minVals) +
             minVals);
         auto nCOP_vals = static_cast<std::size_t>(
             rangeFac * (maxCOPCurvature / refCOP_curvature) * (refCOP_vals - minVals) + minVals);
         std::size_t nVals = std::max(nPowerVals, nCOP_vals);
+
+        // fill heat-sourceT axis
         heatSourceTemps_K.resize(nVals);
         {
             double T_K = C_TO_K(0.);
@@ -1591,6 +1601,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         }
         tempGrid.push_back(heatSourceTemps_K);
 
+        // fill grid values
         std::size_t nTotVals = envTemps_K.size() * heatSourceTemps_K.size();
         std::vector<double> inputPowers_W(nTotVals), heatingCapacities_W(nTotVals);
         std::size_t i = 0;
@@ -1613,10 +1624,11 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     }
 }
 
-// convert to grid
+//-----------------------------------------------------------------------------
+///	@brief	convert performance map of this condenser to grid representation
+//-----------------------------------------------------------------------------
 void HPWH::Condenser::convertMapToGrid()
 {
-
     std::vector<std::vector<double>> tempGrid;
     std::vector<std::vector<double>> tempGridValues;
     makeGridFromMap(tempGrid, tempGridValues);
