@@ -4810,18 +4810,19 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
             cwhs.fixed_flow_rate,
             condenser->isMultipass);
 
-    if ((cwhs.secondary_heat_exchanger_is_set = (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)))
+    if ((cwhs.secondary_heat_exchanger_is_set =
+             (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)))
     {
-        auto& shs = cwhs.secondary_heat_exchanger;
+        auto& she = cwhs.secondary_heat_exchanger;
         checkTo(condenser->secondaryHeatExchanger.coldSideTemperatureOffset_dC,
-                shs.cold_side_temperature_offset_is_set,
-                shs.cold_side_temperature_offset);
+                she.cold_side_temperature_offset_is_set,
+                she.cold_side_temperature_offset);
         checkTo(condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                shs.hot_side_temperature_offset_is_set,
-                shs.hot_side_temperature_offset);
+                she.hot_side_temperature_offset_is_set,
+                she.hot_side_temperature_offset);
         checkTo(condenser->secondaryHeatExchanger.extraPumpPower_W,
-                shs.extra_pump_power_is_set,
-                shs.extra_pump_power);
+                she.extra_pump_power_is_set,
+                she.extra_pump_power);
     }
 }
 
