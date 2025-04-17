@@ -2569,7 +2569,7 @@ void HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4580)
     {
         if (presetNum == MODELS_AOSmithHPTU80)
-        {   // note: HPTU-80DR initialized separately (see below)
+        { // note: HPTU-80DR initialized separately (see below)
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2850,7 +2850,7 @@ void HPWH::initPreset(MODELS presetNum)
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
-        {   // discontinued?
+        { // discontinued?
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
