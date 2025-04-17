@@ -238,7 +238,7 @@ double HPWH::Tank::getAverageNodeT_C(const WeightedDistribution& wdist) const
     for (int i = 0; i < numNodes; ++i)
     {
         double norm_node_height = static_cast<double>(i) / numNodes;
-        double norm_dist_height = distPoint->height / wdist.heightRange();
+        double norm_dist_height = distPoint->height / wdist.maximumHeight();
 
         double next_norm_node_height = static_cast<double>(i + 1) / numNodes;
         double nodeT_C = hpwh->tank->nodeTs_C[i];
@@ -257,7 +257,7 @@ double HPWH::Tank::getAverageNodeT_C(const WeightedDistribution& wdist) const
                 break;
 
             norm_height = norm_dist_height;
-            norm_dist_height = distPoint->height / wdist.heightRange();
+            norm_dist_height = distPoint->height / wdist.maximumHeight();
         }
         double weight = distPoint->weight * (next_norm_node_height - norm_height);
         if (weight > 0.)
@@ -271,8 +271,7 @@ double HPWH::Tank::getAverageNodeT_C(const WeightedDistribution& wdist) const
 
 double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
 {
-
-    switch (dist.distribType)
+    switch (dist.distributionType)
     {
     case DistributionType::BottomOfTank:
     {
@@ -286,7 +285,7 @@ double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
 
     case DistributionType::Weighted:
     {
-        return hpwh->tank->getAverageNodeT_C(dist.weightedDist);
+        return hpwh->tank->getAverageNodeT_C(dist.weightedDistribution);
     }
     }
     return 0;
