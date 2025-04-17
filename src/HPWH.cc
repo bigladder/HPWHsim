@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include "HPWHUtils.hh"
+#include "HPWHFitter.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
 #include "Tank.hh"
