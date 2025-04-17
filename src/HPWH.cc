@@ -3650,21 +3650,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                         std::make_shared<HPWH::TempBasedHeatingLogic>(
                             "custom", nodeWeights, tempDouble, this, absolute, compare);
 
-                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    if (logic->dist.distributionType == DistributionType::TopOfTank)
                     {
                         j_logic["distribution_type"] = "top of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    else if (logic->dist.distributionType == DistributionType::BottomOfTank)
                     {
                         j_logic["distribution_type"] = "bottom of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    else if (logic->dist.distributionType == DistributionType::Weighted)
                     {
                         std::vector<double> distHeights = {}, distWeights = {};
-                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        for (std::size_t i = 0; i < logic->dist.weightedDistribution.size(); ++i)
                         {
-                            distHeights.push_back(logic->dist.weightedDist[i].height);
-                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                            distHeights.push_back(logic->dist.weightedDistribution[i].height);
+                            distWeights.push_back(logic->dist.weightedDistribution[i].weight);
                         }
                         nlohmann::json j_weighted_dist;
                         j_weighted_dist["normalized_height"] = distHeights;
@@ -3791,21 +3791,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    if (logic->dist.distributionType == DistributionType::TopOfTank)
                     {
                         j_logic["distribution_type"] = "top of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    else if (logic->dist.distributionType == DistributionType::BottomOfTank)
                     {
                         j_logic["distribution_type"] = "bottom of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    else if (logic->dist.distributionType == DistributionType::Weighted)
                     {
                         std::vector<double> distHeights = {}, distWeights = {};
-                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        for (std::size_t i = 0; i < logic->dist.weightedDistribution.size(); ++i)
                         {
-                            distHeights.push_back(logic->dist.weightedDist[i].height);
-                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                            distHeights.push_back(logic->dist.weightedDistribution[i].height);
+                            distWeights.push_back(logic->dist.weightedDistribution[i].weight);
                         }
                         nlohmann::json j_weighted_dist;
                         j_weighted_dist["normalized_height"] = distHeights;
@@ -3869,21 +3869,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    if (logic->dist.distributionType == DistributionType::TopOfTank)
                     {
                         j_logic["distribution_type"] = "top of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    else if (logic->dist.distributionType == DistributionType::BottomOfTank)
                     {
                         j_logic["distribution_type"] = "bottom of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    else if (logic->dist.distributionType == DistributionType::Weighted)
                     {
                         std::vector<double> distHeights = {}, distWeights = {};
-                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        for (std::size_t i = 0; i < logic->dist.weightedDistribution.size(); ++i)
                         {
-                            distHeights.push_back(logic->dist.weightedDist[i].height);
-                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                            distHeights.push_back(logic->dist.weightedDistribution[i].height);
+                            distWeights.push_back(logic->dist.weightedDistribution[i].weight);
                         }
                         nlohmann::json j_weighted_dist;
                         j_weighted_dist["normalized_height"] = distHeights;
