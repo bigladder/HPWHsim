@@ -38,18 +38,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "HPWH.hh"
-#include "HPWHFitter.hh"
-#include "HPWHUtils.hh"
-#include "HPWHHeatingLogic.hh"
-#include "HPWHHeatSource.hh"
-#include "Tank.hh"
-#include "Condenser.hh"
-#include "Resistance.hh"
-
-#include <btwxt/btwxt.h>
-#include <fmt/format.h>
-
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -62,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include "HPWHUtils.hh"
+#include "HPWHFitter.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
 #include "Tank.hh"
@@ -2392,7 +2381,7 @@ int HPWH::getResistancePosition(int elementIndex) const
         send_error("This index is not a resistance element.");
     }
     return static_cast<int>(HeatSource::CONDENSITY_SIZE *
-                            heatSources[elementIndex]->heatDist.lowestNormHeight());
+                            heatSources[elementIndex]->heatDist.lowestNormalizedHeight());
 }
 
 void HPWH::updateSoCIfNecessary()
@@ -2547,13 +2536,13 @@ void HPWH::calcDerivedHeatingValues()
                     send_warning("More than one resistance element is assigned to VIP.");
                 }
             }
-            double pos = heatSources[i]->heatDist.lowestNormHeight();
+            double pos = heatSources[i]->heatDist.lowestNormalizedHeight();
             if (pos < lowestPos)
             {
                 lowestElementIndex = i;
                 lowestPos = pos;
             }
-            pos = heatSources[i]->heatDist.lowestNormHeight();
+            pos = heatSources[i]->heatDist.lowestNormalizedHeight();
             if (pos >= highestPos)
             {
                 highestElementIndex = i;
@@ -3664,21 +3653,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                         std::make_shared<HPWH::TempBasedHeatingLogic>(
                             "custom", nodeWeights, tempDouble, this, absolute, compare);
 
-                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    if (logic->dist.distributionType == DistributionType::TopOfTank)
                     {
                         j_logic["distribution_type"] = "top of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    else if (logic->dist.distributionType == DistributionType::BottomOfTank)
                     {
                         j_logic["distribution_type"] = "bottom of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    else if (logic->dist.distributionType == DistributionType::Weighted)
                     {
                         std::vector<double> distHeights = {}, distWeights = {};
-                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        for (std::size_t i = 0; i < logic->dist.weightedDistribution.size(); ++i)
                         {
-                            distHeights.push_back(logic->dist.weightedDist[i].height);
-                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                            distHeights.push_back(logic->dist.weightedDistribution[i].height);
+                            distWeights.push_back(logic->dist.weightedDistribution[i].weight);
                         }
                         nlohmann::json j_weighted_dist;
                         j_weighted_dist["normalized_height"] = distHeights;
@@ -3805,21 +3794,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    if (logic->dist.distributionType == DistributionType::TopOfTank)
                     {
                         j_logic["distribution_type"] = "top of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    else if (logic->dist.distributionType == DistributionType::BottomOfTank)
                     {
                         j_logic["distribution_type"] = "bottom of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    else if (logic->dist.distributionType == DistributionType::Weighted)
                     {
                         std::vector<double> distHeights = {}, distWeights = {};
-                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        for (std::size_t i = 0; i < logic->dist.weightedDistribution.size(); ++i)
                         {
-                            distHeights.push_back(logic->dist.weightedDist[i].height);
-                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                            distHeights.push_back(logic->dist.weightedDistribution[i].height);
+                            distWeights.push_back(logic->dist.weightedDistribution[i].weight);
                         }
                         nlohmann::json j_weighted_dist;
                         j_weighted_dist["normalized_height"] = distHeights;
@@ -3883,21 +3872,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    if (logic->dist.distribType == DistributionType::TopOfTank)
+                    if (logic->dist.distributionType == DistributionType::TopOfTank)
                     {
                         j_logic["distribution_type"] = "top of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::BottomOfTank)
+                    else if (logic->dist.distributionType == DistributionType::BottomOfTank)
                     {
                         j_logic["distribution_type"] = "bottom of tank";
                     }
-                    else if (logic->dist.distribType == DistributionType::Weighted)
+                    else if (logic->dist.distributionType == DistributionType::Weighted)
                     {
                         std::vector<double> distHeights = {}, distWeights = {};
-                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        for (std::size_t i = 0; i < logic->dist.weightedDistribution.size(); ++i)
                         {
-                            distHeights.push_back(logic->dist.weightedDist[i].height);
-                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                            distHeights.push_back(logic->dist.weightedDistribution[i].height);
+                            distWeights.push_back(logic->dist.weightedDistribution[i].weight);
                         }
                         nlohmann::json j_weighted_dist;
                         j_weighted_dist["normalized_height"] = distHeights;
@@ -4833,20 +4822,22 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
     if ((cwhs.secondary_heat_exchanger_is_set =
              (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)))
     {
-        auto& shs = cwhs.secondary_heat_exchanger;
+        auto& she = cwhs.secondary_heat_exchanger;
         checkTo(condenser->secondaryHeatExchanger.coldSideTemperatureOffset_dC,
-                shs.cold_side_temperature_offset_is_set,
-                shs.cold_side_temperature_offset);
+                she.cold_side_temperature_offset_is_set,
+                she.cold_side_temperature_offset);
         checkTo(condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                shs.hot_side_temperature_offset_is_set,
-                shs.hot_side_temperature_offset);
+                she.hot_side_temperature_offset_is_set,
+                she.hot_side_temperature_offset);
         checkTo(condenser->secondaryHeatExchanger.extraPumpPower_W,
-                shs.extra_pump_power_is_set,
-                shs.extra_pump_power);
+                she.extra_pump_power_is_set,
+                she.extra_pump_power);
     }
 }
 
-// convert to grid
+//-----------------------------------------------------------------------------
+///	@brief	convert condenser performance map to grid representation
+//-----------------------------------------------------------------------------
 void HPWH::convertMapToGrid()
 {
     if (!hasACompressor())
