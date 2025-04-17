@@ -266,7 +266,6 @@ double HPWH::Tank::getAverageNodeT_C(const WeightedDistribution& wdist) const
 
 double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
 {
-
     switch (dist.distributionType)
     {
     case DistributionType::BottomOfTank:

@@ -350,7 +350,7 @@ class HPWH : public Courier::Sender
 
     ///	@struct WeightedDistribution
     /// distribution specified by (height, weight) pairs
-     struct WeightedDistribution : public std::vector<DistributionPoint>
+    struct WeightedDistribution : public std::vector<DistributionPoint>
     {
       public:
         /// typical construction uses separate height, weight vectors
@@ -381,7 +381,7 @@ class HPWH : public Courier::Sender
             }
             return total / prevHeight;
         }
-        double maxWeight() const
+        double maximumWeight() const
         {
             double res = 0.;
             for (auto distPoint : (*this))
@@ -389,9 +389,9 @@ class HPWH : public Courier::Sender
             return res;
         }
 
-        /// access by index
-        double normHeight(std::size_t i) const { return (*this)[i].height / heightRange(); }
-        double normalizedWeight(std::size_t i) const { return (*this)[i].weight / maxWeight(); }
+        /// access normalized values by index
+        double normalizedHeight(std::size_t i) const { return (*this)[i].height / heightRange(); }
+        double normalizedWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
 
         bool isValid() const
         {
@@ -399,7 +399,7 @@ class HPWH : public Courier::Sender
             bool hasWeight = false;
             bool isSorted = true;
             double prevHeight = 0.;
-            for (auto& distPoint: *this)
+            for (auto& distPoint : (*this))
             {
                 isSorted &= (distPoint.height > prevHeight);
                 hasWeight |= (distPoint.weight > 0.);
@@ -434,7 +434,7 @@ class HPWH : public Courier::Sender
         }
 
         /// @brief returns the lowest normalized height with non-zero weight
-        double lowestNormHeight() const
+        double lowestNormalizedHeight() const
         {
             double prev_height = 0.;
             for (auto distPoint = begin(); distPoint != end(); ++distPoint)

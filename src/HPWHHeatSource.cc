@@ -140,7 +140,7 @@ void HPWH::HeatSource::to(
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
     {
-        heights.push_back(heatDist.normHeight(i));
+        heights.push_back(heatDist.normalizedHeight(i));
         weights.push_back(heatDist.normalizedWeight(i));
     }
 
