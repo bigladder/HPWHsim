@@ -2569,7 +2569,7 @@ void HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4580)
     {
         if (presetNum == MODELS_AOSmithHPTU80)
-        {   // note: HPTU-80DR initialized separately (see below)
+        { // note: HPTU-80DR initialized separately (see below)
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2850,12 +2850,14 @@ void HPWH::initPreset(MODELS presetNum)
         setpoint_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS40)
-        {   // discontinued?
+        { // discontinued?
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
+            metadataDescription = {
+                "ProLine XE® Voltex® AL 50-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-50 2.."};
             rating10CFR430.certified_reference_number = {"208531033"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2867,6 +2869,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
+            metadataDescription = {
+                "ProLine XE® Voltex® AL 66-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-66 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
@@ -2878,6 +2882,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
+            metadataDescription = {
+                "ProLine XE® Voltex® AL 80-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-80 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
