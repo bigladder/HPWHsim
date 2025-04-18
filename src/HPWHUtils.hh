@@ -54,19 +54,6 @@ void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	update t_new to t if has_value, else retain t_new and is_set
-//-----------------------------------------------------------------------------
-template <typename T>
-void updateTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
-{
-    is_set |= has_value;
-    if (has_value)
-    {
-        t_new = t;
-    }
-}
-
-//-----------------------------------------------------------------------------
 ///	@brief	fill metadata fields of a schema object
 //-----------------------------------------------------------------------------
 template <typename RSSCHEMA, typename RSTYPE>
