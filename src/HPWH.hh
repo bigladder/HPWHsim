@@ -298,7 +298,7 @@ class HPWH : public Courier::Sender
         bool is_set = false;
 
       public:
-        Entry(const T& t_in, bool is_set_in) : is_set(is_set_in)
+        Entry(const T& t_in, const bool is_set_in) : is_set(is_set_in)
         {
             if (is_set)
                 t = t_in;
@@ -310,6 +310,17 @@ class HPWH : public Courier::Sender
 
         T operator()() const { return is_set ? t : T(); }
         bool isSet() const { return is_set; }
+
+        void from(const T& t_in, const bool is_set_in) { *this = {t_in, is_set_in}; }
+
+        void to(T& t_in, bool& is_set_in) const
+        {
+            if (is_set)
+            {
+                t_in = t;
+                is_set_in = true;
+            }
+        }
     };
 
     struct ProductInformation
@@ -335,8 +346,8 @@ class HPWH : public Courier::Sender
                 if (desc.product_information_is_set)
                 {
                     auto& info = desc.product_information;
-                    manufacturer = {info.manufacturer, info.manufacturer_is_set};
-                    model_number = {info.model_number, info.model_number_is_set};
+                    manufacturer.from(info.manufacturer, info.manufacturer_is_set);
+                    model_number.from(info.model_number, info.model_number_is_set);
                 }
             }
         }
@@ -350,15 +361,8 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& prod_info = desc.product_information;
 
-            checkTo(manufacturer(),
-                    prod_info.manufacturer_is_set,
-                    prod_info.manufacturer,
-                    manufacturer.isSet());
-
-            checkTo(model_number(),
-                    prod_info.model_number_is_set,
-                    prod_info.model_number,
-                    model_number.isSet());
+            manufacturer.to(prod_info.manufacturer, prod_info.manufacturer_is_set);
+            model_number.to(prod_info.model_number, prod_info.model_number_is_set);
 
             checkTo(prod_info, desc.product_information_is_set, desc.product_information, !empty());
 
@@ -402,15 +406,15 @@ class HPWH : public Courier::Sender
                 if (desc.rating_10_cfr_430_is_set)
                 {
                     auto& info = desc.rating_10_cfr_430;
-                    certified_reference_number = {info.certified_reference_number,
-                                                  info.certified_reference_number_is_set};
-                    nominal_tank_volume = {info.nominal_tank_volume,
-                                           info.nominal_tank_volume_is_set};
-                    first_hour_rating = {info.first_hour_rating, info.first_hour_rating_is_set};
-                    recovery_efficiency = {info.recovery_efficiency,
-                                           info.recovery_efficiency_is_set};
-                    uniform_energy_factor = {info.uniform_energy_factor,
-                                             info.uniform_energy_factor_is_set};
+                    certified_reference_number.from(info.certified_reference_number,
+                                                    info.certified_reference_number_is_set);
+                    nominal_tank_volume.from(info.nominal_tank_volume,
+                                             info.nominal_tank_volume_is_set);
+                    first_hour_rating.from(info.first_hour_rating, info.first_hour_rating_is_set);
+                    recovery_efficiency.from(info.recovery_efficiency,
+                                             info.recovery_efficiency_is_set);
+                    uniform_energy_factor.from(info.uniform_energy_factor,
+                                               info.uniform_energy_factor_is_set);
                 }
             }
         }
@@ -423,33 +427,15 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& rating = desc.rating_10_cfr_430;
 
-            checkTo(certified_reference_number(),
-                    rating.certified_reference_number_is_set,
-                    rating.certified_reference_number,
-                    certified_reference_number.isSet());
-
-            checkTo(nominal_tank_volume(),
-                    rating.nominal_tank_volume_is_set,
-                    rating.nominal_tank_volume,
-                    nominal_tank_volume.isSet());
-
-            checkTo(first_hour_rating(),
-                    rating.first_hour_rating_is_set,
-                    rating.first_hour_rating,
-                    first_hour_rating.isSet());
-
-            checkTo(recovery_efficiency(),
-                    rating.recovery_efficiency_is_set,
-                    rating.recovery_efficiency,
-                    recovery_efficiency.isSet());
-
-            checkTo(uniform_energy_factor(),
-                    rating.uniform_energy_factor_is_set,
-                    rating.uniform_energy_factor,
-                    uniform_energy_factor.isSet());
+            certified_reference_number.to(rating.certified_reference_number,
+                                          rating.certified_reference_number_is_set);
+            nominal_tank_volume.to(rating.nominal_tank_volume, rating.nominal_tank_volume_is_set);
+            first_hour_rating.to(rating.first_hour_rating, rating.first_hour_rating_is_set);
+            recovery_efficiency.to(rating.recovery_efficiency, rating.recovery_efficiency_is_set);
+            uniform_energy_factor.to(rating.uniform_energy_factor,
+                                     rating.uniform_energy_factor_is_set);
 
             checkTo(rating, desc.rating_10_cfr_430_is_set, desc.rating_10_cfr_430, !empty());
-
             checkTo(desc, rs.description_is_set, rs.description, !empty());
         }
 
