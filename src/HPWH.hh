@@ -323,6 +323,38 @@ class HPWH : public Courier::Sender
         }
     };
 
+    struct MetadataDescription
+    {
+        Entry<std::string> description;
+        MetadataDescription() : description("", false) {}
+        MetadataDescription(std::string description_in) : description(description_in) {}
+        bool empty() const { return !(description.isSet()); }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer field from schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void from(const RSTYPE& rs)
+        {
+            if (rs.metadata_is_set)
+            {
+                auto& metadata = rs.metadata;
+                description.from(metadata.description, metadata.description_is_set);
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer field to schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void to(RSTYPE& rs) const
+        {
+            auto& metadata = rs.metadata;
+            description.to(metadata.description, metadata.description_is_set);
+        }
+
+    } metadataDescription;
+
     struct ProductInformation
     {
         Entry<std::string> manufacturer;
