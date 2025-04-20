@@ -68,9 +68,11 @@ struct PerformanceMapTest : public testing::Test
     void reloadFromDataModel(HPWH& hpwh)
     {
         hpwh_data_model::init(hpwh.get_courier());
-        nlohmann::json j;
+
         hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi0, hsi1;
         hpwh.to(hsi0);
+
+        nlohmann::json j;
         add_to_json(hsi0, j);
 
         hpwh_data_model::hpwh_sim_input::from_json(j, hsi1);
