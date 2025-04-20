@@ -4573,6 +4573,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
+            metadataDescription = {
+                "ENERGY STAR Certified Aerotherm 50 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H50S.-....."};
             rating10CFR430.certified_reference_number = {"200094643"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -4584,6 +4586,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
+            metadataDescription = {
+                "ENERGY STAR Certified Aerotherm 65 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H65T..-....."};
             rating10CFR430.certified_reference_number = {"204835481"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
@@ -4595,6 +4599,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
+            metadataDescription = {
+                "ENERGY STAR Certified Aerotherm 80 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H80T.-....."};
             rating10CFR430.certified_reference_number = {"200094645"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
