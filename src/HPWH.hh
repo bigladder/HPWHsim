@@ -353,7 +353,7 @@ class HPWH : public Courier::Sender
             description.to(metadata.description, metadata.description_is_set);
         }
 
-    } metadataDescription;
+    }; // metadataDescription;
 
     struct ProductInformation
     {
