@@ -11,6 +11,8 @@ import shutil
 import sys
 import time
 
+lattice_branch ="default-is-set"
+
 def generate(repo_dir, build_dir):
 	data_model_dir = os.path.join(build_dir, "hpwh_data_model")
 	working_dir = "."
@@ -72,4 +74,3 @@ if __name__ == "__main__":
 			repo_dir = sys.argv[1]
 			build_dir = sys.argv[2]
 		generate(repo_dir, build_dir)
-

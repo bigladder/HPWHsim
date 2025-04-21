@@ -49,8 +49,8 @@ void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
     if (has_value)
     {
         t_new = t;
-        is_set = true;
     }
+    is_set |= has_value;
 }
 
 //-----------------------------------------------------------------------------

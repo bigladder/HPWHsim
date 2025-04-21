@@ -125,24 +125,24 @@ namespace hpwh_data_model {
 		};
 		struct LiquidComponent {
 			ashrae205::LiquidConstituent liquid_constituent;
-			bool liquid_constituent_is_set;
+			bool liquid_constituent_is_set = false;
 			const static std::string_view liquid_constituent_units;
 			const static std::string_view liquid_constituent_description;
 			const static std::string_view liquid_constituent_name;
 			double concentration;
-			bool concentration_is_set;
+			bool concentration_is_set = false;
 			const static std::string_view concentration_units;
 			const static std::string_view concentration_description;
 			const static std::string_view concentration_name;
 		};
 		struct LiquidMixture {
 			std::vector<ashrae205::LiquidComponent> liquid_components;
-			bool liquid_components_is_set;
+			bool liquid_components_is_set = false;
 			const static std::string_view liquid_components_units;
 			const static std::string_view liquid_components_description;
 			const static std::string_view liquid_components_name;
 			ashrae205::ConcentrationType concentration_type;
-			bool concentration_type_is_set;
+			bool concentration_type_is_set = false;
 			const static std::string_view concentration_type_units;
 			const static std::string_view concentration_type_description;
 			const static std::string_view concentration_type_name;

@@ -318,8 +318,8 @@ class HPWH : public Courier::Sender
             if (is_set)
             {
                 t_in = t;
-                is_set_in = true;
             }
+            is_set_in |= is_set;
         }
     };
 
