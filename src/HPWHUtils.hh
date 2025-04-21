@@ -46,10 +46,10 @@ bool checkFrom(T& t, nlohmann::json& j, std::string_view key, const T t_default)
 template <typename T>
 void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
 {
-    is_set = has_value;
     if (has_value)
     {
         t_new = t;
+        is_set = true;
     }
 }
 
@@ -87,33 +87,6 @@ static void generate_metadata(RSTYPE& rs, std::string_view schema_name, std::str
         std::string(time_of_creation), metadata.time_of_creation_is_set, metadata.time_of_creation);
 
     rs.metadata_is_set = true;
-}
-
-//-----------------------------------------------------------------------------
-///	@brief	transfer metadata to json dict
-//-----------------------------------------------------------------------------
-template <typename RSTYPE>
-nlohmann::json get_metadata_as_json(const RSTYPE& rs)
-{
-    nlohmann::json j_metadata = {};
-    auto& metadata = rs.metadata;
-    if (metadata.author_is_set)
-        j_metadata["author"] = rs.metadata.author;
-    if (metadata.description_is_set)
-        j_metadata["description"] = rs.metadata.description;
-    if (metadata.schema_author_is_set)
-        j_metadata["schema_author"] = rs.metadata.schema_author;
-    if (metadata.schema_name_is_set)
-        j_metadata["schema_name"] = rs.metadata.schema_name;
-    if (metadata.schema_url_is_set)
-        j_metadata["schema_url"] = rs.metadata.schema_url;
-    if (metadata.schema_version_is_set)
-        j_metadata["schema_version"] = rs.metadata.schema_version;
-    if (metadata.source_is_set)
-        j_metadata["source"] = rs.metadata.source;
-    if (metadata.time_of_creation_is_set)
-        j_metadata["time_of_creation"] = rs.metadata.time_of_creation;
-    return j_metadata;
 }
 
 /// add fields from various schema objects to json

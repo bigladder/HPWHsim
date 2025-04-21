@@ -241,6 +241,33 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 }
 
 template <typename RSTYPE>
+void add_metadata_to_json(const RSTYPE& rs, nlohmann::json& j)
+{
+    if (rs.metadata_is_set)
+    {
+        if (!j.contains("metadata"))
+            j["metadata"] = {};
+        auto& metadata = rs.metadata;
+        if (metadata.author_is_set)
+            j["metadata"]["author"] = rs.metadata.author;
+        if (metadata.description_is_set)
+            j["metadata"]["description"] = rs.metadata.description;
+        if (metadata.schema_author_is_set)
+            j["metadata"]["schema_author"] = rs.metadata.schema_author;
+        if (metadata.schema_name_is_set)
+            j["metadata"]["schema_name"] = rs.metadata.schema_name;
+        if (metadata.schema_url_is_set)
+            j["metadata"]["schema_url"] = rs.metadata.schema_url;
+        if (metadata.schema_version_is_set)
+            j["metadata"]["schema_version"] = rs.metadata.schema_version;
+        if (metadata.source_is_set)
+            j["metadata"]["source"] = rs.metadata.source;
+        if (metadata.time_of_creation_is_set)
+            j["metadata"]["time_of_creation"] = rs.metadata.time_of_creation;
+    }
+}
+
+template <typename RSTYPE>
 void add_product_information_to_json(const RSTYPE& rs, nlohmann::json& j)
 {
     if (rs.description_is_set)
@@ -295,7 +322,8 @@ void add_rating_10_cfr_430_to_json(
 }
 void add_to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohmann::json& j)
 {
-    j["metadata"] = get_metadata_as_json(hsi);
+    add_metadata_to_json(hsi, j);
+
     j["number_of_nodes"] = hsi.number_of_nodes;
     j["fixed_volume"] = hsi.fixed_volume;
     j["depresses_temperature"] = hsi.depresses_temperature;
@@ -323,8 +351,7 @@ void add_to_json(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi, nlohm
 void add_to_json(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh,
                  nlohmann::json& j)
 {
-    j["metadata"] = get_metadata_as_json(rswh);
-
+    add_metadata_to_json(rswh, j);
     add_product_information_to_json(rswh, j);
     add_rating_10_cfr_430_to_json(rswh, j);
 
@@ -581,8 +608,7 @@ void add_to_json(
 
 void add_to_json(const hpwh_data_model::rstank::RSTANK& rstank, nlohmann::json& j)
 {
-    j["metadata"] = get_metadata_as_json(rstank);
-
+    add_metadata_to_json(rstank, j);
     add_product_information_to_json(rstank, j);
 
     auto& perf = rstank.performance;
@@ -603,8 +629,7 @@ void add_to_json(
     const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& rshs,
     nlohmann::json& j)
 {
-    j["metadata"] = get_metadata_as_json(rshs);
-
+    add_metadata_to_json(rshs, j);
     add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
@@ -686,8 +711,7 @@ void add_to_json(
 void add_to_json(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& rshs,
                  nlohmann::json& j)
 {
-    j["metadata"] = get_metadata_as_json(rshs);
-
+    add_metadata_to_json(rshs, j);
     add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;
@@ -755,8 +779,7 @@ void add_to_json(
     const hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE& rshs,
     nlohmann::json& j)
 {
-    j["metadata"] = get_metadata_as_json(rshs);
-
+    add_metadata_to_json(rshs, j);
     add_product_information_to_json(rshs, j);
 
     auto& perf = rshs.performance;

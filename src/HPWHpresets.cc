@@ -2342,6 +2342,8 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU50)
         {
+            metadataDescription = {"50 Gallon HPTU-50N Voltex Residential Hybrid Electric Heat "
+                                   "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-50(?:N|DR|CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:69|86|87)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2453,6 +2455,8 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU66)
         {
+            metadataDescription = {"66 Gallon HPTU-60N Voltex Residential Hybrid Electric Heat "
+                                   "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-66(?:N:DR:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:70|86|98)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
@@ -2570,6 +2574,8 @@ void HPWH::initPreset(MODELS presetNum)
     {
         if (presetNum == MODELS_AOSmithHPTU80)
         { // note: HPTU-80DR initialized separately (see below)
+            metadataDescription = {"80 Gallon HPTU-80N Voltex Residential Hybrid Electric Heat "
+                                   "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2755,7 +2761,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
-        // discontinued?
+        metadataDescription = {"120 Gallon Hybrid Light Commercial Water Heater"};
         productInformation = {"A. O. Smith", "CAHP-120"};
 
         setNumNodes(24);
@@ -2856,6 +2862,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
+            metadataDescription = {
+                "ProLine XE® Voltex® AL 50-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-50 2.."};
             rating10CFR430.certified_reference_number = {"208531033"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2867,6 +2875,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
+            metadataDescription = {
+                "ProLine XE® Voltex® AL 66-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-66 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
@@ -2878,6 +2888,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
+            metadataDescription = {
+                "ProLine XE® Voltex® AL 80-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-80 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
