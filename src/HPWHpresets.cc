@@ -2857,6 +2857,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTS40)
         { // discontinued?
+            productInformation.model_number = {"HPTS-40 2.."};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
