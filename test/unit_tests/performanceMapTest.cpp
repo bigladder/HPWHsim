@@ -68,10 +68,14 @@ struct PerformanceMapTest : public testing::Test
     void reloadFromDataModel(HPWH& hpwh)
     {
         hpwh_data_model::init(hpwh.get_courier());
-        nlohmann::json j;
+
         hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi0, hsi1;
         hpwh.to(hsi0);
+
+        nlohmann::json j;
         add_to_json(hsi0, j);
+
+        std::cout << j.dump(2);
 
         hpwh_data_model::hpwh_sim_input::from_json(j, hsi1);
         hpwh.from(hsi1);
@@ -832,5 +836,26 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
+    }
+}
+
+
+/*
+ * ReloadFromDataModel_ExtendedDescription tests
+ */
+TEST_F(PerformanceMapTest, ReloadFromDataModel_ExtendedDescription)
+{
+    HPWH hpwh;
+    {
+        const std::string sModelName = "BradfordWhiteAeroThermRE2H50";
+        hpwh.initPreset(sModelName);
+
+        auto extendedDescription0 = hpwh.metadataDescription.description;
+
+        reloadFromDataModel(hpwh);
+
+        auto extendedDescription1 = hpwh.metadataDescription.description;
+
+        EXPECT_EQ(extendedDescription0(), extendedDescription1()) << sModelName << ": data model";
     }
 }

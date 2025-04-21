@@ -219,7 +219,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
-    metadataDescription = hpwh.metadataDescription;
+    // metadataDescription = hpwh.metadataDescription;
     productInformation = hpwh.productInformation;
 
     return *this;
@@ -495,7 +495,7 @@ void HPWH::runOneStep(double drawVolume_L,
                     }
                 }
             } // heat source not engaged
-        } // end while iHS heat source
+        }     // end while iHS heat source
     }
     if (areAllHeatSourcesOff())
     {
@@ -4482,6 +4482,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
+    metadataDescription.from(rswh);
     productInformation.from(rswh);
     rating10CFR430.from(rswh);
 
@@ -4708,6 +4709,8 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
+    checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
+
     checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
 
     checkTo(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume);
@@ -4742,6 +4745,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSINTEGRATEDWATERHEATER.schema.yaml");
 
+    metadataDescription.to(rswh);
     productInformation.to(rswh);
     rating10CFR430.to(rswh);
 
