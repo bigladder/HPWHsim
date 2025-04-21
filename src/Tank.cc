@@ -23,14 +23,14 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     mixBelowFractionOnDraw = tank_in.mixBelowFractionOnDraw;
     doInversionMixing = tank_in.doInversionMixing;
     hasHeatExchanger = tank_in.hasHeatExchanger;
-    metadataDescription = tank_in.metadataDescription;
+    description = tank_in.description;
     productInformation = tank_in.productInformation;
     return *this;
 }
 
 void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
 {
-    metadataDescription.from(rstank);
+    description.from(rstank);
     productInformation.from(rstank);
 
     auto& perf = rstank.performance;
@@ -60,7 +60,7 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
         "RSTANK",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml");
 
-    metadataDescription.to(rstank);
+    description.to(rstank);
     productInformation.to(rstank);
 
     //

@@ -219,7 +219,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
-    // metadataDescription = hpwh.metadataDescription;
+    // description = hpwh.description;
     productInformation = hpwh.productInformation;
 
     return *this;
@@ -4482,7 +4482,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    metadataDescription.from(rswh);
+    description.from(rswh);
     productInformation.from(rswh);
     rating10CFR430.from(rswh);
 
@@ -4745,7 +4745,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSINTEGRATEDWATERHEATER.schema.yaml");
 
-    metadataDescription.to(rswh);
+    description.to(rswh);
     productInformation.to(rswh);
     rating10CFR430.to(rswh);
 

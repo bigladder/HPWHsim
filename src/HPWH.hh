@@ -323,12 +323,11 @@ class HPWH : public Courier::Sender
         }
     };
 
-    struct MetadataDescription
+    struct Description : public Entry<std::string>
     {
-        Entry<std::string> description;
-        MetadataDescription() : description("", false) {}
-        MetadataDescription(std::string description_in) : description(description_in) {}
-        bool empty() const { return !(description.isSet()); }
+        Description() : Entry<std::string>("", false) {}
+        Description(std::string description_in) : Entry<std::string>(description_in) {}
+        bool empty() const { return !(Entry<std::string>::isSet()); }
 
         //-----------------------------------------------------------------------------
         ///	@brief	Transfer field from schema
@@ -339,7 +338,7 @@ class HPWH : public Courier::Sender
             if (rs.metadata_is_set)
             {
                 auto& metadata = rs.metadata;
-                description.from(metadata.description, metadata.description_is_set);
+                Entry<std::string>::from(metadata.description, metadata.description_is_set);
             }
         }
 
@@ -350,10 +349,10 @@ class HPWH : public Courier::Sender
         void to(RSTYPE& rs) const
         {
             auto& metadata = rs.metadata;
-            description.to(metadata.description, metadata.description_is_set);
+            Entry<std::string>::to(metadata.description, metadata.description_is_set);
         }
 
-    } metadataDescription;
+    } description;
 
     struct ProductInformation
     {
