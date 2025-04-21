@@ -736,8 +736,8 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
 {
     HPWH hpwh;
     {
-        const std::string sModelName = "Rheem2020Prem50";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "Rheem2020Prem50";
+        hpwh.initPreset(modelName);
 
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
@@ -748,7 +748,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -756,7 +756,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
 }
 
@@ -767,8 +767,8 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
 {
     HPWH hpwh;
     {
-        const std::string sModelName = "ColmacCxA_20_MP";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "ColmacCxA_20_MP";
+        hpwh.initPreset(modelName);
 
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
@@ -779,7 +779,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -787,11 +787,11 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
     {
-        const std::string sModelName = "ColmacCxA_20_SP";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "ColmacCxA_20_SP";
+        hpwh.initPreset(modelName);
 
         PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
@@ -802,7 +802,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -810,11 +810,11 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
     {
-        const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "QAHV_N136TAU_HPB_SP";
+        hpwh.initPreset(modelName);
 
         PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
@@ -825,7 +825,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -833,24 +833,22 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
 }
 
 /*
- * ReloadFromDataModel_ExtendedDescription tests
+ * ReloadFromDataModel_Description tests
  */
-TEST_F(PerformanceMapTest, ReloadFromDataModel_ExtendedDescription)
+TEST_F(PerformanceMapTest, ReloadFromDataModel_Description)
 {
     HPWH hpwh;
     {
-        const std::string sModelName = "BradfordWhiteAeroThermRE2H50";
-        hpwh.initPreset(sModelName);
-
+        const std::string modelName = "BradfordWhiteAeroThermRE2H50";
+        hpwh.initPreset(modelName);
         auto description0 = hpwh.description;
 
         reloadFromDataModel(hpwh);
-
         auto description1 = hpwh.description;
 
         EXPECT_EQ(description0.isSet(), description1.isSet());
