@@ -2343,7 +2343,7 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_AOSmithHPTU50)
         {
             description = {"50 Gallon HPTU-50N Voltex Residential Hybrid Electric Heat "
-                                   "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
+                           "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-50(?:N|DR|CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:69|86|87)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -2456,7 +2456,7 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_AOSmithHPTU66)
         {
             description = {"66 Gallon HPTU-60N Voltex Residential Hybrid Electric Heat "
-                                   "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
+                           "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-66(?:N:DR:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:70|86|98)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
@@ -2575,7 +2575,7 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_AOSmithHPTU80)
         { // note: HPTU-80DR initialized separately (see below)
             description = {"80 Gallon HPTU-80N Voltex Residential Hybrid Electric Heat "
-                                   "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
+                           "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
@@ -3562,28 +3562,56 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_RheemPlugInShared40)
         {
-            productInformation.model_number = {"PlugInShared40"};
+            description = {"Performance Platinum ProTerra 40 Gal. 120-Volt Plug-in Smart Heat Pump "
+                           "Water Heater with 10-Year Warranty"};
+            productInformation.model_number = {"XE40T10HMS?00U0"};
+            rating10CFR430.certified_reference_number = {"21471723."};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(40.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(45.) / 1000.;
+            rating10CFR430.recovery_efficiency = 3.87;
+            rating10CFR430.uniform_energy_factor = 2.80;
             tank->volume_L = GAL_TO_L(36.0);
             tank->UA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
         {
-            productInformation.model_number = {"PlugInShared50"};
+            description = {"Performance Platinum ProTerra 50 Gal. 120-Volt Plug-in Smart Heat Pump "
+                           "Water Heater with 10-Year Warranty"};
+            productInformation.model_number = {"XE50T10HMS?00U0"};
+            rating10CFR430.certified_reference_number = {"21471724."};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(55.) / 1000.;
+            rating10CFR430.recovery_efficiency = 3.67;
+            rating10CFR430.uniform_energy_factor = 3.00;
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 8.55;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared65)
         {
-            productInformation.model_number = {"PlugInShared65"};
+            description = {"Performance Platinum ProTerra 65 Gal. 120-Volt Plug-in Smart Heat Pump "
+                           "Water Heater with 10-Year Warranty"};
+            productInformation.model_number = {"XE65T10HMS?00U0"};
+            rating10CFR430.certified_reference_number = {"21471725."};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(63.) / 1000.;
+            rating10CFR430.recovery_efficiency = 3.98;
+            rating10CFR430.uniform_energy_factor = 3.33;
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
             setpoint_C = F_TO_C(127.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared80)
         {
-            productInformation.model_number = {"PlugInShared80"};
+            description = {"Performance Platinum ProTerra 80 Gal. 120-Volt Plug-in Smart Heat Pump "
+                           "Water Heater with 10-Year Warranty"};
+            productInformation.model_number = {"XE80T10HMS?00U0"};
+            rating10CFR430.certified_reference_number = {"21471726."};
+            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
+            rating10CFR430.first_hour_rating = GAL_TO_L(84.) / 1000.;
+            rating10CFR430.recovery_efficiency = 3.93;
+            rating10CFR430.uniform_energy_factor = 3.46;
             tank->volume_L = GAL_TO_L(72.0);
             tank->UA_kJperHrC = 10.83;
             setpoint_C = F_TO_C(127.0);
@@ -3755,7 +3783,8 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_Stiebel220E)
     {
-        productInformation = {"Stiebel", "220E"};
+        description = {"Accelera 220 E, 58 Gallon Hybrid Electric Heat Pump Water Heater"};
+        productInformation = {"Stiebel Eltron", "220 E"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127);
@@ -4358,6 +4387,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
     else if (presetNum == MODELS_AquaThermAire)
     {
+        description = {"AquaThermAire-CHT2021-48A"};
         productInformation = {"Villara", "AquaThermAire - CHT2021-48A"};
         rating10CFR430.first_hour_rating = GAL_TO_L(78.) / 1000.;
         rating10CFR430.recovery_efficiency = 3.837;
@@ -4485,7 +4515,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->backupHeatSource = compressor;
     }
     else if ((MODELS_AWHSTier4Generic40 <= presetNum) && (presetNum <= MODELS_AWHSTier4Generic80))
-    {
+    { // AWHS: Advanced Water Heater Specification
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
@@ -4690,6 +4720,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_LG_APHWC50)
         {
+            description = {"58 Gallon High-Efficiency Electric Inverter Heat Pump Water Heater "
+                           "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC501."};
             rating10CFR430.certified_reference_number = {"213352429"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(58.) / 1000.;
@@ -4701,6 +4733,8 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_LG_APHWC80)
         {
+            description = {"80 Gallon High-Efficiency Electric Inverter Heat Pump Water Heater "
+                           "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC801."};
             rating10CFR430.certified_reference_number = {"213363354"};
             rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
