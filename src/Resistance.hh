@@ -20,7 +20,7 @@ class HPWH::Resistance : public HPWH::HeatSource
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return HPWH::TYPE_resistance; }
 
-    MetadataDescription metadataDescription;
+    Description description;
     ProductInformation productInformation;
 
     void
