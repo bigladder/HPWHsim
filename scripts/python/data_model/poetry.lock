@@ -481,8 +481,8 @@ stringcase = ">=1.2.0"
 [package.source]
 type = "git"
 url = "https://github.com/bigladder/lattice.git"
-reference = "validation-fixes"
-resolved_reference = "f8908a89040c62595b36371ed26b042b3dff9f0e"
+reference = "default-is-set"
+resolved_reference = "6895b453ecba103e70e76a81e2a28846f12c8daf"
 
 [[package]]
 name = "markdown"
@@ -1315,4 +1315,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "d318b3e4e09059862824c2dde08f1e9fc0f75c8fd9754cbaf15033e6b97907da"
+content-hash = "5fda0d3a040c8b8d0f285250214fc0cf94ee2046fc89569b7ae19e9fcc663ef7"
