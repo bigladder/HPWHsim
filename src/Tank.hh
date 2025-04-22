@@ -3,32 +3,31 @@
 
 #include "HPWH.hh"
 
-class HPWH::Tank : public Sender
-{
-  public:
+class HPWH::Tank : public Sender {
+public:
     static const inline double ASPECTRATIO = 4.75;
     /// tank height / radius aspect ratio, derived from the median value of 88
     /// insulated storage tanks currently available on the market.
 
     friend class HPWH;
 
-    HPWH* hpwh;
+    HPWH *hpwh;
 
-    Tank(HPWH* hpwh_in = NULL,
+    Tank(HPWH *hpwh_in = NULL,
          const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
-         const std::string& name_in = "tank")
-        : Sender("HeatSource", name_in, courier), hpwh(hpwh_in)
-    {
+         const std::string &name_in = "tank")
+            : Sender("HeatSource", name_in, courier), hpwh(hpwh_in) {
     }
 
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
-    Tank(const Tank& tank);            /// copy constructor
-    Tank& operator=(const Tank& tank); /// assignment operator
+    Tank(const Tank &tank);            /// copy constructor
+    Tank &operator=(const Tank &tank); /// assignment operator
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    void from(hpwh_data_model::rstank::RSTANK& rstank);
-    void to(hpwh_data_model::rstank::RSTANK& rstank) const;
+    void from(hpwh_data_model::rstank::RSTANK &rstank);
+
+    void to(hpwh_data_model::rstank::RSTANK &rstank) const;
 
     void setAllDefaults();
 
@@ -65,7 +64,7 @@ class HPWH::Tank : public Sender
 
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    void modifyHeatDistribution(std::vector<double>& heatDistribution_W, double setpointT_C);
+    void modifyHeatDistribution(std::vector<double> &heatDistribution_W, double setpointT_C);
 
     /// volume (L)
     double volume_L;
@@ -132,21 +131,21 @@ class HPWH::Tank : public Sender
     /// get index of the top node
     int getIndexTopNode() const { return getNumNodes() - 1; }
 
-    void setNodeTs_C(const std::vector<double>& nodeTs_C_in);
+    void setNodeTs_C(const std::vector<double> &nodeTs_C_in);
 
     void setNodeT_C(double T_C) { setNodeTs_C({T_C}); }
 
-    void getNodeTs_C(std::vector<double>& tankTemps) { tankTemps = nodeTs_C; }
+    void getNodeTs_C(std::vector<double> &tankTemps) { tankTemps = nodeTs_C; }
 
     double getAverageNodeT_C() const;
 
     double getNodeT_C(int nodeNum) const;
 
-    double getAverageNodeT_C(const std::vector<double>& dist) const;
+    double getAverageNodeT_C(const std::vector<double> &dist) const;
 
-    double getAverageNodeT_C(const WeightedDistribution& wdist) const;
+    double getAverageNodeT_C(const WeightedDistribution &wdist) const;
 
-    double getAverageNodeT_C(const Distribution& dist) const;
+    double getAverageNodeT_C(const Distribution &dist) const;
 
     double getHeatContent_kJ() const;
 
@@ -177,6 +176,7 @@ class HPWH::Tank : public Sender
     void mixNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
     void mixInversions();
+
     void checkForInversion();
 
     void updateNodes(double drawVolume_L,
@@ -185,8 +185,10 @@ class HPWH::Tank : public Sender
                      double inletVol2_L,
                      double inletT2_C);
 
-    void setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
+    void setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum);
+
     void setInletByFraction(double fractionalHeight);
+
     void setInlet2ByFraction(double fractionalHeight);
 
     double getStandbyLosses_kJ();
@@ -198,8 +200,7 @@ class HPWH::Tank : public Sender
 
     double getFittingsUA_kJperHrC() { return fittingsUA_kJperHrC; }
 
-    void setFittingsUA_kJperHrC(double fittingsUA_kJperHrC_in)
-    {
+    void setFittingsUA_kJperHrC(double fittingsUA_kJperHrC_in) {
         fittingsUA_kJperHrC = fittingsUA_kJperHrC_in;
     }
 
