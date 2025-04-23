@@ -362,8 +362,8 @@ TEST(WeightedDistributionTest, construct_from_heights_widths)
     EXPECT_EQ(weightedDistribution.maximumHeight(), 5.);
     EXPECT_EQ(weightedDistribution.totalWeight(), 0.9);
     EXPECT_EQ(weightedDistribution.maximumWeight(), 2.);
-    EXPECT_EQ(weightedDistribution.unitaryHeight(3), 4. / 5.);
-    EXPECT_EQ(weightedDistribution.unitaryWeight(3), 1. / 2.);
+    EXPECT_EQ(weightedDistribution.fractionalHeight(3), 4. / 5.);
+    EXPECT_EQ(weightedDistribution.fractionalWeight(3), 1. / 2.);
     EXPECT_EQ(weightedDistribution.normalizedWeight(0.4, 0.8), (1.5 + 1.) / 4.5);
     EXPECT_EQ(weightedDistribution.lowestNormalizedHeight(), 0.2);
 }

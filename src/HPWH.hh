@@ -505,10 +505,10 @@ class HPWH : public Courier::Sender
             return total / prevHeight;
         }
 
-        /// find unitary values (fraction of maxima) by index
-        double unitaryHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
+        /// find fractional (of maxima) values by index
+        double fractionalHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
 
-        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
+        double fractionalWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
 
         bool isValid() const
         {
@@ -577,13 +577,17 @@ class HPWH : public Courier::Sender
         DistributionType distributionType;
         WeightedDistribution weightedDistribution;
 
-        Distribution(DistributionType distribType_in = DistributionType::Weighted,
-                     WeightedDistribution weightedDistribution_in = {{}, {}})
-            : distributionType(distribType_in), weightedDistribution(weightedDistribution_in)
+        Distribution(const DistributionType distribType_in = DistributionType::TopOfTank)
+            : distributionType(distribType_in), weightedDistribution({}, {})
         {
         }
 
-        bool isValid() const
+        Distribution(const std::vector<double>& heights, const std::vector<double>& weights)
+            : distributionType(DistributionType::Weighted), weightedDistribution(heights, weights)
+        {
+        }
+
+        [[nodiscard]] bool isValid() const
         {
             switch (distributionType)
             {
