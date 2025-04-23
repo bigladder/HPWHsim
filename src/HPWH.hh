@@ -426,10 +426,10 @@ class HPWH : public Courier::Sender
             return total / prevHeight;
         }
 
-        /// find unitary values (fraction of maxima) by index
-        double unitaryHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
+        /// find fractional (of maxima) values by index
+        double fractionalHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
 
-        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
+        double fractionalWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
 
         bool isValid() const
         {
