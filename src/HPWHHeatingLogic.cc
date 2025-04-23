@@ -130,18 +130,18 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
                                                    bool checksStandby_in)
     : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS, checksStandby_in), isAbsolute(a)
 {
-    dist = {DistributionType::Weighted, {{}, {}}};
+    dist = {{}, {}};
     auto prev_height = 0.;
     for (auto node = n.begin(); node != n.end(); ++node)
     {
         if (node->nodeNum == 0)
         {
-            dist = {DistributionType::BottomOfTank, {{}, {}}};
+            dist = DistributionType::BottomOfTank;
             return;
         }
         if (node->nodeNum == LOGIC_SIZE + 1)
         {
-            dist = {DistributionType::TopOfTank, {{}, {}}};
+            dist = {{}, {}};
             return;
         }
         double height_front = node->nodeNum - 1;
@@ -379,7 +379,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
                 TOP_OF_TANK:
             {
-                dist = {DistributionType::TopOfTank, {{}, {}}};
+                dist = DistributionType::TopOfTank;
                 label = "top of tank";
                 checksStandby_in = true;
                 break;
@@ -387,7 +387,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
                 BOTTOM_OF_TANK:
             {
-                dist = {DistributionType::BottomOfTank, {{}, {}}};
+                dist = DistributionType::BottomOfTank;
                 label = "bottom of tank";
                 break;
             }
@@ -402,8 +402,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             auto& weight_dist = temp_based_logic->temperature_weight_distribution;
             if (weight_dist.normalized_height_is_set && weight_dist.weight_is_set)
             {
-                dist = {DistributionType::Weighted,
-                        {weight_dist.normalized_height, weight_dist.weight}};
+                dist = {weight_dist.normalized_height, weight_dist.weight};
             }
         }
 
@@ -516,8 +515,8 @@ void HPWH::TempBasedHeatingLogic::to(
         std::vector<double> heights = {}, weights = {};
         for (std::size_t i = 0; i < dist.weightedDistribution.size(); ++i)
         {
-            heights.push_back(dist.weightedDistribution.unitaryHeight(i));
-            weights.push_back(dist.weightedDistribution.unitaryWeight(i));
+            heights.push_back(dist.weightedDistribution.fractionalHeight(i));
+            weights.push_back(dist.weightedDistribution.fractionalWeight(i));
         }
 
         hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
