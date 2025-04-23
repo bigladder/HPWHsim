@@ -381,14 +381,14 @@ class HPWH : public Courier::Sender
         WeightedDistribution(const std::vector<double> node_distribution)
         {
             clear();
-            double nNodes = node_distribution.size();
+            auto nNodes = node_distribution.size();
             double node_sum = 0.;
             for (auto& node : node_distribution)
                 node_sum += node;
             for (std::size_t i = 0; i < nNodes; ++i)
             {
                 double height = static_cast<double>(i + 1) / nNodes;
-                double weight = nNodes * node_distribution[i] / node_sum;
+                double weight = static_cast<double>(nNodes) * node_distribution[i] / node_sum;
                 if (i == nNodes - 1)
                 {
                     push_back({height, weight});
