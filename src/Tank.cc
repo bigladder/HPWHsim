@@ -315,13 +315,11 @@ int HPWH::Tank::getInletHeight(int whichInlet) const
     {
         return inletHeight;
     }
-    else if (whichInlet == 2)
+    else if (whichInlet != 2)
     {
-        return inlet2Height;
-    }
-    else
         send_error("Invalid inlet chosen in getInletHeight.");
-    return 0;
+    }
+    return inlet2Height;
 }
 
 void HPWH::Tank::setDoInversionMixing(bool doInversionMixing_in)
@@ -761,8 +759,9 @@ void HPWH::Tank::modifyHeatDistribution(std::vector<double>& heatDistribution_W,
     for (auto& heatDist_W : heatDistribution_W)
         heatDist_W /= totalHeat_W;
 
-    double shrinkageT_C = findShrinkageT_C(heatDistribution_W, getNumNodes());
-    int lowestNode = findLowestNode(heatDistribution_W, getNumNodes());
+    WeightedDistribution wdist(heatDistribution_W);
+    double shrinkageT_C = findShrinkageT_C(wdist, getNumNodes());
+    int lowestNode = findLowestNode(wdist, getNumNodes());
 
     std::vector<double> modHeatDistribution_W;
     calcThermalDist(modHeatDistribution_W, shrinkageT_C, lowestNode, nodeTs_C, setpointT_C);
