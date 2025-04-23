@@ -350,19 +350,20 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& prod_info = desc.product_information;
 
-            checkTo(manufacturer(),
-                    prod_info.manufacturer_is_set,
-                    prod_info.manufacturer,
-                    manufacturer.isSet());
+            prod_info.manufacturer_is_set = manufacturer.isSet();
+            prod_info.manufacturer = manufacturer();
 
-            checkTo(model_number(),
-                    prod_info.model_number_is_set,
-                    prod_info.model_number,
-                    model_number.isSet());
+            prod_info.model_number_is_set = model_number.isSet();
+            prod_info.model_number = model_number();
 
-            checkTo(prod_info, desc.product_information_is_set, desc.product_information, !empty());
+            bool set_prod_info = !empty();
+            checkTo(prod_info,
+                    desc.product_information_is_set,
+                    desc.product_information,
+                    set_prod_info);
 
-            checkTo(desc, rs.description_is_set, rs.description, !empty());
+            bool set_desc = set_prod_info;
+            checkTo(desc, rs.description_is_set, rs.description, set_desc);
         }
 
     } productInformation;
@@ -522,8 +523,11 @@ class HPWH : public Courier::Sender
     struct WeightedDistribution : public std::vector<DistributionPoint>
     {
       public:
-        /// typical construction uses separate height, weight vectors
-        WeightedDistribution(std::vector<double> heights = {}, std::vector<double> weights = {})
+        /// default constructor
+        WeightedDistribution() : std::vector<DistributionPoint>() {}
+
+        /// construction from separate height, weight vectors
+        WeightedDistribution(const std::vector<double> heights, const std::vector<double> weights)
         {
             clear();
             reserve(heights.size());
@@ -536,7 +540,32 @@ class HPWH : public Courier::Sender
                 }
         }
 
+        /// construct from a node distribution
+        WeightedDistribution(const std::vector<double> node_distribution)
+        {
+            clear();
+            auto nNodes = node_distribution.size();
+            double node_sum = 0.;
+            for (auto& node : node_distribution)
+                node_sum += node;
+            for (std::size_t i = 0; i < nNodes; ++i)
+            {
+                double height = static_cast<double>(i + 1) / nNodes;
+                double weight = static_cast<double>(nNodes) * node_distribution[i] / node_sum;
+                if (i == nNodes - 1)
+                {
+                    push_back({height, weight});
+                    break;
+                }
+                if (weight != node_distribution[i + 1])
+                {
+                    push_back({height, weight});
+                }
+            }
+        }
+
         double maximumHeight() const { return back().height; }
+
         double maximumWeight() const
         {
             double res = 0.;
@@ -617,6 +646,7 @@ class HPWH : public Courier::Sender
             return 0.;
         }
     };
+
     enum class DistributionType
     {
         Weighted,
@@ -629,11 +659,13 @@ class HPWH : public Courier::Sender
       public:
         DistributionType distributionType;
         WeightedDistribution weightedDistribution;
+
         Distribution(DistributionType distribType_in = DistributionType::Weighted,
                      WeightedDistribution weightedDistribution_in = {{}, {}})
             : distributionType(distribType_in), weightedDistribution(weightedDistribution_in)
         {
         }
+
         bool isValid() const
         {
             switch (distributionType)
@@ -653,6 +685,7 @@ class HPWH : public Courier::Sender
     {
         int nodeNum;
         double weight;
+
         NodeWeight(int n, double w) : nodeNum(n), weight(w) {};
 
         NodeWeight(int n) : nodeNum(n), weight(1.0) {};
@@ -664,6 +697,7 @@ class HPWH : public Courier::Sender
                                                      double tempMinUseful_C,
                                                      bool constMains,
                                                      double mains_C);
+
     std::shared_ptr<SoCBasedHeatingLogic> turnOnSoC(std::string desc,
                                                     double targetSoC,
                                                     double hystFract,
