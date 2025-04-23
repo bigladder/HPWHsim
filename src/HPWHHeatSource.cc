@@ -140,8 +140,8 @@ void HPWH::HeatSource::to(
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
     {
-        heights.push_back(heatDist.unitaryHeight(i));
-        weights.push_back(heatDist.unitaryWeight(i));
+        heights.push_back(heatDist.fractionalHeight(i));
+        weights.push_back(heatDist.fractionalWeight(i));
     }
 
     hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
