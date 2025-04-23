@@ -1472,7 +1472,7 @@ HPWH::Distribution HPWH::getRangeDistribution(double bottomFraction, double topF
         heights.push_back(1.);
         weights.push_back(0.);
     }
-    return {DistributionType::Weighted, {heights, weights}};
+    return {heights, weights};
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,
@@ -1572,14 +1572,14 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decision
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
 {
-    HPWH::Distribution dist = {DistributionType::TopOfTank, {{}, {}}};
+    HPWH::Distribution dist = DistributionType::TopOfTank;
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "standby", dist, decisionPoint, this, false, std::less<double>(), false, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
-    HPWH::Distribution dist = {DistributionType::TopOfTank, {{}, {}}};
+    HPWH::Distribution dist = DistributionType::TopOfTank;
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top of tank", dist, decisionPoint, this, true, std::greater<double>());
 }
@@ -1587,7 +1587,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisio
 std::shared_ptr<HPWH::TempBasedHeatingLogic>
 HPWH::bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff /*=false*/)
 {
-    HPWH::Distribution dist = {DistributionType::BottomOfTank, {{}, {}}};
+    HPWH::Distribution dist = DistributionType::BottomOfTank;
     return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom of tank",
                                                          dist,
                                                          decisionPoint,
@@ -4241,19 +4241,19 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
             Distribution dist;
             if (distType == "top of tank")
             {
-                dist = {DistributionType::TopOfTank, {{}, {}}};
+                dist = DistributionType::TopOfTank;
                 checkStandby = true;
             }
 
             else if (distType == "bottom of tank")
-                dist = {DistributionType::BottomOfTank, {{}, {}}};
+                dist = DistributionType::BottomOfTank;
 
             else if (distType == "weighted")
             {
                 auto& j_dist = j_logic["weighted_distribution"];
                 auto& distHeights = j_dist["normalized_height"];
                 auto& distWeights = j_dist["weight"];
-                dist = {DistributionType::Weighted, {distHeights, distWeights}};
+                dist = {distHeights, distWeights};
             }
 
             bool is_absolute = false;
@@ -4287,17 +4287,17 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             Distribution dist;
             if (distType == "top of tank")
-                dist = {DistributionType::TopOfTank, {{}, {}}};
+                dist = DistributionType::TopOfTank;
 
             else if (distType == "bottom of tank")
-                dist = {DistributionType::BottomOfTank, {{}, {}}};
+                dist = DistributionType::BottomOfTank;
 
             else if (distType == "weighted")
             {
                 auto& j_dist = j_logic["weighted_distribution"];
                 auto& distHeights = j_dist["normalized_height"];
                 auto& distWeights = j_dist["weight"];
-                dist = {DistributionType::Weighted, {distHeights, distWeights}};
+                dist = {distHeights, distWeights};
             }
 
             bool is_absolute = false;
@@ -4330,17 +4330,17 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             Distribution dist;
             if (distType == "top of tank")
-                dist = {DistributionType::TopOfTank, {{}, {}}};
+                dist = DistributionType::TopOfTank;
 
             else if (distType == "bottom of tank")
-                dist = {DistributionType::BottomOfTank, {{}, {}}};
+                dist = DistributionType::BottomOfTank;
 
             else if (distType == "weighted")
             {
                 auto& j_dist = j_logic["weighted_distribution"];
                 auto& distHeights = j_dist["normalized_height"];
                 auto& distWeights = j_dist["weight"];
-                dist = {DistributionType::Weighted, {distHeights, distWeights}};
+                dist = {distHeights, distWeights};
             }
 
             bool is_absolute = false;

@@ -589,9 +589,9 @@ class HPWH : public Courier::Sender
             return total / prevHeight;
         }
 
-        /// find unitary values (fraction of maxima) by index
-        double unitaryHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
-        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
+        /// find fractional (of maxima) values by index
+        double fractionalHeight(std::size_t i) const { return (*this)[i].height / maximumHeight(); }
+        double fractionalWeight(std::size_t i) const { return (*this)[i].weight / maximumWeight(); }
 
         bool isValid() const
         {
@@ -660,13 +660,17 @@ class HPWH : public Courier::Sender
         DistributionType distributionType;
         WeightedDistribution weightedDistribution;
 
-        Distribution(DistributionType distribType_in = DistributionType::Weighted,
-                     WeightedDistribution weightedDistribution_in = {{}, {}})
-            : distributionType(distribType_in), weightedDistribution(weightedDistribution_in)
+        Distribution(const DistributionType distribType_in = DistributionType::TopOfTank)
+            : distributionType(distribType_in), weightedDistribution({}, {})
         {
         }
 
-        bool isValid() const
+        Distribution(const std::vector<double>& heights, const std::vector<double>& weights)
+            : distributionType(DistributionType::Weighted), weightedDistribution(heights, weights)
+        {
+        }
+
+        [[nodiscard]] bool isValid() const
         {
             switch (distributionType)
             {
@@ -858,12 +862,14 @@ class HPWH : public Courier::Sender
         member_inletT_C = newInletT_C;
         haveInletT = true;
     };
+
     void setMinutesPerStep(double newMinutesPerStep);
 
     int writeCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
                         int nTCouples = 6,
                         int options = CSVOPT_NONE) const;
+
     int writeCSVRow(std::ofstream& outFILE,
                     const char* preamble = "",
                     int nTCouples = 6,
@@ -1353,6 +1359,7 @@ class HPWH : public Courier::Sender
     TestSummary run24hrTest(TestConfiguration testConfiguration,
                             FirstHourRating::Designation designation,
                             bool saveOutput = false);
+
     TestSummary run24hrTest(TestConfiguration testConfiguration, bool saveOutput = false)
     {
         return run24hrTest(testConfiguration, findFirstHourRating().designation, saveOutput);
@@ -1389,6 +1396,7 @@ class HPWH : public Courier::Sender
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
                               FirstHourRating::Designation designation);
+
     TestSummary makeGenericEF(double targetEF, TestConfiguration testConfiguration)
     {
         return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().designation);
@@ -1408,6 +1416,7 @@ class HPWH : public Courier::Sender
 
     /// fit using UEF config, then adjust E50, E95 coefficients
     TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Designation designation);
+
     TestSummary makeGenericUEF(double targetUEF)
     {
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
