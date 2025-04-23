@@ -498,13 +498,17 @@ class HPWH : public Courier::Sender
         DistributionType distributionType;
         WeightedDistribution weightedDistribution;
 
-        Distribution(DistributionType distribType_in = DistributionType::Weighted,
-                     WeightedDistribution weightedDistribution_in = {{}, {}})
-            : distributionType(distribType_in), weightedDistribution(weightedDistribution_in)
+        Distribution(const DistributionType distribType_in = DistributionType::TopOfTank)
+            : distributionType(distribType_in), weightedDistribution({}, {})
         {
         }
 
-        bool isValid() const
+        Distribution(const std::vector<double>& heights, const std::vector<double>& weights)
+            : distributionType(DistributionType::Weighted), weightedDistribution(heights, weights)
+        {
+        }
+
+        [[nodiscard]] bool isValid() const
         {
             switch (distributionType)
             {
