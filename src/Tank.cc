@@ -310,13 +310,11 @@ int HPWH::Tank::getInletHeight(int whichInlet) const
     {
         return inletHeight;
     }
-    else if (whichInlet == 2)
+    else if (whichInlet != 2)
     {
-        return inlet2Height;
-    }
-    else
         send_error("Invalid inlet chosen in getInletHeight.");
-    return 0;
+    }
+    return inlet2Height;
 }
 
 void HPWH::Tank::setDoInversionMixing(bool doInversionMixing_in)
