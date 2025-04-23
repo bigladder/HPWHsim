@@ -515,8 +515,8 @@ void HPWH::TempBasedHeatingLogic::to(
         std::vector<double> heights = {}, weights = {};
         for (std::size_t i = 0; i < dist.weightedDistribution.size(); ++i)
         {
-            heights.push_back(dist.weightedDistribution.unitaryHeight(i));
-            weights.push_back(dist.weightedDistribution.unitaryWeight(i));
+            heights.push_back(dist.weightedDistribution.fractionalHeight(i));
+            weights.push_back(dist.weightedDistribution.fractionalWeight(i));
         }
 
         hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
