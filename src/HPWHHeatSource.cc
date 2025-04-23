@@ -140,8 +140,8 @@ void HPWH::HeatSource::to(
     std::vector<double> heights = {}, weights = {};
     for (std::size_t i = 0; i < heatDist.size(); ++i)
     {
-        heights.push_back(heatDist.unitaryHeight(i));
-        weights.push_back(heatDist.unitaryWeight(i));
+        heights.push_back(heatDist.fractionalHeight(i));
+        weights.push_back(heatDist.fractionalWeight(i));
     }
 
     hpwh_data_model::heat_source_configuration::WeightedDistribution wd;
@@ -227,26 +227,9 @@ void HPWH::HeatSource::to(
     }
 }
 
-void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
+void HPWH::HeatSource::setCondensity(const std::vector<double>& node_distribution)
 {
-    heatDist = {{}, {}};
-    // double prev_height = 0.;
-    // double prev_weight = 0.;
-    auto nCond = condensity_in.size();
-    for (std::size_t i = 0; i < nCond; ++i)
-    {
-        double height = static_cast<double>(i + 1) / nCond;
-        double weight = condensity_in[i];
-        if (i == nCond - 1)
-        {
-            heatDist.push_back({height, weight});
-            break;
-        }
-        if (weight != condensity_in[i + 1])
-        {
-            heatDist.push_back({height, weight});
-        }
-    }
+    heatDist = WeightedDistribution(node_distribution);
 }
 
 int HPWH::HeatSource::findParent() const

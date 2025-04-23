@@ -350,21 +350,38 @@ TEST(ExtraHeatTest, extraHeat)
 }
 
 /*
- * weighted-distribution test
+ * construct weighted distribution from height, weight vectors
  */
-TEST(WeightedDistributionTest, calculations)
+TEST(WeightedDistributionTest, construct_from_heights_widths)
 {
     const std::vector<double> heights = {1., 2., 3., 4., 5.};
     const std::vector<double> weights = {0., 2., 1.5, 1., 0.};
-
     HPWH::WeightedDistribution weightedDistribution(heights, weights);
 
     EXPECT_TRUE(weightedDistribution.isValid());
     EXPECT_EQ(weightedDistribution.maximumHeight(), 5.);
     EXPECT_EQ(weightedDistribution.totalWeight(), 0.9);
     EXPECT_EQ(weightedDistribution.maximumWeight(), 2.);
-    EXPECT_EQ(weightedDistribution.unitaryHeight(3), 4. / 5.);
-    EXPECT_EQ(weightedDistribution.unitaryWeight(3), 1. / 2.);
+    EXPECT_EQ(weightedDistribution.fractionalHeight(3), 4. / 5.);
+    EXPECT_EQ(weightedDistribution.fractionalWeight(3), 1. / 2.);
     EXPECT_EQ(weightedDistribution.normalizedWeight(0.4, 0.8), (1.5 + 1.) / 4.5);
     EXPECT_EQ(weightedDistribution.lowestNormalizedHeight(), 0.2);
+}
+
+/*
+ * construct weighted distribution from node distribution
+ */
+TEST(WeightedDistributionTest, construct_from_node_distribution)
+{
+    const std::vector<double> nodeDistribution = {
+        0.2, 0.4, 0.2, 0.1, 0.1, 0., 0., 0., 0., 0., 0., 0.};
+    HPWH::WeightedDistribution weightedDistribution(nodeDistribution);
+
+    EXPECT_TRUE(weightedDistribution.isValid());
+    EXPECT_EQ(weightedDistribution.maximumHeight(), 1.);
+    EXPECT_NEAR_REL_TOL(weightedDistribution.totalWeight(), 1., 1.e-12);
+    EXPECT_EQ(weightedDistribution.maximumWeight(), 12. * 0.4);
+    EXPECT_NEAR_REL_TOL(
+        weightedDistribution.normalizedWeight(2. / 12., 4. / 12.), 0.2 + 0.1, 1.e-12);
+    EXPECT_EQ(weightedDistribution.lowestNormalizedHeight(), 0.);
 }

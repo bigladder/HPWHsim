@@ -31,6 +31,7 @@ class HPWH::Tank : public Sender
     ProductInformation productInformation;
 
     void from(hpwh_data_model::rstank::RSTANK& rstank);
+
     void to(hpwh_data_model::rstank::RSTANK& rstank) const;
 
     void setAllDefaults();
@@ -180,6 +181,7 @@ class HPWH::Tank : public Sender
     void mixNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
     void mixInversions();
+
     void checkForInversion();
 
     void updateNodes(double drawVolume_L,
@@ -189,7 +191,9 @@ class HPWH::Tank : public Sender
                      double inletT2_C);
 
     void setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
+
     void setInletByFraction(double fractionalHeight);
+
     void setInlet2ByFraction(double fractionalHeight);
 
     double getStandbyLosses_kJ();
