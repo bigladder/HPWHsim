@@ -360,8 +360,11 @@ class HPWH : public Courier::Sender
     struct WeightedDistribution : public std::vector<DistributionPoint>
     {
       public:
-        /// typical construction uses separate height, weight vectors
-        WeightedDistribution(std::vector<double> heights = {}, std::vector<double> weights = {})
+        /// default constructor
+        WeightedDistribution() : std::vector<DistributionPoint>() {}
+
+        /// construction from separate height, weight vectors
+        WeightedDistribution(const std::vector<double> heights, const std::vector<double> weights)
         {
             clear();
             reserve(heights.size());
@@ -374,20 +377,24 @@ class HPWH : public Courier::Sender
                 }
         }
 
-        void from(const std::vector<double> vector_dist)
+        /// construct from a node distribution
+        WeightedDistribution(const std::vector<double> node_distribution)
         {
             clear();
-            auto nCond = vector_dist.size();
-            for (std::size_t i = 0; i < nCond; ++i)
+            double nNodes = node_distribution.size();
+            double node_sum = 0.;
+            for (auto& node : node_distribution)
+                node_sum += node;
+            for (std::size_t i = 0; i < nNodes; ++i)
             {
-                double height = static_cast<double>(i + 1) / nCond;
-                double weight = vector_dist[i];
-                if (i == nCond - 1)
+                double height = static_cast<double>(i + 1) / nNodes;
+                double weight = nNodes * node_distribution[i] / node_sum;
+                if (i == nNodes - 1)
                 {
                     push_back({height, weight});
                     break;
                 }
-                if (weight != vector_dist[i + 1])
+                if (weight != node_distribution[i + 1])
                 {
                     push_back({height, weight});
                 }

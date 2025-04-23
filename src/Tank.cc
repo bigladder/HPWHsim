@@ -754,8 +754,7 @@ void HPWH::Tank::modifyHeatDistribution(std::vector<double>& heatDistribution_W,
     for (auto& heatDist_W : heatDistribution_W)
         heatDist_W /= totalHeat_W;
 
-    WeightedDistribution wdist;
-    wdist.from(heatDistribution_W);
+    WeightedDistribution wdist(heatDistribution_W);
     double shrinkageT_C = findShrinkageT_C(wdist, getNumNodes());
     int lowestNode = findLowestNode(wdist, getNumNodes());
 
