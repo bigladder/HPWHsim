@@ -68,8 +68,7 @@ struct HPWH::Fitter : public Sender
         /// check validity and retain pointer to HPWH member variable
         void assign()
         {
-            HPWH::HeatSource* heatSource;
-            hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
+            HPWH::HeatSource* heatSource = hpwh->getNthHeatSource(hpwh->compressorIndex);
             auto condenser = reinterpret_cast<HPWH::Condenser*>(heatSource);
 
             auto& performanceMap = condenser->performanceMap;
