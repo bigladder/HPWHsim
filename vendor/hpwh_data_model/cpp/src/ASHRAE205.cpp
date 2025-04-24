@@ -17,6 +17,10 @@ namespace hpwh_data_model  {
 			json_get<ashrae205::LiquidConstituent>(j, logger.get(), "liquid_constituent", x.liquid_constituent, x.liquid_constituent_is_set, true);
 			json_get<double>(j, logger.get(), "concentration", x.concentration, x.concentration_is_set, false);
 		}
+		void to_json(nlohmann::json& j, const LiquidComponent& x) {
+			json_set<ashrae205::LiquidConstituent>(j, logger.get(), "liquid_constituent", x.liquid_constituent, x.liquid_constituent_is_set, true);
+			json_set<double>(j, logger.get(), "concentration", x.concentration, x.concentration_is_set, false);
+		}
 		const std::string_view LiquidComponent::liquid_constituent_units = "";
 
 		const std::string_view LiquidComponent::liquid_constituent_description = "Substance of this component of the mixture";
@@ -33,6 +37,10 @@ namespace hpwh_data_model  {
 			json_get<std::vector<ashrae205::LiquidComponent>>(j, logger.get(), "liquid_components", x.liquid_components, x.liquid_components_is_set, true);
 			json_get<ashrae205::ConcentrationType>(j, logger.get(), "concentration_type", x.concentration_type, x.concentration_type_is_set, true);
 		}
+		void to_json(nlohmann::json& j, const LiquidMixture& x) {
+			json_set<std::vector<ashrae205::LiquidComponent>>(j, logger.get(), "liquid_components", x.liquid_components, x.liquid_components_is_set, true);
+			json_set<ashrae205::ConcentrationType>(j, logger.get(), "concentration_type", x.concentration_type, x.concentration_type_is_set, true);
+		}
 		const std::string_view LiquidMixture::liquid_components_units = "";
 
 		const std::string_view LiquidMixture::liquid_components_description = "An array of all liquid components within the liquid mixture";
@@ -45,6 +53,10 @@ namespace hpwh_data_model  {
 
 		const std::string_view LiquidMixture::concentration_type_name = "concentration_type";
 
+		void ashrae205::to_json(nlohmann::json& j, const LiquidMixture& x) {
+		}
+		void ashrae205::to_json(nlohmann::json& j, const LiquidComponent& x) {
+		}
 	}
 }
 
