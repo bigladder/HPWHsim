@@ -27,6 +27,20 @@ namespace hpwh_data_model  {
 			json_get<std::string>(j, logger.get(), "disclaimer", x.disclaimer, x.disclaimer_is_set, false);
 			json_get<std::string>(j, logger.get(), "notes", x.notes, x.notes_is_set, false);
 		}
+		void to_json(nlohmann::json& j, const Metadata& x) {
+			json_set<std::string>(j, logger.get(), "schema_author", x.schema_author, x.schema_author_is_set, true);
+			json_set<std::string>(j, logger.get(), "schema_name", x.schema_name, x.schema_name_is_set, true);
+			json_set<std::string>(j, logger.get(), "schema_version", x.schema_version, x.schema_version_is_set, true);
+			json_set<std::string>(j, logger.get(), "schema_url", x.schema_url, x.schema_url_is_set, false);
+			json_set<std::string>(j, logger.get(), "author", x.author, x.author_is_set, true);
+			json_set<std::string>(j, logger.get(), "id", x.id, x.id_is_set, false);
+			json_set<std::string>(j, logger.get(), "description", x.description, x.description_is_set, true);
+			json_set<std::string>(j, logger.get(), "time_of_creation", x.time_of_creation, x.time_of_creation_is_set, true);
+			json_set<std::string>(j, logger.get(), "version", x.version, x.version_is_set, false);
+			json_set<std::string>(j, logger.get(), "source", x.source, x.source_is_set, false);
+			json_set<std::string>(j, logger.get(), "disclaimer", x.disclaimer, x.disclaimer_is_set, false);
+			json_set<std::string>(j, logger.get(), "notes", x.notes, x.notes_is_set, false);
+		}
 		const std::string_view Metadata::schema_author_units = "";
 
 		const std::string_view Metadata::schema_author_description = "Name of the organization that published the schema";
@@ -99,6 +113,8 @@ namespace hpwh_data_model  {
 
 		const std::string_view Metadata::notes_name = "notes";
 
+		void core::to_json(nlohmann::json& j, const Metadata& x) {
+		}
 	}
 }
 
