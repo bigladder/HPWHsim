@@ -99,8 +99,9 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
 
-    HPWH::HeatSource* compressor;
-    hpwh.getNthHeatSource(hpwh.getCompressorIndex(), compressor);
+    HPWH::HeatSource* heatSource;
+    hpwh.getNthHeatSource(hpwh.getCompressorIndex(), heatSource);
+    auto compressor = reinterpret_cast<HPWH::Condenser*>(heatSource);
 
     std::vector<double> COP_Coeffs0 = {};
     for (auto& perfPoint : compressor->performanceMap)

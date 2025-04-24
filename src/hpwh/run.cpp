@@ -2,6 +2,8 @@
  * Simulate a HPWH model using a test schedule.
  */
 #include "HPWH.hh"
+#include "Condenser.hh"
+#include "hpwh-data-model.hh"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -32,7 +34,7 @@ CLI::App* add_run(CLI::App& app)
     const auto subcommand = app.add_subcommand("run", "Run a schedule");
 
     static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
+    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File, JSON)");
 
     static std::string modelName = "";
     subcommand->add_option("-m,--model", modelName, "Model name")->required();
@@ -110,29 +112,44 @@ void run(const std::string& sSpecType,
         HPWH_doTempDepress = false;
     }
 
-    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    // process command line arguments
+    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : sSpecType_mod)
+    {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "file")
+        sSpecType_mod = "File";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
 
     // Parse the model
-    newSetpoint = 0;
-    if (presetOrFile == "Preset")
+    if (sSpecType_mod == "Preset")
     {
-
         hpwh.initPreset(modelName);
-        model = static_cast<HPWH::MODELS>(hpwh.getModel());
-        if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
-        {
-            newSetpoint = (149 - 32) / 1.8;
-        }
     }
-    else if (presetOrFile == "File")
+    else if (sSpecType_mod == "File")
     {
         hpwh.initFromFile(modelName);
     }
+    else if (sSpecType_mod == "JSON")
+    {
+        hpwh.initFromJSON(modelName);
+    }
     else
     {
-        cout << "Invalid argument, received '" << presetOrFile
-             << "', expected 'Preset' or 'File'.\n";
+        cout << "Invalid argument, received '" << sSpecType_mod
+             << "', expected 'Preset', 'File', or 'JSON'.\n";
         exit(1);
+    }
+
+    newSetpoint = 0;
+    model = static_cast<HPWH::MODELS>(hpwh.getModel());
+    if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
+    {
+        newSetpoint = (149 - 32) / 1.8;
     }
 
     std::string sTestName = sFullTestName; // remove path prefixes
@@ -168,7 +185,7 @@ void run(const std::string& sSpecType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    cout << "Running: " << modelName << ", " << presetOrFile << ", " << sFullTestName << endl;
+    cout << "Running: " << modelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -317,7 +334,9 @@ void run(const std::string& sSpecType,
     }
     else
     {
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + presetOrFile + "_" + modelName + ".csv";
+
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + sSpecType_mod + "_" + modelName + ".csv";
+
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -346,7 +365,6 @@ void run(const std::string& sSpecType,
     // Loop over the minutes in the test
     for (i = 0; i < minutesToRun; i++)
     {
-
         if (HPWH_doTempDepress)
         {
             airTemp2 = F_TO_C(airTemp);
@@ -470,7 +488,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = sTestName + "," + presetOrFile + "," + modelName;
+        firstCol = sTestName + "," + sSpecType_mod + "," + modelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
