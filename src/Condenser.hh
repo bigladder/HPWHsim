@@ -18,6 +18,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
 
+    Description description;
     ProductInformation productInformation;
 
     void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) const override;
