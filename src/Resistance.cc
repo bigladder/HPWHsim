@@ -26,6 +26,7 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 
     HeatSource::operator=(r_in);
     power_kW = r_in.power_kW;
+    description = r_in.description;
     productInformation = r_in.productInformation;
     return *this;
 }
@@ -36,6 +37,7 @@ void HPWH::Resistance::from(
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
+    description.from(*p_rshs);
     productInformation.from(*p_rshs);
 
     auto& perf = p_rshs->performance;
@@ -53,7 +55,8 @@ void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSource
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSRESISTANCEWATERHEATSOURCE.schema.yaml");
 
-    productInformation.to(*p_hs);
+    description.to(*p_hs);
+   productInformation.to(*p_hs);
 
     auto& perf = p_hs->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
