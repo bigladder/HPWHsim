@@ -2,6 +2,7 @@
 #define HPWHFITTER_hh
 
 #include "HPWH.hh"
+#include "Condenser.hh"
 
 ///	@struct HPWH::Fitter HPWHFitter.h
 /// Optimizer for varying model parameters to match metrics, used by
@@ -62,15 +63,16 @@ struct HPWH::Fitter : public Sender
 
       protected:
         virtual std::vector<double>&
-        getCoefficients(HPWH::HeatSource::PerformancePoint& perfPoint) = 0;
+        getCoefficients(HPWH::Condenser::PerformancePoint& perfPoint) = 0;
 
         /// check validity and retain pointer to HPWH member variable
         void assign()
         {
             HPWH::HeatSource* heatSource;
             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
+            auto condenser = reinterpret_cast<HPWH::Condenser*>(heatSource);
 
-            auto& performanceMap = heatSource->performanceMap;
+            auto& performanceMap = condenser->performanceMap;
             if (temperatureIndex >= performanceMap.size())
             {
                 send_error("Invalid heat-source performance-map temperature index.");
@@ -106,7 +108,7 @@ struct HPWH::Fitter : public Sender
         [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
 
         std::vector<double>&
-        getCoefficients(HPWH::HeatSource::PerformancePoint& performancePoint) override
+        getCoefficients(HPWH::Condenser::PerformancePoint& performancePoint) override
         {
             return performancePoint.inputPower_coeffs;
         }
@@ -129,7 +131,7 @@ struct HPWH::Fitter : public Sender
         [[nodiscard]] std::string getFormat() const override { return "COP[{}]: {}"; }
 
         std::vector<double>&
-        getCoefficients(HPWH::HeatSource::PerformancePoint& performancePoint) override
+        getCoefficients(HPWH::Condenser::PerformancePoint& performancePoint) override
         {
             return performancePoint.COP_coeffs;
         }

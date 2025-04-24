@@ -87,34 +87,36 @@ void make(const std::string& sSpecType,
     else
         testConfiguration = HPWH::testConfiguration_UEF;
 
+    HPWH hpwh;
+
     // process command line arguments
-    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : presetOrFile)
+    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : sSpecType_mod)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (presetOrFile.length() > 0)
-    {
-        presetOrFile[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
-    }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "file")
+        sSpecType_mod = "File";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
 
-    HPWH hpwh;
-    if (presetOrFile == "Preset")
+    if (sSpecType_mod == "Preset")
     {
         hpwh.initPreset(modelName);
     }
-    else
+    else if (sSpecType_mod == "File")
     {
-        std::string sInputFile = modelName;
-        hpwh.initFromFile(sInputFile);
+        hpwh.initFromFile(modelName);
+    }
+    else if (sSpecType_mod == "JSON")
+    {
+        hpwh.initFromJSON(modelName);
     }
 
-    presetOrFile[0] = // capitalize first char
-        static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
-
     std::string results = "";
-    results.append(fmt::format("\tSpecification Type: {}\n", presetOrFile));
+    results.append(fmt::format("\tSpecification Type: {}\n", sSpecType_mod));
     results.append(fmt::format("\tModel Name: {}\n", modelName));
 
     auto designation = HPWH::FirstHourRating::Designation::Medium;
@@ -159,7 +161,7 @@ void make(const std::string& sSpecType,
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
-        std::string sOutputFilename = "test24hr_" + presetOrFile + "_" + modelName + ".csv";
+        std::string sOutputFilename = "test24hr_" + sSpecType_mod + "_" + modelName + ".csv";
         if (sOutputDir != "")
             sOutputFilename = sOutputDir + "/" + sOutputFilename;
         outputFile.open(sOutputFilename.c_str(), std::ifstream::out);
