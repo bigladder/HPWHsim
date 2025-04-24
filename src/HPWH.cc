@@ -1886,6 +1886,15 @@ bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
     return true;
 }
 
+HPWH::HeatSource* HPWH::getNthHeatSource(int N)
+{
+    if (N >= getNumHeatSources() || N < 0)
+    {
+        send_error("You have attempted to access the type of a heat source that does not exist.");
+    }
+    return heatSources[N].get();
+}
+
 double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
 {
     double volume = tank->getVolume_L();
