@@ -117,10 +117,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view CentralWaterHeatingSystem::secondary_heat_exchanger_name = "secondary_heat_exchanger";
 
-		void central_water_heating_system::to_json(nlohmann::json& j, const CentralWaterHeatingSystem& x) {
-		}
-		void central_water_heating_system::to_json(nlohmann::json& j, const SecondaryHeatExchanger& x) {
-		}
 	}
 }
 

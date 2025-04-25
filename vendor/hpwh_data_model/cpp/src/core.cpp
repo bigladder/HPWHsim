@@ -113,8 +113,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view Metadata::notes_name = "notes";
 
-		void core::to_json(nlohmann::json& j, const Metadata& x) {
-		}
 	}
 }
 

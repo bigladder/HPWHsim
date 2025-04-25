@@ -53,10 +53,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view LiquidMixture::concentration_type_name = "concentration_type";
 
-		void ashrae205::to_json(nlohmann::json& j, const LiquidMixture& x) {
-		}
-		void ashrae205::to_json(nlohmann::json& j, const LiquidComponent& x) {
-		}
 	}
 }
 

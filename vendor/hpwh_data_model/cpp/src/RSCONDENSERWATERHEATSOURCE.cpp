@@ -185,20 +185,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view RSCONDENSERWATERHEATSOURCE::performance_name = "performance";
 
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const RSCONDENSERWATERHEATSOURCE& x) {
-		}
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const Description& x) {
-		}
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const ProductInformation& x) {
-		}
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const Performance& x) {
-		}
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const PerformanceMap& x) {
-		}
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const GridVariables& x) {
-		}
-		void rscondenserwaterheatsource::to_json(nlohmann::json& j, const LookupVariables& x) {
-		}
 	}
 }
 

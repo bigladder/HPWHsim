@@ -185,20 +185,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view RSAIRTOWATERHEATPUMP::performance_name = "performance";
 
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const RSAIRTOWATERHEATPUMP& x) {
-		}
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const Description& x) {
-		}
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const ProductInformation& x) {
-		}
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const Performance& x) {
-		}
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const PerformanceMap& x) {
-		}
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const GridVariables& x) {
-		}
-		void rsairtowaterheatpump::to_json(nlohmann::json& j, const LookupVariables& x) {
-		}
 	}
 }
 

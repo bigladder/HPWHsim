@@ -109,14 +109,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view RSINTEGRATEDWATERHEATER::performance_name = "performance";
 
-		void rsintegratedwaterheater::to_json(nlohmann::json& j, const RSINTEGRATEDWATERHEATER& x) {
-		}
-		void rsintegratedwaterheater::to_json(nlohmann::json& j, const Description& x) {
-		}
-		void rsintegratedwaterheater::to_json(nlohmann::json& j, const ProductInformation& x) {
-		}
-		void rsintegratedwaterheater::to_json(nlohmann::json& j, const Performance& x) {
-		}
 	}
 }
 
