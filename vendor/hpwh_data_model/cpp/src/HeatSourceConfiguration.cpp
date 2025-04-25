@@ -266,16 +266,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view StateOfChargeBasedHeatingLogic::constant_mains_temperature_name = "constant_mains_temperature";
 
-		void heat_source_configuration::to_json(nlohmann::json& j, const HeatSourceConfiguration& x) {
-		}
-		void heat_source_configuration::to_json(nlohmann::json& j, const WeightedDistribution& x) {
-		}
-		void heat_source_configuration::to_json(nlohmann::json& j, const HeatingLogic& x) {
-		}
-		void heat_source_configuration::to_json(nlohmann::json& j, const TemperatureBasedHeatingLogic& x) {
-		}
-		void heat_source_configuration::to_json(nlohmann::json& j, const StateOfChargeBasedHeatingLogic& x) {
-		}
 	}
 }
 

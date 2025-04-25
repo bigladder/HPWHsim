@@ -84,7 +84,7 @@ template<class T>
     {
         if (object_is_set)
         {
-            j = nlohmann::json{{subnode : object}};
+            j = nlohmann::json{{subnode, object}};
         }
     }
 }

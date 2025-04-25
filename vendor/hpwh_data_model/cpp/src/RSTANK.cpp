@@ -125,14 +125,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view RSTANK::performance_name = "performance";
 
-		void rstank::to_json(nlohmann::json& j, const RSTANK& x) {
-		}
-		void rstank::to_json(nlohmann::json& j, const Description& x) {
-		}
-		void rstank::to_json(nlohmann::json& j, const ProductInformation& x) {
-		}
-		void rstank::to_json(nlohmann::json& j, const Performance& x) {
-		}
 	}
 }
 

@@ -81,8 +81,6 @@ namespace hpwh_data_model  {
 
 		const std::string_view HPWHSimInput::central_system_name = "central_system";
 
-		void hpwh_sim_input::to_json(nlohmann::json& j, const HPWHSimInput& x) {
-		}
 	}
 }
 
