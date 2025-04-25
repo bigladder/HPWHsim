@@ -75,12 +75,11 @@ namespace hpwh_data_model {
     }
 
 template<class T>
-    void json_set(nlohmann::json j,
-                  Courier::Courier* logger,
+    void json_set(nlohmann::json& j,
                   const char *subnode,
                   const T& object,
-                  bool object_is_set,
-                  bool required = false)
+                  bool object_is_set
+                  )
     {
         if (object_is_set)
         {

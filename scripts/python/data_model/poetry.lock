@@ -482,7 +482,7 @@ stringcase = ">=1.2.0"
 type = "git"
 url = "https://github.com/bigladder/lattice.git"
 reference = "add-json-object-write"
-resolved_reference = "798fcc75c1a0492efaf674d3727cd80455109513"
+resolved_reference = "c276e7337a44bf68ea9fd654918d5a3e9d470f16"
 
 [[package]]
 name = "markdown"
