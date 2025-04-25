@@ -4491,7 +4491,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    description.from(rswh);
+    // description.from(rswh);
     productInformation.from(rswh);
     rating10CFR430.from(rswh);
 
