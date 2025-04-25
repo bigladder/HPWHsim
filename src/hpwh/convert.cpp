@@ -21,7 +21,7 @@ CLI::App* add_convert(CLI::App& app)
     const auto subcommand = app.add_subcommand("convert", "Convert from legacy format to JSON");
 
     static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File, JSON)");
+    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, JSON)");
 
     static std::string sModelName = "";
     subcommand->add_option("-m,--model", sModelName, "Model name or number")->required();
@@ -56,8 +56,6 @@ void convert(const std::string& sSpecType,
     }
     if (sSpecType_mod == "preset")
         sSpecType_mod = "Preset";
-    else if (sSpecType_mod == "file")
-        sSpecType_mod = "File";
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
 
@@ -68,10 +66,6 @@ void convert(const std::string& sSpecType,
             hpwh.initPreset(static_cast<HPWH::MODELS>(std::stoi(sModelName)));
         else
             hpwh.initPreset(sModelName);
-    }
-    else if (sSpecType_mod == "File")
-    {
-        hpwh.initFromFile(sModelName);
     }
     else if (sSpecType_mod == "JSON")
     {
