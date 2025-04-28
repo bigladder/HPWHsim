@@ -3436,12 +3436,18 @@ void HPWH::resetTopOffTimer() { timerTOT = 0.; }
 ///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance
 /// @return	true if balanced; false otherwise.
 //-----------------------------------------------------------------------------
-bool HPWH::isEnergyBalanced(const double drawVol_L,
+bool HPWH::isEnergyBalanced(const double inlet1_drawVol_L,
+                            const double inlet1T_C,
+                            const double inlet2_drawVol_L,
+                            const double inlet2T_C,
                             const double prevHeatContent_kJ,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
-    double drawCp_kJperC =
-        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
+    double inlet1_drawCp_kJperC =
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * inlet1_drawVol_L; // heat capacity of inlet1 draw
+
+    double inlet2_drawCp_kJperC =
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * inlet2_drawVol_L; // heat capacity of inlet2 draw
 
     // Check energy balancing.
     double qInElectrical_kJ = 0.;
@@ -3452,8 +3458,9 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
     double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-    double qOutWater_kJ =
-        drawCp_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
+    double qOutWater_kJ = inlet1_drawCp_kJperC * (outletTemp_C - inlet1T_C) +
+                          inlet2_drawCp_kJperC * (outletTemp_C - inlet2T_C);
+
     double expectedTankHeatContent_kJ =
         prevHeatContent_kJ        // previous heat content
         + qInElectrical_kJ        // electrical energy delivered to heat sources
