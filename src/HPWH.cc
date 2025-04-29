@@ -2865,10 +2865,10 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 totalExpelledHeat_kJ += outputHeat_kJ;
                 tankTemps_C.back() -= outputHeat_kJ / nodeCp_kJperC;
 
-                double inletFraction = 0.;
+                double inletFraction = 0.; // accumulate inlet contributions
                 for (int i = getNumNodes() - 1; i >= 0; --i)
                 {
-                    // combine all inlet contributions at this node
+
                     if (i == highInletNodeIndex)
                     {
                         inletFraction += highInletFraction;
@@ -3431,23 +3431,21 @@ void HPWH::resetTopOffTimer() { timerTOT = 0.; }
 //-----------------------------------------------------------------------------
 ///	@brief	Checks whether energy is balanced during a simulation step.
 /// @note	Used in test/main.cc
-/// @param[in]	drawVol_L				Water volume drawn during simulation step
+/// @param[in]	drawVol1_L				Inlet-1 water volume
+/// @param[in]	inlet1T_C				Inlet-1 water temperature
+/// @param[in]	drawVol2_L				Inlet 2 water volume
+/// @param[in]	inlet2T_C				Inlet-2 water temperature
 ///	@param[in]	prevHeatContent_kJ		Heat content of tank prior to simulation step
 ///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance
 /// @return	true if balanced; false otherwise.
 //-----------------------------------------------------------------------------
-bool HPWH::isEnergyBalanced(const double inlet1_drawVol_L,
+bool HPWH::isEnergyBalanced(const double drawVol1_L,
                             const double inlet1T_C,
-                            const double inlet2_drawVol_L,
+                            const double drawVol2_L,
                             const double inlet2T_C,
                             const double prevHeatContent_kJ,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
-    double inlet1_drawCp_kJperC =
-        CPWATER_kJperkgC * DENSITYWATER_kgperL * inlet1_drawVol_L; // heat capacity of inlet1 draw
-
-    double inlet2_drawCp_kJperC =
-        CPWATER_kJperkgC * DENSITYWATER_kgperL * inlet2_drawVol_L; // heat capacity of inlet2 draw
 
     // Check energy balancing.
     double qInElectrical_kJ = 0.;
@@ -3458,8 +3456,15 @@ bool HPWH::isEnergyBalanced(const double inlet1_drawVol_L,
     double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
     double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-    double qOutWater_kJ = inlet1_drawCp_kJperC * (outletTemp_C - inlet1T_C) +
-                          inlet2_drawCp_kJperC * (outletTemp_C - inlet2T_C);
+
+    double drawCp1_kJperC =
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol1_L; // heat capacity of inlet1 draw
+
+    double drawCp2_kJperC =
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol2_L; // heat capacity of inlet2 draw
+
+    double qOutWater_kJ =
+        drawCp1_kJperC * (outletTemp_C - inlet1T_C) + drawCp2_kJperC * (outletTemp_C - inlet2T_C);
 
     double expectedTankHeatContent_kJ =
         prevHeatContent_kJ        // previous heat content
