@@ -95,8 +95,8 @@ TEST(EnergyBalanceTest, energyBalance)
     {
         // get preset model
         HPWH hpwh;
-        const std::string sModelName = "AOSmithHPTS50";
-        hpwh.initPreset(sModelName);
+        const std::string modelName = "AOSmithHPTS50";
+        hpwh.initPreset(modelName);
 
         hpwh.setInletT(5.);
         const double ambientT_C = 20.;
@@ -122,6 +122,6 @@ TEST(EnergyBalanceTest, energyBalance)
             << "Failure in hpwh.runOneStep.";
         result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
 
-        EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
+        EXPECT_TRUE(result) << "Energy balance failed for model " << modelName;
     }
 }

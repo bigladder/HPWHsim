@@ -22,7 +22,7 @@ CLI::App* add_measure(CLI::App& app)
     const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
 
     static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
+    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, JSON)");
 
     static std::string modelName = "";
     subcommand->add_option("-m,--model", modelName, "Model name")->required();
@@ -65,31 +65,34 @@ void measure(const std::string& sSpecType,
              std::string drawProfileName,
              std::string sTestConfig)
 {
-    std::string presetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    HPWH hpwh;
 
-    for (auto& c : presetOrFile)
+    // process command line arguments
+    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : sSpecType_mod)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (presetOrFile.length() > 0)
-    {
-        presetOrFile[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
-    }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
 
-    HPWH hpwh;
-    if (presetOrFile == "Preset")
+    // Parse the model
+    if (sSpecType_mod == "Preset")
     {
         hpwh.initPreset(modelName);
     }
+    else if (sSpecType_mod == "JSON")
+    {
+        hpwh.initFromJSON(modelName);
+    }
     else
     {
-        std::string inputFile = modelName;
-        hpwh.initFromFile(inputFile);
+        std::cout << "Invalid argument, received '" << sSpecType_mod
+                  << "', expected 'Preset' or 'JSON'.\n";
+        exit(1);
     }
-
-    presetOrFile[0] = // capitalize first char
-        static_cast<char>(std::toupper(static_cast<unsigned char>(presetOrFile[0])));
 
     std::string results = "";
     auto designation = HPWH::FirstHourRating::Designation::Medium;
