@@ -120,8 +120,6 @@ void run(const std::string& sSpecType,
     }
     if (sSpecType_mod == "preset")
         sSpecType_mod = "Preset";
-    else if (sSpecType_mod == "file")
-        sSpecType_mod = "File";
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
 
@@ -130,10 +128,6 @@ void run(const std::string& sSpecType,
     {
         hpwh.initPreset(modelName);
     }
-    else if (sSpecType_mod == "File")
-    {
-        hpwh.initFromFile(modelName);
-    }
     else if (sSpecType_mod == "JSON")
     {
         hpwh.initFromJSON(modelName);
@@ -141,7 +135,7 @@ void run(const std::string& sSpecType,
     else
     {
         cout << "Invalid argument, received '" << sSpecType_mod
-             << "', expected 'Preset', 'File', or 'JSON'.\n";
+             << "', expected 'Preset' or 'JSON'.\n";
         exit(1);
     }
 

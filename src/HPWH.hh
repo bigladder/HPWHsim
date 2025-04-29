@@ -670,13 +670,7 @@ class HPWH : public Courier::Sender
 
 #ifndef HPWH_ABRIDGED
 
-    void initFromFile(std::string modelName);
-
-    void initFromJSON(std::string sModelName);
-
-    void readFileAsJSON(std::string modelName, nlohmann::json& j);
-
-    void initFromFileJSON(nlohmann::json& j);
+    void initFromJSON(std::string modelName);
 
 #endif
 

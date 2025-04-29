@@ -25,7 +25,7 @@ CLI::App* add_make(CLI::App& app)
     const auto subcommand = app.add_subcommand("make", "Make a model with a specified EF");
 
     static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "specification type (Preset, File)");
+    subcommand->add_option("-s,--spec", sSpecType, "specification type (Preset)");
 
     static std::string modelName = "";
     subcommand->add_option("-m,--model", modelName, "model name")->required();
@@ -97,22 +97,23 @@ void make(const std::string& sSpecType,
     }
     if (sSpecType_mod == "preset")
         sSpecType_mod = "Preset";
-    else if (sSpecType_mod == "file")
-        sSpecType_mod = "File";
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
 
+    // Parse the model
     if (sSpecType_mod == "Preset")
     {
         hpwh.initPreset(modelName);
     }
-    else if (sSpecType_mod == "File")
-    {
-        hpwh.initFromFile(modelName);
-    }
     else if (sSpecType_mod == "JSON")
     {
         hpwh.initFromJSON(modelName);
+    }
+    else
+    {
+        std::cout << "Invalid argument, received '" << sSpecType_mod
+                  << "', expected 'Preset' or 'JSON'.\n";
+        exit(1);
     }
 
     std::string results = "";
