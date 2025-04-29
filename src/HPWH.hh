@@ -975,21 +975,21 @@ class HPWH : public Courier::Sender
     bool isSoCControlled() const;
 
     /// Checks whether energy is balanced during a simulation step.
-    bool isEnergyBalanced(const double inlet1_drawVol_L,
+    bool isEnergyBalanced(const double drawVol1_L,
                           const double inlet1T_C,
-                          const double inlet2_drawVol_L,
+                          const double drawVol2_L,
                           const double inlet2T_C,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance = 0.001);
 
     /// Overloaded version of above with one inlet only.
-    bool isEnergyBalanced(const double drawVol_L,
+    bool isEnergyBalanced(const double drawVol1_L,
                           double inletT_C_in,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance)
     {
         return isEnergyBalanced(
-            drawVol_L, inletT_C_in, 0., 0., prevHeatContent_kJ, fracEnergyTolerance);
+            drawVol1_L, inletT_C_in, 0., 0., prevHeatContent_kJ, fracEnergyTolerance);
     }
 
     /// Overloaded version of above using current inletT
