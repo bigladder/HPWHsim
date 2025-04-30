@@ -2634,8 +2634,8 @@ bool HPWH::isEnergyBalanced(const double drawVol1_L,
     double drawCp2_kJperC =
         CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol2_L; // heat capacity of inlet2 draw
 
-    double qOutWater_kJ =
-        drawCp1_kJperC * (tank->getOutletT_C() - inlet1T_C) + drawCp2_kJperC * (tank->getOutletT_C() - inlet2T_C);
+    double qOutWater_kJ = drawCp1_kJperC * (tank->getOutletT_C() - inlet1T_C) +
+                          drawCp2_kJperC * (tank->getOutletT_C() - inlet2T_C);
 
     double expectedTankHeatContent_kJ =
         prevHeatContent_kJ        // previous heat content
