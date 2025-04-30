@@ -468,18 +468,6 @@ class HPWH : public Courier::Sender
 
     } rating10CFR430;
 
-    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
-    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
-
-    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
-    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
-
-    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
-    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
-
-    void from(hpwh_data_model::rsintegratedwaterheater::Description& desc);
-    void to(hpwh_data_model::rsintegratedwaterheater::Description& desc) const;
-
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
     enum VERBOSITY
