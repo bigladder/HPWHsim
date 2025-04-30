@@ -473,7 +473,7 @@ class HPWH : public Courier::Sender
                     push_back({height, weight});
                     break;
                 }
-                if (weight != node_distribution[i + 1])
+                if (node_distribution[i] != node_distribution[i + 1])
                 {
                     push_back({height, weight});
                 }
