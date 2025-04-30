@@ -3624,8 +3624,6 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
     checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
 
-    checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
-
     checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
 
     checkTo(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume);
