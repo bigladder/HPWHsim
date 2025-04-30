@@ -85,6 +85,8 @@ if (${PROJECT_NAME}_COVERAGE)
     add_coverage(${PROJECT_NAME})
 endif ()
 
+add_subdirectory(presets)
+
 if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(hpwh)
 endif ()

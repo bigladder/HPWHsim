@@ -27,9 +27,11 @@ def incorp_models(models_list_file, build_dir):
 		if not os.path.exists(output_dir):
 			os.mkdir(output_dir)
 			
+		combined_header =  "#ifndef MODELS_H\n"
+		combined_header += "#define MODELS_H\n\n"
+		
 		for model in json_data:  
 			convert_list = [app_cmd, 'convert', '-m', str(model["number"]), '-n', '-d', output_dir, '-f', model["name"]]
-			#print(convert_list)	  
 			result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)	
 				
 			model_json_path = os.path.join(output_dir, model["name"] + ".json")
@@ -41,11 +43,19 @@ def incorp_models(models_list_file, build_dir):
 					json_data.close()
 			except:
 				continue	
-			model_text_path = os.path.join("../../../src/models", model["name"] + ".h")
+			model_text_path = os.path.join("../../../src/presets/include", model["name"] + ".h")
 
-			model_text = "constexpr char *j_" + model["name"] + "= R\"config("
-			model_text = model_text + json.dumps(data)
-			model_text = model_text + ")config\";"
+			guard_name = model["name"].upper() + "_H"
+			combined_header += "#include <" + model["name"] + ".h>\n"
+			
+			model_text = "#ifndef " + guard_name + "\n"
+			model_text += "#define " + guard_name + "\n\n"
+
+			model_text += "constexpr char *j_" + model["name"] + "= R\"config("
+			model_text += json.dumps(data)
+			model_text += ")config\";" + "\n\n"
+			
+			model_text += "#endif\n"
 			
 			try:	
 				with open(model_text_path, "w") as model_text_file:
@@ -53,6 +63,14 @@ def incorp_models(models_list_file, build_dir):
 					model_text_file.close()
 			except:
 				print("Failed to create file")
+
+		combined_header += "#endif\n\n"				
+		try:	
+			with open("../../../src/presets/models.h", "w") as model_header:
+				model_header.write(combined_header)
+				model_header.close()
+		except:
+			print("Failed to combined header")
 
 	os.chdir(orig_dir)
   
