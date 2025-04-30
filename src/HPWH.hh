@@ -93,6 +93,18 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
+    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
+
+    void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
+
+    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
+
+    void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
+
+    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
+
+    void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
+
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
     enum DRMODES
@@ -802,11 +814,9 @@ class HPWH : public Courier::Sender
     void initPreset(const std::string& modelName);
 
 #ifndef HPWH_ABRIDGED
-    void initFromFile(std::string modelName);
-    void initFromJSON(std::string sModelName);
 
-    void readFileAsJSON(std::string modelName, nlohmann::json& j);
-    void initFromFileJSON(nlohmann::json& j);
+    void initFromJSON(std::string modelName);
+
 #endif
 
     void runOneStep(double drawVolume_L,
@@ -816,6 +826,7 @@ class HPWH : public Courier::Sender
                     double inletVol2_L = 0.,
                     double inletT2_C = 0.,
                     std::vector<double>* extraHeatDist_W = NULL);
+
     double minutesPerStep = 1.;
     double secondsPerStep, hoursPerStep;
 
@@ -1205,6 +1216,7 @@ class HPWH : public Courier::Sender
     void setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
+
     void setEnteringWaterHighTempShutOff(double highTemp,
                                          bool tempIsAbsolute,
                                          int heatSourceIndex,
@@ -1226,18 +1238,30 @@ class HPWH : public Courier::Sender
     bool isSoCControlled() const;
 
     /// Checks whether energy is balanced during a simulation step.
-    bool isEnergyBalanced(const double drawVol_L,
+    bool isEnergyBalanced(const double drawVol1_L,
+                          const double inlet1T_C,
+                          const double drawVol2_L,
+                          const double inlet2T_C,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance = 0.001);
 
-    /// Overloaded version of above that allows specification of inlet temperature.
-    bool isEnergyBalanced(const double drawVol_L,
+    /// Overloaded version of above with one inlet only.
+    bool isEnergyBalanced(const double drawVol1_L,
                           double inletT_C_in,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance)
     {
-        setInletT(inletT_C_in);
-        return isEnergyBalanced(drawVol_L, prevHeatContent_kJ, fracEnergyTolerance);
+        return isEnergyBalanced(
+            drawVol1_L, inletT_C_in, 0., 0., prevHeatContent_kJ, fracEnergyTolerance);
+    }
+
+    /// Overloaded version of above using current inletT
+    bool isEnergyBalanced(const double drawVol_L,
+                          const double prevHeatContent_kJ,
+                          const double fracEnergyTolerance = 0.001)
+    {
+        return isEnergyBalanced(
+            drawVol_L, member_inletT_C, prevHeatContent_kJ, fracEnergyTolerance);
     }
 
     /// Addition of heat from a normal heat sources; return excess heat, if needed, to prevent
@@ -1557,24 +1581,34 @@ class HPWH : public Courier::Sender
     static double getResampledValue(const std::vector<double>& sampleValues,
                                     double beginFraction,
                                     double endFraction);
+
     static void resample(std::vector<double>& values, const std::vector<double>& sampleValues);
+
     static void resampleExtensive(std::vector<double>& values,
                                   const std::vector<double>& sampleValues);
+
     static inline void resampleIntensive(std::vector<double>& values,
                                          const std::vector<double>& sampleValues)
     {
         resample(values, sampleValues);
     }
+
     static double expitFunc(double x, double offset);
+
     static void normalize(std::vector<double>& distribution);
+
     static int findLowestNode(const WeightedDistribution& wdist, const int numTankNodes);
+
     static double findShrinkageT_C(const WeightedDistribution& wDist, const int numTankNodes);
+
     static void calcThermalDist(std::vector<double>& thermalDist,
                                 const double shrinkageT_C,
                                 const int lowestNode,
                                 const std::vector<double>& nodeT_C,
                                 const double setpointT_C);
+
     static void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
+
     static double getChargePerNode(double tCold, double tMix, double tHot);
 
 }; // end of HPWH class
