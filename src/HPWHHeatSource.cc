@@ -150,6 +150,7 @@ void HPWH::HeatSource::to(
     checkTo(wd, hsc.heat_distribution_is_set, hsc.heat_distribution);
 
     hsc.id = name;
+    hsc.id_is_set = true;
 
     hsc.shut_off_logic.resize(shutOffLogicSet.size());
     std::size_t i = 0;
