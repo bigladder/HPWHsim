@@ -3738,6 +3738,8 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
                 she.extra_pump_power_is_set,
                 she.extra_pump_power);
     }
+
+    cwhs.heat_source_configurations_is_set = true;
 }
 
 //-----------------------------------------------------------------------------
