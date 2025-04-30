@@ -37,7 +37,7 @@ void HPWH::Resistance::from(
     auto p_rshs = reinterpret_cast<
         hpwh_data_model::rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(hs.get());
 
-    // description.from(*p_rshs);
+    description.from(*p_rshs);
     productInformation.from(*p_rshs);
 
     auto& perf = p_rshs->performance;
@@ -55,7 +55,7 @@ void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSource
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSRESISTANCEWATERHEATSOURCE.schema.yaml");
 
-    // description.to(*p_hs);
+    description.to(*p_hs);
     productInformation.to(*p_hs);
 
     auto& perf = p_hs->performance;
