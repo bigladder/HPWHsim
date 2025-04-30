@@ -749,13 +749,7 @@ class HPWH : public Courier::Sender
 
 #ifndef HPWH_ABRIDGED
 
-    void initFromFile(std::string modelName);
-
-    void initFromJSON(std::string sModelName);
-
-    void readFileAsJSON(std::string modelName, nlohmann::json& j);
-
-    void initFromFileJSON(nlohmann::json& j);
+    void initFromJSON(std::string modelName);
 
 #endif
 
@@ -1240,18 +1234,30 @@ class HPWH : public Courier::Sender
     bool isSoCControlled() const;
 
     /// Checks whether energy is balanced during a simulation step.
-    bool isEnergyBalanced(const double drawVol_L,
+    bool isEnergyBalanced(const double drawVol1_L,
+                          const double inlet1T_C,
+                          const double drawVol2_L,
+                          const double inlet2T_C,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance = 0.001);
 
-    /// Overloaded version of above that allows specification of inlet temperature.
-    bool isEnergyBalanced(const double drawVol_L,
+    /// Overloaded version of above with one inlet only.
+    bool isEnergyBalanced(const double drawVol1_L,
                           double inletT_C_in,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance)
     {
-        setInletT(inletT_C_in);
-        return isEnergyBalanced(drawVol_L, prevHeatContent_kJ, fracEnergyTolerance);
+        return isEnergyBalanced(
+            drawVol1_L, inletT_C_in, 0., 0., prevHeatContent_kJ, fracEnergyTolerance);
+    }
+
+    /// Overloaded version of above using current inletT
+    bool isEnergyBalanced(const double drawVol_L,
+                          const double prevHeatContent_kJ,
+                          const double fracEnergyTolerance = 0.001)
+    {
+        return isEnergyBalanced(
+            drawVol_L, member_inletT_C, prevHeatContent_kJ, fracEnergyTolerance);
     }
 
     /// Addition of heat from a normal heat sources; return excess heat, if needed, to prevent
