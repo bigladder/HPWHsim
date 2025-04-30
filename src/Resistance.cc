@@ -57,6 +57,8 @@ void HPWH::Resistance::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSource
 
     auto& perf = p_hs->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
+
+    p_hs->performance_is_set = true;
 }
 
 void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CONDENSITY_SIZE*/)
