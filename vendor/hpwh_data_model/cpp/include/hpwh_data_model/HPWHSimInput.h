@@ -3,6 +3,11 @@
 #include <ASHRAE205.h>
 #include <RSINTEGRATEDWATERHEATER.h>
 #include <CentralWaterHeatingSystem.h>
+#include <RSTANK.h>
+#include <RSRESISTANCEWATERHEATSOURCE.h>
+#include <RSCONDENSERWATERHEATSOURCE.h>
+#include <HeatSourceConfiguration.h>
+#include <RSAIRTOWATERHEATPUMP.h>
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -33,42 +38,42 @@ namespace hpwh_data_model {
 		};
 		struct HPWHSimInput {
 			core::Metadata metadata;
-			bool metadata_is_set;
+			bool metadata_is_set = false;
 			const static std::string_view metadata_units;
 			const static std::string_view metadata_description;
 			const static std::string_view metadata_name;
 			int number_of_nodes;
-			bool number_of_nodes_is_set;
+			bool number_of_nodes_is_set = false;
 			const static std::string_view number_of_nodes_units;
 			const static std::string_view number_of_nodes_description;
 			const static std::string_view number_of_nodes_name;
 			bool depresses_temperature;
-			bool depresses_temperature_is_set;
+			bool depresses_temperature_is_set = false;
 			const static std::string_view depresses_temperature_units;
 			const static std::string_view depresses_temperature_description;
 			const static std::string_view depresses_temperature_name;
 			bool fixed_volume;
-			bool fixed_volume_is_set;
+			bool fixed_volume_is_set = false;
 			const static std::string_view fixed_volume_units;
 			const static std::string_view fixed_volume_description;
 			const static std::string_view fixed_volume_name;
 			double standard_setpoint;
-			bool standard_setpoint_is_set;
+			bool standard_setpoint_is_set = false;
 			const static std::string_view standard_setpoint_units;
 			const static std::string_view standard_setpoint_description;
 			const static std::string_view standard_setpoint_name;
 			hpwh_sim_input::HPWHSystemType system_type;
-			bool system_type_is_set;
+			bool system_type_is_set = false;
 			const static std::string_view system_type_units;
 			const static std::string_view system_type_description;
 			const static std::string_view system_type_name;
 			rsintegratedwaterheater::RSINTEGRATEDWATERHEATER integrated_system;
-			bool integrated_system_is_set;
+			bool integrated_system_is_set = false;
 			const static std::string_view integrated_system_units;
 			const static std::string_view integrated_system_description;
 			const static std::string_view integrated_system_name;
 			central_water_heating_system::CentralWaterHeatingSystem central_system;
-			bool central_system_is_set;
+			bool central_system_is_set = false;
 			const static std::string_view central_system_units;
 			const static std::string_view central_system_description;
 			const static std::string_view central_system_name;
@@ -79,6 +84,7 @@ namespace hpwh_data_model {
 			{HPWHSystemType::CENTRAL, "CENTRAL"}
 		})
 		void from_json(const nlohmann::json& j, HPWHSimInput& x);
+		void to_json(nlohmann::json& j, const HPWHSimInput& x);
 	}
 }
 #endif

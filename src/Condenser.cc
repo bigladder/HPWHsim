@@ -636,8 +636,11 @@ void HPWH::Condenser::to(
         checkTo(
             tempGridValues[1], lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
 
+        map.grid_variables_is_set = true;
+        map.lookup_variables_is_set = true;
         perf.performance_map_is_set = true;
     }
+    hs.performance_is_set = true;
 }
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
@@ -745,6 +748,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         checkTo(
             heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
 
+        map.grid_variables_is_set = true;
+        map.lookup_variables_is_set = true;
         perf.performance_map_is_set = true;
     }
     else // convert to grid
@@ -782,8 +787,11 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         checkTo(
             tempGridValues[1], lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
 
+        map.grid_variables_is_set = true;
+        map.lookup_variables_is_set = true;
         perf.performance_map_is_set = true;
     }
+    hs.performance_is_set = true;
 }
 
 void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
