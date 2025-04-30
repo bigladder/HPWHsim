@@ -3345,7 +3345,7 @@ void HPWH::initFromJSON(string modelName)
 
 #endif
 
-void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
+void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
     checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
 
@@ -3395,9 +3395,9 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
 }
 
-void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
-    // description.from(rswh);
+    description.from(rswh);
     productInformation.from(rswh);
     rating10CFR430.from(rswh);
 
@@ -3495,7 +3495,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATE
     }
 }
 
-void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);

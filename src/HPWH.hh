@@ -93,15 +93,15 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
-    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
+    void from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
 
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
 
-    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
+    void from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
 
     void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
 
-    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
+    void from(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
 
     void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
 
@@ -339,6 +339,7 @@ class HPWH : public Courier::Sender
     {
         Description() : Entry<std::string>("", false) {}
         Description(std::string description_in) : Entry<std::string>(description_in) {}
+        Description(const Entry<std::string>& entry) : Entry<std::string>(entry) {}
         bool empty() const { return !(Entry<std::string>::isSet()); }
 
         //-----------------------------------------------------------------------------

@@ -28,7 +28,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
-void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
+void HPWH::Tank::from(const hpwh_data_model::rstank::RSTANK& rstank)
 {
     // description.from(rstank);
     productInformation.from(rstank);

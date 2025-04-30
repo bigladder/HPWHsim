@@ -30,7 +30,7 @@ class HPWH::Tank : public Sender
     Description description;
     ProductInformation productInformation;
 
-    void from(hpwh_data_model::rstank::RSTANK& rstank);
+    void from(const hpwh_data_model::rstank::RSTANK& rstank);
 
     void to(hpwh_data_model::rstank::RSTANK& rstank) const;
 
