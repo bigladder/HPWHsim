@@ -52,10 +52,10 @@ namespace hpwh_data_model  {
 		void to_json(nlohmann::json& j, const HeatingLogic& x) {
 			json_set<heat_source_configuration::HeatingLogicType>(j, "heating_logic_type", x.heating_logic_type, x.heating_logic_type_is_set);
 			if (x.heating_logic_type == heat_source_configuration::HeatingLogicType::STATE_OF_CHARGE_BASED) {
-				to_json(j.at("heating_logic"), *dynamic_cast<heat_source_configuration::StateOfChargeBasedHeatingLogic*>(x.heating_logic.get()));
+				json_set<heat_source_configuration::StateOfChargeBasedHeatingLogic>(j, "heating_logic", *dynamic_cast<const heat_source_configuration::StateOfChargeBasedHeatingLogic*>(x.heating_logic.get()), x.heating_logic_is_set);
 			}
 			if (x.heating_logic_type == heat_source_configuration::HeatingLogicType::TEMPERATURE_BASED) {
-				to_json(j.at("heating_logic"), *dynamic_cast<heat_source_configuration::TemperatureBasedHeatingLogic*>(x.heating_logic.get()));
+				json_set<heat_source_configuration::TemperatureBasedHeatingLogic>(j, "heating_logic", *dynamic_cast<const heat_source_configuration::TemperatureBasedHeatingLogic*>(x.heating_logic.get()), x.heating_logic_is_set);
 			}
 			json_set<heat_source_configuration::ComparisonType>(j, "comparison_type", x.comparison_type, x.comparison_type_is_set);
 		}
@@ -110,13 +110,13 @@ namespace hpwh_data_model  {
 			json_set<std::string>(j, "id", x.id, x.id_is_set);
 			json_set<heat_source_configuration::HeatSourceType>(j, "heat_source_type", x.heat_source_type, x.heat_source_type_is_set);
 			if (x.heat_source_type == heat_source_configuration::HeatSourceType::RESISTANCE) {
-				to_json(j.at("heat_source"), *dynamic_cast<rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(x.heat_source.get()));
+				json_set<rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE>(j, "heat_source", *dynamic_cast<const rsresistancewaterheatsource::RSRESISTANCEWATERHEATSOURCE*>(x.heat_source.get()), x.heat_source_is_set);
 			}
 			if (x.heat_source_type == heat_source_configuration::HeatSourceType::CONDENSER) {
-				to_json(j.at("heat_source"), *dynamic_cast<rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(x.heat_source.get()));
+				json_set<rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE>(j, "heat_source", *dynamic_cast<const rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(x.heat_source.get()), x.heat_source_is_set);
 			}
 			if (x.heat_source_type == heat_source_configuration::HeatSourceType::AIRTOWATERHEATPUMP) {
-				to_json(j.at("heat_source"), *dynamic_cast<rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(x.heat_source.get()));
+				json_set<rsairtowaterheatpump::RSAIRTOWATERHEATPUMP>(j, "heat_source", *dynamic_cast<const rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(x.heat_source.get()), x.heat_source_is_set);
 			}
 			json_set<heat_source_configuration::WeightedDistribution>(j, "heat_distribution", x.heat_distribution, x.heat_distribution_is_set);
 			json_set<std::vector<heat_source_configuration::HeatingLogic>>(j, "turn_on_logic", x.turn_on_logic, x.turn_on_logic_is_set);

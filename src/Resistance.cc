@@ -51,6 +51,8 @@ void HPWH::Resistance::to(
         "RSRESISTANCEWATERHEATSOURCE.schema.yaml");
     auto& perf = res_ptr->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
+
+    res_ptr->performance_is_set = true;
 }
 
 void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CONDENSITY_SIZE*/)
