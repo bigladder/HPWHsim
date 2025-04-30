@@ -3657,6 +3657,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         auto& configuration = configurations[iHeatSource];
         heatSources[iHeatSource]->to(configuration);
         configuration.heat_source_is_set = true;
+        configuration.heat_source_type_is_set = true;
         if (heatSources[iHeatSource]->isVIP)
         {
             hasPrimaryHeatSource = true;
@@ -3687,6 +3688,7 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
         auto& configuration = configurations[iHeatSource];
         heatSources[iHeatSource]->to(configuration);
         configuration.heat_source_is_set = true;
+        configuration.heat_source_type_is_set = true;
         if (heatSources[iHeatSource]->isVIP)
         {
             hasPrimaryHeatSource = true;
