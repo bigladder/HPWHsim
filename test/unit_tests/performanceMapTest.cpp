@@ -69,7 +69,7 @@ struct PerformanceMapTest : public testing::Test
     {
         hpwh_data_model::init(hpwh.get_courier());
 
-        hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi0,  hsi1;
+        hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi0, hsi1;
         hpwh.to(hsi0);
 
         nlohmann::json j;
