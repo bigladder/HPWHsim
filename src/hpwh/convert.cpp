@@ -77,7 +77,7 @@ void convert(const std::string& sSpecType,
 
     nlohmann::json j;
     hpwh_data_model::hpwh_sim_input::to_json(j, hsi);
-    //add_to_json(hsi, j);
+    // add_to_json(hsi, j);
 
     std::ofstream outputFile;
     if (sOutputFilename == "")
