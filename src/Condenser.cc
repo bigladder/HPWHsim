@@ -630,6 +630,7 @@ void HPWH::Condenser::to(
 
         perf.performance_map_is_set = true;
     }
+    hs.performance_is_set = true;
 }
 
 void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs) const
@@ -773,6 +774,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
 
         perf.performance_map_is_set = true;
     }
+    hs.performance_is_set = true;
 }
 
 void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
