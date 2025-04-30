@@ -23,6 +23,16 @@ namespace hpwh_data_model  {
 			json_get<rsintegratedwaterheater::RSINTEGRATEDWATERHEATER>(j, logger.get(), "integrated_system", x.integrated_system, x.integrated_system_is_set, true);
 			json_get<central_water_heating_system::CentralWaterHeatingSystem>(j, logger.get(), "central_system", x.central_system, x.central_system_is_set, true);
 		}
+		void to_json(nlohmann::json& j, const HPWHSimInput& x) {
+			json_set<core::Metadata>(j, "metadata", x.metadata, x.metadata_is_set);
+			json_set<int>(j, "number_of_nodes", x.number_of_nodes, x.number_of_nodes_is_set);
+			json_set<bool>(j, "depresses_temperature", x.depresses_temperature, x.depresses_temperature_is_set);
+			json_set<bool>(j, "fixed_volume", x.fixed_volume, x.fixed_volume_is_set);
+			json_set<double>(j, "standard_setpoint", x.standard_setpoint, x.standard_setpoint_is_set);
+			json_set<hpwh_sim_input::HPWHSystemType>(j, "system_type", x.system_type, x.system_type_is_set);
+			json_set<rsintegratedwaterheater::RSINTEGRATEDWATERHEATER>(j, "integrated_system", x.integrated_system, x.integrated_system_is_set);
+			json_set<central_water_heating_system::CentralWaterHeatingSystem>(j, "central_system", x.central_system, x.central_system_is_set);
+		}
 		const std::string_view HPWHSimInput::metadata_units = "";
 
 		const std::string_view HPWHSimInput::metadata_description = "Metadata data group";

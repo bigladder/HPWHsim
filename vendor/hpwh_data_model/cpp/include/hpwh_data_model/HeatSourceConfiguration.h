@@ -218,10 +218,15 @@ namespace hpwh_data_model {
 			{ComparisonType::LESS_THAN, "LESS_THAN"}
 		})
 		void from_json(const nlohmann::json& j, HeatSourceConfiguration& x);
+		void to_json(nlohmann::json& j, const HeatSourceConfiguration& x);
 		void from_json(const nlohmann::json& j, WeightedDistribution& x);
+		void to_json(nlohmann::json& j, const WeightedDistribution& x);
 		void from_json(const nlohmann::json& j, HeatingLogic& x);
+		void to_json(nlohmann::json& j, const HeatingLogic& x);
 		void from_json(const nlohmann::json& j, TemperatureBasedHeatingLogic& x);
+		void to_json(nlohmann::json& j, const TemperatureBasedHeatingLogic& x);
 		void from_json(const nlohmann::json& j, StateOfChargeBasedHeatingLogic& x);
+		void to_json(nlohmann::json& j, const StateOfChargeBasedHeatingLogic& x);
 	}
 }
 #endif

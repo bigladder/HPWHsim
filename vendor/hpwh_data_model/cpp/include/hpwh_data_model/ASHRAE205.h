@@ -198,7 +198,9 @@ namespace hpwh_data_model {
 			{ConcentrationType::BY_MASS, "BY_MASS"}
 		})
 		void from_json(const nlohmann::json& j, LiquidMixture& x);
+		void to_json(nlohmann::json& j, const LiquidMixture& x);
 		void from_json(const nlohmann::json& j, LiquidComponent& x);
+		void to_json(nlohmann::json& j, const LiquidComponent& x);
 	}
 }
 #endif
