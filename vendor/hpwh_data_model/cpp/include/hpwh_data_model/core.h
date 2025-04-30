@@ -84,6 +84,7 @@ namespace hpwh_data_model {
 			const static std::string_view notes_name;
 		};
 		void from_json(const nlohmann::json& j, Metadata& x);
+		void to_json(nlohmann::json& j, const Metadata& x);
 	}
 }
 #endif

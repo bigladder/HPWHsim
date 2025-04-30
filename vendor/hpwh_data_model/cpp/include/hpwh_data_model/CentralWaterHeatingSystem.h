@@ -2,6 +2,10 @@
 #define CENTRAL_WATER_HEATING_SYSTEM_H_
 #include <RSTANK.h>
 #include <HeatSourceConfiguration.h>
+#include <ASHRAE205.h>
+#include <RSRESISTANCEWATERHEATSOURCE.h>
+#include <RSCONDENSERWATERHEATSOURCE.h>
+#include <RSAIRTOWATERHEATPUMP.h>
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -99,7 +103,9 @@ namespace hpwh_data_model {
 			{ControlType::FIXED_OUTLET_TEMPERATURE, "FIXED_OUTLET_TEMPERATURE"}
 		})
 		void from_json(const nlohmann::json& j, CentralWaterHeatingSystem& x);
+		void to_json(nlohmann::json& j, const CentralWaterHeatingSystem& x);
 		void from_json(const nlohmann::json& j, SecondaryHeatExchanger& x);
+		void to_json(nlohmann::json& j, const SecondaryHeatExchanger& x);
 	}
 }
 #endif

@@ -5,6 +5,7 @@
 #include <RSRESISTANCEWATERHEATSOURCE.h>
 #include <RSCONDENSERWATERHEATSOURCE.h>
 #include <HeatSourceConfiguration.h>
+#include <RSAIRTOWATERHEATPUMP.h>
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -114,10 +115,15 @@ namespace hpwh_data_model {
 			const static std::string_view performance_name;
 		};
 		void from_json(const nlohmann::json& j, RSINTEGRATEDWATERHEATER& x);
+		void to_json(nlohmann::json& j, const RSINTEGRATEDWATERHEATER& x);
 		void from_json(const nlohmann::json& j, Description& x);
+		void to_json(nlohmann::json& j, const Description& x);
 		void from_json(const nlohmann::json& j, ProductInformation& x);
+		void to_json(nlohmann::json& j, const ProductInformation& x);
 		void from_json(const nlohmann::json& j, Rating10CFR430& x);
+		void to_json(nlohmann::json& j, const Rating10CFR430& x);
 		void from_json(const nlohmann::json& j, Performance& x);
+		void to_json(nlohmann::json& j, const Performance& x);
 	}
 }
 #endif
