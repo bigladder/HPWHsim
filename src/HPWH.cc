@@ -3495,7 +3495,8 @@ void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATE
     }
 }
 
-void HPWH::from(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(
+    const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);
