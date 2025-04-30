@@ -136,16 +136,16 @@ TEST(EnergyBalanceTest, energyBalance)
         double inlet1Vol_L = 0.6 * drawVol_L;            // split between two inlets
         double inlet2Vol_L = drawVol_L - inlet1Vol_L;
 
-        double inlet1T_C = 5.;
-        double inlet2T_C = 60.;
-
         const double ambientT_C = 20.;
         const double externalT_C = 20.;
 
-        { // inleta at bottom and top of tank
+        { // inlets at bottom and top of tank
             hpwh.setInletByFraction(0.);
             hpwh.setInlet2ByFraction(1.);
             hpwh.setTankToTemperature(53.);
+            double inlet1T_C = 5.;
+            double inlet2T_C = 60.;
+
 
             double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
             hpwh.runOneStep(inlet1T_C,
@@ -161,9 +161,51 @@ TEST(EnergyBalanceTest, energyBalance)
                 << "Failure in two-inlet test:" << modelName;
         }
         { // inlets at 1/4 and 3/4 heights
-            hpwh.setInletByFraction(0.25);
-            hpwh.setInlet2ByFraction(0.75);
+            hpwh.setInletByFraction(0.25); // node 3
+            hpwh.setInlet2ByFraction(0.75); // node 9
             hpwh.setTankToTemperature(53.);
+            double inlet1T_C = 5.;
+            double inlet2T_C = 60.;
+
+            double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
+            hpwh.runOneStep(inlet1T_C,
+                            drawVol_L,
+                            ambientT_C,
+                            externalT_C,
+                            HPWH::DR_ALLOW,
+                            inlet2Vol_L,
+                            inlet2T_C);
+
+            EXPECT_TRUE(hpwh.isEnergyBalanced(
+                inlet1Vol_L, inlet1T_C, inlet2Vol_L, inlet2T_C, prevHeatContent_kJ, 1.e-6))
+                << "Failure in two-inlet test:" << modelName;
+        }
+        { // invert inlets
+            hpwh.setInletByFraction(1.);
+            hpwh.setInlet2ByFraction(0.);
+            hpwh.setTankToTemperature(53.);
+            double inlet1T_C = 5.;
+            double inlet2T_C = 60.;
+
+            double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
+            hpwh.runOneStep(inlet1T_C,
+                            drawVol_L,
+                            ambientT_C,
+                            externalT_C,
+                            HPWH::DR_ALLOW,
+                            inlet2Vol_L,
+                            inlet2T_C);
+
+            EXPECT_TRUE(hpwh.isEnergyBalanced(
+                inlet1Vol_L, inlet1T_C, inlet2Vol_L, inlet2T_C, prevHeatContent_kJ, 1.e-6))
+                << "Failure in two-inlet test:" << modelName;
+        }
+        { // swap temps
+            hpwh.setInletByFraction(0.);
+            hpwh.setInlet2ByFraction(1.);
+            hpwh.setTankToTemperature(53.);
+            double inlet1T_C = 60.;
+            double inlet2T_C = 5.;
 
             double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
             hpwh.runOneStep(inlet1T_C,
