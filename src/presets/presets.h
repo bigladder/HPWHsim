@@ -53,7 +53,7 @@
 #include "RheemPlugInShared50.h"
 #include "RheemPlugInShared65.h"
 #include "RheemPlugInShared80.h"
-#include "Stiebel220E.h"
+#include "Stiebel220e.h"
 #include "UEF2generic.h"
 #include "LG_APHWC50.h"
 #include "LG_APHWC80.h"

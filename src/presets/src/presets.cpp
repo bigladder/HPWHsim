@@ -56,7 +56,7 @@ std::unordered_map<int, std::pair<const char *, const char *>> index = {
 { index_RheemPlugInShared50, {"RheemPlugInShared50", RheemPlugInShared50}},
 { index_RheemPlugInShared65, {"RheemPlugInShared65", RheemPlugInShared65}},
 { index_RheemPlugInShared80, {"RheemPlugInShared80", RheemPlugInShared80}},
-{ index_Stiebel220E, {"Stiebel220E", Stiebel220E}},
+{ index_Stiebel220e, {"Stiebel220e", Stiebel220e}},
 { index_UEF2generic, {"UEF2generic", UEF2generic}},
 { index_LG_APHWC50, {"LG_APHWC50", LG_APHWC50}},
 { index_LG_APHWC80, {"LG_APHWC80", LG_APHWC80}},
