@@ -104,4 +104,9 @@
 #include "RheemHPHD60.h"
 #include "RheemHPHD135.h"
 
+namespace hpwh_presets {
+
+std::unordered_map<int, constexpr char *> presets_map
+}
+
 #endif

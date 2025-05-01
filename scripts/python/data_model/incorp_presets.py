@@ -52,6 +52,9 @@ def incorp_presets(presets_list_files, build_dir):
 				preset_text += "constexpr char *" + preset["name"] + "= R\"config("
 				preset_text += json.dumps(data)
 				preset_text += ")config\";" + "\n\n"
+				
+				preset_text += "constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + "\n\n"
+				
 				preset_text += "}\n"		
 				preset_text += "#endif\n"
 				
@@ -67,8 +70,17 @@ def incorp_presets(presets_list_files, build_dir):
 
 		presets_header =  "#ifndef PRESETS_H\n"
 		presets_header += "#define PRESETS_H\n\n"
-		presets_header += presets_header_text
-		presets_header += "\n#endif\n"				
+		
+		presets_header += presets_header_text + "\n"
+		
+
+		presets_header += "namespace hpwh_presets {\n\n"
+		
+		presets_header += "std::unordered_map<int, constexpr char *> presets_map\n"
+
+		presets_header += "}\n\n"
+
+		presets_header += "#endif\n"				
 		try:	
 			with open("../../../src/presets/presets.h", "w") as presets_header_file:
 				presets_header_file.write(presets_header)
