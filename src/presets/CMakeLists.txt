@@ -3,16 +3,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(hpwh_presets)
 
-file(GLOB model_headers "include/*.h")
+# Set a default build type if none was specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
 
-set(sources "presets.h" "${model_headers}")
+find_package(Git QUIET)
 
-add_library(hpwh_presets STATIC ${sources})
+set(JSON_BuildTests OFF CACHE INTERNAL "")
 
-#target_link_libraries(hpwh_presets PUBLIC nlohmann_json)
+add_subdirectory(src)
 
-target_include_directories(hpwh_presets PUBLIC ${PROJECT_SOURCE_DIR}/presets/include)
-
-target_compile_features(hpwh_presets PRIVATE cxx_std_17)
-include(GenerateExportHeader)
-generate_export_header(hpwh_presets)
