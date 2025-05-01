@@ -1,14 +1,11 @@
 
-file(GLOB headers "include/*.h")
-file(GLOB sources "src/*.cpp")
-
-file(GLOB lib_headers "${PROJECT_SOURCE_DIR}/include/*.h")
+file(GLOB lib_headers "${PROJECT_SOURCE_DIR}/*.h" "${PROJECT_SOURCE_DIR}/include/*.h")
 file(GLOB lib_src "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
-set (sources "${lib_headers}"
+set (lib_files "${lib_headers}"
              "${lib_src}")
 
-add_library(hpwh_presets STATIC ${sources})
+add_library(hpwh_presets STATIC ${lib_files})
 
 target_include_directories(hpwh_presets PUBLIC ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
 

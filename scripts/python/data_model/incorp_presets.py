@@ -49,12 +49,12 @@ def incorp_presets(presets_list_files, build_dir):
 				preset_text = "#ifndef " + guard_name + "\n"
 				preset_text += "#define " + guard_name + "\n\n"
 
-				preset_text += "namespace hpwh_presets {\n"
-				preset_text += "const char *" + preset["name"] + "= R\"config("
+				preset_text += "namespace hpwh_presets {\n\n"
+				preset_text += "inline const char *" + preset["name"] + "= R\"config("
 				preset_text += json.dumps(data)
 				preset_text += ")config\";" + "\n\n"
 				
-				preset_text += "constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + ";\n\n"
+				preset_text += "inline constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + ";\n\n"
 				
 				preset_text += "}\n"		
 				preset_text += "#endif\n"
@@ -89,7 +89,7 @@ def incorp_presets(presets_list_files, build_dir):
 
 		presets_header += "#endif\n"				
 		try:	
-			with open("../../../src/presets/presets.h", "w") as presets_header_file:
+			with open("../../../src/presets/include/presets.h", "w") as presets_header_file:
 				presets_header_file.write(presets_header)
 				presets_header_file.close()
 		except:
@@ -98,7 +98,7 @@ def incorp_presets(presets_list_files, build_dir):
 		# create library source
 		presets_source =  "#include <iostream>\n"
 		presets_source += "#include <unordered_map>\n"
-		presets_source += "#include \"presets.h\"\n\n"
+		presets_source += "#include \"../include/presets.h\"\n\n"
 		presets_source += "namespace hpwh_presets {\n"
 		
 		presets_source += "std::unordered_map<int, const char *> index = {\n"

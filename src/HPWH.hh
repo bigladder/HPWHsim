@@ -19,6 +19,7 @@
 #include <nlohmann/json.hpp>
 
 #include "hpwh-data-model.hh"
+#include "presets/presets.h"
 #include "HPWHUtils.hh"
 
 namespace Btwxt
@@ -806,6 +807,9 @@ class HPWH : public Courier::Sender
      */
 
     static bool mapNameToPreset(const std::string& modelName, MODELS& model);
+
+    void init(MODELS presetNum);
+    void init(const std::string& modelName);
 
     void initPreset(MODELS presetNum);
     /**< This function will reset all member variables to defaults and then
