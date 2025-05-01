@@ -459,10 +459,10 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
                 totalExpelledHeat_kJ += outputHeat_kJ;
                 nodeTs_C.back() -= outputHeat_kJ / nodeCp_kJperC;
 
+                double inletFraction = 0.; // accumulate inlet contributions
                 for (int i = getNumNodes() - 1; i >= 0; --i)
                 {
-                    // combine all inlet contributions at this node
-                    double inletFraction = 0.;
+
                     if (i == highInletNodeIndex)
                     {
                         inletFraction += highInletFraction;
@@ -578,7 +578,7 @@ void HPWH::Tank::setNodeNumFromFractionalHeight(double fractionalHeight, int& in
         send_error("Out of bounds fraction for setInletByFraction.");
     }
 
-    int node = (int)std::floor(getNumNodes() * fractionalHeight);
+    auto node = static_cast<int>(std::floor(getNumNodes() * fractionalHeight));
     inletNum = (node == getNumNodes()) ? getIndexTopNode() : node;
 }
 
