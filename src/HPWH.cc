@@ -2242,12 +2242,7 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
     {
         scaleVector(cond_ptr->perfGridValues[0], scaleCapacity);
         scaleVector(cond_ptr->perfGridValues[1], scaleCOP);
-
-        cond_ptr->perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-            Btwxt::RegularGridInterpolator(cond_ptr->perfGrid,
-                                           cond_ptr->perfGridValues,
-                                           "RegularGridInterpolator",
-                                           get_courier()));
+        cond_ptr->makeBtwxt();
     }
     else
         for (auto& performancePoint : cond_ptr->performanceMap)
