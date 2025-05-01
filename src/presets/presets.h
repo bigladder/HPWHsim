@@ -106,7 +106,8 @@
 
 namespace hpwh_presets {
 
-std::unordered_map<int, constexpr char *> presets_map
+extern std::unordered_map<int, const char *> index;
+
 }
 
 #endif

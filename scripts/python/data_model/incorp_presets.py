@@ -17,7 +17,8 @@ def incorp_presets(presets_list_files, build_dir):
 	os.chdir(orig_dir)
 
 	presets_header_text = ""
-
+	presets_source_text = ""
+	first = True
 	for preset_list_file in presets_list_files:
 		with open(preset_list_file) as json_file:
 			json_data = json.load(json_file)
@@ -28,7 +29,7 @@ def incorp_presets(presets_list_files, build_dir):
 
 			if not os.path.exists(output_dir):
 				os.mkdir(output_dir)
-				
+			
 			for preset in json_data:  
 				convert_list = [app_cmd, 'convert', '-m', str(preset["number"]), '-n', '-d', output_dir, '-f', preset["name"]]
 				result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)	
@@ -49,11 +50,11 @@ def incorp_presets(presets_list_files, build_dir):
 				preset_text += "#define " + guard_name + "\n\n"
 
 				preset_text += "namespace hpwh_presets {\n"
-				preset_text += "constexpr char *" + preset["name"] + "= R\"config("
+				preset_text += "const char *" + preset["name"] + "= R\"config("
 				preset_text += json.dumps(data)
 				preset_text += ")config\";" + "\n\n"
 				
-				preset_text += "constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + "\n\n"
+				preset_text += "constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + ";\n\n"
 				
 				preset_text += "}\n"		
 				preset_text += "#endif\n"
@@ -67,17 +68,23 @@ def incorp_presets(presets_list_files, build_dir):
 					print("Failed to create file")
 
 				presets_header_text += "#include \"" + preset["name"] + ".h\"\n"
+				
+				if not first:
+					presets_source_text += ",\n"
+					
+				presets_source_text += "{ index_" + preset["name"] + ", " + preset["name"] + "}"
+				first = False
 
+		# create library header
 		presets_header =  "#ifndef PRESETS_H\n"
 		presets_header += "#define PRESETS_H\n\n"
 		
+		# add the includes
 		presets_header += presets_header_text + "\n"
 		
-
-		presets_header += "namespace hpwh_presets {\n\n"
-		
-		presets_header += "std::unordered_map<int, constexpr char *> presets_map\n"
-
+		# declare a model number - to - model name map
+		presets_header += "namespace hpwh_presets {\n\n"	
+		presets_header += "extern std::unordered_map<int, const char *> index;\n\n"
 		presets_header += "}\n\n"
 
 		presets_header += "#endif\n"				
@@ -88,6 +95,24 @@ def incorp_presets(presets_list_files, build_dir):
 		except:
 			print("Failed to create presets.h")
 
+		# create library source
+		presets_source =  "#include <iostream>\n"
+		presets_source += "#include <unordered_map>\n"
+		presets_source += "#include \"presets.h\"\n\n"
+		presets_source += "namespace hpwh_presets {\n"
+		
+		presets_source += "std::unordered_map<int, const char *> index = {\n"
+		presets_source += presets_source_text + "\n"
+		presets_source += "};\n}\n"
+		
+		try:	
+			with open("../../../src/presets/src/presets.cpp", "w") as presets_src_file:
+				presets_src_file.write(presets_source)
+				presets_src_file.close()
+		except:
+			print("Failed to create presets.cpp")
+
+		
 	os.chdir(orig_dir)
   
 # main
