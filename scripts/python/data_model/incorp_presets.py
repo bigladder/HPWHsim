@@ -72,7 +72,7 @@ def incorp_presets(presets_list_files, build_dir):
 				if not first:
 					presets_source_text += ",\n"
 					
-				presets_source_text += "{ index_" + preset["name"] + ", " + preset["name"] + "}"
+				presets_source_text += "{ index_" + preset["name"] + ", {\"" + preset["name"] + "\", "+ preset["name"] + "}}"
 				first = False
 
 		# create library header
@@ -84,12 +84,12 @@ def incorp_presets(presets_list_files, build_dir):
 		
 		# declare a model number - to - model name map
 		presets_header += "namespace hpwh_presets {\n\n"	
-		presets_header += "extern std::unordered_map<int, const char *> index;\n\n"
+		presets_header += "extern std::unordered_map<int, std::pair<const char *, const char *>> index;\n\n"
 		presets_header += "}\n\n"
 
 		presets_header += "#endif\n"				
 		try:	
-			with open("../../../src/presets/include/presets.h", "w") as presets_header_file:
+			with open("../../../src/presets/presets.h", "w") as presets_header_file:
 				presets_header_file.write(presets_header)
 				presets_header_file.close()
 		except:
@@ -98,10 +98,10 @@ def incorp_presets(presets_list_files, build_dir):
 		# create library source
 		presets_source =  "#include <iostream>\n"
 		presets_source += "#include <unordered_map>\n"
-		presets_source += "#include \"../include/presets.h\"\n\n"
+		presets_source += "#include \"../presets.h\"\n\n"
 		presets_source += "namespace hpwh_presets {\n"
 		
-		presets_source += "std::unordered_map<int, const char *> index = {\n"
+		presets_source += "std::unordered_map<int, std::pair<const char *, const char *>> index = {\n"
 		presets_source += presets_source_text + "\n"
 		presets_source += "};\n}\n"
 		

@@ -60,6 +60,7 @@
 #include "BradfordWhiteAeroThermRE2H50.h"
 #include "BradfordWhiteAeroThermRE2H65.h"
 #include "BradfordWhiteAeroThermRE2H80.h"
+#include "StorageTank.h"
 #include "Sanden40.h"
 #include "Sanden80.h"
 #include "Sanden120.h"
@@ -106,7 +107,7 @@
 
 namespace hpwh_presets {
 
-extern std::unordered_map<int, const char *> index;
+extern std::unordered_map<int, std::pair<const char *, const char *>> index;
 
 }
 

@@ -344,4 +344,42 @@ void HPWH::initPreset(MODELS presetNum)
 {
     init(presetNum);
 
+    bool hasInitialTankTemp = false;
+    double initialTankT_C = F_TO_C(120.);
+
+    // If the model is the TamOMatic, HotTam, Generic... This model is scalable.
+    if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
+    {
+        tank->volumeFixed = false; // a fully scalable model
+        canScale = true;
+    }
+    else if (presetNum == MODELS_Scalable_MP)
+    {
+        tank->volumeFixed = false;
+        canScale = true;
+    }
+
+    if (hasInitialTankTemp)
+        setTankToTemperature(initialTankT_C);
+    else // start tank off at setpoint
+        resetTankToSetpoint();
+
+    model = presetNum;
+    calcDerivedValues();
+
+    checkInputs();
+
+    isHeating = false;
+    for (int i = 0; i < getNumHeatSources(); i++)
+    {
+        if (heatSources[i]->isOn)
+        {
+            isHeating = true;
+        }
+        if (heatSources[i]->isACompressor())
+        {
+            reinterpret_cast<Condenser*>(heatSources[i].get())->sortPerformanceMap();
+        }
+    }
+
 } // end HPWHinit_presets

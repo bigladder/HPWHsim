@@ -18,7 +18,8 @@
         "heat_source": {
           "description": {
             "product_information": {
-              "manufacturer": "Nyle"
+              "manufacturer": "Nyle",
+ 							"model_number": "C60A_C_SP"
             }
           },
           "metadata": {
