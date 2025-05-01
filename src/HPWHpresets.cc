@@ -342,27 +342,40 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
 void HPWH::initPreset(MODELS presetNum)
 {
-    init(presetNum);
-
-    bool hasInitialTankTemp = false;
-    double initialTankT_C = F_TO_C(120.);
-
-    // If the model is the TamOMatic, HotTam, Generic... This model is scalable.
-    if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
+    if (presetNum == MODELS_StorageTank)
     {
-        tank->volumeFixed = false; // a fully scalable model
-        canScale = true;
-    }
-    else if (presetNum == MODELS_Scalable_MP)
-    {
+        setAllDefaults();
+
+        heatSources.clear();
+
+        setNumNodes(12);
+        setpoint_C = 800.;
+
         tank->volumeFixed = false;
-        canScale = true;
-    }
+        tank->volume_L = GAL_TO_L(80);
+        tank->UA_kJperHrC = 10; // 0 to turn off
 
-    if (hasInitialTankTemp)
-        setTankToTemperature(initialTankT_C);
-    else // start tank off at setpoint
+        doTempDepression = false;
+        tank->mixesOnDraw = false;
+
+        setTankToTemperature(F_TO_C(127.));
+    }
+    else
+    {
+        init(presetNum);
+        // If the model is the TamOMatic, HotTam, Generic... This model is scalable.
+        if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
+        {
+            tank->volumeFixed = false; // a fully scalable model
+            canScale = true;
+        }
+        else if (presetNum == MODELS_Scalable_MP)
+        {
+            tank->volumeFixed = false;
+            canScale = true;
+        }
         resetTankToSetpoint();
+    }
 
     model = presetNum;
     calcDerivedValues();

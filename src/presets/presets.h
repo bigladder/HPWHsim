@@ -60,7 +60,6 @@
 #include "BradfordWhiteAeroThermRE2H50.h"
 #include "BradfordWhiteAeroThermRE2H65.h"
 #include "BradfordWhiteAeroThermRE2H80.h"
-#include "StorageTank.h"
 #include "Sanden40.h"
 #include "Sanden80.h"
 #include "Sanden120.h"

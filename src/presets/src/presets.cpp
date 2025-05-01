@@ -63,7 +63,6 @@ std::unordered_map<int, std::pair<const char *, const char *>> index = {
 { index_BradfordWhiteAeroThermRE2H50, {"BradfordWhiteAeroThermRE2H50", BradfordWhiteAeroThermRE2H50}},
 { index_BradfordWhiteAeroThermRE2H65, {"BradfordWhiteAeroThermRE2H65", BradfordWhiteAeroThermRE2H65}},
 { index_BradfordWhiteAeroThermRE2H80, {"BradfordWhiteAeroThermRE2H80", BradfordWhiteAeroThermRE2H80}},
-{ index_StorageTank, {"StorageTank", StorageTank}},
 { index_Sanden40, {"Sanden40", Sanden40}},
 { index_Sanden80, {"Sanden80", Sanden80}},
 { index_Sanden120, {"Sanden120", Sanden120}},
