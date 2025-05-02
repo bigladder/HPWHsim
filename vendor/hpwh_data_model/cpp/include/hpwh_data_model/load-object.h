@@ -73,6 +73,19 @@ namespace hpwh_data_model {
             }
         }
     }
+
+    template<class T>
+    void json_set(nlohmann::json &j,
+                  const char *subnode,
+                  const T& object,
+                  bool object_is_set
+                  )
+    {
+        if (object_is_set)
+        {
+            j[subnode] = object;
+        }
+    }
 }
 
 #endif
