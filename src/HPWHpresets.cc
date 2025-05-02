@@ -377,6 +377,12 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
         }
+        else if (presetNum == MODELS_GE2012)
+        {
+            auto& condenser = heatSources[compressorIndex];
+            auto offLogic = condenser->shutOffLogicSet[0];
+            offLogic->description = "large draw";
+        }
         resetTankToSetpoint();
     }
 
