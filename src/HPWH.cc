@@ -3645,6 +3645,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
 
     auto& rstank = performance.tank;
     tank->to(rstank);
+    performance.tank_is_set = true;
 
     // heat-source priority is retained from the entry order
     auto& configurations = performance.heat_source_configurations;
@@ -3655,6 +3656,8 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
     {
         auto& configuration = configurations[iHeatSource];
         heatSources[iHeatSource]->to(configuration);
+        configuration.heat_source_is_set = true;
+        configuration.heat_source_type_is_set = true;
         if (heatSources[iHeatSource]->isVIP)
         {
             hasPrimaryHeatSource = true;
@@ -3665,11 +3668,15 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
             performance.primary_heat_source_id_is_set,
             performance.primary_heat_source_id,
             hasPrimaryHeatSource);
+
+    performance.heat_source_configurations_is_set = true;
+    rswh.performance_is_set = true;
 }
 
 void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const
 {
     tank->to(cwhs.tank);
+    cwhs.tank_is_set = true;
 
     // heat-source priority is retained from the entry order
     auto& configurations = cwhs.heat_source_configurations;
@@ -3679,8 +3686,9 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
     for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
-
         heatSources[iHeatSource]->to(configuration);
+        configuration.heat_source_is_set = true;
+        configuration.heat_source_type_is_set = true;
         if (heatSources[iHeatSource]->isVIP)
         {
             hasPrimaryHeatSource = true;
@@ -3730,6 +3738,8 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
                 she.extra_pump_power_is_set,
                 she.extra_pump_power);
     }
+
+    cwhs.heat_source_configurations_is_set = true;
 }
 
 //-----------------------------------------------------------------------------

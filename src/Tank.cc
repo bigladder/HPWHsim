@@ -72,6 +72,8 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
 
     else
         perf.heat_exchanger_effectiveness_is_set = false;
+
+    rstank.performance_is_set = true;
 }
 
 void HPWH::Tank::setAllDefaults()
