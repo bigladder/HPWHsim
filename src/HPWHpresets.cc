@@ -374,9 +374,8 @@ void HPWH::initPreset(MODELS presetNum)
             tank->volumeFixed = false;
             canScale = true;
         }
-        else if(presetNum == MODELS_AOSmithHPTS50)
+        else if (presetNum == MODELS_AOSmithHPTS50)
         {
-
         }
         resetTankToSetpoint();
     }

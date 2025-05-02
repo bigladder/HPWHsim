@@ -2894,7 +2894,7 @@ void HPWH::checkInputs()
 
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
 {
-    for (auto &preset: hpwh_presets::index)
+    for (auto& preset : hpwh_presets::index)
     {
         if (modelName == preset.second.first)
         {
@@ -2919,9 +2919,9 @@ void HPWH::init(HPWH::MODELS presetNum)
     hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
+    model = presetNum;
     from(hsi);
 }
-
 
 void HPWH::init(const std::string& presetName)
 {
@@ -2940,10 +2940,10 @@ void HPWH::init(const std::string& presetName)
 /// Initializes a preset from the modelName
 void HPWH::initPreset(const std::string& modelName)
 {
-    HPWH::MODELS targetModel;
-    if (mapNameToPreset(modelName, targetModel))
+    HPWH::MODELS presetNum;
+    if (mapNameToPreset(modelName, presetNum))
     {
-        initPreset(targetModel);
+        initPreset(presetNum);
     }
     else
     {
