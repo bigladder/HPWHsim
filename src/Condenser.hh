@@ -18,17 +18,17 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
 
-    void
-    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const override;
-    void
-    to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& cond_ptr) const;
-    void to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& atwhp_ptr) const;
+    Description description;
+    ProductInformation productInformation;
 
+    void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) const override;
+    void to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs) const;
+    void to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& p_rshs) const;
+
+    void from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) override;
     void
-    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) override;
-    void
-    from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& cond_ptr);
-    void from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& atwhp_ptr);
+    from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs);
+    void from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& p_rshs);
 
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 
@@ -147,11 +147,10 @@ class HPWH::Condenser : public HPWH::HeatSource
         double coldSideTemperatureOffset_dC;
         double hotSideTemperatureOffset_dC;
         double extraPumpPower_W;
-    };
-
-    SecondaryHeatExchanger secondaryHeatExchanger; /**< adjustments for a approximating a secondary
-      heat exchanger by adding extra input energy for the pump and an increaes in the water to the
-      incoming waater temperature to the heatpump*/
+    } secondaryHeatExchanger;
+    /**< adjustments for a approximating a secondary
+    heat exchanger by adding extra input energy for the pump and an increaes in the water to the
+    incoming waater temperature to the heatpump*/
 
     /// Polynomials for evaluating input power and COP.
     /// Three different representations of the temperature variations are used:
