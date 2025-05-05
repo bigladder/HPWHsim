@@ -812,6 +812,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
 
     bool returnVal = false;
 
+    constexpr double tolT_C = 1.e-9;
     if (isSetpointFixed())
     {
         returnVal = (newSetpoint_C == setpoint_C);
@@ -823,7 +824,6 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
     }
     else
     {
-
         if (hasACompressor())
         { // If there's a compressor lets check the new setpoint against the compressor's max
           // setpoint
@@ -833,7 +833,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
             maxAllowedSetpoint_C = cond_ptr->maxSetpoint_C -
                                    cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
-            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
+            if ((newSetpoint_C > maxAllowedSetpoint_C + tolT_C) && lowestElementIndex == -1)
             {
                 why = "The compressor cannot meet the setpoint temperature and there is no "
                       "resistance backup.";
@@ -849,7 +849,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
           // setpoint
 
             maxAllowedSetpoint_C = 100.;
-            if (newSetpoint_C > maxAllowedSetpoint_C)
+            if (newSetpoint_C > maxAllowedSetpoint_C + tolT_C)
             {
                 why = "The resistance elements cannot produce water this hot.";
                 returnVal = false;
@@ -1738,7 +1738,8 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
 
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
-    if (airTemp_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT)
+    double tolT_C = 1.e-9;
+    if (airTemp_C < cond_ptr->minT || (airTemp_C  > cond_ptr->maxT + tolT_C))
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
@@ -1746,7 +1747,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     double maxAllowedSetpoint_C =
         cond_ptr->maxSetpoint_C - cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
-    if (outTemp_C > maxAllowedSetpoint_C)
+    if (outTemp_C > maxAllowedSetpoint_C + tolT_C)
     {
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
