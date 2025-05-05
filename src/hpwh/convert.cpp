@@ -23,8 +23,8 @@ CLI::App* add_convert(CLI::App& app)
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, JSON)");
 
-    static std::string modelName = "";
-    subcommand->add_option("-m,--model", modelName, "Model name or number")->required();
+    static std::string modelNameNum = "";
+    subcommand->add_option("-m,--model", modelNameNum, "Model name or number")->required();
 
     static bool use_model_number = false;
     subcommand->add_flag(
@@ -37,13 +37,13 @@ CLI::App* add_convert(CLI::App& app)
     subcommand->add_option("-f,--filename", sOutputFilename, "Output filename");
 
     subcommand->callback(
-        [&]() { convert(sSpecType, modelName, use_model_number, sOutputDir, sOutputFilename); });
+        [&]() { convert(sSpecType, modelNameNum, use_model_number, sOutputDir, sOutputFilename); });
 
     return subcommand;
 }
 
 void convert(const std::string& sSpecType,
-             const std::string& modelName,
+             const std::string& modelNameNum,
              bool useModelNumber,
              std::string sOutputDir,
              std::string sOutputFilename)
@@ -59,17 +59,23 @@ void convert(const std::string& sSpecType,
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
 
-    HPWH hpwh;
+    auto model_name = modelNameNum;
+    if (useModelNumber)
+        if (mapNameToPreset(modelName, presetNum))
+            model_name = HPWH hpwh;
     if (sSpecType_mod == "Preset")
     {
         if (useModelNumber)
-            hpwh.initPreset(static_cast<HPWH::MODELS>(std::stoi(modelName)));
+            hpwh.initPreset(static_cast<HPWH::MODELS>(std::stoi(modelNameNum)));
         else
-            hpwh.initPreset(modelName);
+            hpwh.initPreset(modelNameNum);
     }
     else if (sSpecType_mod == "JSON")
     {
-        hpwh.initFromJSON(modelName);
+        if (useModelNumber)
+            hpwh.initFromJSON(static_cast<HPWH::MODELS>(std::stoi(modelNameNum)));
+        else
+            hpwh.initFromJSON(modelNameNum);
     }
 
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;

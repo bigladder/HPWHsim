@@ -1739,7 +1739,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
     double tolT_C = 1.e-9;
-    if (airTemp_C < cond_ptr->minT || (airTemp_C  > cond_ptr->maxT + tolT_C))
+    if (airTemp_C < cond_ptr->minT || (airTemp_C > cond_ptr->maxT + tolT_C))
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
@@ -2893,11 +2893,11 @@ void HPWH::checkInputs()
     }
 }
 
-/* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
+/* static */ bool HPWH::getPresetNumberFromName(const std::string& modelName, HPWH::MODELS& model)
 {
     for (auto& preset : hpwh_presets::index)
     {
-        if (modelName == preset.second.first)
+        if (modelName == preset.second.name)
         {
             model = static_cast<HPWH::MODELS>(preset.first);
             return true;
@@ -2912,10 +2912,17 @@ void HPWH::checkInputs()
     return false;
 }
 
+/* static */
+bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS& model)
+{
+    modelName = hpwh_presets::index[model].name;
+    return true;
+}
+
 void HPWH::init(HPWH::MODELS presetNum)
 {
-    const auto& preset = hpwh_presets::index[presetNum].second;
-    nlohmann::json j = nlohmann::json::parse(preset);
+    const auto& jsonText = hpwh_presets::index[presetNum].json_text;
+    nlohmann::json j = nlohmann::json::parse(jsonText);
 
     hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
@@ -2927,22 +2934,22 @@ void HPWH::init(HPWH::MODELS presetNum)
 void HPWH::init(const std::string& presetName)
 {
     HPWH::MODELS presetNum;
-    if (mapNameToPreset(presetName, presetNum))
+    if (getPresetNumberFromName(presetName, presetNum))
     {
         initPreset(presetNum);
+        name = presetName;
     }
     else
     {
         send_error("Unable to initialize model.");
     }
-    name = presetName;
 }
 
 /// Initializes a preset from the modelName
 void HPWH::initPreset(const std::string& modelName)
 {
     HPWH::MODELS presetNum;
-    if (mapNameToPreset(modelName, presetNum))
+    if (getPresetNumberFromName(modelName, presetNum))
     {
         initPreset(presetNum);
     }
@@ -2955,14 +2962,19 @@ void HPWH::initPreset(const std::string& modelName)
 
 #ifndef HPWH_ABRIDGED
 
-void HPWH::initFromJSON(string modelName)
+void HPWH::initFromJSON(const HPWH::MODELS presetNumber)
+{
+    initFromJSON({*hpwh_presets::index[presetNumber].name});
+}
+
+void HPWH::initFromJSON(const std::string modelName)
 {
     auto sInputFileName = "models_json/" + modelName + ".json";
     std::ifstream inputFile(sInputFileName);
     nlohmann::json j = nlohmann::json::parse(inputFile);
     hpwh_data_model::init(get_courier());
 
-    mapNameToPreset(modelName, model);
+    getPresetNumberFromName(modelName, model);
 
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);

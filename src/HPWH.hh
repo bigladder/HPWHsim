@@ -19,7 +19,7 @@
 #include <nlohmann/json.hpp>
 
 #include "hpwh-data-model.hh"
-#include "presets/presets.h"
+#include "presets.h"
 #include "HPWHUtils.hh"
 
 namespace Btwxt
@@ -806,7 +806,8 @@ class HPWH : public Courier::Sender
      * are taken from the GE2015_STDMode model.
      */
 
-    static bool mapNameToPreset(const std::string& modelName, MODELS& model);
+    static bool getPresetNameFromNumber(std::string& modelName, const MODELS& model);
+    static bool getPresetNumberFromName(const std::string& modelName, MODELS& model);
 
     void init(MODELS presetNum);
     void init(const std::string& modelName);
@@ -824,7 +825,8 @@ class HPWH : public Courier::Sender
 
 #ifndef HPWH_ABRIDGED
 
-    void initFromJSON(std::string modelName);
+    void initFromJSON(const std::string modelName);
+    void initFromJSON(const MODELS presetNumber);
 
 #endif
 

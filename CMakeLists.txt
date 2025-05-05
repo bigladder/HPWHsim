@@ -49,6 +49,27 @@ if (${PROJECT_NAME}_BUILD_TESTING)
 endif ()
 
 add_subdirectory(vendor)
+
+#generate presets
+set(srcCodeDir "${PROJECT_BINARY_DIR}/presets")
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
+
+include(poetry-install)
+poetry_install(${pythonScriptDir})
+execute_process(
+        COMMAND poetry run python "incorp_presets.py" "JSON" "${PROJECT_BINARY_DIR}" "IHPWH_models.json" "CWHS_models.json"
+        WORKING_DIRECTORY "${pythonScriptDir}"
+        RESULT_VARIABLE build_presets_result)
+
+if (build_presets_result EQUAL 0)
+     message(STATUS "Preset generation succeeded")
+else()
+    message(STATUS "Preset generation failed")
+endif()
+
+add_subdirectory("${PROJECT_BINARY_DIR}/presets")
+
+#
 add_subdirectory(src)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
