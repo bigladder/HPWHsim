@@ -368,6 +368,10 @@ void HPWH::initPreset(MODELS presetNum)
         {
             tank->volumeFixed = false; // a fully scalable model
             canScale = true;
+
+            auto& condenser = heatSources[compressorIndex];
+            auto offLogic = condenser->shutOffLogicSet[0];
+            offLogic->setIsEnteringWaterHighTempShutoff(true);
         }
         else if (presetNum == MODELS_Scalable_MP)
         {
@@ -387,7 +391,29 @@ void HPWH::initPreset(MODELS presetNum)
                  presetNum == MODELS_SANCO2_119)
         {
             setpointFixed = true;
+            auto& condenser = heatSources[compressorIndex];
+            auto offLogic = condenser->shutOffLogicSet[0];
+            offLogic->setIsEnteringWaterHighTempShutoff(true);
         }
+        else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
+        {
+            auto& condenser = heatSources[compressorIndex];
+            auto offLogic = condenser->shutOffLogicSet[0];
+            offLogic->setIsEnteringWaterHighTempShutoff(true);
+        }
+        else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+        {
+            auto& condenser = heatSources[compressorIndex];
+            auto offLogic = condenser->shutOffLogicSet[0];
+            offLogic->setIsEnteringWaterHighTempShutoff(true);
+        }
+        else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
+        {
+            auto& condenser = heatSources[compressorIndex];
+            auto offLogic = condenser->shutOffLogicSet[0];
+            offLogic->setIsEnteringWaterHighTempShutoff(true);
+        }
+
         resetTankToSetpoint();
     }
 
