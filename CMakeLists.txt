@@ -67,6 +67,8 @@ else()
     message(STATUS "Preset generation failed")
 endif()
 
+add_custom_target(generate_presets ALL DEPENDS "${PROJECT_BINARY_DIR}/presets")
+
 add_subdirectory("${PROJECT_BINARY_DIR}/presets")
 
 #
