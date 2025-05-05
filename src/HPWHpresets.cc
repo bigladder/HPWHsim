@@ -383,6 +383,11 @@ void HPWH::initPreset(MODELS presetNum)
             auto offLogic = condenser->shutOffLogicSet[0];
             offLogic->description = "large draw";
         }
+        else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
+                 presetNum == MODELS_SANCO2_119)
+        {
+            setpointFixed = true;
+        }
         resetTankToSetpoint();
     }
 
