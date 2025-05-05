@@ -87,30 +87,6 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
 
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double setpointTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop);
-
-    void getCapacityMP(double externalT_C,
-                       double condenserTemp_C,
-                       double& input_BTUperHr,
-                       double& cap_BTUperHr,
-                       double& cop);
-
-    /** An overloaded function that uses uses the setpoint temperature  */
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop)
-    {
-        getCapacity(
-            externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
-    };
-
     bool doDefrost;
     /**<  If and only if true will derate the COP of a compressor to simulate a defrost cycle  */
 
@@ -174,6 +150,51 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// Linear interpolation is applied to the collection of points.
     /// Only the first entry is used for cases 2. and 3.
     std::vector<PerformancePoint> performanceMap;
+
+
+    void getCapacityLegacy(double externalT_C,
+                                  double adjCondenserT_C,
+                                  double adjOutletT_C,
+                                  double& input_BTUperHr,
+                                  double& cop);
+
+    void getCapacityBtwxt(double externalT_C,
+                                 double adjCondenserT_C,
+                                 double adjOutletT_C,
+                                 double& input_BTUperHr,
+                                 double& cop);
+
+    void getCapacityNew(double externalT_C,
+                        double condenserT_C,
+                        double& input_BTUperHr,
+                        double& cap_BTUperHr,
+                        double& cop);
+
+    void getCapacity(double externalT_C,
+                     double condenserTemp_C,
+                     double setpointTemp_C,
+                     double& input_BTUperHr,
+                     double& cap_BTUperHr,
+                     double& cop);
+
+    void getCapacityMP(double externalT_C,
+                       double condenserTemp_C,
+                       double& input_BTUperHr,
+                       double& cap_BTUperHr,
+                       double& cop);
+
+    /** An overloaded function that uses uses the setpoint temperature  */
+    void getCapacity(double externalT_C,
+                     double condenserTemp_C,
+                     double& input_BTUperHr,
+                     double& cap_BTUperHr,
+                     double& cop)
+    {
+        getCapacity(
+            externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
+    };
+
+    std::function<void(double, double, double, double&, double&)> fGetCapacity;
 
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);

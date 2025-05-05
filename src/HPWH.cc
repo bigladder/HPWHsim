@@ -1762,8 +1762,8 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         }
         else
         {
-            cond_ptr->getCapacity(
-                airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            cond_ptr->getCapacityNew(
+                airTemp_C, inletTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
         }
     }
     else
@@ -4254,18 +4254,16 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     fitter.fit();
 
     double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    compressor->getCapacity(testConfiguration.ambientT_C,
+    compressor->getCapacityNew(testConfiguration.ambientT_C,
                             compressor->maxSetpoint_C,
-                            getSetpoint(),
                             input_BTUperHr,
                             cap_BTUperHr,
                             cop1);
     if (cop1 < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor->getCapacity(testConfiguration.ambientT_C,
+    compressor->getCapacityNew(testConfiguration.ambientT_C,
                             0., /// low condenserT_C
-                            getSetpoint(),
                             input_BTUperHr,
                             cap_BTUperHr,
                             cop);
