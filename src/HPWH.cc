@@ -2491,6 +2491,7 @@ void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 
 void HPWH::calcDerivedValues()
 {
+
     // condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
     calcDerivedHeatingValues();
 
@@ -2504,7 +2505,10 @@ void HPWH::calcDerivedValues()
         if (heatSources[i]->isACompressor())
         {
             heatSources[i]->depressesTemperature = true;
-        }
+
+            auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
+            condenser->setPerformanceFunction();
+         }
         else if (heatSources[i]->isAResistance())
         {
             heatSources[i]->depressesTemperature = false;

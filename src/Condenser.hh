@@ -151,50 +151,36 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// Only the first entry is used for cases 2. and 3.
     std::vector<PerformancePoint> performanceMap;
 
-
-    void getCapacityLegacy(double externalT_C,
-                                  double adjCondenserT_C,
-                                  double adjOutletT_C,
-                                  double& input_BTUperHr,
-                                  double& cop);
-
-    void getCapacityBtwxt(double externalT_C,
-                                 double adjCondenserT_C,
-                                 double adjOutletT_C,
-                                 double& input_BTUperHr,
-                                 double& cop);
-
-    void getCapacityNew(double externalT_C,
-                        double condenserT_C,
-                        double& input_BTUperHr,
-                        double& cap_BTUperHr,
-                        double& cop);
-
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double setpointTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop);
-
-    void getCapacityMP(double externalT_C,
-                       double condenserTemp_C,
-                       double& input_BTUperHr,
-                       double& cap_BTUperHr,
-                       double& cop);
-
-    /** An overloaded function that uses uses the setpoint temperature  */
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop)
+    struct Performance
     {
-        getCapacity(
-            externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
+        double input_BTUperHr;
+        double output_BTUperHr;
+        double cop;
     };
 
-    std::function<void(double, double, double, double&, double&)> fGetCapacity;
+    Performance getPerformanceIHPWH(double externalT_C,
+                         double condenserT_C);
+
+    Performance getCapacityCWHS_SP(double externalT_C,
+                         double condenserT_C);
+
+    Performance getCapacityCWHS_MP(double externalT_C,
+                                   double condenserT_C);
+
+    std::function<Performance(double, double)> fGetCapacity;
+
+    void interpolateIHPWH(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+    void interpolateIHPWH_legacy(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+
+    void interpolateCHWS_SP(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+    void interpolateCHWS_SP_legacy(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+
+    void interpolateCHWS_MP(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+    void interpolateCHWS_MP_legacy(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+
+    std::function<void(const std::vector<double>& grid_vars, std::vector<double>& grid_vals)> fInterpolate;
+
+    void setPerformanceFunction();
 
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
