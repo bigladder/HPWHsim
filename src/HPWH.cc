@@ -1752,24 +1752,22 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
+    Condenser::Performance performance;
     if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-            cond_ptr->getCapacityMP(
-                airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            performance = cond_ptr->getCapacityCWHS_MP(airTemp_C, averageTemp_C);
         }
         else
         {
-            cond_ptr->getCapacityNew(
-                airTemp_C, inletTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            performance = cond_ptr->getCapacityCWHS_SP(airTemp_C, inletTemp_C);
         }
     }
     else
     {
-        cond_ptr->getCapacity(
-            airTemp_C, inletTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        performance = cond_ptr->getCapacityIHPWH(airTemp_C, inletTemp_C);
     }
 
     double outputCapacity = capTemp_BTUperHr;
