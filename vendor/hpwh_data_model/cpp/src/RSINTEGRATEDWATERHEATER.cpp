@@ -40,6 +40,13 @@ namespace hpwh_data_model  {
 			json_get<double>(j, logger.get(), "recovery_efficiency", x.recovery_efficiency, x.recovery_efficiency_is_set, false);
 			json_get<double>(j, logger.get(), "uniform_energy_factor", x.uniform_energy_factor, x.uniform_energy_factor_is_set, false);
 		}
+		void to_json(nlohmann::json& j, const Rating10CFR430& x) {
+			json_set<std::string>(j, "certified_reference_number", x.certified_reference_number, x.certified_reference_number_is_set);
+			json_set<double>(j, "nominal_tank_volume", x.nominal_tank_volume, x.nominal_tank_volume_is_set);
+			json_set<double>(j, "first_hour_rating", x.first_hour_rating, x.first_hour_rating_is_set);
+			json_set<double>(j, "recovery_efficiency", x.recovery_efficiency, x.recovery_efficiency_is_set);
+			json_set<double>(j, "uniform_energy_factor", x.uniform_energy_factor, x.uniform_energy_factor_is_set);
+		}
 		const std::string_view Rating10CFR430::certified_reference_number_units = "";
 
 		const std::string_view Rating10CFR430::certified_reference_number_description = "AHRI certified reference number";
@@ -76,6 +83,7 @@ namespace hpwh_data_model  {
 		}
 		void to_json(nlohmann::json& j, const Description& x) {
 			json_set<rsintegratedwaterheater::ProductInformation>(j, "product_information", x.product_information, x.product_information_is_set);
+			json_set<rsintegratedwaterheater::Rating10CFR430>(j, "rating_10_cfr_430", x.rating_10_cfr_430, x.rating_10_cfr_430_is_set);
 		}
 		const std::string_view Description::product_information_units = "";
 
