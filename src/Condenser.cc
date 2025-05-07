@@ -580,7 +580,7 @@ void HPWH::Condenser::to(
         envTemps_K.reserve(perfGrid[0].size());
         for (auto T : perfGrid[0])
         {
-            envTemps_K.push_back(C_TO_K(F_TO_C(T)));
+            envTemps_K.push_back(C_TO_K(T));
         }
         if (K_TO_C(envTemps_K.front()) > minT)
             envTemps_K.push_back(C_TO_K(minT));
@@ -599,12 +599,14 @@ void HPWH::Condenser::to(
         heatSourceTemps_K.reserve(perfGrid[iElem].size());
         for (auto T : perfGrid[iElem])
         {
-            heatSourceTemps_K.push_back(C_TO_K(F_TO_C(T)));
+            heatSourceTemps_K.push_back(C_TO_K(T));
         }
 
         checkTo(heatSourceTemps_K,
                 grid_vars.heat_source_temperature_is_set,
                 grid_vars.heat_source_temperature);
+
+        map.grid_variables_is_set = true;
 
         //
         auto& lookup_vars = map.lookup_variables;
@@ -616,10 +618,10 @@ void HPWH::Condenser::to(
         for (auto& envTemp_K : envTemps_K)
             for (auto& heatSourceTemp_K : heatSourceTemps_K)
             {
-                std::vector target = {C_TO_F(K_TO_C(envTemp_K)), C_TO_F(K_TO_C(heatSourceTemp_K))};
+                std::vector target = {K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K)};
                 std::vector<double> result = perfRGI->get_values_at_target(target);
 
-                inputPowers_W[i] = 1000. * BTUperH_TO_KW(result[0]); // from Btu/h
+                inputPowers_W[i] = result[0];
                 heatingCapacities_W[i] = result[1] * inputPowers_W[i];
                 ++i;
             }
@@ -628,6 +630,7 @@ void HPWH::Condenser::to(
         checkTo(
             heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
 
+        map.lookup_variables_is_set = true;
         perf.performance_map_is_set = true;
     }
     else // convert to grid
@@ -699,9 +702,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         std::vector<double> heatSourceTemps_K = {};
         {
             envTemps_K.reserve(perfGrid[iElem].size());
-            for (auto T : perfGrid[iElem])
+            for (auto T_C : perfGrid[iElem])
             {
-                envTemps_K.push_back(C_TO_K(F_TO_C(T)));
+                envTemps_K.push_back(C_TO_K(T_C));
             }
             if (K_TO_C(envTemps_K.front()) > minT)
                 envTemps_K.push_back(C_TO_K(minT));
@@ -718,9 +721,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         }
         {
             outletTemps_K.reserve(perfGrid[iElem].size());
-            for (auto T : perfGrid[iElem])
+            for (auto T_C : perfGrid[iElem])
             {
-                outletTemps_K.push_back(C_TO_K(F_TO_C(T)));
+                outletTemps_K.push_back(C_TO_K(T_C));
             }
             checkTo(outletTemps_K,
                     grid_vars.condenser_leaving_temperature_is_set,
@@ -731,9 +734,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         }
         {
             heatSourceTemps_K.reserve(perfGrid[iElem].size());
-            for (auto T : perfGrid[iElem])
+            for (auto T_C : perfGrid[iElem])
             {
-                heatSourceTemps_K.push_back(C_TO_K(F_TO_C(T)));
+                heatSourceTemps_K.push_back(C_TO_K(T_C));
             }
 
             checkTo(heatSourceTemps_K,
@@ -749,16 +752,12 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             for (auto& outletTemp_K : outletTemps_K)
                 for (auto& heatSourceTemp_K : heatSourceTemps_K)
                 {
-                    std::vector<double> target = {C_TO_F(K_TO_C(envTemp_K)),
-                                                  C_TO_F(K_TO_C(outletTemp_K)),
-                                                  C_TO_F(K_TO_C(heatSourceTemp_K))};
+                    std::vector<double> target = {K_TO_C(envTemp_K),
+                                                  K_TO_C(outletTemp_K),
+                                                  K_TO_C(heatSourceTemp_K)};
                     std::vector<double> result = perfRGI->get_values_at_target(target);
 
-                    if (isMultipass)
-                        inputPowers_W[i] = 1000. * result[0]; // from KW
-                    else
-                        inputPowers_W[i] = 1000. * BTUperH_TO_KW(result[0]); // from Btu/h
-
+                    inputPowers_W[i] = result[0];
                     heatingCapacities_W[i] = result[1] * inputPowers_W[i];
                     ++i;
                 }
@@ -868,7 +867,7 @@ HPWH::Condenser::evaluatePerformanceIHPWH(const std::vector<double>& vars)
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
 
-    std::vector<double> target {C_TO_F(externalT_C), C_TO_F(condenserT_C)};
+    std::vector<double> target {externalT_C, condenserT_C};
 
     double inputPower_W = 0.;
     double cop = 0.;
