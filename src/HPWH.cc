@@ -1768,19 +1768,16 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
     }
 
-    double outputCapacity = performance.output_BTUperHr;
     switch (pwrUnit)
     {
     case UNITS_BTUperHr:
-        break;
+        return W_TO_BTUperH(performance.outputPower_W);
     case UNITS_KW:
-        outputCapacity = BTU_TO_KWH(performance.output_BTUperHr);
-        break;
+        return performance.outputPower_W / 1000.;
     default:
         send_error("Invalid units.");
     }
-
-    return outputCapacity;
+    return 0.;
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const

@@ -153,8 +153,8 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     struct Performance
     {
-        double input_BTUperHr;
-        double output_BTUperHr;
+        double inputPower_W;
+        double outputPower_W;
         double cop;
     };
 
@@ -190,16 +190,10 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     int getAmbientT_index(double ambientT_C);
 
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double outletT_C,
-                            double& input_BTUperHr,
-                            double& cop) const;
+    Performance
+    getPerformanceFromMap(double environmentT_C, double heatSourceT_C, double outletT_C) const;
 
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double& input_BTUperHr,
-                            double& cop) const;
+    Performance getPerformanceFromMap(double environmentT_C, double heatSourceT_C) const;
 
     void makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
                          std::vector<std::vector<double>>& tempGridValues) const;
