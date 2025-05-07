@@ -43,7 +43,10 @@ struct HPWH::HeatingLogic
     virtual void setDecisionPoint(double value) = 0;
     double getDecisionPoint() { return decisionPoint; }
     bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
-    void setIsEnteringWaterHighTempShutoff(const bool& isEnteringWaterHighTempShutoff_in) {isEnteringWaterHighTempShutoff = isEnteringWaterHighTempShutoff_in; }
+    void setIsEnteringWaterHighTempShutoff(const bool& isEnteringWaterHighTempShutoff_in)
+    {
+        isEnteringWaterHighTempShutoff = isEnteringWaterHighTempShutoff_in;
+    }
 
     static std::shared_ptr<HeatingLogic>
     make(const hpwh_data_model::heat_source_configuration::HeatingLogic& logic, HPWH* hpwh);

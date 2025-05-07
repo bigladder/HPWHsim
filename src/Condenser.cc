@@ -32,8 +32,8 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
     , configuration(COIL_CONFIG::CONFIG_WRAPPED)
     , isMultipass(true)
 {
-    fEvaluatePerformance = [this](const std::vector<double>& vars, std::vector<double>& vals)
-    { return evaluatePerformanceCWHS_MP_legacy(vars, vals); };
+    fEvaluatePerformance = [this](const std::vector<double>& vars)
+    { return evaluatePerformanceCWHS_MP_legacy(vars); };
 }
 
 HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
@@ -78,20 +78,18 @@ void HPWH::Condenser::setEvaluatePerformanceFunction()
     if (configuration == CONFIG_EXTERNAL)
     {
         if (isMultipass)
-            fEvaluatePerformance =
-                [this](const std::vector<double>& vars, std::vector<double>& vals)
-            { return evaluatePerformanceCWHS_MP(vars, vals); };
+            fEvaluatePerformance = [this](const std::vector<double>& vars)
+            { return evaluatePerformanceCWHS_MP(vars); };
         else
         {
-            fEvaluatePerformance =
-                [this](const std::vector<double>& vars, std::vector<double>& vals)
-            { return evaluatePerformanceCWHS_SP(vars, vals); };
+            fEvaluatePerformance = [this](const std::vector<double>& vars)
+            { return evaluatePerformanceCWHS_SP(vars); };
         }
     }
     else
     {
-        fEvaluatePerformance = [this](const std::vector<double>& vars, std::vector<double>& vals)
-        { return evaluatePerformanceIHPWH(vars, vals); };
+        fEvaluatePerformance = [this](const std::vector<double>& vars)
+        { return evaluatePerformanceIHPWH(vars); };
     }
 }
 // pick the nearest temperature index
@@ -877,8 +875,8 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
     energyOutput_kWh += BTU_TO_KWH(performance.output_BTUperHr * runtime_min / min_per_hr);
 }
 
-void HPWH::Condenser::evaluatePerformanceIHPWH(const std::vector<double>& vars,
-                                               std::vector<double>& vals)
+HPWH::Condenser::Performance
+HPWH::Condenser::evaluatePerformanceIHPWH(const std::vector<double>& vars)
 {
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
@@ -888,11 +886,11 @@ void HPWH::Condenser::evaluatePerformanceIHPWH(const std::vector<double>& vars,
     double input_BTUperHr = 0.;
     double cop = 0.;
     btwxtInterp(input_BTUperHr, cop, target);
-    vals = {input_BTUperHr, cop};
+    return {input_BTUperHr, cop * input_BTUperHr, cop};
 }
 
-void HPWH::Condenser::evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars,
-                                                      std::vector<double>& vals)
+HPWH::Condenser::Performance
+HPWH::Condenser::evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars)
 {
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
@@ -900,11 +898,11 @@ void HPWH::Condenser::evaluatePerformanceIHPWH_legacy(const std::vector<double>&
     double input_BTUperHr = 0.;
     double cop = 0.;
     getCapacityFromMap(externalT_C, condenserT_C, input_BTUperHr, cop);
-    vals = {input_BTUperHr, cop};
+    return {input_BTUperHr, cop * input_BTUperHr, cop};
 }
 
-void HPWH::Condenser::evaluatePerformanceCWHS_SP(const std::vector<double>& vars,
-                                                 std::vector<double>& vals)
+HPWH::Condenser::Performance
+HPWH::Condenser::evaluatePerformanceCWHS_SP(const std::vector<double>& vars)
 {
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
@@ -914,12 +912,11 @@ void HPWH::Condenser::evaluatePerformanceCWHS_SP(const std::vector<double>& vars
     double cop = 0.;
     std::vector<double> target {C_TO_F(externalT_C), C_TO_F(outletT_C), C_TO_F(condenserT_C)};
     btwxtInterp(input_BTUperHr, cop, target);
-
-    vals = {input_BTUperHr, cop};
+    return {input_BTUperHr, cop * input_BTUperHr, cop};
 }
 
-void HPWH::Condenser::evaluatePerformanceCWHS_SP_legacy(const std::vector<double>& vars,
-                                                        std::vector<double>& vals)
+HPWH::Condenser::Performance
+HPWH::Condenser::evaluatePerformanceCWHS_SP_legacy(const std::vector<double>& vars)
 {
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
@@ -931,11 +928,11 @@ void HPWH::Condenser::evaluatePerformanceCWHS_SP_legacy(const std::vector<double
     {
         getCapacityFromMap(externalT_C, condenserT_C, outletT_C, input_BTUperHr, cop);
     }
-    vals = {input_BTUperHr, cop};
+    return {input_BTUperHr, cop * input_BTUperHr, cop};
 }
 
-void HPWH::Condenser::evaluatePerformanceCWHS_MP(const std::vector<double>& vars,
-                                                 std::vector<double>& vals)
+HPWH::Condenser::Performance
+HPWH::Condenser::evaluatePerformanceCWHS_MP(const std::vector<double>& vars)
 {
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
@@ -945,11 +942,11 @@ void HPWH::Condenser::evaluatePerformanceCWHS_MP(const std::vector<double>& vars
     double cop = 0.;
     std::vector<double> target {C_TO_F(externalT_C), C_TO_F(outletT_C), C_TO_F(condenserT_C)};
     btwxtInterp(input_BTUperHr, cop, target);
-    vals = {input_BTUperHr, cop};
+    return {input_BTUperHr, cop * input_BTUperHr, cop};
 }
 
-void HPWH::Condenser::evaluatePerformanceCWHS_MP_legacy(const std::vector<double>& vars,
-                                                        std::vector<double>& vals)
+HPWH::Condenser::Performance
+HPWH::Condenser::evaluatePerformanceCWHS_MP_legacy(const std::vector<double>& vars)
 {
     double externalT_C = vars[0];
     double condenserT_C = vars[1];
@@ -961,7 +958,7 @@ void HPWH::Condenser::evaluatePerformanceCWHS_MP_legacy(const std::vector<double
     {
         getCapacityFromMap(externalT_C, condenserT_C, outletT_C, input_BTUperHr, cop);
     }
-    vals = {input_BTUperHr, cop};
+    return {input_BTUperHr, cop * input_BTUperHr, cop};
 }
 
 HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
@@ -984,15 +981,12 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
         }
     }
 
-    std::vector<double> vals = {};
-    fEvaluatePerformance({C_TO_F(externalT_C), F_TO_C(outletT_C), C_TO_F(condenserT_C)}, vals);
-    double input_BTUperHr = vals[0];
-    double cop = vals[2];
+    auto performance = fEvaluatePerformance({externalT_C, outletT_C, condenserT_C});
 
     if (doDefrost)
     {
         // adjust COP by the defrost factor
-        defrostDerate(cop, C_TO_F(externalT_C));
+        defrostDerate(performance.cop, C_TO_F(externalT_C));
     }
 
     // here is where the scaling for flow restriction happens
@@ -1003,25 +997,25 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
     if (airflowFreedom != 1)
     {
         double airflow = 375 * airflowFreedom;
-        cop *= 0.00056 * airflow + 0.79;
+        performance.cop *= 0.00056 * airflow + 0.79;
+        performance.output_BTUperHr = performance.cop * performance.input_BTUperHr;
     }
-    double output_BTUperHr = cop * input_BTUperHr;
 
     // For accounting add the resistance defrost to the input energy
     if (resDefrostHeatingOn)
     {
-        input_BTUperHr += KW_TO_BTUperH(resDefrost.inputPwr_kW);
+        performance.input_BTUperHr += KW_TO_BTUperH(resDefrost.inputPwr_kW);
     }
 
-    if (cop < 0.)
+    if (performance.cop < 0.)
     {
         send_warning("Warning: COP is Negative!");
     }
-    if (cop < 1.)
+    if (performance.cop < 1.)
     {
         send_warning("Warning: COP is Less than 1!");
     }
-    return {input_BTUperHr, output_BTUperHr, cop};
+    return performance;
 }
 
 void HPWH::Condenser::setupDefrostMap(double derate35 /*=0.8865*/)
@@ -1172,7 +1166,7 @@ double HPWH::Condenser::addHeatExternal(double externalT_C,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        netPerformance.input_BTUperHr += (tempPerformance.output_BTUperHr +
+        netPerformance.input_BTUperHr += (tempPerformance.input_BTUperHr +
                                           W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) *
                                          heatingTime_min;
         netPerformance.output_BTUperHr += tempPerformance.output_BTUperHr * heatingTime_min;

@@ -160,20 +160,16 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     // std::function<Performance(double, double)> fGetPerformance;
 
-    void evaluatePerformanceIHPWH(const std::vector<double>& vars, std::vector<double>& vals);
-    void evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars,
-                                         std::vector<double>& vals);
+    Performance evaluatePerformanceIHPWH(const std::vector<double>& vars);
+    Performance evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars);
 
-    void evaluatePerformanceCWHS_SP(const std::vector<double>& vars, std::vector<double>& vals);
-    void evaluatePerformanceCWHS_SP_legacy(const std::vector<double>& vars,
-                                           std::vector<double>& vals);
+    Performance evaluatePerformanceCWHS_SP(const std::vector<double>& vars);
+    Performance evaluatePerformanceCWHS_SP_legacy(const std::vector<double>& vars);
 
-    void evaluatePerformanceCWHS_MP(const std::vector<double>& vars, std::vector<double>& vals);
-    void evaluatePerformanceCWHS_MP_legacy(const std::vector<double>& vars,
-                                           std::vector<double>& vals);
+    Performance evaluatePerformanceCWHS_MP(const std::vector<double>& vars);
+    Performance evaluatePerformanceCWHS_MP_legacy(const std::vector<double>& vars);
 
-    std::function<void(const std::vector<double>& vars, std::vector<double>& vals)>
-        fEvaluatePerformance;
+    std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance;
 
     Performance getPerformance(double externalT_C,
                                double condenserT_C); // uses fEvaluatePerformance
