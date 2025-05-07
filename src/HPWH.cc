@@ -1713,8 +1713,6 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
                                    UNITS tempUnit /*=UNITS_C*/)
 {
     // calculate capacity btu/hr, input btu/hr, and cop
-    double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
-
     if (!hasACompressor())
     {
         send_error("Current model does not have a compressor.");
@@ -1752,31 +1750,31 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
-    Condenser::Performance performance;
+    Condenser::Performance performance = {0., 0., 0.};
     if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-            performance = cond_ptr->getCapacityCWHS_MP(airTemp_C, averageTemp_C);
+            performance = cond_ptr->getPerformance(airTemp_C, averageTemp_C);
         }
         else
         {
-            performance = cond_ptr->getCapacityCWHS_SP(airTemp_C, inletTemp_C);
+            performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
         }
     }
     else
     {
-        performance = cond_ptr->getCapacityIHPWH(airTemp_C, inletTemp_C);
+        performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
     }
 
-    double outputCapacity = capTemp_BTUperHr;
+    double outputCapacity = performance.output_BTUperHr;
     switch (pwrUnit)
     {
     case UNITS_BTUperHr:
         break;
     case UNITS_KW:
-        outputCapacity = BTU_TO_KWH(capTemp_BTUperHr);
+        outputCapacity = BTU_TO_KWH(performance.output_BTUperHr);
         break;
     default:
         send_error("Invalid units.");
@@ -2505,8 +2503,8 @@ void HPWH::calcDerivedValues()
             heatSources[i]->depressesTemperature = true;
 
             auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
-            condenser->setPerformanceFunction();
-         }
+            condenser->setEvaluatePerformanceFunction();
+        }
         else if (heatSources[i]->isAResistance())
         {
             heatSources[i]->depressesTemperature = false;
@@ -4255,21 +4253,16 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
 
-    double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    compressor->getCapacityNew(testConfiguration.ambientT_C,
-                            compressor->maxSetpoint_C,
-                            input_BTUperHr,
-                            cap_BTUperHr,
-                            cop1);
-    if (cop1 < 0.)
+    auto performance1 =
+        compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
+
+    if (performance1.cop < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor->getCapacityNew(testConfiguration.ambientT_C,
-                            0., /// low condenserT_C
-                            input_BTUperHr,
-                            cap_BTUperHr,
-                            cop);
-    if (cop < cop1)
+    /// low condenserT_C
+    auto performance0 = compressor->getPerformance(testConfiguration.ambientT_C, 0.);
+
+    if (performance0.cop < performance1.cop)
         send_error("COP slope is positive.");
 
     return ef_metric->getTestSummary();

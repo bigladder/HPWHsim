@@ -158,29 +158,27 @@ class HPWH::Condenser : public HPWH::HeatSource
         double cop;
     };
 
-    Performance getPerformanceIHPWH(double externalT_C,
-                         double condenserT_C);
+    // std::function<Performance(double, double)> fGetPerformance;
 
-    Performance getCapacityCWHS_SP(double externalT_C,
-                         double condenserT_C);
+    void evaluatePerformanceIHPWH(const std::vector<double>& vars, std::vector<double>& vals);
+    void evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars,
+                                         std::vector<double>& vals);
 
-    Performance getCapacityCWHS_MP(double externalT_C,
-                                   double condenserT_C);
+    void evaluatePerformanceCWHS_SP(const std::vector<double>& vars, std::vector<double>& vals);
+    void evaluatePerformanceCWHS_SP_legacy(const std::vector<double>& vars,
+                                           std::vector<double>& vals);
 
-    std::function<Performance(double, double)> fGetCapacity;
+    void evaluatePerformanceCWHS_MP(const std::vector<double>& vars, std::vector<double>& vals);
+    void evaluatePerformanceCWHS_MP_legacy(const std::vector<double>& vars,
+                                           std::vector<double>& vals);
 
-    void interpolateIHPWH(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
-    void interpolateIHPWH_legacy(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+    std::function<void(const std::vector<double>& vars, std::vector<double>& vals)>
+        fEvaluatePerformance;
 
-    void interpolateCHWS_SP(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
-    void interpolateCHWS_SP_legacy(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
+    Performance getPerformance(double externalT_C,
+                               double condenserT_C); // uses fEvaluatePerformance
 
-    void interpolateCHWS_MP(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
-    void interpolateCHWS_MP_legacy(const std::vector<double>& grid_vars, std::vector<double>& grid_vals);
-
-    std::function<void(const std::vector<double>& grid_vars, std::vector<double>& grid_vals)> fInterpolate;
-
-    void setPerformanceFunction();
+    void setEvaluatePerformanceFunction();
 
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
@@ -224,20 +222,12 @@ class HPWH::Condenser : public HPWH::HeatSource
     bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
                                                   pass is multipass*/
 
-    double addHeatExternal(double externalT_C,
-                           double minutesToRun,
-                           double& cap_BTUperHr,
-                           double& input_BTUperHr,
-                           double& cop);
+    double addHeatExternal(double externalT_C, double minutesToRun, Performance& performance);
     /**<  Add heat from a source outside of the tank. Assume the condensity is where
         the water is drawn from and hot water is put at the top of the tank. */
 
     /// Add heat from external source using a multi-pass configuration
-    double addHeatExternalMP(double externalT_C,
-                             double minutesToRun,
-                             double& cap_BTUperHr,
-                             double& input_BTUperHr,
-                             double& cop);
+    double addHeatExternalMP(double externalT_C, double minutesToRun, Performance& netPerformance);
 
     void sortPerformanceMap();
     /**< sorts the Performance Map by increasing external temperatures */
