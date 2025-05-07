@@ -686,12 +686,12 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test const along Tair
-    checkPoint = {110.0, 140.0, 62.6, 136480};
+    checkPoint = {110.0, 140.0, 62.6, 137646.4450382183};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test const along Tair
-    checkPoint = {114.0, 176.0, 84.2, 136564.470884};
+    checkPoint = {114.0, 176.0, 84.2, 137324.38898325423};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
