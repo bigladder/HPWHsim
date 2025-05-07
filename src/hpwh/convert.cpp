@@ -59,23 +59,18 @@ void convert(const std::string& sSpecType,
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
 
-    auto model_name = modelNameNum;
+    HPWH hpwh;
+    auto modelName = modelNameNum;
     if (useModelNumber)
-        if (mapNameToPreset(modelName, presetNum))
-            model_name = HPWH hpwh;
+        hpwh.getPresetNameFromNumber(modelName, static_cast<HPWH::MODELS>(std::stoi(modelNameNum)));
+
     if (sSpecType_mod == "Preset")
     {
-        if (useModelNumber)
-            hpwh.initPreset(static_cast<HPWH::MODELS>(std::stoi(modelNameNum)));
-        else
-            hpwh.initPreset(modelNameNum);
+        hpwh.initPreset(modelName);
     }
     else if (sSpecType_mod == "JSON")
     {
-        if (useModelNumber)
-            hpwh.initFromJSON(static_cast<HPWH::MODELS>(std::stoi(modelNameNum)));
-        else
-            hpwh.initFromJSON(modelNameNum);
+        hpwh.initFromJSON(modelName);
     }
 
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;

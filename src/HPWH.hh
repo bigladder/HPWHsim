@@ -1452,6 +1452,16 @@ class HPWH : public Courier::Sender
             targetE50, targetUEF, targetE95, findFirstHourRating().designation);
     }
 
+    void makeGenericTier3_E50_UEF_E95(double targetE50,
+                                      double targetUEF,
+                                      double targetE95,
+                                      FirstHourRating::Designation designation);
+
+    void makeGenericTier4_E50_UEF_E95(double targetE50,
+                                      double targetUEF,
+                                      double targetE95,
+                                      FirstHourRating::Designation designation);
+
     /// fit using UEF config, then adjust E50, E95 coefficients
     TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Designation designation);
 
@@ -1459,6 +1469,10 @@ class HPWH : public Courier::Sender
     {
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
+
+    void makeTier3();
+
+    void makeTier4();
 
     void convertMapToGrid();
 
