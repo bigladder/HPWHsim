@@ -3,6 +3,11 @@
 #include <ASHRAE205.h>
 #include <RSINTEGRATEDWATERHEATER.h>
 #include <CentralWaterHeatingSystem.h>
+#include <RSTANK.h>
+#include <RSRESISTANCEWATERHEATSOURCE.h>
+#include <RSCONDENSERWATERHEATSOURCE.h>
+#include <HeatSourceConfiguration.h>
+#include <RSAIRTOWATERHEATPUMP.h>
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -79,6 +84,7 @@ namespace hpwh_data_model {
 			{HPWHSystemType::CENTRAL, "CENTRAL"}
 		})
 		void from_json(const nlohmann::json& j, HPWHSimInput& x);
+		void to_json(nlohmann::json& j, const HPWHSimInput& x);
 	}
 }
 #endif

@@ -63,9 +63,13 @@ namespace hpwh_data_model {
 			const static std::string_view performance_name;
 		};
 		void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x);
+		void to_json(nlohmann::json& j, const RSRESISTANCEWATERHEATSOURCE& x);
 		void from_json(const nlohmann::json& j, Description& x);
+		void to_json(nlohmann::json& j, const Description& x);
 		void from_json(const nlohmann::json& j, ProductInformation& x);
+		void to_json(nlohmann::json& j, const ProductInformation& x);
 		void from_json(const nlohmann::json& j, Performance& x);
+		void to_json(nlohmann::json& j, const Performance& x);
 	}
 }
 #endif

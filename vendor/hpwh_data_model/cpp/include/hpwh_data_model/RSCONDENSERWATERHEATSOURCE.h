@@ -139,12 +139,19 @@ namespace hpwh_data_model {
 			{CoilConfiguration::WRAPPED, "WRAPPED"}
 		})
 		void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x);
+		void to_json(nlohmann::json& j, const RSCONDENSERWATERHEATSOURCE& x);
 		void from_json(const nlohmann::json& j, Description& x);
+		void to_json(nlohmann::json& j, const Description& x);
 		void from_json(const nlohmann::json& j, ProductInformation& x);
+		void to_json(nlohmann::json& j, const ProductInformation& x);
 		void from_json(const nlohmann::json& j, Performance& x);
+		void to_json(nlohmann::json& j, const Performance& x);
 		void from_json(const nlohmann::json& j, PerformanceMap& x);
+		void to_json(nlohmann::json& j, const PerformanceMap& x);
 		void from_json(const nlohmann::json& j, GridVariables& x);
+		void to_json(nlohmann::json& j, const GridVariables& x);
 		void from_json(const nlohmann::json& j, LookupVariables& x);
+		void to_json(nlohmann::json& j, const LookupVariables& x);
 	}
 }
 #endif

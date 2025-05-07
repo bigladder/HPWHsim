@@ -5,6 +5,7 @@
 #include <RSRESISTANCEWATERHEATSOURCE.h>
 #include <RSCONDENSERWATERHEATSOURCE.h>
 #include <HeatSourceConfiguration.h>
+#include <RSAIRTOWATERHEATPUMP.h>
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -35,44 +36,12 @@ namespace hpwh_data_model {
 			const static std::string_view model_number_description;
 			const static std::string_view model_number_name;
 		};
-		struct Rating10CFR430 {
-			std::string certified_reference_number;
-			bool certified_reference_number_is_set = false;
-			const static std::string_view certified_reference_number_units;
-			const static std::string_view certified_reference_number_description;
-			const static std::string_view certified_reference_number_name;
-			double nominal_tank_volume;
-			bool nominal_tank_volume_is_set = false;
-			const static std::string_view nominal_tank_volume_units;
-			const static std::string_view nominal_tank_volume_description;
-			const static std::string_view nominal_tank_volume_name;
-			double first_hour_rating;
-			bool first_hour_rating_is_set = false;
-			const static std::string_view first_hour_rating_units;
-			const static std::string_view first_hour_rating_description;
-			const static std::string_view first_hour_rating_name;
-			double recovery_efficiency;
-			bool recovery_efficiency_is_set = false;
-			const static std::string_view recovery_efficiency_units;
-			const static std::string_view recovery_efficiency_description;
-			const static std::string_view recovery_efficiency_name;
-			double uniform_energy_factor;
-			bool uniform_energy_factor_is_set = false;
-			const static std::string_view uniform_energy_factor_units;
-			const static std::string_view uniform_energy_factor_description;
-			const static std::string_view uniform_energy_factor_name;
-		};
 		struct Description {
 			rsintegratedwaterheater::ProductInformation product_information;
 			bool product_information_is_set = false;
 			const static std::string_view product_information_units;
 			const static std::string_view product_information_description;
 			const static std::string_view product_information_name;
-			rsintegratedwaterheater::Rating10CFR430 rating_10_cfr_430;
-			bool rating_10_cfr_430_is_set = false;
-			const static std::string_view rating_10_cfr_430_units;
-			const static std::string_view rating_10_cfr_430_description;
-			const static std::string_view rating_10_cfr_430_name;
 		};
 		struct Performance {
 			rstank::RSTANK tank;
@@ -114,10 +83,13 @@ namespace hpwh_data_model {
 			const static std::string_view performance_name;
 		};
 		void from_json(const nlohmann::json& j, RSINTEGRATEDWATERHEATER& x);
+		void to_json(nlohmann::json& j, const RSINTEGRATEDWATERHEATER& x);
 		void from_json(const nlohmann::json& j, Description& x);
+		void to_json(nlohmann::json& j, const Description& x);
 		void from_json(const nlohmann::json& j, ProductInformation& x);
-		void from_json(const nlohmann::json& j, Rating10CFR430& x);
+		void to_json(nlohmann::json& j, const ProductInformation& x);
 		void from_json(const nlohmann::json& j, Performance& x);
+		void to_json(nlohmann::json& j, const Performance& x);
 	}
 }
 #endif
