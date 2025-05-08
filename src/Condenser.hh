@@ -158,8 +158,6 @@ class HPWH::Condenser : public HPWH::HeatSource
         double cop;
     };
 
-    // std::function<Performance(double, double)> fGetPerformance;
-
     Performance evaluatePerformanceIHPWH(const std::vector<double>& vars);
     Performance evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars);
 
@@ -171,8 +169,8 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance;
 
-    Performance getPerformance(double externalT_C,
-                               double condenserT_C); // uses fEvaluatePerformance
+    // uses fEvaluatePerformance
+    Performance getPerformance(double externalT_C, double condenserT_C);
 
     void setEvaluatePerformanceFunction();
 

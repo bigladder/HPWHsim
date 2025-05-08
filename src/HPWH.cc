@@ -4319,7 +4319,7 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Replace compressor performance witht hat of Generic Tier-3
+///	@brief	Replace compressor performance with that of AWHSTier3Generic
 //-----------------------------------------------------------------------------
 void HPWH::makeTier3()
 {
@@ -4360,7 +4360,7 @@ void HPWH::makeTier3()
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Replace compressor performance witht hat of Generic Tier-4
+///	@brief	Replace compressor performance with that of AWHSTier4Generic
 //-----------------------------------------------------------------------------
 void HPWH::makeTier4()
 {
