@@ -230,8 +230,6 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    resample(resampledTankTemps, hpwh->tank->nodeTs_C);
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
     double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
@@ -252,32 +250,21 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
         totWeight = 1.;
         break;
     }
-
     case DistributionType::Weighted:
     {
-        for (auto& distPoint : dist.weightedDistribution)
+        double df = 1. / hpwh->getNumNodes();
+        for (int i = 0; i < hpwh->getNumNodes(); ++i)
         {
-            if (distPoint.weight > 0.)
+            double fStart = static_cast<double>(i) / hpwh->getNumNodes();
+            double w = dist.weightedDistribution.normalizedWeight(fStart, fStart + df);
+            if (w > 0.)
             {
-                firstNode = 0;
-                calcNode = static_cast<int>(nodeDensity) - 1; // last tank node in logic node
-                break;
+                if (firstNode == -1)
+                    firstNode = i;
+                calcNode = i;
             }
-            else
-            {
-                double norm_dist_height =
-                    distPoint.height / dist.weightedDistribution.maximumHeight();
-                firstNode = static_cast<int>(
-                    norm_dist_height * hpwh->getNumNodes()); // first tank node with non-zero weight
-                calcNode =
-                    firstNode + static_cast<int>(nodeDensity); // last tank node in logic node
-                break;
-            }
-        }
-        for (int i = firstNode; i <= calcNode; ++i)
-        {
-            sum += hpwh->tank->nodeTs_C[i];
-            totWeight += 1.;
+            sum += w * hpwh->tank->nodeTs_C[i];
+            totWeight += w;
         }
     }
     }
