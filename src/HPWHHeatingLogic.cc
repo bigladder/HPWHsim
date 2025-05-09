@@ -261,9 +261,9 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
                 if (firstNode == -1)
                     firstNode = i;
                 calcNode = i;
+                sum += w * hpwh->tank->nodeTs_C[i];
+                totWeight += w;
             }
-            sum += w * hpwh->tank->nodeTs_C[i];
-            totWeight += w;
         }
     }
     }
