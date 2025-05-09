@@ -232,7 +232,6 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
-    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
     switch (dist.distributionType)
     {
     case DistributionType::BottomOfTank:
@@ -283,13 +282,13 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     // If the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
     // about, so shift a whole node.
-    // factor of nodeDensity converts logic-node fraction to tank-node fraction
-    double nodeFrac =
-        compare(averageT_C, comparisonT_C)
-            ? 0.
-            : ((nodeDiffT_C > 0.) ? nodeDensity * logicNodeDiffT_C / nodeDiffT_C : 1.);
+    double nodeFrac = compare(averageT_C, comparisonT_C)
+                          ? 0.
+                          : ((nodeDiffT_C > 0.) ? logicNodeDiffT_C / nodeDiffT_C : 1.);
 
-    return nodeFrac;
+    // factor of nodeDensity preserves legacy behavior
+    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
+    return nodeDensity * nodeFrac;
 }
 
 /*static*/
