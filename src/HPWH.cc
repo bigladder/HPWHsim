@@ -2918,8 +2918,10 @@ bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS& m
 
 void HPWH::init(HPWH::MODELS presetNum)
 {
-    const auto& jsonText = hpwh_presets::index[presetNum].json_text;
-    nlohmann::json j = nlohmann::json::parse(jsonText);
+   // constexpr std::size_t csize = hpwh_presets::index[presetNum].size;
+    auto cbor = static_cast<const char *>(hpwh_presets::index[presetNum].cbor_data);
+   // auto r = std::array<std::uint8_t, csize>(cbor);
+    nlohmann::json j = nlohmann::json::from_cbor(cbor);
 
     hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;

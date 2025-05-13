@@ -9,6 +9,7 @@ package-mode = false
 python = "^3.10"
 #lattice = {path = "../../../lattice", develop = true}
 lattice = {git = "https://github.com/bigladder/lattice.git", branch = "add-json-object-write"}
+cbor-json = "^0.0.4"
 
 [tool.poetry.dev-dependencies]
 doit = "0.36.0"

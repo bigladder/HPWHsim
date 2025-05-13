@@ -9,6 +9,8 @@ import sys
 import json
 import subprocess
 
+import cbor_json
+
 def incorp_presets(presets_list_files, build_dir, spec_type):
     
 	orig_dir = str(Path.cwd())
@@ -61,20 +63,31 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 						json_preset_data.close()
 				except:
 					continue	
-
+				
+				cbor = cbor_json.cbor_from_jsonable(data)
 				guard_name = preset["name"].upper() + "_H"
 				
 				preset_text = "#ifndef " + guard_name + "\n"
 				preset_text += "#define " + guard_name + "\n\n"
 
+
+				preset_text += "#include <array>\n\n"
+				
 				preset_text += "namespace hpwh_presets {\n\n"
-				preset_text += "inline const char *" + preset["name"] + "= R\"config("
-				preset_text += json.dumps(data)
-				preset_text += ")config\";" + "\n\n"
+				
+				nbytes = len(cbor)
+				preset_text += f"inline const std::array<std::uint8_t, {nbytes}> " + preset["name"] + "=  {\n"
+			
+				for i, entry  in enumerate(cbor):
+					preset_text += hex(entry) + ", "
+					if (i % 40 == 0) and (i != 0): 
+						preset_text += "\n";
+				
+				preset_text += "};\n\n"
 				
 				preset_text += "inline constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + ";\n\n"
 				
-				preset_text += "}\n"		
+				preset_text += "};\n\n"		
 				preset_text += "#endif\n"
 				
 				try:	
@@ -90,13 +103,14 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				if not first:
 					presets_source_text += ",\n"
 					
-				presets_source_text += "{ index_" + preset["name"] + ", {\"" + preset["name"] + "\", "+ preset["name"] + "}}"
+				presets_source_text += "{ index_" + preset["name"] + ", {\"" + preset["name"] + "\", static_cast<const void*>(&"+ preset["name"] + ")}}"
 				first = False
 
 		# create library header
 		presets_header =  """
 #ifndef PRESETS_H
 #define PRESETS_H
+
 """
 
 		# add the includes	
@@ -108,8 +122,8 @@ namespace hpwh_presets {
 
 struct Identifier
 {
-    const char *name;
-    const char *json_text;
+		const char *name;
+		const void *cbor_data;
 };	
 
 extern std::unordered_map<int, Identifier> index;
