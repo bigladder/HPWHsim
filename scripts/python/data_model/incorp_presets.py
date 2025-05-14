@@ -85,7 +85,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				nbytes = len(cbor_data)
 				#preset_text += "inline constexpr std::size_t name_" + preset["name"] + " = " + preset["name"] + ";\n"
 				#preset_text += "inline constexpr std::size_t size_" + preset["name"] + " = " + str(nbytes) + ";\n"
-				preset_text += "inline const std::vector<uint8_t> cbor_" + preset["name"] + "{\n"
+				preset_text += "const std::vector<uint8_t> cbor_" + preset["name"] + "{\n"
 				for i, entry  in enumerate(cbor_data):
 					preset_text += hex(entry) + ", "
 					if (i % 40 == 0) and (i != 0): 
@@ -134,9 +134,10 @@ struct Identifier
       name(name_in), size(size_in), cbor_data(cbor_data_in){}
 };
 
-inline std::unordered_map<int, Identifier> index = {
+extern std::unordered_map<int, Identifier> index;
+}
+#endif
 """
-		presets_header += presets_source_text + "};\n}\n#endif\n"
 
 		try:	
 			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
@@ -146,12 +147,17 @@ inline std::unordered_map<int, Identifier> index = {
 			print("Failed to create presets.h")
 
 		# create library source
-		presets_source =  "#include <iostream>\n"
-		presets_source += "#include <unordered_map>\n"
-		presets_source += "#include \"../presets.h\"\n\n"
-		presets_source += "namespace hpwh_presets {\n"
+		presets_source =  """
+#include <iostream>
+#include <unordered_map>
+#include "../presets.h"
 
-		presets_source += "\n}\n"
+namespace hpwh_presets {
+
+std::unordered_map<int, Identifier> index({
+"""	
+		presets_source += presets_source_text + "\n"
+		presets_source += "});\n}\n"
 
 		try:	
 			with open(os.path.join(presets_src_dir, "presets.cpp"), "w") as presets_src_file:
