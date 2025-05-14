@@ -1539,6 +1539,8 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         double maxCOPCurvature = 0.;
         envTemps_K.reserve(nEnvTempsOrig + 2); // # of map entries, plus endpoints
         envTemps_K.push_back(C_TO_K(minT));
+        envTemps_K.push_back(C_TO_K(22.));
+        envTemps_K.push_back(C_TO_K(30.));
         for (auto& perfPoint : performanceMap)
         {
             if ((F_TO_C(perfPoint.T_F) > minT) && (F_TO_C(perfPoint.T_F) < maxT))
@@ -1553,6 +1555,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             }
         }
         envTemps_K.push_back(C_TO_K(maxT));
+        arrangeGridVector(envTemps_K);
         tempGrid.push_back(envTemps_K);
 
         // fill outletT axis, if external (only used by Sanco)
