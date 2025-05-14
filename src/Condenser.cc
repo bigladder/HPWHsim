@@ -958,6 +958,7 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
     {
         // adjust COP by the defrost factor
         defrostDerate(performance.cop, C_TO_F(externalT_C));
+        performance.outputPower_W = performance.cop * performance.inputPower_W;
     }
 
     // here is where the scaling for flow restriction happens
