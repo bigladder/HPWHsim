@@ -9,7 +9,7 @@ import sys
 import json
 import subprocess
 
-import cbor_json
+import cbor2
 
 def incorp_presets(presets_list_files, build_dir, spec_type):
     
@@ -56,38 +56,44 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				else:
 					preset_json_path = os.path.join(test_json_dir, preset["name"] + ".json")
 			  
-				data = {}
+
+				json_data = {}
 				try:
-					with open(preset_json_path) as json_preset_data:
-						data = json.load(json_preset_data)
-						json_preset_data.close()
+					with open(preset_json_path, 'r', encoding='utf-8') as f:
+						json_data = json.load(f)
+						f.close()
 				except:
-					continue	
-				
-				cbor = cbor_json.cbor_from_jsonable(data)
+					continue
+			
+				cbor_data = cbor2.dumps(json_data)
+				#print(cbor_data)
+				#c2 = cbor2.loads(cbor_data)
+				#json_data2 = json.dumps(c2)
+				#print(json_data2)
+				#sys.exit(0)
+					
 				guard_name = preset["name"].upper() + "_H"
 				
 				preset_text = "#ifndef " + guard_name + "\n"
 				preset_text += "#define " + guard_name + "\n\n"
 
 
-				preset_text += "#include <array>\n\n"
+				preset_text += "#include <vector>\n\n"
 				
 				preset_text += "namespace hpwh_presets {\n\n"
 				
-				nbytes = len(cbor)
-				preset_text += f"inline const std::array<std::uint8_t, {nbytes}> " + preset["name"] + "=  {\n"
-			
-				for i, entry  in enumerate(cbor):
+				nbytes = len(cbor_data)
+				#preset_text += "inline constexpr std::size_t name_" + preset["name"] + " = " + preset["name"] + ";\n"
+				#preset_text += "inline constexpr std::size_t size_" + preset["name"] + " = " + str(nbytes) + ";\n"
+				preset_text += "inline const std::vector<uint8_t> cbor_" + preset["name"] + "{\n"
+				for i, entry  in enumerate(cbor_data):
 					preset_text += hex(entry) + ", "
 					if (i % 40 == 0) and (i != 0): 
 						preset_text += "\n";
 				
-				preset_text += "};\n\n"
+				preset_text += " };\n\n"
 				
-				preset_text += "inline constexpr int index_" + preset["name"] + " = " + str(preset["number"]) + ";\n\n"
-				
-				preset_text += "};\n\n"		
+				preset_text += "}\n"
 				preset_text += "#endif\n"
 				
 				try:	
@@ -103,7 +109,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				if not first:
 					presets_source_text += ",\n"
 					
-				presets_source_text += "{ index_" + preset["name"] + ", {\"" + preset["name"] + "\", static_cast<const void*>(&"+ preset["name"] + ")}}"
+				presets_source_text += "\t{ " + str(preset["number"]) + ", {\"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0]}}"
 				first = False
 
 		# create library header
@@ -112,26 +118,26 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 #define PRESETS_H
 
 """
-
 		# add the includes	
 		presets_header += presets_header_text
 	
-		# declare a model number-to-model name map	
 		presets_header += """		
+	
 namespace hpwh_presets {
 
 struct Identifier
 {
-		const char *name;
-		const void *cbor_data;
-};	
+  std::string name;
+  const std::size_t size;
+  const std::uint8_t *cbor_data;
+  Identifier(const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
+      name(name_in), size(size_in), cbor_data(cbor_data_in){}
+};
 
-extern std::unordered_map<int, Identifier> index;
-}
+inline std::unordered_map<int, Identifier> index = {
+"""
+		presets_header += presets_source_text + "};\n}\n#endif\n"
 
-#endif
-"""		
-	
 		try:	
 			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
 				presets_header_file.write(presets_header)
@@ -144,11 +150,9 @@ extern std::unordered_map<int, Identifier> index;
 		presets_source += "#include <unordered_map>\n"
 		presets_source += "#include \"../presets.h\"\n\n"
 		presets_source += "namespace hpwh_presets {\n"
-		
-		presets_source += "std::unordered_map<int, Identifier> index = {\n"
-		presets_source += presets_source_text + "\n"
-		presets_source += "};\n}\n"
-		
+
+		presets_source += "\n}\n"
+
 		try:	
 			with open(os.path.join(presets_src_dir, "presets.cpp"), "w") as presets_src_file:
 				presets_src_file.write(presets_source)

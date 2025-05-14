@@ -36,21 +36,6 @@ files = [
 dev = ["freezegun (>=1.0,<2.0)", "pytest (>=6.0)", "pytest-cov"]
 
 [[package]]
-name = "cbor-json"
-version = "0.0.4"
-description = "Three-way conversion between 'native' Python data representation, CBOR, and JSON"
-optional = false
-python-versions = ">=3.7,<4.0"
-groups = ["main"]
-files = [
-    {file = "cbor-json-0.0.4.tar.gz", hash = "sha256:a71db754305b3c58586dac2fa45fcca73709d73e66358761aa0b995241c2787e"},
-    {file = "cbor_json-0.0.4-py3-none-any.whl", hash = "sha256:ebb35cdabaef090ef90cfb8bef3a5af63ca5b4c5d518e0eaad55db6ec4acd052"},
-]
-
-[package.dependencies]
-cbor2 = ">=5.4.0,<6.0.0"
-
-[[package]]
 name = "cbor2"
 version = "5.6.5"
 description = "CBOR (de)serializer with extensive tag support"
@@ -1330,4 +1315,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "c6c063d3b75e72f8d9e3135e234163e2423a2edae0f8657805f8524aaf7070b5"
+content-hash = "29b0c3d5f2b1c5593d3ffd8a005831e80076647bfa1bca45a66aec6a0dedeba9"

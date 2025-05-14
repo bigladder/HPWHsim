@@ -806,7 +806,7 @@ class HPWH : public Courier::Sender
      * are taken from the GE2015_STDMode model.
      */
 
-    static bool getPresetNameFromNumber(std::string& modelName, const MODELS& model);
+    static bool getPresetNameFromNumber(std::string& modelName, const MODELS model);
     static bool getPresetNumberFromName(const std::string& modelName, MODELS& model);
 
     void init(MODELS presetNum);

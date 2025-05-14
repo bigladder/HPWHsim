@@ -2910,18 +2910,17 @@ void HPWH::checkInputs()
 }
 
 /* static */
-bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS& model)
+bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS model)
 {
-    modelName = hpwh_presets::index[model].name;
+    modelName = hpwh_presets::index.at(model).name;
     return true;
 }
 
 void HPWH::init(HPWH::MODELS presetNum)
 {
-   // constexpr std::size_t csize = hpwh_presets::index[presetNum].size;
-    auto cbor = static_cast<const char *>(hpwh_presets::index[presetNum].cbor_data);
-   // auto r = std::array<std::uint8_t, csize>(cbor);
-    nlohmann::json j = nlohmann::json::from_cbor(cbor);
+    auto presetData = hpwh_presets::index.at(presetNum);
+    nlohmann::json j =
+        nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
 
     hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
@@ -2963,7 +2962,7 @@ void HPWH::initPreset(const std::string& modelName)
 
 void HPWH::initFromJSON(const HPWH::MODELS presetNumber)
 {
-    initFromJSON({*hpwh_presets::index[presetNumber].name});
+    initFromJSON(hpwh_presets::index.at(presetNumber).name);
 }
 
 void HPWH::initFromJSON(const std::string modelName)
