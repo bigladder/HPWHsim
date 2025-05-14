@@ -3328,6 +3328,12 @@ void HPWH::initFromJSON(string modelName)
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     from(hsi);
+
+    if (model == MODELS_SANCO2_83 || model == MODELS_SANCO2_GS3_45HPA_US_SP ||
+        model == MODELS_SANCO2_119)
+    {
+        setpointFixed = true;
+    }
 }
 
 #endif
