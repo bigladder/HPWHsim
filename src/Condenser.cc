@@ -976,7 +976,7 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
     // For accounting add the resistance defrost to the input energy
     if (resDefrostHeatingOn)
     {
-        performance.inputPower_W += resDefrost.inputPwr_kW;
+        performance.inputPower_W += 1000. * resDefrost.inputPwr_kW;
     }
 
     if (performance.cop < 0.)
