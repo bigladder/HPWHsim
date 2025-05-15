@@ -225,15 +225,16 @@ void HPWH::Condenser::makeBtwxt()
     auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
     auto is_NyleMP =
         ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
+    auto is_Sanden =
+        ((hpwh->model == MODELS_SANCO2_83) || (hpwh->model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
+         (hpwh->model == MODELS_SANCO2_119));
 
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;
     {
-        auto interpLimit = (perfGrid[iAxis].size() > 2) ? Btwxt::InterpolationMethod::cubic
-                                                        : Btwxt::InterpolationMethod::linear;
-        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated)
+        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_Sanden || is_integrated)
                                 ? Btwxt::InterpolationMethod::linear
-                                : interpLimit;
+                                : Btwxt::InterpolationMethod::cubic;
         auto extrapMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
                                                          : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
