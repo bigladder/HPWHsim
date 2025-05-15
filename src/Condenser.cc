@@ -131,6 +131,18 @@ void arrangeGridVector(std::vector<double>& V)
     }
 }
 
+void trimGridVector(std::vector<double>& V, const double minT, const double maxT)
+{
+    arrangeGridVector(V);
+    auto copyV = V;
+    V.clear();
+    for (auto& x : copyV) // skip duplicates
+    {
+        if ((minT <= x) && (x <= maxT))
+            V.push_back(x);
+    }
+}
+
 bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
 {
     // if it's already locked out, keep it locked out
@@ -217,9 +229,11 @@ void HPWH::Condenser::makeBtwxt()
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;
     {
+        auto interpLimit = (perfGrid[iAxis].size() > 2) ? Btwxt::InterpolationMethod::cubic
+                                                        : Btwxt::InterpolationMethod::linear;
         auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated)
                                 ? Btwxt::InterpolationMethod::linear
-                                : Btwxt::InterpolationMethod::cubic;
+                                : interpLimit;
         auto extrapMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
                                                          : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
@@ -247,8 +261,10 @@ void HPWH::Condenser::makeBtwxt()
     }
 
     {
-        auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
-                                                         : Btwxt::InterpolationMethod::cubic;
+        auto interpLimit = (perfGrid[iAxis].size() > 2) ? Btwxt::InterpolationMethod::cubic
+                                                        : Btwxt::InterpolationMethod::linear;
+        auto interpMethod =
+            (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear : interpLimit;
         auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::linear
                                             : ((is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
                                                            : Btwxt::ExtrapolationMethod::linear);
@@ -555,11 +571,9 @@ void HPWH::Condenser::to(
         {
             envTemps_K.push_back(C_TO_K(F_TO_C(T)));
         }
-        if (K_TO_C(envTemps_K.front()) > minT)
-            envTemps_K.push_back(C_TO_K(minT));
-        if (K_TO_C(envTemps_K.back()) < maxT)
-            envTemps_K.push_back(C_TO_K(maxT));
-        arrangeGridVector(envTemps_K);
+        envTemps_K.push_back(C_TO_K(minT));
+        envTemps_K.push_back(C_TO_K(maxT));
+        trimGridVector(envTemps_K, C_TO_K(minT), C_TO_K(maxT));
 
         checkTo(envTemps_K,
                 grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
@@ -672,11 +686,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             {
                 envTemps_K.push_back(C_TO_K(F_TO_C(T)));
             }
-            if (K_TO_C(envTemps_K.front()) > minT)
-                envTemps_K.push_back(C_TO_K(minT));
-            if (K_TO_C(envTemps_K.back()) < maxT)
-                envTemps_K.push_back(C_TO_K(maxT));
-            arrangeGridVector(envTemps_K);
+            envTemps_K.push_back(C_TO_K(minT));
+            envTemps_K.push_back(C_TO_K(maxT));
+            trimGridVector(envTemps_K, C_TO_K(minT), C_TO_K(maxT));
 
             checkTo(envTemps_K,
                     grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
@@ -1454,12 +1466,9 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
 
             envTemps_K.push_back(C_TO_K(minT));
             for (auto& T_C : testEnvTemps_C)
-            {
-                if ((T_C > minT) && (T_C < maxT))
-                    envTemps_K.push_back(C_TO_K(T_C));
-            }
+                envTemps_K.push_back(C_TO_K(T_C));
             envTemps_K.push_back(C_TO_K(maxT));
-            arrangeGridVector(envTemps_K);
+            trimGridVector(envTemps_K, C_TO_K(minT), C_TO_K(maxT));
         }
 
         { // fill vector of outlet temps
@@ -1538,9 +1547,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         double maxPowerCurvature = 0.; // curvature used to determine # of points
         double maxCOPCurvature = 0.;
         envTemps_K.reserve(nEnvTempsOrig + 2); // # of map entries, plus endpoints
-        envTemps_K.push_back(C_TO_K(minT));
-        envTemps_K.push_back(C_TO_K(22.));
-        envTemps_K.push_back(C_TO_K(30.));
+
         for (auto& perfPoint : performanceMap)
         {
             if ((F_TO_C(perfPoint.T_F) > minT) && (F_TO_C(perfPoint.T_F) < maxT))
@@ -1554,8 +1561,13 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                     magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
             }
         }
+        envTemps_K.push_back(C_TO_K(minT));
         envTemps_K.push_back(C_TO_K(maxT));
-        arrangeGridVector(envTemps_K);
+        envTemps_K.push_back(C_TO_K(0.));
+        envTemps_K.push_back(C_TO_K(20.));
+        envTemps_K.push_back(C_TO_K(22.));
+        envTemps_K.push_back(C_TO_K(30.));
+        trimGridVector(envTemps_K, C_TO_K(minT), C_TO_K(maxT));
         tempGrid.push_back(envTemps_K);
 
         // fill outletT axis, if external (only used by Sanco)
