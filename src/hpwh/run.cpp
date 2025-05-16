@@ -397,8 +397,6 @@ void run(const std::string& sSpecType,
             }
         }
 
-        if (i == 602)
-            std::cout << "here\n";
         // Run the step
         hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
                         GAL_TO_L(allSchedules[1][i]), // Flow in gallons
