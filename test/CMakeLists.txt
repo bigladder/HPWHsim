@@ -26,7 +26,6 @@ set(general_Tests
         test50
         test70
         test95
-        testSandenCombi
         )
 
 # Demand-response tests
@@ -160,6 +159,14 @@ set(yearLargeTests
         )
 
 #
+set(SancoModels 
+        Sanden80
+)
+set(SancoTests
+        testSandenCombi
+)
+
+#
 set(SoC_Models
         Sanden120
         NyleC25A_SP
@@ -173,9 +180,9 @@ set(SoC_Tests
         )
 
 #
-set(Villara_Models "AquaThermAire")
-set(Villara_TestDir "Villara/AquaThermAire")
-set(Villara_Tests
+set(VillaraModels "AquaThermAire")
+set(VillaraTestDir "Villara/AquaThermAire")
+set(VillaraTests
         villara_24hr67
         )
 
@@ -323,9 +330,15 @@ foreach (model ${lockoutTestModels})
 	else ()
 		continue()
   endif ()
-
-	add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "JSON" AIR_T_F "${airT_F}")
 endforeach (model)
+
+# Sanco tests
+foreach (test ${SancoTests})
+    foreach (model ${SancoModels})
+				set(fullTestName "${test}")
+				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
 
 # DR tests
 foreach (test ${DR_Tests})
@@ -336,9 +349,9 @@ foreach (test ${DR_Tests})
 endforeach (test)
 
 # Villara AquaThermAire tests
-foreach (model ${Villara_Models})
-    foreach (test ${Villara_Tests})
-				set(fullTestName "${Villara_TestDir}/${test}")
+foreach (model ${VillaraModels})
+    foreach (test ${VillaraTests})
+				set(fullTestName "${VillaraTestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
     endforeach (test)
 endforeach (model)
@@ -421,8 +434,8 @@ foreach (test ${SoC_Tests})
 endforeach (test)
 
 # Villara Aerotherm regression tests
-foreach (model ${Villara_Models})
-    foreach (test ${Villara_Tests})
+foreach (model ${VillaraModels})
+    foreach (test ${VillaraTests})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
     endforeach (test)
 endforeach (model)

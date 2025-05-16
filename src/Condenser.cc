@@ -227,7 +227,7 @@ void HPWH::Condenser::makeBtwxt()
         ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
     auto is_Sanden =
         ((hpwh->model == MODELS_SANCO2_83) || (hpwh->model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
-         (hpwh->model == MODELS_SANCO2_119));
+         (hpwh->model == MODELS_SANCO2_119) || (hpwh->model == MODELS_SANCO2_43));
 
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;
