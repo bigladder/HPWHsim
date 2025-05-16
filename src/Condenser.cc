@@ -1463,7 +1463,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             std::vector<double> testEnvTemps_C = {
                 0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,       5.,   5.5,
                 6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,       10.5, 11.,
-                11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556};
+                11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556, 20.};
 
             envTemps_K.push_back(C_TO_K(minT));
             for (auto& T_C : testEnvTemps_C)
