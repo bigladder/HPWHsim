@@ -3419,6 +3419,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATE
                 hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(
                 config.heat_source.get());
             condenser->from(*cond_ptr);
+            compressorIndex = iHeatSource;
             break;
         }
         case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
@@ -3535,6 +3536,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
                 reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
                     config.heat_source.get());
             condenser->from(*ptr);
+            compressorIndex = iHeatSource;
             break;
         }
         case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
@@ -3589,6 +3591,14 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
     // hard-code fix: two VIPs assigned in preset
     if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
         heatSources[0]->isVIP = heatSources[2]->isVIP = true;
+
+    if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
+        (model == MODELS_SANCO2_119) || (model == MODELS_SANCO2_43))
+    {
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
 
     // calculate oft-used derived values
     calcDerivedValues();
