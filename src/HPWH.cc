@@ -3606,6 +3606,13 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
         logic->checksStandby() = true;
     }
 
+    if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP))
+    {
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->turnOnLogicSet[1].get());
+        logic->checksStandby() = true;
+    }
+
     // calculate oft-used derived values
     calcDerivedValues();
     checkInputs();
