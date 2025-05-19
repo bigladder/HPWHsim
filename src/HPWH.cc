@@ -3613,6 +3613,13 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
         logic->checksStandby() = true;
     }
 
+    if ((MODELS_NyleC25A_SP <= model) && (model <= MODELS_NyleC250A_C_SP))
+    {
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+
     // calculate oft-used derived values
     calcDerivedValues();
     checkInputs();
