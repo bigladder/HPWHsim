@@ -1492,7 +1492,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                         C_TO_K(highestTestSetpoint_C +
                                secondaryHeatExchanger.hotSideTemperatureOffset_dC));
 
-                arrangeGridVector(outletTemps_K);
+                trimGridVector(outletTemps_K, 0., C_TO_K(maxSetpoint_C));
             }
         }
 
