@@ -50,7 +50,7 @@ struct HPWH::HeatingLogic
     virtual void
     to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const = 0;
 
-    bool checksStandby() { return checkStandby; }
+    bool& checksStandby() { return checkStandby; }
 
   protected:
     double decisionPoint;

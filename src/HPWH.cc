@@ -3590,7 +3590,12 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
 
     // hard-code fix: two VIPs assigned in preset
     if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
+    {
         heatSources[0]->isVIP = heatSources[2]->isVIP = true;
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->checksStandby() = true;
+    }
 
     if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
         (model == MODELS_SANCO2_119) || (model == MODELS_SANCO2_43))
@@ -3598,6 +3603,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
         auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
             heatSources[compressorIndex]->shutOffLogicSet[0].get());
         logic->getIsEnteringWaterHighTempShutoff() = true;
+        logic->checksStandby() = true;
     }
 
     // calculate oft-used derived values
