@@ -330,6 +330,7 @@ foreach (model ${lockoutTestModels})
 	else ()
 		continue()
   endif ()
+  add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "JSON" AIR_T_F "${airT_F}")
 endforeach (model)
 
 # Sanco tests
