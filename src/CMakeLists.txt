@@ -14,9 +14,9 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 set(headers
         HPWHversion.in.hh
         HPWH.hh
+		HPWHUtils.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
-
         Tank.hh
         Condenser.hh
         Resistance.hh
@@ -27,6 +27,7 @@ set(headers
 
 set(sources
         HPWHversion.cc
+        HPWH.cc
         HPWHUtils.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
@@ -61,13 +62,13 @@ target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_SOURCE_DIR}/src
         )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model hpwh_presets)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header generate_presets)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
