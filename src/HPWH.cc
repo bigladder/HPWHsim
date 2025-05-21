@@ -1711,9 +1711,6 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
                                    UNITS pwrUnit /*=UNITS_KW*/,
                                    UNITS tempUnit /*=UNITS_C*/)
 {
-    // calculate capacity btu/hr, input btu/hr, and cop
-    double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
-
     if (!hasACompressor())
     {
         send_error("Current model does not have a compressor.");
@@ -2963,7 +2960,7 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
         auto offLogic = condenser->shutOffLogicSet[0];
         offLogic->getIsEnteringWaterHighTempShutoff() = true;
     }
-   if (presetNum == MODELS_GE2012)
+    if (presetNum == MODELS_GE2012)
     {
         auto& condenser = heatSources[compressorIndex];
         auto offLogic = condenser->shutOffLogicSet[0];
@@ -2997,7 +2994,6 @@ void HPWH::initPreset(const std::string& presetName)
         send_error("Unable to initialize model.");
     }
 }
-
 
 /// Initializes a preset from the modelName
 void HPWH::initLegacy(const std::string& modelName)
@@ -3037,7 +3033,7 @@ void HPWH::initFromJSON(const std::string modelName)
 
 #endif
 
-void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
+void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
     checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
 
@@ -3087,8 +3083,9 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
 }
 
-void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
+    description.from(rswh);
     productInformation.from(rswh);
     rating10CFR430.from(rswh);
 
@@ -3174,7 +3171,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATE
     }
 }
 
-void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);
@@ -3276,7 +3273,6 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
-
 }
 
 void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
@@ -3322,6 +3318,7 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSINTEGRATEDWATERHEATER.schema.yaml");
 
+    description.to(rswh);
     productInformation.to(rswh);
     rating10CFR430.to(rswh);
 
@@ -4287,23 +4284,16 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
 
-    double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    compressor->getCapacity(testConfiguration.ambientT_C,
-                            compressor->maxSetpoint_C,
-                            getSetpoint(),
-                            input_BTUperHr,
-                            cap_BTUperHr,
-                            cop1);
-    if (cop1 < 0.)
+    auto performance1 =
+        compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
+
+    if (performance1.cop < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor->getCapacity(testConfiguration.ambientT_C,
-                            0., /// low condenserT_C
-                            getSetpoint(),
-                            input_BTUperHr,
-                            cap_BTUperHr,
-                            cop);
-    if (cop < cop1)
+    /// low condenserT_C
+    auto performance0 = compressor->getPerformance(testConfiguration.ambientT_C, 0.);
+
+    if (performance0.cop < performance1.cop)
         send_error("COP slope is positive.");
 
     return ef_metric->getTestSummary();

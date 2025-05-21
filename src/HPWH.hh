@@ -74,7 +74,7 @@ class HPWH : public Courier::Sender
     static const double KWATER_WpermC;       /// thermal conductivity of water
     static const double CPWATER_kJperkgC;    /// specific heat capcity of water
     static const double TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced
-                                         to 0 this saves on computations */
+                                                to 0 this saves on computations */
 
     static const float UNINITIALIZED_LOCATIONTEMP; /**< this is used to tell the
    simulation when the location temperature has not been initialized */
@@ -92,17 +92,18 @@ class HPWH : public Courier::Sender
     HPWH(const HPWH& hpwh);                    /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
-                                                     eventually?   */
+                                                                                       eventually?
+              */
 
-    void from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
+    void from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
 
     void to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const;
 
-    void from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
+    void from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh);
 
     void to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh) const;
 
-    void from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
+    void from(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs);
 
     void to(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs) const;
 
@@ -311,7 +312,7 @@ class HPWH : public Courier::Sender
         bool is_set = false;
 
       public:
-        Entry(const T& t_in, bool is_set_in) : is_set(is_set_in)
+        Entry(const T& t_in, const bool is_set_in) : is_set(is_set_in)
         {
             if (is_set)
                 t = t_in;
@@ -323,7 +324,50 @@ class HPWH : public Courier::Sender
 
         T operator()() const { return is_set ? t : T(); }
         bool isSet() const { return is_set; }
+
+        void from(const T& t_in, const bool is_set_in) { *this = {t_in, is_set_in}; }
+
+        void to(T& t_in, bool& is_set_in) const
+        {
+            if (is_set)
+            {
+                t_in = t;
+            }
+            is_set_in |= is_set;
+        }
     };
+
+    struct Description : public Entry<std::string>
+    {
+        Description() : Entry<std::string>("", false) {}
+        Description(std::string description_in) : Entry<std::string>(description_in) {}
+        Description(const Entry<std::string>& entry) : Entry<std::string>(entry) {}
+        bool empty() const { return !(Entry<std::string>::isSet()); }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer field from schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void from(const RSTYPE& rs)
+        {
+            if (rs.metadata_is_set)
+            {
+                auto& metadata = rs.metadata;
+                Entry<std::string>::from(metadata.description, metadata.description_is_set);
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        ///	@brief	Transfer field to schema
+        //-----------------------------------------------------------------------------
+        template <typename RSTYPE>
+        void to(RSTYPE& rs) const
+        {
+            auto& metadata = rs.metadata;
+            Entry<std::string>::to(metadata.description, metadata.description_is_set);
+        }
+
+    } description;
 
     struct ProductInformation
     {
@@ -348,8 +392,8 @@ class HPWH : public Courier::Sender
                 if (desc.product_information_is_set)
                 {
                     auto& info = desc.product_information;
-                    manufacturer = {info.manufacturer, info.manufacturer_is_set};
-                    model_number = {info.model_number, info.model_number_is_set};
+                    manufacturer.from(info.manufacturer, info.manufacturer_is_set);
+                    model_number.from(info.model_number, info.model_number_is_set);
                 }
             }
         }
@@ -363,20 +407,12 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& prod_info = desc.product_information;
 
-            prod_info.manufacturer_is_set = manufacturer.isSet();
-            prod_info.manufacturer = manufacturer();
+            manufacturer.to(prod_info.manufacturer, prod_info.manufacturer_is_set);
+            model_number.to(prod_info.model_number, prod_info.model_number_is_set);
 
-            prod_info.model_number_is_set = model_number.isSet();
-            prod_info.model_number = model_number();
+            checkTo(prod_info, desc.product_information_is_set, desc.product_information, !empty());
 
-            bool set_prod_info = !empty();
-            checkTo(prod_info,
-                    desc.product_information_is_set,
-                    desc.product_information,
-                    set_prod_info);
-
-            bool set_desc = set_prod_info;
-            checkTo(desc, rs.description_is_set, rs.description, set_desc);
+            checkTo(desc, rs.description_is_set, rs.description, !empty());
         }
 
     } productInformation;
@@ -416,15 +452,15 @@ class HPWH : public Courier::Sender
                 if (desc.rating_10_cfr_430_is_set)
                 {
                     auto& info = desc.rating_10_cfr_430;
-                    certified_reference_number = {info.certified_reference_number,
-                                                  info.certified_reference_number_is_set};
-                    nominal_tank_volume = {info.nominal_tank_volume,
-                                           info.nominal_tank_volume_is_set};
-                    first_hour_rating = {info.first_hour_rating, info.first_hour_rating_is_set};
-                    recovery_efficiency = {info.recovery_efficiency,
-                                           info.recovery_efficiency_is_set};
-                    uniform_energy_factor = {info.uniform_energy_factor,
-                                             info.uniform_energy_factor_is_set};
+                    certified_reference_number.from(info.certified_reference_number,
+                                                    info.certified_reference_number_is_set);
+                    nominal_tank_volume.from(info.nominal_tank_volume,
+                                             info.nominal_tank_volume_is_set);
+                    first_hour_rating.from(info.first_hour_rating, info.first_hour_rating_is_set);
+                    recovery_efficiency.from(info.recovery_efficiency,
+                                             info.recovery_efficiency_is_set);
+                    uniform_energy_factor.from(info.uniform_energy_factor,
+                                               info.uniform_energy_factor_is_set);
                 }
             }
         }
@@ -437,33 +473,15 @@ class HPWH : public Courier::Sender
             auto& desc = rs.description;
             auto& rating = desc.rating_10_cfr_430;
 
-            checkTo(certified_reference_number(),
-                    rating.certified_reference_number_is_set,
-                    rating.certified_reference_number,
-                    certified_reference_number.isSet());
-
-            checkTo(nominal_tank_volume(),
-                    rating.nominal_tank_volume_is_set,
-                    rating.nominal_tank_volume,
-                    nominal_tank_volume.isSet());
-
-            checkTo(first_hour_rating(),
-                    rating.first_hour_rating_is_set,
-                    rating.first_hour_rating,
-                    first_hour_rating.isSet());
-
-            checkTo(recovery_efficiency(),
-                    rating.recovery_efficiency_is_set,
-                    rating.recovery_efficiency,
-                    recovery_efficiency.isSet());
-
-            checkTo(uniform_energy_factor(),
-                    rating.uniform_energy_factor_is_set,
-                    rating.uniform_energy_factor,
-                    uniform_energy_factor.isSet());
+            certified_reference_number.to(rating.certified_reference_number,
+                                          rating.certified_reference_number_is_set);
+            nominal_tank_volume.to(rating.nominal_tank_volume, rating.nominal_tank_volume_is_set);
+            first_hour_rating.to(rating.first_hour_rating, rating.first_hour_rating_is_set);
+            recovery_efficiency.to(rating.recovery_efficiency, rating.recovery_efficiency_is_set);
+            uniform_energy_factor.to(rating.uniform_energy_factor,
+                                     rating.uniform_energy_factor_is_set);
 
             checkTo(rating, desc.rating_10_cfr_430_is_set, desc.rating_10_cfr_430, !empty());
-
             checkTo(desc, rs.description_is_set, rs.description, !empty());
         }
 
@@ -775,7 +793,6 @@ class HPWH : public Courier::Sender
                                    double upperPower_W,
                                    double lowerPower_W);
 
-    /**< This function will initialize a HPWH o`bject to be a generic resistance storage water
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -1443,6 +1460,9 @@ class HPWH : public Courier::Sender
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
 
+    void makeTier3();
+    void makeTier4();
+
     void convertMapToGrid();
 
   private:
@@ -1607,7 +1627,6 @@ class HPWH : public Courier::Sender
     static void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
     static double getChargePerNode(double tCold, double tMix, double tHot);
-
 }; // end of HPWH class
 
 constexpr double BTUperKWH =

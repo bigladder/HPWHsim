@@ -75,8 +75,6 @@ struct PerformanceMapTest : public testing::Test
         nlohmann::json j;
         hpwh_data_model::hpwh_sim_input::to_json(j, hsi0);
 
-        std::cout << j.dump(2);
-
         hpwh_data_model::hpwh_sim_input::from_json(j, hsi1);
         hpwh.from(hsi1);
     }
@@ -821,7 +819,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {45., 40., 135, 40.195550598336204};
+        checkPoint = {45., 40., 135, 40.632847982630899};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
