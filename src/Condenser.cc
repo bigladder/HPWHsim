@@ -17,16 +17,11 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
                            const std::string& name_in)
     : HeatSource(hpwh_in, courier, name_in)
     , hysteresis_dC(0)
-
     , maxSetpoint_C(100.)
     , useBtwxtGrid(false)
-
     , extrapolationMethod(EXTRAP_LINEAR)
-
     , doDefrost(false)
-
     , maxOut_at_LowT {100, -273.15}
-
     , secondaryHeatExchanger {0., 0., 0.}
     , standbyPower_kW(0.)
     , configuration(COIL_CONFIG::CONFIG_WRAPPED)
@@ -323,6 +318,8 @@ void HPWH::Condenser::from(
     description.from(hs);
     productInformation.from(hs);
 
+    productInformation.from(hs);
+
     auto& perf = hs.performance;
 
     switch (perf.coil_configuration)
@@ -412,6 +409,8 @@ void HPWH::Condenser::from(
 void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
     description.from(hs);
+    productInformation.from(hs);
+
     productInformation.from(hs);
 
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
