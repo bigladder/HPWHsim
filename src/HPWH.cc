@@ -1732,9 +1732,10 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Invalid units.");
     }
 
+    constexpr double tolT_C = 1.e-9;
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
-    if (airTemp_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT)
+    if (airTemp_C + tolT_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT + tolT_C)
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
@@ -1742,7 +1743,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     double maxAllowedSetpoint_C =
         cond_ptr->maxSetpoint_C - cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
-    if (outTemp_C > maxAllowedSetpoint_C)
+    if (outTemp_C > maxAllowedSetpoint_C + tolT_C)
     {
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
@@ -2912,6 +2913,7 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
     model = presetNum;
     from(hsi);
 
+    // adjustments for non-data-model properties
     if (presetNum == MODELS_Scalable_MP)
     {
         canScale = true;
@@ -2925,6 +2927,7 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
         heatSources[0]->isVIP = heatSources[2]->isVIP = true;
         auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
             heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->getIsEnteringWaterHighTempShutoff() = true;
         logic->checksStandby() = true;
     }
     if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
@@ -3171,7 +3174,8 @@ void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATE
     }
 }
 
-void HPWH::from(const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(
+    const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);

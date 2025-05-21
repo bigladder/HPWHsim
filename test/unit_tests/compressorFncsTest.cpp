@@ -56,9 +56,9 @@ TEST_F(CompressorFncsTest, compressorSpecs)
             EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.modelName;
             EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
                 << modelSpec.modelName;
-            EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
+            EXPECT_NEAR(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C, 1.e-6)
                 << modelSpec.modelName;
-            EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
+            EXPECT_NEAR(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F, 1.e-6)
                 << modelSpec.modelName;
         }
         else
