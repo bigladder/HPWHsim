@@ -1370,6 +1370,10 @@ class HPWH : public Courier::Sender
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
 
+    //void makeTier3();
+
+    //void makeTier4();
+
     void convertMapToGrid();
 
   private:

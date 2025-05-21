@@ -2931,7 +2931,8 @@ void HPWH::initPreset(const std::string& modelName)
     HPWH::MODELS presetNum;
     if (getPresetNumberFromName(modelName, presetNum))
     {
-        initFromJSON(modelName);
+        init(presetNum);
+        //initFromJSON(modelName);
         //initPreset(presetNum);
     }
     else
@@ -3217,6 +3218,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
     // hard-code fix: two VIPs assigned in preset
     if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
     {
+        canScale = true;
         heatSources[0]->isVIP = heatSources[2]->isVIP = true;
         auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
             heatSources[compressorIndex]->shutOffLogicSet[0].get());

@@ -75,6 +75,8 @@ struct PerformanceMapTest : public testing::Test
         nlohmann::json j;
         hpwh_data_model::hpwh_sim_input::to_json(j, hsi0);
 
+        std::cout << j.dump(2);
+
         hpwh_data_model::hpwh_sim_input::from_json(j, hsi1);
         hpwh.from(hsi1);
     }
