@@ -1,9 +1,7 @@
-# 'poetry update lattice', if needed
 # 'poetry run python convert_models.py IHPWH_models.json ../../../build ../../../test/models_json'
 # or
 # 'poetry run python convert_models.py CWHS_models.json ../../../build ../../../test/models_json'
-# Generates hpwh-data-model source code based on schema in 'data_model'dir'
-# into 'src_out_dir'.
+# calls `hpwh convert' for each model in models_list_file json
 
 from pathlib import Path
 import os

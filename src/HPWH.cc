@@ -38,23 +38,24 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "HPWH.hh"
-#include "HPWHFitter.hh"
-#include "HPWHUtils.hh"
-#include "HPWHHeatingLogic.hh"
-#include "HPWHHeatSource.hh"
-#include "Tank.hh"
-#include "Condenser.hh"
-#include "Resistance.hh"
-
-#include <btwxt/btwxt.h>
-#include <fmt/format.h>
-
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <regex>
 #include <queue>
+
+#include <fmt/format.h>
+
+#include <btwxt/btwxt.h>
+
+#include "HPWH.hh"
+#include "HPWHUtils.hh"
+#include "HPWHFitter.hh"
+#include "HPWHHeatingLogic.hh"
+#include "HPWHHeatSource.hh"
+#include "Tank.hh"
+#include "Condenser.hh"
+#include "Resistance.hh"
 
 using std::cout;
 using std::endl;
@@ -217,6 +218,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     timerLimitTOT = hpwh.timerLimitTOT;
 
     usesSoCLogic = hpwh.usesSoCLogic;
+
+    productInformation = hpwh.productInformation;
 
     return *this;
 }
@@ -3086,6 +3089,9 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
+    productInformation.from(rswh);
+    rating10CFR430.from(rswh);
+
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;
@@ -3315,6 +3321,9 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         "RSINTEGRATEDWATERHEATER",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSINTEGRATEDWATERHEATER.schema.yaml");
+
+    productInformation.to(rswh);
+    rating10CFR430.to(rswh);
 
     auto& performance = rswh.performance;
 

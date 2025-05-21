@@ -1,5 +1,5 @@
 ﻿/*
- * Implementation of static HPWH utility functions
+ * Implementation of HPWH utility functions
  */
 
 #include "HPWH.hh"
