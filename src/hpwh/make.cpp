@@ -99,6 +99,8 @@ void make(const std::string& sSpecType,
         sSpecType_mod = "Preset";
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
+    else if (sSpecType_mod == "legacy")
+        sSpecType_mod = "Legacy";
 
     // Parse the model
     if (sSpecType_mod == "Preset")
@@ -108,6 +110,10 @@ void make(const std::string& sSpecType,
     else if (sSpecType_mod == "JSON")
     {
         hpwh.initFromJSON(modelName);
+    }
+    else if (sSpecType_mod == "Legacy")
+    {
+        hpwh.initLegacy(modelName);
     }
     else
     {

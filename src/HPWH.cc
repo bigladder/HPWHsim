@@ -808,6 +808,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
 
     bool returnVal = false;
 
+    constexpr double tolT_C = 1.e-9;
     if (isSetpointFixed())
     {
         returnVal = (newSetpoint_C == setpoint_C);
@@ -819,17 +820,16 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
     }
     else
     {
-
         if (hasACompressor())
         { // If there's a compressor lets check the new setpoint against the compressor's max
-          // setpoint
+            // setpoint
 
             auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
             maxAllowedSetpoint_C = cond_ptr->maxSetpoint_C -
                                    cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
-            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
+            if ((newSetpoint_C > maxAllowedSetpoint_C + tolT_C) && lowestElementIndex == -1)
             {
                 why = "The compressor cannot meet the setpoint temperature and there is no "
                       "resistance backup.";
@@ -845,7 +845,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
           // setpoint
 
             maxAllowedSetpoint_C = 100.;
-            if (newSetpoint_C > maxAllowedSetpoint_C)
+            if (newSetpoint_C > maxAllowedSetpoint_C + tolT_C)
             {
                 why = "The resistance elements cannot produce water this hot.";
                 returnVal = false;
@@ -1747,39 +1747,34 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
+    Condenser::Performance performance = {0., 0., 0.};
     if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-            cond_ptr->getCapacityMP(
-                airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            performance = cond_ptr->getPerformance(airTemp_C, averageTemp_C);
         }
         else
         {
-            cond_ptr->getCapacity(
-                airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
         }
     }
     else
     {
-        cond_ptr->getCapacity(
-            airTemp_C, inletTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
     }
 
-    double outputCapacity = capTemp_BTUperHr;
     switch (pwrUnit)
     {
     case UNITS_BTUperHr:
-        break;
+        return W_TO_BTUperH(performance.outputPower_W);
     case UNITS_KW:
-        outputCapacity = BTU_TO_KWH(capTemp_BTUperHr);
-        break;
+        return performance.outputPower_W / 1000.;
     default:
         send_error("Invalid units.");
     }
-
-    return outputCapacity;
+    return 0.;
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
@@ -2224,11 +2219,19 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
     }
 
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    for (auto& performancePoint : cond_ptr->performanceMap)
+
+    if (cond_ptr->useBtwxtGrid)
     {
-        scaleVector(performancePoint.inputPower_coeffs, scaleCapacity);
-        scaleVector(performancePoint.COP_coeffs, scaleCOP);
+        scaleVector(cond_ptr->perfGridValues[0], scaleCapacity);
+        scaleVector(cond_ptr->perfGridValues[1], scaleCOP);
+        cond_ptr->makeBtwxt();
     }
+    else
+        for (auto& performancePoint : cond_ptr->performanceMap)
+        {
+            scaleVector(performancePoint.inputPower_coeffs, scaleCapacity);
+            scaleVector(performancePoint.COP_coeffs, scaleCOP);
+        }
 }
 
 void HPWH::setCompressorOutputCapacity(double newCapacity,
@@ -2897,7 +2900,7 @@ bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS mo
     return true;
 }
 
-void HPWH::init(HPWH::MODELS presetNum)
+void HPWH::initPreset(HPWH::MODELS presetNum)
 {
     auto presetData = hpwh_presets::index.at(presetNum);
     nlohmann::json j =
@@ -2908,15 +2911,82 @@ void HPWH::init(HPWH::MODELS presetNum)
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     model = presetNum;
     from(hsi);
+
+    if (presetNum == MODELS_Scalable_MP)
+    {
+        canScale = true;
+        tank->volumeFixed = false;
+    }
+    // hard-code fix: two VIPs assigned in preset
+    if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
+    {
+        canScale = true;
+        tank->volumeFixed = false;
+        heatSources[0]->isVIP = heatSources[2]->isVIP = true;
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->checksStandby() = true;
+    }
+    if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
+        (model == MODELS_SANCO2_119) || (model == MODELS_SANCO2_43))
+    {
+        setpointFixed = true;
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+        logic->checksStandby() = true;
+    }
+    if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP))
+    {
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->turnOnLogicSet[1].get());
+        logic->checksStandby() = true;
+    }
+    if ((MODELS_NyleC25A_SP <= model) && (model <= MODELS_NyleC250A_C_SP))
+    {
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+    if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
+    {
+        auto& condenser = heatSources[compressorIndex];
+        auto offLogic = condenser->shutOffLogicSet[0];
+        offLogic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+    if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    {
+        auto& condenser = heatSources[compressorIndex];
+        auto offLogic = condenser->shutOffLogicSet[0];
+        offLogic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+   if (presetNum == MODELS_GE2012)
+    {
+        auto& condenser = heatSources[compressorIndex];
+        auto offLogic = condenser->shutOffLogicSet[0];
+        offLogic->description = "large draw";
+    }
+
+    // calculate oft-used derived values
+    calcDerivedValues();
+    checkInputs();
+    resetTankToSetpoint();
+    isHeating = false;
+    for (auto i = 0; i < getNumHeatSources(); i++)
+    {
+        if (heatSources[i]->isOn)
+        {
+            isHeating = true;
+        }
+    }
 }
 
-void HPWH::init(const std::string& presetName)
+void HPWH::initPreset(const std::string& presetName)
 {
     HPWH::MODELS presetNum;
     if (getPresetNumberFromName(presetName, presetNum))
     {
-        initFromJSON(presetName);
-        //initPreset(presetNum);
+        initPreset(presetNum);
         name = presetName;
     }
     else
@@ -2925,15 +2995,14 @@ void HPWH::init(const std::string& presetName)
     }
 }
 
+
 /// Initializes a preset from the modelName
-void HPWH::initPreset(const std::string& modelName)
+void HPWH::initLegacy(const std::string& modelName)
 {
     HPWH::MODELS presetNum;
     if (getPresetNumberFromName(modelName, presetNum))
     {
-        init(presetNum);
-        //initFromJSON(modelName);
-        //initPreset(presetNum);
+        initLegacy(presetNum);
     }
     else
     {
@@ -3097,19 +3166,6 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATE
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
-
-    // calculate oft-used derived values
-    calcDerivedValues();
-    checkInputs();
-    resetTankToSetpoint();
-    isHeating = false;
-    for (auto i = 0; i < getNumHeatSources(); i++)
-    {
-        if (heatSources[i]->isOn)
-        {
-            isHeating = true;
-        }
-    }
 }
 
 void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
@@ -3215,52 +3271,6 @@ void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeati
         }
     }
 
-    // hard-code fix: two VIPs assigned in preset
-    if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
-    {
-        canScale = true;
-        heatSources[0]->isVIP = heatSources[2]->isVIP = true;
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->shutOffLogicSet[0].get());
-        logic->checksStandby() = true;
-    }
-
-    if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
-        (model == MODELS_SANCO2_119) || (model == MODELS_SANCO2_43))
-    {
-        setpointFixed = true;
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->shutOffLogicSet[0].get());
-        logic->getIsEnteringWaterHighTempShutoff() = true;
-        logic->checksStandby() = true;
-    }
-
-    if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP))
-    {
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->turnOnLogicSet[1].get());
-        logic->checksStandby() = true;
-    }
-
-    if ((MODELS_NyleC25A_SP <= model) && (model <= MODELS_NyleC250A_C_SP))
-    {
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->shutOffLogicSet[0].get());
-        logic->getIsEnteringWaterHighTempShutoff() = true;
-    }
-
-    // calculate oft-used derived values
-    calcDerivedValues();
-    checkInputs();
-    resetTankToSetpoint();
-    isHeating = false;
-    for (auto i = 0; i < getNumHeatSources(); i++)
-    {
-        if (heatSources[i]->isOn)
-        {
-            isHeating = true;
-        }
-    }
 }
 
 void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
@@ -4331,4 +4341,85 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
     makeGenericEF(targetE50, testConfiguration_E50, designation);
     makeGenericEF(targetUEF, testConfiguration_UEF, designation);
     makeGenericEF(targetE95, testConfiguration_E95, designation);
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Replace compressor performance with that of AWHSTier3Generic
+//-----------------------------------------------------------------------------
+void HPWH::makeTier3()
+{
+    if (!hasACompressor())
+        return;
+
+    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    compressor->performanceMap.reserve(3);
+    compressor->performanceMap.clear();
+
+    compressor->performanceMap.push_back({
+        50,                           // Temperature (F)
+        {187.064124, 1.939747, 0.0},  // Input Power (W) Coefficients
+        {5.22288834, -0.0243008, 0.0} // COP Coefficients
+    });
+
+    compressor->performanceMap.push_back({
+        67.5,                            // Temperature (F)
+        {152.9195905, 2.476598, 0.0},    // Input Power (W) Coefficients
+        {6.643934986, -0.032373288, 0.0} // COP Coefficients
+    });
+
+    compressor->performanceMap.push_back({
+        95,                           // Temperature (F)
+        {99.263895, 3.320221, 0.0},   // Input Power (W) Coefficients
+        {8.87700829, -0.0450586, 0.0} // COP Coefficients
+
+    });
+
+    compressor->minT = F_TO_C(42.0);
+    compressor->maxT = F_TO_C(120.);
+    compressor->maxSetpoint_C = MAXOUTLET_R134A;
+
+    compressor->useBtwxtGrid = false;
+
+    compressor->fEvaluatePerformance = [compressor](const std::vector<double>& vars)
+    { return compressor->evaluatePerformanceIHPWH_legacy(vars); };
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Replace compressor performance with that of AWHSTier4Generic
+//-----------------------------------------------------------------------------
+void HPWH::makeTier4()
+{
+    if (!hasACompressor())
+        return;
+
+    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    compressor->performanceMap.reserve(3);
+    compressor->performanceMap.clear();
+
+    compressor->performanceMap.push_back({
+        50,                    // Temperature (F)
+        {126.9, 2.215, 0.0},   // Input Power (W) Coefficients
+        {6.931, -0.03395, 0.0} // COP Coefficients
+    });
+
+    compressor->performanceMap.push_back({
+        67.5,                  // Temperature (F)
+        {116.6, 2.467, 0.0},   // Input Power (W) Coefficients
+        {8.833, -0.04431, 0.0} // COP Coefficients
+    });
+
+    compressor->performanceMap.push_back({
+        95,                     // Temperature (F)
+        {100.4, 2.863, 0.0},    // Input Power (W) Coefficients
+        {11.822, -0.06059, 0.0} // COP Coefficients
+    });
+
+    compressor->minT = F_TO_C(37.);
+    compressor->maxT = F_TO_C(120.);
+    compressor->maxSetpoint_C = MAXOUTLET_R134A;
+
+    compressor->useBtwxtGrid = false;
+
+    compressor->fEvaluatePerformance = [compressor](const std::vector<double>& vars)
+    { return compressor->evaluatePerformanceIHPWH_legacy(vars); };
 }

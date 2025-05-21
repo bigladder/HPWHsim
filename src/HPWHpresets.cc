@@ -340,7 +340,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor->sortPerformanceMap();
 }
 
-void HPWH::initPreset(MODELS presetNum)
+void HPWH::initLegacy(MODELS presetNum)
 {
     setAllDefaults();
 
