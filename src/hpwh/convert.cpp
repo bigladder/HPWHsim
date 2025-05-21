@@ -58,6 +58,8 @@ void convert(const std::string& sSpecType,
         sSpecType_mod = "Preset";
     else if (sSpecType_mod == "json")
         sSpecType_mod = "JSON";
+    else if (sSpecType_mod == "legacy")
+        sSpecType_mod = "Legacy";
 
     HPWH hpwh;
     if (sSpecType_mod == "Preset")
@@ -71,7 +73,10 @@ void convert(const std::string& sSpecType,
     {
         hpwh.initFromJSON(modelName);
     }
-
+    else if (sSpecType_mod == "Legacy")
+    {
+        hpwh.initLegacy(modelName);
+    }
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh.to(hsi);
 

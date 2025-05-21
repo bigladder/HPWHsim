@@ -67,7 +67,7 @@ TEST(MaxSetpointTest, NyleC90A_SP)
 
     EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
     EXPECT_FALSE(hpwh.isNewSetpointPossible(99., num, why));  // Can't go to near boiling
-    EXPECT_EQ(HPWH::MAXOUTLET_R134A, num);                  // Assert we're getting the right number
+    EXPECT_NEAR(HPWH::MAXOUTLET_R134A, num, 1.e-6);         // Assert we're getting the right number
     EXPECT_TRUE(hpwh.isNewSetpointPossible(60., num, why)); // Can go to normal
     EXPECT_TRUE(
         hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max

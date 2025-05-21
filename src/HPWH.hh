@@ -639,7 +639,7 @@ class HPWH : public Courier::Sender
                                    double upperPower_W,
                                    double lowerPower_W);
 
-    /**< This function will initialize a HPWH object to be a generic resistance storage water
+    /**< This function will initialize a HPWH o`bject to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
      * Several assumptions regarding the tank configuration are assumed: the lower element
@@ -658,10 +658,10 @@ class HPWH : public Courier::Sender
     static bool getPresetNameFromNumber(std::string& modelName, const MODELS model);
     static bool getPresetNumberFromName(const std::string& modelName, MODELS& model);
 
-    void init(MODELS presetNum);
-    void init(const std::string& modelName);
-
     void initPreset(MODELS presetNum);
+    void initPreset(const std::string& modelName);
+
+    void initLegacy(MODELS presetNum);
 
     /**< This function will reset all member variables to defaults and then
      * load in a set of parameters that are hardcoded in this function -
@@ -671,7 +671,7 @@ class HPWH : public Courier::Sender
      * My impression is that this could be a useful input paradigm for CSE
      */
 
-    void initPreset(const std::string& modelName);
+    void initLegacy(const std::string& modelName);
 
 #ifndef HPWH_ABRIDGED
 
@@ -1370,9 +1370,9 @@ class HPWH : public Courier::Sender
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
 
-    //void makeTier3();
+    void makeTier3();
 
-    //void makeTier4();
+    void makeTier4();
 
     void convertMapToGrid();
 
