@@ -2901,26 +2901,9 @@ bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS mo
     return true;
 }
 
-void HPWH::initPreset(HPWH::MODELS presetNum)
-{
-    auto presetData = hpwh_presets::index.at(presetNum);
-    nlohmann::json j =
-        nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
-
-    hpwh_data_model::init(get_courier());
-    hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
-    hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
-    model = presetNum;
-    from(hsi);
-
-    // adjustments for non-data-model properties
-    if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
-    {
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->turnOnLogicSet[1].get());
-        logic->checksStandby() = true;
-    }
-    if (presetNum == MODELS_Scalable_MP)
+void HPWH::configure()
+{ // adjustments for non-data-model properties
+    if (model == MODELS_Scalable_MP)
     {
         canScale = true;
         tank->volumeFixed = false;
@@ -2957,28 +2940,30 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
             heatSources[compressorIndex]->shutOffLogicSet[0].get());
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
+    if (MODELS_ColmacCxV_5_SP <= model && model <= MODELS_ColmacCxA_30_SP)
     {
         auto& condenser = heatSources[compressorIndex];
         auto offLogic = condenser->shutOffLogicSet[0];
         offLogic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    if (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
         auto& condenser = heatSources[compressorIndex];
         auto offLogic = condenser->shutOffLogicSet[0];
         offLogic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    if (presetNum == MODELS_GE2012)
+    if (model == MODELS_GE2012)
     {
         auto& condenser = heatSources[compressorIndex];
         auto offLogic = condenser->shutOffLogicSet[0];
         offLogic->description = "large draw";
     }
-    if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+
+    if (MODELS_AOSmithHPTS40 <= model && model <= MODELS_AOSmithHPTS80)
     {
         auto& condenser = heatSources[compressorIndex];
         auto logic = reinterpret_cast<TempBasedHeatingLogic*>(condenser->turnOnLogicSet[1].get());
+        logic->getIsEnteringWaterHighTempShutoff() = false;
         logic->checksStandby() = true;
     }
 
@@ -2996,13 +2981,27 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
     }
 }
 
+void HPWH::initPreset(HPWH::MODELS presetNum)
+{
+    auto presetData = hpwh_presets::index.at(presetNum);
+    nlohmann::json j =
+        nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
+
+    hpwh_data_model::init(get_courier());
+    hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
+    hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
+    name = presetData.name;
+    model = presetNum;
+    from(hsi);
+    configure();
+}
+
 void HPWH::initPreset(const std::string& presetName)
 {
     HPWH::MODELS presetNum;
     if (getPresetNumberFromName(presetName, presetNum))
     {
         initPreset(presetNum);
-        name = presetName;
     }
     else
     {
@@ -3044,6 +3043,8 @@ void HPWH::initFromJSON(const std::string modelName)
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     from(hsi);
+
+    configure();
 }
 
 #endif
