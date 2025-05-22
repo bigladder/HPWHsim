@@ -96,29 +96,24 @@ void make(const std::string& sSpecType,
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
     if (sSpecType_mod == "preset")
-        sSpecType_mod = "Preset";
-    else if (sSpecType_mod == "json")
-        sSpecType_mod = "JSON";
-    else if (sSpecType_mod == "legacy")
-        sSpecType_mod = "Legacy";
-
-    // Parse the model
-    if (sSpecType_mod == "Preset")
     {
+        sSpecType_mod = "Preset";
         hpwh.initPreset(modelName);
     }
-    else if (sSpecType_mod == "JSON")
+    else if (sSpecType_mod == "json")
     {
+        sSpecType_mod = "JSON";
         hpwh.initFromJSON(modelName);
     }
-    else if (sSpecType_mod == "Legacy")
+    else if (sSpecType_mod == "legacy")
     {
+        sSpecType_mod = "Legacy";
         hpwh.initLegacy(modelName);
     }
     else
     {
-        std::cout << "Invalid argument, received '" << sSpecType_mod
-                  << "', expected 'Preset' or 'JSON'.\n";
+        cout << "Invalid argument, received '" << sSpecType_mod
+             << "', expected 'Preset' or 'JSON'.\n";
         exit(1);
     }
 
