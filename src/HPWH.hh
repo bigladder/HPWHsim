@@ -813,6 +813,10 @@ class HPWH : public Courier::Sender
 
     void configure();
 
+    /// init general
+    void init(const std::string& specType, const MODELS presetNum);
+    void init(const std::string& specType, const std::string& modelName);
+
     /// init legacy Preset
     void initLegacy(MODELS presetNum);
     void initLegacy(const std::string& modelName);
