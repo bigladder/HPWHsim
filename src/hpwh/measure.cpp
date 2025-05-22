@@ -9,8 +9,7 @@ namespace hpwh_cli
 {
 
 /// measure
-static void measure(const std::string& sSpecType,
-                    const std::string& modelName,
+static void measure(HPWH& hpwh,
                     std::string sOutputDir,
                     bool sSupressOutput,
                     std::string sResultsFilename,
@@ -21,12 +20,21 @@ CLI::App* add_measure(CLI::App& app)
 {
     const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
 
-    static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, JSON)");
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON)");
+
+    //
+    auto model_group = subcommand->add_option_group("model");
 
     static std::string modelName = "";
-    subcommand->add_option("-m,--model", modelName, "Model name")->required();
+    model_group->add_option("-m,--model", modelName, "Model name");
 
+    static int modelNumber = -1;
+    model_group->add_option("-n,--number", modelNumber, "Model number");
+
+    model_group->required(1);
+
+    //
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
@@ -42,11 +50,16 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sTestConfig = "UEF";
     subcommand->add_option("-c,--config", sTestConfig, "test configuration");
 
+    HPWH hpwh;
+    if (modelName != "")
+        hpwh.init(specType, modelName);
+    else if (modelNumber != -1)
+        hpwh.init(specType, static_cast<HPWH::MODELS>(modelNumber));
+
     subcommand->callback(
         [&]()
         {
-            measure(sSpecType,
-                    modelName,
+            measure(hpwh,
                     sOutputDir,
                     saveTestData,
                     sResultsFilename,
@@ -57,49 +70,13 @@ CLI::App* add_measure(CLI::App& app)
     return subcommand;
 }
 
-void measure(const std::string& sSpecType,
-             const std::string& modelName,
+void measure(HPWH& hpwh,
              std::string sOutputDir,
              bool saveTestData,
              std::string sResultsFilename,
              std::string drawProfileName,
              std::string sTestConfig)
 {
-    HPWH hpwh;
-
-    // process command line arguments
-    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (sSpecType_mod == "preset")
-    {
-        sSpecType_mod = "Preset";
-        hpwh.initPreset(modelName);
-    }
-    else if (sSpecType_mod == "json")
-    {
-        sSpecType_mod = "JSON";
-        hpwh.initFromJSON(modelName);
-    }
-    else if (sSpecType_mod == "legacy")
-    {
-        sSpecType_mod = "Legacy";
-        hpwh.initLegacy(modelName);
-    }
-    else
-    {
-        cout << "Invalid argument, received '" << sSpecType_mod
-             << "', expected 'Preset' or 'JSON'.\n";
-        exit(1);
-    }
-
     std::string results = "";
     auto designation = HPWH::FirstHourRating::Designation::Medium;
 

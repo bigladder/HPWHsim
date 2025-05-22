@@ -11,8 +11,8 @@ namespace hpwh_cli
 {
 
 /// make
-static void make(const std::string& sSpecType,
-                 const std::string& modelName,
+static void make(const std::string& specType,
+                 HPWH& hpwh,
                  double targetEF,
                  std::string sTestConfig,
                  std::string sOutputDir,
@@ -24,12 +24,21 @@ CLI::App* add_make(CLI::App& app)
 {
     const auto subcommand = app.add_subcommand("make", "Make a model with a specified EF");
 
-    static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "specification type (Preset)");
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "specification type (Preset)");
+
+    //
+    auto model_group = subcommand->add_option_group("model");
 
     static std::string modelName = "";
-    subcommand->add_option("-m,--model", modelName, "model name")->required();
+    model_group->add_option("-m,--model", modelName, "Model name");
 
+    static int modelNumber = -1;
+    model_group->add_option("-n,--number", modelNumber, "Model number");
+
+    model_group->required(1);
+
+    //
     static double targetUEF = -1.;
     subcommand->add_option("-e,--ef", targetUEF, "target EF")->required();
 
@@ -48,11 +57,17 @@ CLI::App* add_make(CLI::App& app)
     static std::string drawProfileName = "";
     subcommand->add_option("-p,--profile", drawProfileName, "Draw profile");
 
+    HPWH hpwh;
+    if (modelName != "")
+        hpwh.init(specType, modelName);
+    else if (modelNumber != -1)
+        hpwh.init(specType, static_cast<HPWH::MODELS>(modelNumber));
+
     subcommand->callback(
         [&]()
         {
-            make(sSpecType,
-                 modelName,
+            make(specType,
+                 hpwh,
                  targetUEF,
                  sTestConfig,
                  sOutputDir,
@@ -64,8 +79,8 @@ CLI::App* add_make(CLI::App& app)
     return subcommand;
 }
 
-void make(const std::string& sSpecType,
-          const std::string& modelName,
+void make(const std::string& specType,
+          HPWH &hpwh,
           double targetEF,
           std::string sTestConfig,
           std::string sOutputDir,
@@ -87,39 +102,9 @@ void make(const std::string& sSpecType,
     else
         testConfiguration = HPWH::testConfiguration_UEF;
 
-    HPWH hpwh;
-
-    // process command line arguments
-    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (sSpecType_mod == "preset")
-    {
-        sSpecType_mod = "Preset";
-        hpwh.initPreset(modelName);
-    }
-    else if (sSpecType_mod == "json")
-    {
-        sSpecType_mod = "JSON";
-        hpwh.initFromJSON(modelName);
-    }
-    else if (sSpecType_mod == "legacy")
-    {
-        sSpecType_mod = "Legacy";
-        hpwh.initLegacy(modelName);
-    }
-    else
-    {
-        cout << "Invalid argument, received '" << sSpecType_mod
-             << "', expected 'Preset' or 'JSON'.\n";
-        exit(1);
-    }
-
     std::string results = "";
-    results.append(fmt::format("\tSpecification Type: {}\n", sSpecType_mod));
-    results.append(fmt::format("\tModel Name: {}\n", modelName));
+    results.append(fmt::format("\tSpecification Type: {}\n", specType));
+    results.append(fmt::format("\tModel Name: {}\n", hpwh.name));
 
     auto designation = HPWH::FirstHourRating::Designation::Medium;
     if (drawProfileName != "")
@@ -163,7 +148,7 @@ void make(const std::string& sSpecType,
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
-        std::string sOutputFilename = "test24hr_" + sSpecType_mod + "_" + modelName + ".csv";
+        std::string sOutputFilename = "test24hr_" + specType + "_" + hpwh.name + ".csv";
         if (sOutputDir != "")
             sOutputFilename = sOutputDir + "/" + sOutputFilename;
         outputFile.open(sOutputFilename.c_str(), std::ifstream::out);

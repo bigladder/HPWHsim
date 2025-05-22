@@ -28,7 +28,7 @@ def convert_models(models_list_file, build_dir, output_dir):
       os.mkdir(output_dir)
 
     for model in json_data:  
-      convert_list = [app_cmd, 'convert', '-m', str(model["number"]), '-n', '-d', output_dir, '-f', model["name"]]
+      convert_list = [app_cmd, 'convert', '-n', str(model["number"]), '-d', output_dir, '-f', model["name"]]
       print(convert_list)
       result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)
 

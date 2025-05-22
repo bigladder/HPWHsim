@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <fmt/format.h>
 
-using std::cout;
 using std::endl;
 using std::ifstream;
 using std::string;
@@ -100,7 +99,7 @@ void run(const std::string& sSpecType,
     string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
     string strHeadSoC = "targetSoCFract,soCFract,";
 
-    cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
+    std::cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
     if (airTemp > 0.)
     {
@@ -135,8 +134,8 @@ void run(const std::string& sSpecType,
     }
     else
     {
-        cout << "Invalid argument, received '" << sSpecType_mod
-             << "', expected 'Preset' or 'JSON'.\n";
+        std::cout << "Invalid argument, received '" << sSpecType_mod
+                  << "', expected 'Preset' or 'JSON'.\n";
         exit(1);
     }
 
@@ -165,7 +164,7 @@ void run(const std::string& sSpecType,
     controlFile.open(fileToOpen.c_str());
     if (!controlFile.is_open())
     {
-        cout << "Could not open control file " << fileToOpen << "\n";
+        std::cout << "Could not open control file " << fileToOpen << "\n";
         exit(1);
     }
     outputCode = 0;
@@ -180,7 +179,7 @@ void run(const std::string& sSpecType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    cout << "Running: " << modelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
+    std::cout << "Running: " << modelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -223,13 +222,13 @@ void run(const std::string& sSpecType,
         }
         else
         {
-            cout << var1 << " in testInfo.txt is an unrecogized key.\n";
+            std::cout << var1 << " in testInfo.txt is an unrecogized key.\n";
         }
     }
 
     if (minutesToRun == 0)
     {
-        cout << "Error, must record length_of_test in testInfo.txt file\n";
+        std::cout << "Error, must record length_of_test in testInfo.txt file\n";
         exit(1);
     }
 
@@ -251,7 +250,8 @@ void run(const std::string& sSpecType,
         {
             if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC")
             {
-                cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
+                std::cout << "readSchedule returns an error on " << scheduleNames[i]
+                          << " schedule!\n";
                 exit(1);
             }
             else
@@ -309,7 +309,7 @@ void run(const std::string& sSpecType,
     {
         if (allSchedules[6].empty())
         {
-            cout << "If useSoC is true need an SoCschedule.csv file \n";
+            std::cout << "If useSoC is true need an SoCschedule.csv file \n";
         }
         hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
     }
@@ -323,7 +323,7 @@ void run(const std::string& sSpecType,
         yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
         if (!yearOutFile.is_open())
         {
-            cout << "Could not open output file " << fileToOpen << "\n";
+            std::cout << "Could not open output file " << fileToOpen << "\n";
             exit(1);
         }
     }
@@ -335,7 +335,7 @@ void run(const std::string& sSpecType,
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
-            cout << "Could not open output file " << fileToOpen << "\n";
+            std::cout << "Could not open output file " << fileToOpen << "\n";
             exit(1);
         }
 
@@ -353,7 +353,7 @@ void run(const std::string& sSpecType,
     }
 
     // ------------------------------------- Simulate --------------------------------------- //
-    cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
+    std::cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
     std::vector<double> nodeExtraHeat_W;
     std::vector<double>* vectptr = NULL;
@@ -411,7 +411,7 @@ void run(const std::string& sSpecType,
         if (!hpwh.isEnergyBalanced(
                 GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
         {
-            cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
+            std::cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
             exit(1);
         }
 
@@ -420,9 +420,9 @@ void run(const std::string& sSpecType,
         {
             if (hpwh.getNthHeatSourceRunTime(iHS) > 1)
             {
-                cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for "
-                     << hpwh.getNthHeatSourceRunTime(iHS) << "minutes"
-                     << "\n";
+                std::cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for "
+                          << hpwh.getNthHeatSourceRunTime(iHS) << "minutes"
+                          << "\n";
                 exit(1);
             }
         }
@@ -434,9 +434,10 @@ void run(const std::string& sSpecType,
                                       hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
-                cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
-                     << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: " << mpFlowVolume_Gal
-                     << "\n";
+                std::cout
+                    << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
+                    << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: " << mpFlowVolume_Gal
+                    << "\n";
                 // exit(1);
             }
         }
@@ -516,7 +517,7 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
     double valTmp;
     ifstream inputFile(scheduleFileName.c_str());
     // open the schedule file provided
-    cout << "Opening " << scheduleFileName << '\n';
+    std::cout << "Opening " << scheduleFileName << '\n';
 
     if (!inputFile.is_open())
     {
@@ -524,14 +525,14 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
     }
 
     inputFile >> snippet >> valTmp;
-    // cout << "snippet " << snippet << " valTmp"<< valTmp<<'\n';
+    // std::cout << "snippet " << snippet << " valTmp"<< valTmp<<'\n';
 
     if (snippet != "default")
     {
-        cout << "First line of " << scheduleFileName << " must specify default\n";
+        std::cout << "First line of " << scheduleFileName << " must specify default\n";
         return 1;
     }
-    // cout << valTmp << " minutes = " << minutesOfTest << "\n";
+    // std::cout << valTmp << " minutes = " << minutesOfTest << "\n";
 
     // Fill with the default value
     scheduleArray.assign(minutesOfTest, valTmp);
@@ -555,8 +556,8 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
         if (minuteHrTmp >= (int)scheduleArray.size())
         {
-            cout << "In " << scheduleFileName
-                 << " the input file has more minutes than the test was defined with\n";
+            std::cout << "In " << scheduleFileName
+                      << " the input file has more minutes than the test was defined with\n";
             return 1;
         }
         // Update the value
@@ -569,7 +570,8 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
             for (int j = minuteHrTmp * 60; j < (minuteHrTmp + 1) * 60; j++)
             {
                 scheduleArray[j] = valTmp;
-                // cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
+                // std::cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" <<
+                // (minuteHrTmp)<<"\n";
             }
         }
     }
