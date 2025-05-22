@@ -813,27 +813,17 @@ class HPWH : public Courier::Sender
 
     void configure();
 
+    /// init legacy Preset
+    void initLegacy(MODELS presetNum);
+    void initLegacy(const std::string& modelName);
+
+    /// init Preset from embedded CBOR representation
     void initPreset(MODELS presetNum);
     void initPreset(const std::string& modelName);
 
-    void initLegacy(MODELS presetNum);
-
-    /**< This function will reset all member variables to defaults and then
-     * load in a set of parameters that are hardcoded in this function -
-     * which particular set of parameters is selected by presetNum.
-     * This is similar to the way the HPWHsim currently operates, as used in SEEM,
-     * but not quite as versatile.
-     * My impression is that this could be a useful input paradigm for CSE
-     */
-
-    void initLegacy(const std::string& modelName);
-
-#ifndef HPWH_ABRIDGED
-
+    /// init from JSON file in test/models_json
     void initFromJSON(const std::string modelName);
     void initFromJSON(const MODELS presetNumber);
-
-#endif
 
     void runOneStep(double drawVolume_L,
                     double ambientT_C,
