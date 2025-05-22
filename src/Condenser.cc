@@ -155,6 +155,18 @@ void arrangeGridVector(std::vector<double>& V)
     }
 }
 
+void trimGridVector(std::vector<double>& V, const double minT, const double maxT)
+{
+    arrangeGridVector(V);
+    auto copyV = V;
+    V.clear();
+    for (auto& x : copyV) // skip duplicates
+    {
+        if ((minT <= x) && (x <= maxT))
+            V.push_back(x);
+    }
+}
+
 bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
 {
     // if it's already locked out, keep it locked out
@@ -570,7 +582,6 @@ void HPWH::Condenser::to(
     if (useBtwxtGrid)
     {
         auto& map = perf.performance_map;
-
         auto& grid_vars = map.grid_variables;
 
         //
@@ -579,13 +590,11 @@ void HPWH::Condenser::to(
         envTemps_K.reserve(perfGrid[0].size());
         for (auto T : perfGrid[0])
         {
-            envTemps_K.push_back(C_TO_K(T));
+            envTemps_K.push_back(C_TO_K(F_TO_C(T)));
         }
-        if (K_TO_C(envTemps_K.front()) > minT)
-            envTemps_K.push_back(C_TO_K(minT));
-        if (K_TO_C(envTemps_K.back()) < maxT)
-            envTemps_K.push_back(C_TO_K(maxT));
-        arrangeGridVector(envTemps_K);
+        envTemps_K.push_back(C_TO_K(minT));
+        envTemps_K.push_back(C_TO_K(maxT));
+        trimGridVector(envTemps_K, C_TO_K(minT), C_TO_K(maxT));
 
         checkTo(envTemps_K,
                 grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
@@ -751,9 +760,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             for (auto& outletTemp_K : outletTemps_K)
                 for (auto& heatSourceTemp_K : heatSourceTemps_K)
                 {
-                    std::vector<double> target = {K_TO_C(envTemp_K),
-                                                  K_TO_C(outletTemp_K),
-                                                  K_TO_C(heatSourceTemp_K)};
+                    std::vector<double> target = {
+                        K_TO_C(envTemp_K), K_TO_C(outletTemp_K), K_TO_C(heatSourceTemp_K)};
                     std::vector<double> result = perfRGI->get_values_at_target(target);
 
                     inputPowers_W[i] = result[0];
@@ -1477,9 +1485,9 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     {
         { // fill vector of environment temps, selected from tests
             std::vector<double> testEnvTemps_C = {
-                0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,       5.,   5.5,
-                6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,       10.5, 11.,
-                11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556};
+                0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,        5.,   5.5,
+                6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,        10.5, 11.,
+                11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556, 20.,  30.};
 
             envTemps_K.push_back(C_TO_K(minT));
             for (auto& T_C : testEnvTemps_C)
@@ -1497,21 +1505,29 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                     C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC)};
             else
             {
-                double standardOutletT_K =
-                    C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
                 outletTemps_K.reserve(3);
-                outletTemps_K.push_back(standardOutletT_K);
+                outletTemps_K.push_back(
+                    C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
 
-                if (maxOut_at_LowT.airT_C > K_TO_C(envTemps_K.front()))
-                    outletTemps_K.push_back(C_TO_K(maxOut_at_LowT.outT_C));
+                outletTemps_K.push_back(C_TO_K(maxOut_at_LowT.outT_C));
 
-                const double highestTestSetpoint_C = 65.; // from testLargeCompHot
-                if (highestTestSetpoint_C < maxSetpoint_C)
-                    outletTemps_K.push_back(
-                        C_TO_K(highestTestSetpoint_C +
-                               secondaryHeatExchanger.hotSideTemperatureOffset_dC));
+                // from testSoCSetpointChange
+                outletTemps_K.push_back(
+                    C_TO_K(50. + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
 
-                arrangeGridVector(outletTemps_K);
+                // from testSoCSetpointChange
+                outletTemps_K.push_back(
+                    C_TO_K(55. + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
+
+                // from testSoCSetpointChange
+                outletTemps_K.push_back(
+                    C_TO_K(65. + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
+
+                // from testLargeCompHot
+                outletTemps_K.push_back(
+                    C_TO_K(93. + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
+
+                trimGridVector(outletTemps_K, C_TO_K(0.), C_TO_K(100.));
             }
         }
 
