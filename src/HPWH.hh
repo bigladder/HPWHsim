@@ -811,6 +811,8 @@ class HPWH : public Courier::Sender
     static bool getPresetNameFromNumber(std::string& modelName, const MODELS model);
     static bool getPresetNumberFromName(const std::string& modelName, MODELS& model);
 
+    void configure();
+
     void initPreset(MODELS presetNum);
     void initPreset(const std::string& modelName);
 
