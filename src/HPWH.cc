@@ -2914,6 +2914,12 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
     from(hsi);
 
     // adjustments for non-data-model properties
+    if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+    {
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
+            heatSources[compressorIndex]->turnOnLogicSet[1].get());
+        logic->checksStandby() = true;
+    }
     if (presetNum == MODELS_Scalable_MP)
     {
         canScale = true;
@@ -2968,6 +2974,12 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
         auto& condenser = heatSources[compressorIndex];
         auto offLogic = condenser->shutOffLogicSet[0];
         offLogic->description = "large draw";
+    }
+    if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+    {
+        auto& condenser = heatSources[compressorIndex];
+        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(condenser->turnOnLogicSet[1].get());
+        logic->checksStandby() = true;
     }
 
     // calculate oft-used derived values
