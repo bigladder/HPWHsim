@@ -18,17 +18,17 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
 
-    void
-    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const override;
-    void
-    to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& cond_ptr) const;
-    void to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& atwhp_ptr) const;
+    Description description;
+    ProductInformation productInformation;
 
+    void to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) const override;
+    void to(hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs) const;
+    void to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& p_rshs) const;
+
+    void from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) override;
     void
-    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) override;
-    void
-    from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& cond_ptr);
-    void from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& atwhp_ptr);
+    from(const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& p_rshs);
+    void from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& p_rshs);
 
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 
@@ -87,30 +87,6 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
 
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double setpointTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop);
-
-    void getCapacityMP(double externalT_C,
-                       double condenserTemp_C,
-                       double& input_BTUperHr,
-                       double& cap_BTUperHr,
-                       double& cop);
-
-    /** An overloaded function that uses uses the setpoint temperature  */
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop)
-    {
-        getCapacity(
-            externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
-    };
-
     bool doDefrost;
     /**<  If and only if true will derate the COP of a compressor to simulate a defrost cycle  */
 
@@ -147,11 +123,10 @@ class HPWH::Condenser : public HPWH::HeatSource
         double coldSideTemperatureOffset_dC;
         double hotSideTemperatureOffset_dC;
         double extraPumpPower_W;
-    };
-
-    SecondaryHeatExchanger secondaryHeatExchanger; /**< adjustments for a approximating a secondary
-      heat exchanger by adding extra input energy for the pump and an increaes in the water to the
-      incoming waater temperature to the heatpump*/
+    } secondaryHeatExchanger;
+    /**< adjustments for a approximating a secondary
+    heat exchanger by adding extra input energy for the pump and an increaes in the water to the
+    incoming waater temperature to the heatpump*/
 
     /// Polynomials for evaluating input power and COP.
     /// Three different representations of the temperature variations are used:
@@ -176,35 +151,32 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// Only the first entry is used for cases 2. and 3.
     std::vector<PerformancePoint> performanceMap;
 
+    struct Performance
+    {
+        double inputPower_W;
+        double outputPower_W;
+        double cop;
+    };
+
+    Performance evaluatePerformanceIHPWH(const std::vector<double>& vars);
+    Performance evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars);
+
+    Performance evaluatePerformanceCWHS_SP(const std::vector<double>& vars);
+    Performance evaluatePerformanceCWHS_MP(const std::vector<double>& vars);
+
+    std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance;
+
+    /// note: uses fEvaluatePerformance
+    Performance getPerformance(double externalT_C, double condenserT_C) const;
+
+    void setEvaluatePerformanceFunction();
+
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
     /**< Does a simple linear interpolation between two points to the xnew point */
 
-    static void regressedMethod(
-        double& ynew, const std::vector<double>& coefficents, double x1, double x2, double x3);
-    /**< Does a calculation based on the ten term regression equation  */
-
-    static void
-    regressedMethodMP(double& ynew, const std::vector<double>& coefficents, double x1, double x2);
-    /**< Does a calculation based on the five term regression equation for MP split systems  */
-
+    /// pick the nearest temperature index
     int getAmbientT_index(double ambientT_C);
-
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double outletT_C,
-                            double& input_BTUperHr,
-                            double& cop) const;
-
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double& input_BTUperHr,
-                            double& cop) const;
-
-    void makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
-                         std::vector<std::vector<double>>& tempGridValues) const;
-
-    void convertMapToGrid();
 
     double standbyPower_kW;
 
@@ -218,20 +190,12 @@ class HPWH::Condenser : public HPWH::HeatSource
     bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
                                                   pass is multipass*/
 
-    double addHeatExternal(double externalT_C,
-                           double minutesToRun,
-                           double& cap_BTUperHr,
-                           double& input_BTUperHr,
-                           double& cop);
+    double addHeatExternal(double externalT_C, double minutesToRun, Performance& performance);
     /**<  Add heat from a source outside of the tank. Assume the condensity is where
         the water is drawn from and hot water is put at the top of the tank. */
 
     /// Add heat from external source using a multi-pass configuration
-    double addHeatExternalMP(double externalT_C,
-                             double minutesToRun,
-                             double& cap_BTUperHr,
-                             double& input_BTUperHr,
-                             double& cop);
+    double addHeatExternalMP(double externalT_C, double minutesToRun, Performance& netPerformance);
 
     void sortPerformanceMap();
     /**< sorts the Performance Map by increasing external temperatures */
@@ -241,6 +205,11 @@ class HPWH::Condenser : public HPWH::HeatSource
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
 
     void makeBtwxt();
+
+    void makeGridFromLegacyMap(std::vector<std::vector<double>>& tempGrid,
+                               std::vector<std::vector<double>>& tempGridValues) const;
+
+    void convertLegacyMapToGrid();
 };
 
 #endif
