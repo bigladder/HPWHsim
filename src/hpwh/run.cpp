@@ -127,11 +127,6 @@ void run(const std::string& sSpecType,
         sSpecType_mod = "JSON";
         hpwh.initFromJSON(modelName);
     }
-    else if (sSpecType_mod == "legacy")
-    {
-        sSpecType_mod = "Legacy";
-        hpwh.initLegacy(modelName);
-    }
     else
     {
         std::cout << "Invalid argument, received '" << sSpecType_mod

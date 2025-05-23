@@ -25,7 +25,7 @@ CLI::App* add_make(CLI::App& app)
     const auto subcommand = app.add_subcommand("make", "Make a model with a specified EF");
 
     static std::string specType = "Preset";
-    subcommand->add_option("-s,--spec", specType, "specification type (Preset)");
+    subcommand->add_option("-s,--spec", specType, "specification type (Preset, JSON)");
 
     //
     auto model_group = subcommand->add_option_group("model");

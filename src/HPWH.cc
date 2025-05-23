@@ -3013,21 +3013,6 @@ void HPWH::configure()
     }
 }
 
-/// Initializes a preset from the modelName
-void HPWH::initLegacy(const std::string& modelName)
-{
-    HPWH::MODELS presetNum;
-    if (getPresetNumberFromName(modelName, presetNum))
-    {
-        initLegacy(presetNum);
-    }
-    else
-    {
-        send_error("Unable to initialize model.");
-    }
-    name = modelName;
-}
-
 void HPWH::initPreset(HPWH::MODELS presetNum)
 {
     auto presetData = hpwh_presets::index.at(presetNum);
@@ -3094,11 +3079,6 @@ void HPWH::init(const std::string& specType, const MODELS presetNum)
         specType_mod = "JSON";
         initFromJSON(presetNum);
     }
-    else if (specType_mod == "legacy")
-    {
-        specType_mod = "Legacy";
-        initLegacy(presetNum);
-    }
     else
     {
         send_error(fmt::format("Invalid specification type: '{}'\n", specType_mod));
@@ -3123,11 +3103,6 @@ void HPWH::init(const std::string& specType, const std::string& modelName)
     {
         specType_mod = "JSON";
         initFromJSON(model);
-    }
-    else if (specType_mod == "legacy")
-    {
-        specType_mod = "Legacy";
-        initLegacy(model);
     }
     else
     {
@@ -3526,22 +3501,6 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
     cwhs.heat_source_configurations_is_set = true;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	convert condenser performance map to grid representation
-//-----------------------------------------------------------------------------
-void HPWH::convertMapToGrid()
-{
-    if (!hasACompressor())
-    {
-        send_error("Current model does not have a compressor.");
-    }
-
-    auto condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    if (!condenser->useBtwxtGrid)
-    {
-        condenser->convertMapToGrid();
-    }
-}
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prepare for test
 ///         Draw until heating begins, wait for recovery.
