@@ -46,8 +46,7 @@ CLI::App* add_convert(CLI::App& app)
     else if (modelNumber != -1)
         hpwh.init(specType, static_cast<HPWH::MODELS>(modelNumber));
 
-    subcommand->callback(
-        [&]() { convert(specType, hpwh, sOutputDir, sOutputFilename); });
+    subcommand->callback([&]() { convert(specType, hpwh, sOutputDir, sOutputFilename); });
 
     return subcommand;
 }
@@ -73,7 +72,8 @@ void convert(const std::string& specType,
     outputFile.open(sOutputFilename.c_str(), std::ifstream::out);
     if (!outputFile.is_open())
     {
-        hpwh.get_courier()->send_error(fmt::format("Could not open output file {}\n", sOutputFilename));
+        hpwh.get_courier()->send_error(
+            fmt::format("Could not open output file {}\n", sOutputFilename));
     }
     outputFile << j.dump(2);
     outputFile.close();

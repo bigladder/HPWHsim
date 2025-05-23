@@ -80,7 +80,7 @@ CLI::App* add_make(CLI::App& app)
 }
 
 void make(const std::string& specType,
-          HPWH &hpwh,
+          HPWH& hpwh,
           double targetEF,
           std::string sTestConfig,
           std::string sOutputDir,
