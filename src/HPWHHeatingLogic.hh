@@ -6,8 +6,8 @@
 struct HPWH::HeatingLogic
 {
   public:
-    static const int LOGIC_SIZE =
-        12; /**< number of logic nodes associated with temperature-based heating logic */
+    static const int LOGIC_SIZE = 12;
+    /**< number of logic nodes associated with temperature-based heating logic */
 
     std::string description;
     std::function<bool(double, double)> compare;
@@ -87,7 +87,6 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setConstantMainsTemperature(double mains_C);
 
-    // void to(hpwh_data_model::rsintegratedwaterheater::SoCBasedHeatingLogic& heating_logic);
     void to(hpwh_data_model::heat_source_configuration::HeatingLogic& heatingLogic) const override;
 
   private:
@@ -107,9 +106,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           bool a = false,
                           std::function<bool(double, double)> c = std::less<double>(),
                           bool isHTS = false,
-                          bool checkStandby = false);
-
-    //: HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n)  {}
+                          bool checkStandby_in = false);
 
     TempBasedHeatingLogic(std::string desc,
                           Distribution dist_in,
@@ -118,8 +115,8 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           bool a = false,
                           std::function<bool(double, double)> c = std::less<double>(),
                           bool isHTS = false,
-                          bool checkStandby = false)
-        : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS, checkStandby)
+                          bool checkStandby_in = false)
+        : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS, checkStandby_in)
         , isAbsolute(a)
         , dist(dist_in)
     {

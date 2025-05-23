@@ -398,20 +398,20 @@ void HPWH::runOneStep(double drawVolume_L,
             // going through in order, check if the heat source is on
             if (heatSources[i]->isEngaged())
             {
-
                 HeatSource* heatSourcePtr;
                 if (heatSources[i]->isLockedOut() && heatSources[i]->backupHeatSource != NULL)
                 {
-
-                    // Check that the backup isn't locked out too or already engaged then it will
-                    // heat on its own.
+                    // std::cout << "\t" << i << ": locked out and backup not null.\n";
+                    //  Check that the backup isn't locked out too or already engaged then it will
+                    //  heat on its own.
                     bool shouldLockOut =
                         heatSources[i]->backupHeatSource->isEngaged() ||
                         shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
                                         DRstatus);
                     if (heatSources[i]->backupHeatSource->typeOfHeatSource() == TYPE_compressor)
                     {
-                        auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
+                        auto condenser =
+                            reinterpret_cast<Condenser*>(heatSources[i]->backupHeatSource);
                         shouldLockOut |= condenser->toLockOrUnlock(heatSourceAmbientT_C);
                     }
                     else if (heatSources[i]->typeOfHeatSource() == TYPE_resistance)
@@ -419,6 +419,7 @@ void HPWH::runOneStep(double drawVolume_L,
                         auto resistance = reinterpret_cast<Resistance*>(heatSources[i].get());
                         shouldLockOut |= resistance->toLockOrUnlock();
                     }
+
                     if (shouldLockOut)
                     {
                         continue;
@@ -629,8 +630,8 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
 
         // Check the air temprature and setpoint against maxOut_at_LowT
         double tempSetpoint_C = -273.15;
-        if (heatSourceAmbientT_C <= cond_ptr->maxOut_at_LowT.airT_C &&
-            setpoint_C >= cond_ptr->maxOut_at_LowT.outT_C)
+        if ((heatSourceAmbientT_C <= cond_ptr->maxOut_at_LowT.airT_C) &&
+            (setpoint_C >= cond_ptr->maxOut_at_LowT.outT_C))
         {
             tempSetpoint_C = setpoint_C; // Store setpoint
             setSetpoint(cond_ptr->maxOut_at_LowT
@@ -1737,7 +1738,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
 
     if (airTemp_C + tolT_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT + tolT_C)
     {
-        send_error("The compress does not operate at the specified air temperature.");
+        send_error("The compressor does not operate at the specified air temperature.");
     }
 
     double maxAllowedSetpoint_C =
@@ -2903,53 +2904,43 @@ bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS mo
 
 void HPWH::configure()
 { // adjustments for non-data-model properties
-    if ((MODELS_AOSmithHPTS40 <= model) && (model <= MODELS_AOSmithHPTS80))
+    if (model == MODELS_GE2012)
     {
         auto& condenser = heatSources[compressorIndex];
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(condenser->turnOnLogicSet[1].get());
-        logic->getIsEnteringWaterHighTempShutoff() = false;
-        logic->checksStandby() = true;
-    }
-    else if (model == MODELS_GE2012)
-    {
-        auto& condenser = heatSources[compressorIndex];
-        auto offLogic = condenser->shutOffLogicSet[0];
-        offLogic->description = "large draw";
+        auto logic = condenser->shutOffLogicSet[0];
+        logic->description = "large draw";
     }
     else if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
              (model == MODELS_SANCO2_119) || (model == MODELS_SANCO2_43))
     {
         setpointFixed = true;
         {
-            auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-                heatSources[compressorIndex]->shutOffLogicSet[0].get());
+            auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
             logic->getIsEnteringWaterHighTempShutoff() = true;
             logic->checksStandby() = true;
         }
         if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP))
         {
-            auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-                heatSources[compressorIndex]->turnOnLogicSet[1].get());
+            auto logic = heatSources[compressorIndex]->turnOnLogicSet[1];
             logic->checksStandby() = true;
         }
     }
     else if ((MODELS_NyleC25A_SP <= model) && (model <= MODELS_NyleC250A_C_SP))
     {
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
     else if ((MODELS_ColmacCxV_5_SP <= model) && (model <= MODELS_ColmacCxA_30_SP))
     {
         auto& condenser = heatSources[compressorIndex];
-        auto offLogic = condenser->shutOffLogicSet[0];
-        offLogic->getIsEnteringWaterHighTempShutoff() = true;
+        auto logic = condenser->shutOffLogicSet[0];
+        logic->getIsEnteringWaterHighTempShutoff() = true;
     }
     else if (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
         auto& condenser = heatSources[compressorIndex];
-        auto offLogic = condenser->shutOffLogicSet[0];
-        offLogic->getIsEnteringWaterHighTempShutoff() = true;
+        auto logic = condenser->shutOffLogicSet[0];
+        logic->getIsEnteringWaterHighTempShutoff() = true;
     }
     else if (model == MODELS_Scalable_MP)
     {
@@ -2960,14 +2951,54 @@ void HPWH::configure()
     {
         canScale = true;
         tank->volumeFixed = false;
-        heatSources[0]->isVIP = heatSources[2]->isVIP =
-            true; // hard-code fix: two VIPs assigned in preset
-        auto logic = reinterpret_cast<TempBasedHeatingLogic*>(
-            heatSources[compressorIndex]->shutOffLogicSet[0].get());
+
+        // hard-code fix: two VIPs assigned in preset
+        heatSources[0]->isVIP = heatSources[2]->isVIP = true;
+
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
         logic->checksStandby() = true;
     }
+    /*
+        for (auto& heatSource: heatSources)
+        {
+            std::cout << "heat source: \n";
+            for (auto& logic: heatSource->turnOnLogicSet)
+            {
+                std::cout << "\tturn-on logic\n";
+                std::cout << "\t\tdecision point: " << logic->getDecisionPoint() << "\n";
+                std::cout << "\t\tisEnteringWaterHighTempShutoff: "
+                          << (logic->getIsEnteringWaterHighTempShutoff() ? " true" : "false") <<
+       "\n"; std::cout << "\t\tchecksStandby: " << (logic->checksStandby() ? " true" : "false") <<
+       "\n";
+            }
+            for (auto& logic: heatSource->shutOffLogicSet)
+            {
+                std::cout << "\tshut-off logic\n";
+                std::cout << "\t\tdecision point: " << logic->getDecisionPoint() << "\n";
+                std::cout << "\t\tisEnteringWaterHighTempShutoff: "
+                          << (logic->getIsEnteringWaterHighTempShutoff() ? " true" : "false") <<
+       "\n"; std::cout << "\t\tchecksStandby: " << (logic->checksStandby() ? " true" : "false") <<
+       "\n";
+            }
 
+            if (heatSource->backupHeatSource != NULL)
+            {
+                std::cout << "\tbackup: "
+                          << heatSource->backupHeatSource->name << "\n";
+            }
+            if (heatSource->companionHeatSource != NULL)
+            {
+                std::cout << "\tcompanion: "
+                          << heatSource->companionHeatSource->name << "\n";
+            }
+            if (heatSource->followedByHeatSource != NULL)
+            {
+                std::cout << "\tfollowed-by: "
+                          << heatSource->followedByHeatSource->name << "\n";
+            }
+        }
+    */
     // calculate oft-used derived values
     calcDerivedValues();
     checkInputs();
