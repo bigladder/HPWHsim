@@ -176,27 +176,28 @@ bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
     }
     else
     {
+        constexpr double tolT_C = 1.e-9;
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() && (heatSourceAmbientT_C < minT - hysteresis_dC))
+        if (isEngaged() && (heatSourceAmbientT_C + tolT_C < minT - hysteresis_dC))
         {
             lock = true;
         }
         // when not running, don't use hysteresis
-        else if (!isEngaged() && (heatSourceAmbientT_C < minT))
+        else if (!isEngaged() && (heatSourceAmbientT_C + tolT_C < minT))
         {
             lock = true;
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
         // when running, use hysteresis
-        if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC))
+        if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC + tolT_C))
         {
             lock = true;
         }
         // when not running, don't use hysteresis
-        else if (!isEngaged() && (heatSourceAmbientT_C > maxT))
+        else if (!isEngaged() && (heatSourceAmbientT_C > maxT + tolT_C))
         {
             lock = true;
         }
@@ -226,16 +227,18 @@ bool HPWH::Condenser::shouldUnlock(double heatSourceAmbientT_C) const
     }
     else
     {
+        constexpr double tolT_C = 1.e-9;
         // when the "external" temperature is no longer too cold or too warm
         // when running, use hysteresis
         bool unlock = false;
-        if (isEngaged() && (heatSourceAmbientT_C > minT + hysteresis_dC) &&
-            (heatSourceAmbientT_C < maxT - hysteresis_dC))
+        if (isEngaged() && (heatSourceAmbientT_C > minT + hysteresis_dC + tolT_C) &&
+            (heatSourceAmbientT_C + tolT_C < maxT - hysteresis_dC))
         {
             unlock = true;
         }
         // when not running, don't use hysteresis
-        else if (!isEngaged() && (heatSourceAmbientT_C > minT) && (heatSourceAmbientT_C < maxT))
+        else if (!isEngaged() && (heatSourceAmbientT_C > minT + tolT_C) &&
+                 (heatSourceAmbientT_C + tolT_C < maxT))
         {
             unlock = true;
         }
