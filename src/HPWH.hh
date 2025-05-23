@@ -817,10 +817,6 @@ class HPWH : public Courier::Sender
     void init(const std::string& specType, const MODELS presetNum);
     void init(const std::string& specType, const std::string& modelName);
 
-    /// init legacy Preset
-    void initLegacy(MODELS presetNum);
-    void initLegacy(const std::string& modelName);
-
     /// init Preset from embedded CBOR representation
     void initPreset(MODELS presetNum);
     void initPreset(const std::string& modelName);
@@ -1458,8 +1454,6 @@ class HPWH : public Courier::Sender
 
     void makeTier3();
     void makeTier4();
-
-    void convertMapToGrid();
 
   private:
     void setAllDefaults(); /**< sets all the defaults */

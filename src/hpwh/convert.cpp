@@ -17,10 +17,10 @@ void convert(const std::string& specType,
 
 CLI::App* add_convert(CLI::App& app)
 {
-    const auto subcommand = app.add_subcommand("convert", "Convert from legacy format to JSON");
+    const auto subcommand = app.add_subcommand("convert", "Convert to JSON");
 
     static std::string specType = "Preset";
-    subcommand->add_option("-s,--spec", specType, "Specification type (Legacy, Preset, JSON)");
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON)");
 
     //
     auto model_group = subcommand->add_option_group("model");

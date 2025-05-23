@@ -162,15 +162,12 @@ class HPWH::Condenser : public HPWH::HeatSource
     Performance evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars);
 
     Performance evaluatePerformanceCWHS_SP(const std::vector<double>& vars);
-    Performance evaluatePerformanceCWHS_SP_legacy(const std::vector<double>& vars);
-
     Performance evaluatePerformanceCWHS_MP(const std::vector<double>& vars);
-    Performance evaluatePerformanceCWHS_MP_legacy(const std::vector<double>& vars);
 
     std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance;
 
     // uses fEvaluatePerformance
-    Performance getPerformance(double externalT_C, double condenserT_C);
+    Performance getPerformance(double externalT_C, double condenserT_C) const;
 
     void setEvaluatePerformanceFunction();
 
@@ -178,25 +175,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
     /**< Does a simple linear interpolation between two points to the xnew point */
 
-    static void regressedMethod(
-        double& ynew, const std::vector<double>& coefficents, double x1, double x2, double x3);
-    /**< Does a calculation based on the ten term regression equation  */
-
-    static void
-    regressedMethodMP(double& ynew, const std::vector<double>& coefficents, double x1, double x2);
-    /**< Does a calculation based on the five term regression equation for MP split systems  */
-
     int getAmbientT_index(double ambientT_C);
-
-    Performance
-    getPerformanceFromMap(double environmentT_C, double heatSourceT_C, double outletT_C) const;
-
-    Performance getPerformanceFromMap(double environmentT_C, double heatSourceT_C) const;
-
-    void makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
-                         std::vector<std::vector<double>>& tempGridValues) const;
-
-    void convertMapToGrid();
 
     double standbyPower_kW;
 
@@ -225,6 +204,11 @@ class HPWH::Condenser : public HPWH::HeatSource
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
 
     void makeBtwxt();
+
+    void makeGridFromLegacyMap(std::vector<std::vector<double>>& tempGrid,
+                               std::vector<std::vector<double>>& tempGridValues) const;
+
+    void convertLegacyMapToGrid();
 };
 
 #endif
