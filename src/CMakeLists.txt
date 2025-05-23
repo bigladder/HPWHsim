@@ -14,7 +14,7 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 set(headers
         HPWHversion.in.hh
         HPWH.hh
-		HPWHUtils.hh
+        HPWHUtils.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
         Tank.hh

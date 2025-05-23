@@ -166,7 +166,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance;
 
-    // uses fEvaluatePerformance
+    /// note: uses fEvaluatePerformance
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 
     void setEvaluatePerformanceFunction();
@@ -175,6 +175,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
     /**< Does a simple linear interpolation between two points to the xnew point */
 
+    /// pick the nearest temperature index
     int getAmbientT_index(double ambientT_C);
 
     double standbyPower_kW;

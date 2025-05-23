@@ -87,7 +87,7 @@ void HPWH::Condenser::setEvaluatePerformanceFunction()
         { return evaluatePerformanceIHPWH(vars); };
     }
 }
-// pick the nearest temperature index
+
 int HPWH::Condenser::getAmbientT_index(double ambientT_C)
 {
     int nPerfPts = static_cast<int>(performanceMap.size());
@@ -136,35 +136,6 @@ bool HPWH::Condenser::maxedOut() const
         }
     }
     return maxed;
-}
-
-void arrangeGridVector(std::vector<double>& V)
-{
-    std::sort(V.begin(), V.end(), [](double a, double b) { return a < b; });
-
-    auto copyV = V;
-    V.clear();
-    bool first = true;
-    double x_prev = 0.;
-    for (auto& x : copyV) // skip duplicates
-    {
-        if (first || (x > x_prev))
-            V.push_back(x);
-        first = false;
-        x_prev = x;
-    }
-}
-
-void trimGridVector(std::vector<double>& V, const double minT, const double maxT)
-{
-    arrangeGridVector(V);
-    auto copyV = V;
-    V.clear();
-    for (auto& x : copyV) // skip duplicates
-    {
-        if ((minT <= x) && (x <= maxT))
-            V.push_back(x);
-    }
 }
 
 bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
@@ -243,6 +214,35 @@ bool HPWH::Condenser::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
         }
         return unlock;
+    }
+}
+
+void arrangeGridVector(std::vector<double>& V)
+{
+    std::sort(V.begin(), V.end(), [](double a, double b) { return a < b; });
+
+    auto copyV = V;
+    V.clear();
+    bool first = true;
+    double x_prev = 0.;
+    for (auto& x : copyV) // skip duplicates
+    {
+        if (first || (x > x_prev))
+            V.push_back(x);
+        first = false;
+        x_prev = x;
+    }
+}
+
+void trimGridVector(std::vector<double>& V, const double minT, const double maxT)
+{
+    arrangeGridVector(V);
+    auto copyV = V;
+    V.clear();
+    for (auto& x : copyV) // skip duplicates
+    {
+        if ((minT <= x) && (x <= maxT))
+            V.push_back(x);
     }
 }
 

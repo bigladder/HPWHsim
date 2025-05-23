@@ -127,7 +127,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     heatSources.clear();
 
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
-    if (lowerPower_W < 0)
+    if (lowerPower_W < 0.)
     {
         send_error("Lower resistance tank wattage below 0 W.");
     }
@@ -241,15 +241,15 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor->performanceMap.reserve(2);
 
     compressor->performanceMap.push_back({
-        50,                          // Temperature (T_F)
-        {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+        50,                          // Temperature (F)
+        {187.064124, 1.939747, 0.0}, // Input Power Coefficients
+        {5.4977772, -0.0243008, 0.0} // COP Coefficients
     });
 
     compressor->performanceMap.push_back({
-        70,                         // Temperature (T_F)
-        {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-        {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+        70,                         // Temperature (F)
+        {148.0418, 2.553291, 0.0},  // Input Power Coefficients
+        {7.207307, -0.0335265, 0.0} // COP Coefficients
     });
 
     compressor->minT = F_TO_C(45.);
