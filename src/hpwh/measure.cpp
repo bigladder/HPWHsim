@@ -57,14 +57,8 @@ CLI::App* add_measure(CLI::App& app)
         hpwh.init(specType, static_cast<HPWH::MODELS>(modelNumber));
 
     subcommand->callback(
-        [&]()
-        {
-            measure(hpwh,
-                    sOutputDir,
-                    saveTestData,
-                    sResultsFilename,
-                    drawProfileName,
-                    sTestConfig);
+        [&]() {
+            measure(hpwh, sOutputDir, saveTestData, sResultsFilename, drawProfileName, sTestConfig);
         });
 
     return subcommand;
