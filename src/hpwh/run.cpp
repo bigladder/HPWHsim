@@ -22,8 +22,8 @@ namespace hpwh_cli
 {
 
 /// run
-static void run(const std::string& sSpecType,
-                const std::string& modelName,
+static void run(const std::string specType,
+                HPWH& hpwh,
                 std::string sTestName,
                 std::string sOutputDir,
                 double airTemp);
@@ -32,14 +32,23 @@ CLI::App* add_run(CLI::App& app)
 {
     const auto subcommand = app.add_subcommand("run", "Run a schedule");
 
-    static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File, JSON)");
+    //
+    auto model_group = subcommand->add_option_group("Model options");
 
     static std::string modelName = "";
-    subcommand->add_option("-m,--model", modelName, "Model name")->required();
+    model_group->add_option("-m,--model", modelName, "Model name");
 
-    static std::string sTestName = "";
-    subcommand->add_option("-t,--test", sTestName, "Test name")->required();
+    static int modelNumber = -1;
+    model_group->add_option("-n,--number", modelNumber, "Model number");
+
+    static std::string modelFilename = "";
+    model_group->add_option("-f,--filename", modelFilename, "Model filename");
+
+    model_group->required(1);
+
+    //
+    static std::string testName = "";
+    subcommand->add_option("-t,--test", testName, "Test name")->required();
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -47,21 +56,34 @@ CLI::App* add_run(CLI::App& app)
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
-    subcommand->callback([&]() { run(sSpecType, modelName, sTestName, sOutputDir, airTemp); });
+    subcommand->callback(
+        [&]()
+        {
+            HPWH hpwh;
+            std::string specType = "Preset";
+            if (modelName != "")
+                hpwh.initPreset(modelName);
+            else if (modelNumber != -1)
+                hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
+            else if (modelFilename != "")
+            {
+                specType = "JSON";
+                hpwh.initFromJSON(modelFilename);
+            }
+            run(specType, hpwh, testName, sOutputDir, airTemp);
+        });
 
     return subcommand;
 }
 
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
-void run(const std::string& sSpecType,
-         const std::string& modelName,
-         std::string sFullTestName,
+void run(const std::string specType,
+         HPWH& hpwh,
+         std::string fullTestName,
          std::string sOutputDir,
          double airTemp)
 {
-    HPWH hpwh;
-
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
     HPWH::MODELS model;
 
@@ -111,29 +133,6 @@ void run(const std::string& sSpecType,
         HPWH_doTempDepress = false;
     }
 
-    // process command line arguments
-    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (sSpecType_mod == "preset")
-    {
-        sSpecType_mod = "Preset";
-        hpwh.initPreset(modelName);
-    }
-    else if (sSpecType_mod == "json")
-    {
-        sSpecType_mod = "JSON";
-        hpwh.initFromJSON(modelName);
-    }
-    else
-    {
-        std::cout << "Invalid argument, received '" << sSpecType_mod
-                  << "', expected 'Preset' or 'JSON'.\n";
-        exit(1);
-    }
-
     newSetpoint = 0;
     model = static_cast<HPWH::MODELS>(hpwh.getModel());
     if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
@@ -141,11 +140,11 @@ void run(const std::string& sSpecType,
         newSetpoint = (149 - 32) / 1.8;
     }
 
-    std::string sTestName = sFullTestName; // remove path prefixes
-    if (sFullTestName.find("/") != std::string::npos)
+    std::string sTestName = fullTestName; // remove path prefixes
+    if (fullTestName.find("/") != std::string::npos)
     {
-        std::size_t iLast = sFullTestName.find_last_of("/");
-        sTestName = sFullTestName.substr(iLast + 1);
+        std::size_t iLast = fullTestName.find_last_of("/");
+        sTestName = fullTestName.substr(iLast + 1);
     }
 
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
@@ -155,7 +154,7 @@ void run(const std::string& sSpecType,
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
-    fileToOpen = sFullTestName + "/" + "testInfo.txt";
+    fileToOpen = fullTestName + "/" + "testInfo.txt";
     controlFile.open(fileToOpen.c_str());
     if (!controlFile.is_open())
     {
@@ -174,7 +173,9 @@ void run(const std::string& sSpecType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    std::cout << "Running: " << modelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
+    std::string modelName;
+    HPWH::getPresetNameFromNumber(modelName, static_cast<HPWH::MODELS>(hpwh.getModel()));
+    std::cout << "Running: " << modelName << ", " << specType << ", " << fullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -239,7 +240,7 @@ void run(const std::string& sSpecType,
 
     for (i = 0; (unsigned)i < scheduleNames.size(); i++)
     {
-        fileToOpen = sFullTestName + "/" + scheduleNames[i] + "schedule.csv";
+        fileToOpen = fullTestName + "/" + scheduleNames[i] + "schedule.csv";
         outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
         if (outputCode != 0)
         {
@@ -325,7 +326,7 @@ void run(const std::string& sSpecType,
     else
     {
 
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + sSpecType_mod + "_" + modelName + ".csv";
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + modelName + ".csv";
 
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
@@ -483,7 +484,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = sTestName + "," + sSpecType_mod + "," + modelName;
+        firstCol = sTestName + "," + specType + "," + modelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)

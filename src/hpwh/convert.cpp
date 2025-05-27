@@ -19,9 +19,6 @@ CLI::App* add_convert(CLI::App& app)
 {
     const auto subcommand = app.add_subcommand("convert", "Convert to JSON");
 
-    static std::string specType = "Preset";
-    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON)");
-
     //
     auto model_group = subcommand->add_option_group("model");
 
@@ -30,6 +27,9 @@ CLI::App* add_convert(CLI::App& app)
 
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
+
+    static std::string modelFilename = "";
+    model_group->add_option("-f,--filename", modelFilename, "Model filename");
 
     model_group->required(1);
 
@@ -40,13 +40,22 @@ CLI::App* add_convert(CLI::App& app)
     static std::string sOutputFilename = "";
     subcommand->add_option("-f,--filename", sOutputFilename, "Output filename");
 
-    HPWH hpwh;
-    if (modelName != "")
-        hpwh.init(specType, modelName);
-    else if (modelNumber != -1)
-        hpwh.init(specType, static_cast<HPWH::MODELS>(modelNumber));
-
-    subcommand->callback([&]() { convert(specType, hpwh, sOutputDir, sOutputFilename); });
+    subcommand->callback(
+        [&]()
+        {
+            HPWH hpwh;
+            std::string specType = "Preset";
+            if (modelName != "")
+                hpwh.initPreset(modelName);
+            else if (modelNumber != -1)
+                hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
+            else if (modelFilename != "")
+            {
+                specType = "JSON";
+                hpwh.initFromJSON(modelFilename);
+            }
+            convert(specType, hpwh, sOutputDir, sOutputFilename);
+        });
 
     return subcommand;
 }
