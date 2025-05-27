@@ -68,10 +68,11 @@ CLI::App* add_make(CLI::App& app)
                 hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
             else if (!modelFilename.empty())
             {
-                specType = "JSON";
                 std::ifstream inputFile(modelFilename);
                 nlohmann::json j = nlohmann::json::parse(inputFile);
-                hpwh.initFromJSON(j);
+                specType = "JSON";
+                modelName = getModelNameFromFilename(modelFilename);
+                hpwh.initFromJSON(j, modelName);
             }
             make(specType,
                  hpwh,

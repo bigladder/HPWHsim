@@ -28,6 +28,16 @@ set(general_Tests
         test95
         )
 
+set(JSON_modelNames
+        AOSmithHPTS50
+        Sanden80
+        )
+
+set(JSON_testNames
+        "general_tests/test50"
+        "general_tests/test95"
+        )
+
 # Demand-response tests
 set(DR_TestDir "DR_tests")
 set(DR_Tests
@@ -215,17 +225,6 @@ set(LG_Tests
         DP_LGC50_HVT
         )
 
-set(JSON_modelNames
-        LG_APHWC50
-        ColmacCxA_15_MP
-        NyleC250A_MP
-        )
-
-set(JSON_testNames
-        "general_tests/test50"
-        "general_tests/test95"
-        )
-
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
@@ -323,16 +322,6 @@ function(add_plot_test)
 endfunction()
 
 ## Model tests
-
-# JSON tests
-foreach (test ${JSON_testNames})
-    foreach (model ${JSON_modelNames})
-        set(fullModelFilepath "./models_json/${model}.json")
-        add_model_test(TEST_NAME ${test} MODEL_FILEPATH "${fullModelFilepath}")
-    endforeach (model)
-endforeach (test)
-
-
 # general tests
 foreach (test ${general_Tests})
     foreach (model ${modelNames})
@@ -422,6 +411,14 @@ foreach (test ${largeCompressorTests})
     endforeach (model)
 endforeach (test)
 
+# JSON tests
+foreach (test ${JSON_testNames})
+    foreach (model ${JSON_modelNames})
+        set(fullModelFilepath "./models_json/${model}.json")
+        add_model_test(TEST_NAME ${test} MODEL_FILEPATH "${fullModelFilepath}")
+    endforeach (model)
+endforeach (test)
+
 ## Regression tests
 # general regression tests
 foreach (test ${general_Tests})
@@ -482,6 +479,13 @@ endforeach (model)
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" COMPARE_SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+# JSON<->Preset regression tests
+foreach (test ${JSON_testNames})
+    foreach (model ${JSON_modelNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 

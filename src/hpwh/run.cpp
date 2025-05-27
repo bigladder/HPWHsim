@@ -67,10 +67,11 @@ CLI::App* add_run(CLI::App& app)
                 hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
             else if (!modelFilename.empty())
             {
-                specType = "JSON";
                 std::ifstream inputFile(modelFilename);
                 nlohmann::json j = nlohmann::json::parse(inputFile);
-                hpwh.initFromJSON(j);
+                specType = "JSON";
+                modelName = getModelNameFromFilename(modelFilename);
+                hpwh.initFromJSON(j, modelName);
             }
             run(specType, hpwh, testName, sOutputDir, airTemp);
         });
@@ -175,7 +176,6 @@ void run(const std::string specType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    std::string modelName;
     std::cout << "Running: " << hpwh.name << ", " << specType << ", " << fullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
@@ -327,7 +327,7 @@ void run(const std::string specType,
     else
     {
 
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + modelName + ".csv";
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
 
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
@@ -485,7 +485,7 @@ void run(const std::string specType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = sTestName + "," + specType + "," + modelName;
+        firstCol = sTestName + "," + specType + "," + hpwh.name;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
