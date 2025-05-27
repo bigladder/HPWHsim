@@ -301,7 +301,7 @@ class HPWH : public Courier::Sender
 
         MODELS_LG_APHWC50 = 600,
         MODELS_LG_APHWC80 = 601
-    };
+    } model;
 
     /// data entry to/from schema
     template <typename T>
@@ -821,9 +821,8 @@ class HPWH : public Courier::Sender
     void initPreset(MODELS presetNum);
     void initPreset(const std::string& modelName);
 
-    /// init from JSON file in test/models_json
-    void initFromJSON(const std::string modelName);
-    void initFromJSON(const MODELS presetNumber);
+    /// init from hpwh-data-model in JSON format
+    void initFromJSON(const nlohmann::json& j);
 
     void runOneStep(double drawVolume_L,
                     double ambientT_C,
@@ -1503,9 +1502,6 @@ class HPWH : public Courier::Sender
 
     bool canScale;
     /**< can the HPWH scale capactiy and COP or not  */
-
-    MODELS model;
-    /**< The model id */
 
     Condenser* addCondenser(const std::string& name_in);
     Resistance* addResistance(const std::string& name_in);

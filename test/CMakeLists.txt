@@ -215,6 +215,17 @@ set(LG_Tests
         DP_LGC50_HVT
         )
 
+set(JSON_modelNames
+        LG_APHWC50
+        ColmacCxA_15_MP
+        NyleC250A_MP
+        )
+
+set(JSON_testNames
+        "general_tests/test50"
+        "general_tests/test95"
+        )
+
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
@@ -226,22 +237,27 @@ endif ()
 #Tests for successful runs
 function(add_model_test)
     set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME AIR_T_F)
+    set(oneValueArgs MODEL_NAME MODEL_FILEPATH TEST_NAME AIR_T_F)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(hpwhArgs run -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+		if (DEFINED ARG_MODEL_NAME)
+    	set(hpwhArgs run -m ${ARG_MODEL_NAME})
+    	set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+		elseif (DEFINED ARG_MODEL_FILEPATH)
+    	set(hpwhArgs run -f ${ARG_MODEL_FILEPATH})
+   		set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_FILEPATH}.JSON")
+		endif()
+
+   	set(hpwhArgs ${hpwhArgs} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
 
     if (DEFINED ARG_AIR_T_F)
         set(hpwhArgs ${hpwhArgs} -a ${ARG_AIR_T_F})
     endif()
 
-    set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-
     add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:hpwh> ${hpwhArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
-
 endfunction()
 
 # Tests for regression differences against reference results
@@ -307,6 +323,16 @@ function(add_plot_test)
 endfunction()
 
 ## Model tests
+
+# JSON tests
+foreach (test ${JSON_testNames})
+    foreach (model ${JSON_modelNames})
+        set(fullModelFilepath "./models_json/${model}.json")
+        add_model_test(TEST_NAME ${test} MODEL_FILEPATH "${fullModelFilepath}")
+    endforeach (model)
+endforeach (test)
+
+
 # general tests
 foreach (test ${general_Tests})
     foreach (model ${modelNames})

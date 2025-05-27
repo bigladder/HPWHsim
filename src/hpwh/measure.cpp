@@ -62,7 +62,9 @@ CLI::App* add_measure(CLI::App& app)
             else if (!modelFilename.empty())
             {
                 specType = "JSON";
-                hpwh.initFromJSON(modelFilename);
+                std::ifstream inputFile(modelFilename);
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j);
             }
             measure(hpwh, sOutputDir, saveTestData, sResultsFilename, drawProfileName, sTestConfig);
         });
