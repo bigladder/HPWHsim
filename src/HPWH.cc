@@ -2898,8 +2898,12 @@ void HPWH::checkInputs()
 /* static */
 bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS model)
 {
-    modelName = hpwh_presets::index.at(model).name;
-    return true;
+    if (hpwh_presets::index.find(model) != hpwh_presets::index.end())
+    {
+        modelName = hpwh_presets::index.at(model).name;
+        return true;
+    }
+    return false;
 }
 
 void HPWH::configure()
@@ -3002,16 +3006,16 @@ void HPWH::initPreset(const std::string& presetName)
     }
 }
 
-void HPWH::initFromJSON(const nlohmann::json& j)
+void HPWH::initFromJSON(const nlohmann::json& j, const std::string& modelName)
 {
     hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     from(hsi);
 
-    name = "custom";
-    model = MODELS::MODELS_CustomFile;
-    
+    name = modelName;
+    getPresetNumberFromName(name, model);
+
     configure();
 }
 

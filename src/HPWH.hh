@@ -822,7 +822,7 @@ class HPWH : public Courier::Sender
     void initPreset(const std::string& modelName);
 
     /// init from hpwh-data-model in JSON format
-    void initFromJSON(const nlohmann::json& j);
+    void initFromJSON(const nlohmann::json& j, const std::string& modelName = "custom");
 
     void runOneStep(double drawVolume_L,
                     double ambientT_C,
@@ -1680,6 +1680,22 @@ inline bool aboutEqual(T a, T b)
 inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, const bool absolute)
 {
     return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
+}
+
+inline std::string getModelNameFromFilename(const std::string& modelFilename)
+{
+    std::string modelName = "custom";
+    if (modelFilename.find("/") != std::string::npos)
+    {
+        std::size_t iLast = modelFilename.find_last_of("/");
+        modelName = modelFilename.substr(iLast + 1);
+    }
+    if (modelName.find(".") != std::string::npos)
+    {
+        std::size_t iLast = modelName.find_last_of(".");
+        modelName = modelName.substr(0, iLast);
+    }
+    return modelName;
 }
 
 #endif

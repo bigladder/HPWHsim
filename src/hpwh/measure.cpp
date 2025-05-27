@@ -61,10 +61,11 @@ CLI::App* add_measure(CLI::App& app)
                 hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
             else if (!modelFilename.empty())
             {
-                specType = "JSON";
                 std::ifstream inputFile(modelFilename);
                 nlohmann::json j = nlohmann::json::parse(inputFile);
-                hpwh.initFromJSON(j);
+                specType = "JSON";
+                modelName = getModelNameFromFilename(modelFilename);
+                hpwh.initFromJSON(j, modelName);
             }
             measure(hpwh, sOutputDir, saveTestData, sResultsFilename, drawProfileName, sTestConfig);
         });
