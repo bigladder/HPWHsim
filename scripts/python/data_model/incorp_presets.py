@@ -78,14 +78,14 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				preset_text += "#define " + guard_name + "\n\n"
 
 
-				preset_text += "#include <vector>\n\n"
+				preset_text += "#include <array>\n\n"
 				
 				preset_text += "namespace hpwh_presets {\n\n"
 				
 				nbytes = len(cbor_data)
 				#preset_text += "inline constexpr std::size_t name_" + preset["name"] + " = " + preset["name"] + ";\n"
 				#preset_text += "inline constexpr std::size_t size_" + preset["name"] + " = " + str(nbytes) + ";\n"
-				preset_text += "const std::vector<uint8_t> cbor_" + preset["name"] + "{\n"
+				preset_text += "const std::array<uint8_t, " + str(nbytes) + "> cbor_" + preset["name"] + "{\n"
 				for i, entry  in enumerate(cbor_data):
 					preset_text += hex(entry) + ", "
 					if (i % 40 == 0) and (i != 0): 
