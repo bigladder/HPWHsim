@@ -2959,46 +2959,7 @@ void HPWH::configure()
         logic->getIsEnteringWaterHighTempShutoff() = true;
         logic->checksStandby() = true;
     }
-    /*
-        for (auto& heatSource: heatSources)
-        {
-            std::cout << "heat source: \n";
-            for (auto& logic: heatSource->turnOnLogicSet)
-            {
-                std::cout << "\tturn-on logic\n";
-                std::cout << "\t\tdecision point: " << logic->getDecisionPoint() << "\n";
-                std::cout << "\t\tisEnteringWaterHighTempShutoff: "
-                          << (logic->getIsEnteringWaterHighTempShutoff() ? " true" : "false") <<
-       "\n"; std::cout << "\t\tchecksStandby: " << (logic->checksStandby() ? " true" : "false") <<
-       "\n";
-            }
-            for (auto& logic: heatSource->shutOffLogicSet)
-            {
-                std::cout << "\tshut-off logic\n";
-                std::cout << "\t\tdecision point: " << logic->getDecisionPoint() << "\n";
-                std::cout << "\t\tisEnteringWaterHighTempShutoff: "
-                          << (logic->getIsEnteringWaterHighTempShutoff() ? " true" : "false") <<
-       "\n"; std::cout << "\t\tchecksStandby: " << (logic->checksStandby() ? " true" : "false") <<
-       "\n";
-            }
 
-            if (heatSource->backupHeatSource != NULL)
-            {
-                std::cout << "\tbackup: "
-                          << heatSource->backupHeatSource->name << "\n";
-            }
-            if (heatSource->companionHeatSource != NULL)
-            {
-                std::cout << "\tcompanion: "
-                          << heatSource->companionHeatSource->name << "\n";
-            }
-            if (heatSource->followedByHeatSource != NULL)
-            {
-                std::cout << "\tfollowed-by: "
-                          << heatSource->followedByHeatSource->name << "\n";
-            }
-        }
-    */
     // calculate oft-used derived values
     calcDerivedValues();
     checkInputs();
