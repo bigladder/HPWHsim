@@ -69,7 +69,9 @@ CLI::App* add_make(CLI::App& app)
             else if (!modelFilename.empty())
             {
                 specType = "JSON";
-                hpwh.initFromJSON(modelFilename);
+                std::ifstream inputFile(modelFilename);
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j);
             }
             make(specType,
                  hpwh,

@@ -68,7 +68,9 @@ CLI::App* add_run(CLI::App& app)
             else if (!modelFilename.empty())
             {
                 specType = "JSON";
-                hpwh.initFromJSON(modelFilename);
+                std::ifstream inputFile(modelFilename);
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j);
             }
             run(specType, hpwh, testName, sOutputDir, airTemp);
         });
@@ -174,8 +176,7 @@ void run(const std::string specType,
     bool hasInitialTankTemp = false;
 
     std::string modelName;
-    HPWH::getPresetNameFromNumber(modelName, static_cast<HPWH::MODELS>(hpwh.getModel()));
-    std::cout << "Running: " << modelName << ", " << specType << ", " << fullTestName << endl;
+    std::cout << "Running: " << hpwh.name << ", " << specType << ", " << fullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {

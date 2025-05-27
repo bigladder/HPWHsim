@@ -52,7 +52,9 @@ CLI::App* add_convert(CLI::App& app)
             else if (!modelFilename.empty())
             {
                 specType = "JSON";
-                hpwh.initFromJSON(modelFilename);
+                std::ifstream inputFile(modelFilename);
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j);
             }
             convert(specType, hpwh, sOutputDir, sOutputFilename);
         });
