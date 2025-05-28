@@ -251,7 +251,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
         {148.0418, 2.553291, 0.0},  // Input Power Coefficients
         {7.207307, -0.0335265, 0.0} // COP Coefficients
     });
-
+    compressor->useBtwxtGrid = false;
     compressor->minT = F_TO_C(45.);
     compressor->maxT = F_TO_C(120.);
     compressor->hysteresis_dC = dF_TO_dC(2);
@@ -315,6 +315,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor->performanceMap[1].inputPower_coeffs[0] /= genericFudge;
     compressor->performanceMap[1].inputPower_coeffs[1] /= genericFudge;
     compressor->performanceMap[1].inputPower_coeffs[2] /= genericFudge;
+    compressor->useBtwxtGrid = false;
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
