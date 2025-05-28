@@ -68,8 +68,9 @@ else()
 endif()
 
 add_custom_target(generate_presets ALL DEPENDS "${PROJECT_BINARY_DIR}/presets")
-
-add_subdirectory("${PROJECT_BINARY_DIR}/presets")
+if(${CMAKE_PROJECT_NAME} STREQUAL "HPWHsim")
+    add_subdirectory("${PROJECT_BINARY_DIR}/presets")
+endif()
 
 #
 add_subdirectory(src)
