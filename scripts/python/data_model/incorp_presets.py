@@ -166,60 +166,6 @@ std::unordered_map<int, Identifier> index({
 		except:
 			print("Failed to create presets.cpp")
 
-		
-	cmake_text = """
-cmake_minimum_required (VERSION 3.10)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-project(hpwh_presets)
-
-# Set a default build type if none was specified
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to 'Release' as none was specified.")
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-    "MinSizeRel" "RelWithDebInfo")
-endif()
-
-find_package(Git QUIET)
-
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-
-add_subdirectory(src)
-"""
-
-	try:	
-		with open(os.path.join(presets_dir, "CMakeLists.txt"), "w") as cmake_file:
-			cmake_file.write(cmake_text)
-			cmake_file.close()
-	except:
-		print("Failed to create CMakeLists.txt")
-		
-	cmake_src_text = """
-file(GLOB lib_headers "${PROJECT_SOURCE_DIR}/*.h" "${PROJECT_SOURCE_DIR}/include/*.h")
-file(GLOB lib_src "${PROJECT_SOURCE_DIR}/src/*.cpp")
-
-set (lib_files "${lib_headers}"
-             "${lib_src}")
-
-add_library(hpwh_presets STATIC ${lib_files})
-
-target_include_directories(hpwh_presets PUBLIC ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
-
-target_compile_features(hpwh_presets PRIVATE cxx_std_17)
-include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME})
-"""
-
-	try:	
-		with open(os.path.join(presets_src_dir, "CMakeLists.txt"), "w") as cmake_file:
-			cmake_file.write(cmake_src_text)
-			cmake_file.close()
-	except:
-		print("Failed to create src/CMakeLists.txt")
-
-
 	os.chdir(orig_dir)
   
 # main
