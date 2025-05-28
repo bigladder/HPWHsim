@@ -18,7 +18,7 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
     : HeatSource(hpwh_in, courier, name_in)
     , hysteresis_dC(0)
     , maxSetpoint_C(100.)
-    , useBtwxtGrid(true)
+    , useBtwxtGrid(false)
     , extrapolationMethod(EXTRAP_LINEAR)
     , doDefrost(false)
     , maxOut_at_LowT {100, -273.15}
