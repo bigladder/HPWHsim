@@ -13,7 +13,6 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 
 get_filename_component(abs_presets_path "${PROJECT_BINARY_DIR}/presets" ABSOLUTE)
 file(GLOB preset_headers "${abs_presets_path}/presets.h" "${abs_presets_path}/include/*.h")
-file(GLOB preset_sources "${abs_presets_path}/src/*.cpp")
 
 set(headers
         HPWHversion.in.hh
@@ -42,7 +41,6 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
-        "${preset_sources}"
         )
 
 set(library_sources

@@ -25,10 +25,6 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 	if not os.path.exists(presets_dir):
 			os.mkdir(presets_dir)
 			
-	presets_src_dir = os.path.join(presets_dir, 'src')
-	if not os.path.exists(presets_src_dir):
-			os.mkdir(presets_src_dir)
-			
 	presets_include_dir = os.path.join(presets_dir, 'include')
 	if not os.path.exists(presets_include_dir):
 			os.mkdir(presets_include_dir)	
@@ -117,6 +113,9 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 #ifndef PRESETS_H
 #define PRESETS_H
 
+#include <iostream>
+#include <unordered_map>
+
 """
 		# add the includes	
 		presets_header += presets_header_text
@@ -134,10 +133,11 @@ struct Identifier
       name(name_in), size(size_in), cbor_data(cbor_data_in){}
 };
 
-extern std::unordered_map<int, Identifier> index;
-}
-#endif
-"""
+inline std::unordered_map<int, Identifier> index({
+"""	
+		presets_header  += presets_source_text + "\n"
+		presets_header  += "});\n}\n"
+		presets_header  += "#endif\n"
 
 		try:	
 			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
@@ -146,28 +146,6 @@ extern std::unordered_map<int, Identifier> index;
 		except:
 			print("Failed to create presets.h")
 
-		# create library source
-		presets_source =  """
-#include <iostream>
-#include <unordered_map>
-#include "../presets.h"
-
-namespace hpwh_presets {
-
-std::unordered_map<int, Identifier> index({
-"""	
-		presets_source += presets_source_text + "\n"
-		presets_source += "});\n}\n"
-
-		try:	
-			with open(os.path.join(presets_src_dir, "presets.cpp"), "w") as presets_src_file:
-				presets_src_file.write(presets_source)
-				presets_src_file.close()
-		except:
-			print("Failed to create presets.cpp")
-
-	os.chdir(orig_dir)
-  
 # main
 if __name__ == "__main__":
 	n_args = len(sys.argv) - 1
