@@ -3737,7 +3737,7 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
                 she.hot_side_temperature_offset);
         checkTo(condenser->secondaryHeatExchanger.extraPumpPower_W,
                 she.extra_pump_power_is_set,
-                she.extra_pumpgit add._power);
+                she.extra_pump_power);
     }
 
     cwhs.heat_source_configurations_is_set = true;
