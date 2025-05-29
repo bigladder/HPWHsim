@@ -1454,7 +1454,6 @@ class HPWH : public Courier::Sender
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
 
-
   private:
     void setAllDefaults(); /**< sets all the defaults */
 
