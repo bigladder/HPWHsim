@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu
             os_ver: "22.04"
             config: Release
-            coverage: false
+            coverage: true
             cc: gcc-10
             cxx: g++-10
             experimental: false
