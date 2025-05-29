@@ -72,6 +72,10 @@ struct HPWH::Fitter : public Sender
             hpwh->getNthHeatSource(hpwh->compressorIndex, heatSource);
             auto condenser = reinterpret_cast<HPWH::Condenser*>(heatSource);
 
+            if (condenser->useBtwxtGrid)
+            {
+                send_error("Invalid performance representation.");
+            }
             auto& performanceMap = condenser->performanceMap;
             if (temperatureIndex >= performanceMap.size())
             {
