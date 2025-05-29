@@ -45,6 +45,9 @@ CLI::App* add_make(CLI::App& app)
     static std::string sTestConfig = "UEF";
     subcommand->add_option("-c,--config", sTestConfig, "test configuration");
 
+    static int tier = 4;
+    subcommand->add_option("-t,--tier", tier, "tier 3 or 4")->check(CLI::IsMember({3, 4}));
+
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
@@ -74,6 +77,11 @@ CLI::App* add_make(CLI::App& app)
                 modelName = getModelNameFromFilename(modelFilename);
                 hpwh.initFromJSON(j, modelName);
             }
+            if (tier == 3)
+                hpwh.makeTier3();
+            else
+                hpwh.makeTier4();
+
             make(specType,
                  hpwh,
                  targetUEF,
