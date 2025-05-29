@@ -4,4 +4,3 @@ coverage:
   range: "0...100"
   ignore:
     - "vendor/**/*"
-    - "**/presets/**/*"

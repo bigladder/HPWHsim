@@ -51,7 +51,6 @@ endif ()
 add_subdirectory(vendor)
 
 #generate presets
-set(srcCodeDir "${PROJECT_BINARY_DIR}/presets")
 set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
 
 include(poetry-install)
