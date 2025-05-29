@@ -170,6 +170,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 
     void setEvaluatePerformanceFunction();
+    void setEvaluatePerformanceFunctionIHPWH_Legacy();
 
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
