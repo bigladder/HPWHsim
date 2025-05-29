@@ -1421,6 +1421,9 @@ class HPWH : public Courier::Sender
 
     struct Fitter;
 
+    void makeTier3();
+    void makeTier4();
+
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
@@ -1451,8 +1454,6 @@ class HPWH : public Courier::Sender
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
 
-    void makeTier3();
-    void makeTier4();
 
   private:
     void setAllDefaults(); /**< sets all the defaults */
