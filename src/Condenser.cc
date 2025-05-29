@@ -27,8 +27,7 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
     , configuration(COIL_CONFIG::CONFIG_WRAPPED)
     , isMultipass(true)
 {
-    fEvaluatePerformance = [this](const std::vector<double>& vars)
-    { return evaluatePerformanceCWHS_MP(vars); };
+    setEvaluatePerformanceFunction();
 }
 
 HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
@@ -44,6 +43,7 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     perfGridValues = cond_in.perfGridValues;
     perfRGI = cond_in.perfRGI;
     useBtwxtGrid = cond_in.useBtwxtGrid;
+    fEvaluatePerformance = cond_in.fEvaluatePerformance;
 
     defrostMap = cond_in.defrostMap;
     resDefrost = cond_in.resDefrost;
@@ -64,7 +64,6 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
 
     description = cond_in.description;
     productInformation = cond_in.productInformation;
-
     return *this;
 }
 
@@ -86,6 +85,14 @@ void HPWH::Condenser::setEvaluatePerformanceFunction()
         fEvaluatePerformance = [this](const std::vector<double>& vars)
         { return evaluatePerformanceIHPWH(vars); };
     }
+    useBtwxtGrid = true;
+}
+
+void HPWH::Condenser::setEvaluatePerformanceFunctionIHPWH_Legacy()
+{
+    fEvaluatePerformance = [this](const std::vector<double>& vars)
+    { return evaluatePerformanceIHPWH_legacy(vars); };
+    useBtwxtGrid = false;
 }
 
 int HPWH::Condenser::getAmbientT_index(double ambientT_C)

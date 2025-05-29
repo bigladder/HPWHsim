@@ -4396,10 +4396,7 @@ void HPWH::makeTier3()
     compressor->maxT = F_TO_C(120.);
     compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-    compressor->useBtwxtGrid = false;
-
-    compressor->fEvaluatePerformance = [compressor](const std::vector<double>& vars)
-    { return compressor->evaluatePerformanceIHPWH_legacy(vars); };
+    compressor->setEvaluatePerformanceFunctionIHPWH_Legacy();
 }
 
 //-----------------------------------------------------------------------------
@@ -4436,8 +4433,5 @@ void HPWH::makeTier4()
     compressor->maxT = F_TO_C(120.);
     compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-    compressor->useBtwxtGrid = false;
-
-    compressor->fEvaluatePerformance = [compressor](const std::vector<double>& vars)
-    { return compressor->evaluatePerformanceIHPWH_legacy(vars); };
+    compressor->setEvaluatePerformanceFunctionIHPWH_Legacy();
 }
