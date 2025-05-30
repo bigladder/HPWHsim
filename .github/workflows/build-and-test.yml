@@ -29,19 +29,24 @@ jobs:
             cc: cl
             cxx: cl
             experimental: false
+          - os: windows
+            os_ver: "2022"
+            config: Release
+            arch: "32"
+            compiler: msvc
+            experimental: false
+          - os: windows
+            os_ver: "2022"
+            config: Release
+            arch: "64"
+            compiler: msvc
+            experimental: false
           - os: macos
             os_ver: "13"
             config: Release
             coverage: false
             cc: clang
             cxx: clang++
-            experimental: false
-          - os: ubuntu
-            os_ver: "22.04"
-            config: Debug
-            coverage: true
-            cc: gcc-10
-            cxx: g++-10
             experimental: false
     defaults:
       run:
