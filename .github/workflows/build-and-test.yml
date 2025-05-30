@@ -24,30 +24,19 @@ jobs:
             experimental: false
           - os: windows
             os_ver: "2022"
-            config: Release
-            coverage: false
-            cc: cl
-            cxx: cl
-            experimental: false
-          - os: windows
-            os_ver: "2022"
-            config: Release
-            arch: "64"
-            coverage: false
-            cc: cl
-            cxx: cl
-            experimental: false
-          - os: windows
-            os_ver: "2022"
-            config: Release
             arch: "32"
-            compiler: msvc
+            config: Release
+            coverage: false
+            cc: cl
+            cxx: cl
             experimental: false
           - os: windows
             os_ver: "2022"
-            config: Release
             arch: "64"
-            compiler: msvc
+            config: Release
+            coverage: false
+            cc: cl
+            cxx: cl
             experimental: false
           - os: macos
             os_ver: "13"
