@@ -3725,7 +3725,7 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
             condenser->isMultipass);
 
     if ((cwhs.secondary_heat_exchanger_is_set =
-             (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)))
+        (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)))
     {
         auto& she = cwhs.secondary_heat_exchanger;
         checkTo(condenser->secondaryHeatExchanger.coldSideTemperatureOffset_dC,
