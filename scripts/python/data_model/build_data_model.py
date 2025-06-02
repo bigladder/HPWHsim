@@ -1,5 +1,4 @@
-# 'poetry run python build_data_model.py'
-#
+# uv run --no-project build_data_model.py
 # generates source code based on hpwh_data_model schema.
 # schema repo is cloned in repo
 

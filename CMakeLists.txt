@@ -53,10 +53,10 @@ add_subdirectory(vendor)
 #generate presets
 set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
 
-include(poetry-install)
-poetry_install(${pythonScriptDir})
+include(pkgmgr-install)
+uv_install(${pythonScriptDir})
 execute_process(
-        COMMAND poetry run python "incorp_presets.py" "JSON" "${PROJECT_BINARY_DIR}" "IHPWH_models.json" "CWHS_models.json"
+        COMMAND uv run --no-project "incorp_presets.py" "JSON" "${PROJECT_BINARY_DIR}" "IHPWH_models.json" "CWHS_models.json"
         WORKING_DIRECTORY "${pythonScriptDir}"
         RESULT_VARIABLE build_presets_result)
 

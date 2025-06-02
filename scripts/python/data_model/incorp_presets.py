@@ -1,4 +1,4 @@
-# 'poetry run python incorp_presets.py JSON ../../../build IHPWH_models.json CWHS_models.json'
+# uv run --no-project incorp_presets.py JSON ../../../build IHPWH_models.json CWHS_models.json
 
 # calls `hpwh convert' for each model in models_list_file json,
 # then creates a C++ header file containing that data.

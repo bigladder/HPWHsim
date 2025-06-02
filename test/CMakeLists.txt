@@ -228,8 +228,8 @@ set(LG_Tests
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
-    include(poetry-install)
-    poetry_install(${pythonScriptDir})
+    include(pkgmgr-install)
+    uv_install(${pythonScriptDir})
     set(${PROJECT_NAME}_PYTHON_PLOTS_SETUP TRUE CACHE BOOL "Python plotting environment is already setup" FORCE)
 endif ()
 
