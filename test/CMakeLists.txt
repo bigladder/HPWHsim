@@ -314,8 +314,13 @@ function(add_plot_test)
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python/plotting" run python
-                "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
+
+        add_test(NAME "${plotTestName}"
+						COMMAND uv run --no-project "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py" 
+								${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} 
+						WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python/plotting" 
+						)
+
         set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
     endif ()
 
