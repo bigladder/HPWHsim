@@ -1,16 +1,21 @@
-[tool.poetry]
+[project]
 name = "HPWHsim-python-scripts"
 version = "0.0.0"
 description = ""
 authors = []
+requires-python = "~=3.8"
+dependencies = [
+    "pandas",
+    "plotly",
+    "koozie",
+    "dimes",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pandas = "*"
-plotly = "*"
-koozie = "*"
+[tool.uv]
+
+[tool.uv.sources]
 dimes = { git = "https://github.com/bigladder/dimes" }
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
