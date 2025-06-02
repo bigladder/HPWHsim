@@ -51,25 +51,21 @@ endif ()
 add_subdirectory(vendor)
 
 #generate presets
-if (${PROJECT_NAME}_PRESETS_ARE_SETUP)
-    message(STATUS "Preset are setup")
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
+
+include(pkgmgr-install)
+uv_install(${pythonScriptDir})
+execute_process(
+        COMMAND uv run --no-project "incorp_presets.py" "JSON" "${PROJECT_BINARY_DIR}" "IHPWH_models.json" "CWHS_models.json"
+        WORKING_DIRECTORY "${pythonScriptDir}"
+        RESULT_VARIABLE build_presets_result)
+
+if (build_presets_result EQUAL 0)
+     message(STATUS "Preset generation succeeded")
+     set(${PROJECT_NAME}_PRESETS_ARE_SETUP TRUE CACHE BOOL "Presets are setup" FORCE)
 else()
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
-
-    include(pkgmgr-install)
-    uv_install(${pythonScriptDir})
-    execute_process(
-            COMMAND uv run --no-project "incorp_presets.py" "JSON" "${PROJECT_BINARY_DIR}" "IHPWH_models.json" "CWHS_models.json"
-            WORKING_DIRECTORY "${pythonScriptDir}"
-            RESULT_VARIABLE build_presets_result)
-
-    if (build_presets_result EQUAL 0)
-         message(STATUS "Preset generation succeeded")
-         set(${PROJECT_NAME}_PRESETS_ARE_SETUP TRUE CACHE BOOL "Presets are setup" FORCE)
-    else()
-        message(STATUS "Preset generation failed")
-     endif()
-endif()
+    message(STATUS "Preset generation failed")
+ endif()
 
 #
 add_subdirectory(src)
