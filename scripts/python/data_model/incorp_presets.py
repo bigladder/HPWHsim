@@ -8,7 +8,6 @@ import os
 import sys
 import json
 import subprocess
-
 import cbor2
 
 def incorp_presets(presets_list_files, build_dir, spec_type):

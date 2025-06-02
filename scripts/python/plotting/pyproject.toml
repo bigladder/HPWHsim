@@ -3,7 +3,7 @@ name = "HPWHsim-python-scripts"
 version = "0.0.0"
 description = ""
 authors = []
-requires-python = "~=3.8"
+requires-python = ">=3.10, <4.0"
 dependencies = [
     "pandas",
     "plotly",
@@ -14,8 +14,4 @@ dependencies = [
 [tool.uv]
 
 [tool.uv.sources]
-dimes = { git = "https://github.com/bigladder/dimes" }
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+dimes = { git = "https://github.com/bigladder/dimes#1b8082f06909d551b36e7b784816d7abd915b58a" }
