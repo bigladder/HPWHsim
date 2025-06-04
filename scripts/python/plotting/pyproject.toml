@@ -1,16 +1,17 @@
-[tool.poetry]
+[project]
 name = "HPWHsim-python-scripts"
 version = "0.0.0"
 description = ""
 authors = []
+requires-python = ">=3.10, <4.0"
+dependencies = [
+    "pandas",
+    "plotly",
+    "koozie",
+    "dimes",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pandas = "*"
-plotly = "*"
-koozie = "*"
-dimes = { git = "https://github.com/bigladder/dimes" }
+[tool.uv]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv.sources]
+dimes = { git = "https://github.com/bigladder/dimes#1b8082f06909d551b36e7b784816d7abd915b58a" }
