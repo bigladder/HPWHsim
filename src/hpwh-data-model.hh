@@ -11,11 +11,20 @@
 #include <RSAIRTOWATERHEATPUMP.h>
 #include <CentralWaterHeatingSystem.h>
 #include <RSTANK.h>
+#include "courier/helpers.h"
 
 #define JSON_HAS_CPP_17
 
 namespace hpwh_data_model
 {
-void init(std::shared_ptr<Courier::Courier> logger_in);
-}
+class QuietCourier : public Courier::DefaultCourier
+{
+  public:
+    static inline std::vector<std::string> warnings = {};
+
+  protected:
+    void receive_warning(const std::string& message) override { warnings.push_back(message); }
+};
+void init(std::shared_ptr<Courier::Courier> logger_in = std::make_shared<QuietCourier>());
+} // namespace hpwh_data_model
 #endif
