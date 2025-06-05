@@ -2205,7 +2205,7 @@ void HPWH::setInlet2ByFraction(double fractionalHeight)
 
 bool HPWH::isScalable() const { return canScale; }
 
-void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/)
+void HPWH::setScaleCapacityCOP(double scaleCapacity_in /*=1.0*/, double scaleCOP_in /*=1.0*/)
 {
     if (!isScalable())
     {
@@ -2215,25 +2215,13 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
     {
         send_error("Current model does not have a compressor.");
     }
-    if (scaleCapacity <= 0 || scaleCOP <= 0)
+    if (scaleCapacity_in <= 0 || scaleCOP_in <= 0)
     {
         send_error("Can not scale the HPWH Capacity or COP to 0 or less than 0.");
     }
-
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-
-    if (cond_ptr->useBtwxtGrid)
-    {
-        scaleVector(cond_ptr->perfGridValues[0], scaleCapacity);
-        scaleVector(cond_ptr->perfGridValues[1], scaleCOP);
-        cond_ptr->makeBtwxt();
-    }
-    else
-        for (auto& performancePoint : cond_ptr->perfPolySet)
-        {
-            scaleVector(performancePoint.inputPower_coeffs, scaleCapacity);
-            scaleVector(performancePoint.COP_coeffs, scaleCOP);
-        }
+    cond_ptr->inputPowerScale *= scaleCapacity_in;
+    cond_ptr->COP_scale *= scaleCOP_in;
 }
 
 void HPWH::setCompressorOutputCapacity(double newCapacity,

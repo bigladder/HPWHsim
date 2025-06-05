@@ -23,6 +23,8 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
     , doDefrost(false)
     , maxOut_at_LowT {100, -273.15}
     , secondaryHeatExchanger {0., 0., 0.}
+    , inputPowerScale(1.)
+    , COP_scale(1.)
     , standbyPower_kW(0.)
     , configuration(COIL_CONFIG::CONFIG_WRAPPED)
     , isMultipass(true)
@@ -64,6 +66,9 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
 
     description = cond_in.description;
     productInformation = cond_in.productInformation;
+
+    inputPowerScale = cond_in.inputPowerScale;
+    COP_scale = cond_in.COP_scale;
     return *this;
 }
 
@@ -1019,6 +1024,9 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
     }
 
     auto performance = fEvaluatePerformance({externalT_C, condenserT_C, outletT_C});
+    performance.inputPower_W *= inputPowerScale;
+    performance.cop *= COP_scale;
+    performance.outputPower_W = performance.cop * performance.inputPower_W;
 
     if (doDefrost)
     {
