@@ -32,17 +32,6 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 
-    std::vector<std::vector<double>> perfGrid;
-    /**< The axis values defining the regular grid for the performance data.
-    SP would have 3 axis, MP would have 2 axis*/
-
-    std::vector<std::vector<double>> perfGridValues;
-    /**< The values for input power and cop use matching to the grid. Should be long format with { {
-     * inputPower_W }, { COP } }. */
-
-    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI;
-    /**< The grid interpolator used for mapping performance*/
-
     void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
     /**< Does a linear interpolation in btwxt to the target point*/
 
@@ -138,6 +127,9 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// 3.  two-dimensional polynomial (six terms each) wrt external and condenser
     ///     temperatures.The variation with external temperature
     ///     is clipped at the specified temperature.
+  public:
+    static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
+
     struct PerformancePoly
     {
         double T_F;
@@ -149,7 +141,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// For case 1. above, the map typically contains multiple points, at various temperatures.
     /// Linear interpolation is applied to the collection of points.
     /// Only the first entry is used for cases 2. and 3.
-    std::vector<PerformancePoly> perfPolySet;
+    //std::vector<PerformancePoly> perfPolySet;
 
     struct Performance
     {
@@ -158,29 +150,151 @@ class HPWH::Condenser : public HPWH::HeatSource
         double cop;
     };
 
-    Performance evaluatePerformanceIHPWH(const std::vector<double>& vars);
-    Performance evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars);
+    Performance getPerformance(double externalT_C, double condenserT_C, std::function<Performance(const std::vector<double>&)> fEvaluatePerformance) const;
 
-    Performance evaluatePerformanceCWHS_SP(const std::vector<double>& vars);
-    Performance evaluatePerformanceCWHS_MP(const std::vector<double>& vars);
+    std::function<Performance(double, double)>
+    makePerformance(Btwxt::RegularGridInterpolator& perfRGI)
+    {
+        std::function<Performance(const std::vector<double>&)> fEval =
+        [&perfRGI](const std::vector<double>& target)
+        {
+            std::vector<double> result = perfRGI.get_values_at_target(target);
+            Performance performance({result[0], result[1] * result[0], result[1]});
+            return performance;
+        };
 
-    std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance;
+        return [this, fEval](double externalT_C, double condenserT_C)
+        {
+           return getPerformance(externalT_C, condenserT_C, fEval);
+        };
+    }
 
-    /// note: uses fEvaluatePerformance
-    Performance getPerformance(double externalT_C, double condenserT_C) const;
+    std::function<Performance(double, double)>
+    makePerformance(std::vector<PerformancePoly>& perfPolySet)
+    {
+        std::function<Performance(const std::vector<double>&)> fEval =
+        [&perfPolySet](const std::vector<double>& target)
+        {
+            double environmentT_C = target[0];
+            double heatSourceT_C = target[1];
 
-    void setEvaluatePerformanceFunction();
-    void setEvaluatePerformanceFunctionIHPWH_Legacy();
+            Performance performance = {0., 0., 0.};
+
+            double COP_T1, COP_T2; // cop at ambient temperatures T1 and T2
+            double inputPower_T1_W,
+                inputPower_T2_W; // input power at ambient temperatures T1 and T2
+
+            size_t i_prev = 0;
+            size_t i_next = 1;
+
+            double environmentT_F = C_TO_F(environmentT_C);
+            double heatSourceT_F = C_TO_F(heatSourceT_C);
+            for (size_t i = 0; i < perfPolySet.size(); ++i)
+            {
+                if (environmentT_F < perfPolySet[i].T_F)
+                {
+                    if (i == 0)
+                    {
+                        i_prev = 0;
+                        i_next = 1;
+                    }
+                    else
+                    {
+                        i_prev = i - 1;
+                        i_next = i;
+                    }
+                    break;
+                }
+                else
+                {
+                    if (i == perfPolySet.size() - 1)
+                    {
+                        i_prev = i - 1;
+                        i_next = i;
+                        break;
+                    }
+                }
+            }
+
+            // Calculate COP and Input Power at each of the two reference temperatures
+            COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
+            COP_T1 += perfPolySet[i_prev].COP_coeffs[1] * heatSourceT_F;
+            COP_T1 += perfPolySet[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+            COP_T2 = perfPolySet[i_next].COP_coeffs[0];
+            COP_T2 += perfPolySet[i_next].COP_coeffs[1] * heatSourceT_F;
+            COP_T2 += perfPolySet[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+            inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
+            inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[1] * heatSourceT_F;
+            inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+            inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
+            inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[1] * heatSourceT_F;
+            inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+            // Interpolate to get COP and input power at the current ambient temperature
+            Condenser::linearInterp(performance.cop,
+                         environmentT_F,
+                         perfPolySet[i_prev].T_F,
+                         perfPolySet[i_next].T_F,
+                         COP_T1,
+                         COP_T2);
+            linearInterp(performance.inputPower_W,
+                         environmentT_F,
+                         perfPolySet[i_prev].T_F,
+                         perfPolySet[i_next].T_F,
+                         inputPower_T1_W,
+                         inputPower_T2_W);
+            performance.outputPower_W = performance.cop * performance.inputPower_W;
+            return performance;
+        };
+
+        return [this, fEval](double externalT_C, double condenserT_C)
+        {
+            return getPerformance(externalT_C, condenserT_C, fEval);
+        };
+    };
+
+    std::function<Performance(double, double)>
+        makeTier3_performance(const double c50, const double c67_5, const double c95)
+    {
+        std::vector<PerformancePoly> perfPolySet = { {50., {187.064124, 1.939747, 0.}, {c50, -0.0243008, 0.}},
+                                                   {67.5, {152.9195905, 2.476598, 0.}, {c67_5, -0.032373288, 0.}},
+                                                   {95., {99.263895, 3.320221, 0.}, {c95, -0.0450586, 0.}}};
+
+        std::function<Performance(double, double)> fPerf = [this, &perfPolySet](double externalT_C, double condenserT_C)
+            {return makePerformance(perfPolySet)(externalT_C, condenserT_C);};
+        return fPerf;
+    }
+
+    std::function<Performance(double, double)>
+    makeTier4_performance(const double c50, const double c67_5, const double c95)
+    {
+        std::vector<PerformancePoly> perfPolySet = { {50., {126.9, 2.215, 0.}, {c50, -0.03395, 0.}},
+                                                    {67.5, {116.6, 2.467, 0.}, {c67_5, -0.04431, 0.}},
+                                                    {95., {100.4, 2.863, 0.}, {c95, -0.06059, 0.}}};
+
+        std::function<Performance(double, double)> fPerf = [this, &perfPolySet](double externalT_C, double condenserT_C)
+        {return makePerformance(perfPolySet)(externalT_C, condenserT_C);};
+        return fPerf;
+    }
+
+    void makeBtwxt(std::vector<std::vector<double>>& perfGrid, std::vector<std::vector<double>>& perfGridValues);
+
+    void makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
+                             std::vector<std::vector<double>>& tempGridValues) const;
+
+    std::function<Performance(double, double)> fPerformance;
 
     double inputPowerScale = 1.;
     double COP_scale = 1.;
 
-  public:
-    static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
-    /**< Does a simple linear interpolation between two points to the xnew point */
+     /**< Does a simple linear interpolation between two points to the xnew point */
 
     /// pick the nearest temperature index
-    int getAmbientT_index(double ambientT_C);
+    static
+    int getAmbientT_index(std::vector<PerformancePoly>& perfPolySet, double ambientT_C);
 
     double standbyPower_kW;
 
@@ -207,11 +321,6 @@ class HPWH::Condenser : public HPWH::HeatSource
     void addHeat(double externalT_C, double minutesToRun);
 
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
-
-    void makeBtwxt();
-
-    void makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
-                               std::vector<std::vector<double>>& tempGridValues) const;
 
     void convertPolySetToGrid();
 };
