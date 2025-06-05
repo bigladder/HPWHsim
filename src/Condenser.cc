@@ -37,7 +37,7 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     Tshrinkage_C = cond_in.Tshrinkage_C;
     lockedOut = cond_in.lockedOut;
 
-    performanceMap = cond_in.performanceMap;
+    perfPolySet = cond_in.perfPolySet;
 
     perfGrid = cond_in.perfGrid;
     perfGridValues = cond_in.perfGridValues;
@@ -97,9 +97,9 @@ void HPWH::Condenser::setEvaluatePerformanceFunctionIHPWH_Legacy()
 
 int HPWH::Condenser::getAmbientT_index(double ambientT_C)
 {
-    int nPerfPts = static_cast<int>(performanceMap.size());
+    int nPerfPts = static_cast<int>(perfPolySet.size());
     int i0 = 0, i1 = 0;
-    for (auto& perfPoint : performanceMap)
+    for (auto& perfPoint : perfPolySet)
     {
         if (ambientT_C < F_TO_C(perfPoint.T_F))
             break;
@@ -109,8 +109,8 @@ int HPWH::Condenser::getAmbientT_index(double ambientT_C)
     double ratio = 0.;
     if ((i1 > i0) && (i1 < nPerfPts))
     {
-        ratio = (ambientT_C - performanceMap[i0].T_F) /
-                (performanceMap[i1].T_F - performanceMap[i0].T_F);
+        ratio = (ambientT_C - perfPolySet[i0].T_F) /
+                (perfPolySet[i1].T_F - perfPolySet[i0].T_F);
     }
     return (ratio < 0.5) ? i0 : i1;
 }
@@ -656,7 +656,7 @@ void HPWH::Condenser::to(
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        makeGridFromLegacyMap(tempGrid, tempGridValues);
+        makeGridFromPolySet(tempGrid, tempGridValues);
 
         auto& map = perf.performance_map;
 
@@ -793,7 +793,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        makeGridFromLegacyMap(tempGrid, tempGridValues);
+        makeGridFromPolySet(tempGrid, tempGridValues);
 
         auto& map = perf.performance_map;
 
@@ -909,9 +909,9 @@ HPWH::Condenser::evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars
 
     double environmentT_F = C_TO_F(environmentT_C);
     double heatSourceT_F = C_TO_F(heatSourceT_C);
-    for (size_t i = 0; i < performanceMap.size(); ++i)
+    for (size_t i = 0; i < perfPolySet.size(); ++i)
     {
-        if (environmentT_F < performanceMap[i].T_F)
+        if (environmentT_F < perfPolySet[i].T_F)
         {
             if (i == 0)
             {
@@ -927,7 +927,7 @@ HPWH::Condenser::evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars
         }
         else
         {
-            if (i == performanceMap.size() - 1)
+            if (i == perfPolySet.size() - 1)
             {
                 i_prev = i - 1;
                 i_next = i;
@@ -937,33 +937,33 @@ HPWH::Condenser::evaluatePerformanceIHPWH_legacy(const std::vector<double>& vars
     }
 
     // Calculate COP and Input Power at each of the two reference temperatures
-    COP_T1 = performanceMap[i_prev].COP_coeffs[0];
-    COP_T1 += performanceMap[i_prev].COP_coeffs[1] * heatSourceT_F;
-    COP_T1 += performanceMap[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+    COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
+    COP_T1 += perfPolySet[i_prev].COP_coeffs[1] * heatSourceT_F;
+    COP_T1 += perfPolySet[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-    COP_T2 = performanceMap[i_next].COP_coeffs[0];
-    COP_T2 += performanceMap[i_next].COP_coeffs[1] * heatSourceT_F;
-    COP_T2 += performanceMap[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+    COP_T2 = perfPolySet[i_next].COP_coeffs[0];
+    COP_T2 += perfPolySet[i_next].COP_coeffs[1] * heatSourceT_F;
+    COP_T2 += perfPolySet[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-    inputPower_T1_W = performanceMap[i_prev].inputPower_coeffs[0];
-    inputPower_T1_W += performanceMap[i_prev].inputPower_coeffs[1] * heatSourceT_F;
-    inputPower_T1_W += performanceMap[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+    inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
+    inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-    inputPower_T2_W = performanceMap[i_next].inputPower_coeffs[0];
-    inputPower_T2_W += performanceMap[i_next].inputPower_coeffs[1] * heatSourceT_F;
-    inputPower_T2_W += performanceMap[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+    inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
+    inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
     // Interpolate to get COP and input power at the current ambient temperature
     linearInterp(performance.cop,
                  environmentT_F,
-                 performanceMap[i_prev].T_F,
-                 performanceMap[i_next].T_F,
+                 perfPolySet[i_prev].T_F,
+                 perfPolySet[i_next].T_F,
                  COP_T1,
                  COP_T2);
     linearInterp(performance.inputPower_W,
                  environmentT_F,
-                 performanceMap[i_prev].T_F,
-                 performanceMap[i_next].T_F,
+                 perfPolySet[i_prev].T_F,
+                 perfPolySet[i_next].T_F,
                  inputPower_T1_W,
                  inputPower_T2_W);
     performance.outputPower_W = performance.cop * performance.inputPower_W;
@@ -1360,11 +1360,11 @@ bool HPWH::Condenser::isExternalMultipass() const
 
 bool HPWH::Condenser::isExternal() const { return (configuration == Condenser::CONFIG_EXTERNAL); }
 
-void HPWH::Condenser::sortPerformanceMap()
+void HPWH::Condenser::sortPerformancePolySet()
 {
-    std::sort(performanceMap.begin(),
-              performanceMap.end(),
-              [](const PerformancePoint& a, const PerformancePoint& b) -> bool
+    std::sort(perfPolySet.begin(),
+              perfPolySet.end(),
+              [](const PerformancePoly& a, const PerformancePoly& b) -> bool
               { return a.T_F < b.T_F; });
 }
 
@@ -1378,10 +1378,10 @@ void HPWH::Condenser::linearInterp(
 //-----------------------------------------------------------------------------
 ///	@brief	compute a grid representation for performance map of this condenser
 //-----------------------------------------------------------------------------
-void HPWH::Condenser::makeGridFromLegacyMap(std::vector<std::vector<double>>& tempGrid,
+void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
                                             std::vector<std::vector<double>>& tempGridValues) const
 {
-    std::size_t nEnvTempsOrig = performanceMap.size();
+    std::size_t nEnvTempsOrig = perfPolySet.size();
     if (nEnvTempsOrig < 1)
         return;
 
@@ -1396,7 +1396,7 @@ void HPWH::Condenser::makeGridFromLegacyMap(std::vector<std::vector<double>>& te
     double maxCOPCurvature = 0.;
     envTemps_K.reserve(nEnvTempsOrig + 2); // # of map entries, plus endpoints
     envTemps_K.push_back(C_TO_K(minT));
-    for (auto& perfPoint : performanceMap)
+    for (auto& perfPoint : perfPolySet)
     {
         if ((F_TO_C(perfPoint.T_F) > minT) && (F_TO_C(perfPoint.T_F) < maxT))
         {
@@ -1477,11 +1477,11 @@ void HPWH::Condenser::makeGridFromLegacyMap(std::vector<std::vector<double>>& te
 //-----------------------------------------------------------------------------
 ///	@brief	convert performance map of this condenser to grid representation
 //-----------------------------------------------------------------------------
-void HPWH::Condenser::convertLegacyMapToGrid()
+void HPWH::Condenser::convertPolySetToGrid()
 {
     std::vector<std::vector<double>> tempGrid;
     std::vector<std::vector<double>> tempGridValues;
-    makeGridFromLegacyMap(tempGrid, tempGridValues);
+    makeGridFromPolySet(tempGrid, tempGridValues);
     perfGrid.reserve(tempGrid.size());
     for (auto& tempGridAxis : tempGrid)
     {

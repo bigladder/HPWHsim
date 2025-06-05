@@ -2229,7 +2229,7 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
         cond_ptr->makeBtwxt();
     }
     else
-        for (auto& performancePoint : cond_ptr->performanceMap)
+        for (auto& performancePoint : cond_ptr->perfPolySet)
         {
             scaleVector(performancePoint.inputPower_coeffs, scaleCapacity);
             scaleVector(performancePoint.COP_coeffs, scaleCOP);
@@ -2780,7 +2780,7 @@ void HPWH::checkInputs()
             if (cond_ptr->useBtwxtGrid)
             {
                 // If useBtwxtGrid is true that the perfMap is empty
-                if (cond_ptr->performanceMap.size() != 0)
+                if (cond_ptr->perfPolySet.size() != 0)
                 {
                     error_msgs.push("\n\tUsing the grid lookups but a regression-based performance "
                                     "map is given.");
@@ -2813,7 +2813,7 @@ void HPWH::checkInputs()
             else
             {
                 // Check that perfmap only has 1 point if config_external and multipass
-                if (cond_ptr->isExternalMultipass() && cond_ptr->performanceMap.size() != 1)
+                if (cond_ptr->isExternalMultipass() && cond_ptr->perfPolySet.size() != 1)
                 {
                     error_msgs.push(
                         "External multipass heat sources must have a perfMap of only one point "
@@ -4332,17 +4332,17 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
     // pick the nearest temperature index
     int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    auto originalCoefficient = compressor->performanceMap[i_ambientT].COP_coeffs[0];
+    auto originalCoefficient = compressor->perfPolySet[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
     double dCOP_Coefficient =
-        compressor->performanceMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
+        compressor->perfPolySet[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>(compressor->performanceMap.size());
+    int nPerfPts = static_cast<int>(compressor->perfPolySet.size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            compressor->performanceMap[i].COP_coeffs[0] += dCOP_Coefficient;
+            compressor->perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
     }
 
     return testSummary;
@@ -4371,22 +4371,22 @@ void HPWH::makeTier3()
         return;
 
     auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->performanceMap.reserve(3);
-    compressor->performanceMap.clear();
+    compressor->perfPolySet.reserve(3);
+    compressor->perfPolySet.clear();
 
-    compressor->performanceMap.push_back({
+    compressor->perfPolySet.push_back({
         50,                           // Temperature (F)
         {187.064124, 1.939747, 0.0},  // Input Power (W) Coefficients
         {5.22288834, -0.0243008, 0.0} // COP Coefficients
     });
 
-    compressor->performanceMap.push_back({
+    compressor->perfPolySet.push_back({
         67.5,                            // Temperature (F)
         {152.9195905, 2.476598, 0.0},    // Input Power (W) Coefficients
         {6.643934986, -0.032373288, 0.0} // COP Coefficients
     });
 
-    compressor->performanceMap.push_back({
+    compressor->perfPolySet.push_back({
         95,                           // Temperature (F)
         {99.263895, 3.320221, 0.0},   // Input Power (W) Coefficients
         {8.87700829, -0.0450586, 0.0} // COP Coefficients
@@ -4409,22 +4409,22 @@ void HPWH::makeTier4()
         return;
 
     auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->performanceMap.reserve(3);
-    compressor->performanceMap.clear();
+    compressor->perfPolySet.reserve(3);
+    compressor->perfPolySet.clear();
 
-    compressor->performanceMap.push_back({
+    compressor->perfPolySet.push_back({
         50,                    // Temperature (F)
         {126.9, 2.215, 0.0},   // Input Power (W) Coefficients
         {6.931, -0.03395, 0.0} // COP Coefficients
     });
 
-    compressor->performanceMap.push_back({
+    compressor->perfPolySet.push_back({
         67.5,                  // Temperature (F)
         {116.6, 2.467, 0.0},   // Input Power (W) Coefficients
         {8.833, -0.04431, 0.0} // COP Coefficients
     });
 
-    compressor->performanceMap.push_back({
+    compressor->perfPolySet.push_back({
         95,                     // Temperature (F)
         {100.4, 2.863, 0.0},    // Input Power (W) Coefficients
         {11.822, -0.06059, 0.0} // COP Coefficients
