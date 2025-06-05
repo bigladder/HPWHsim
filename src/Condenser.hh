@@ -172,6 +172,9 @@ class HPWH::Condenser : public HPWH::HeatSource
     void setEvaluatePerformanceFunction();
     void setEvaluatePerformanceFunctionIHPWH_Legacy();
 
+    double inputPowerScale = 1.;
+    double COP_scale = 1.;
+
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
     /**< Does a simple linear interpolation between two points to the xnew point */
