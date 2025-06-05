@@ -63,7 +63,7 @@ struct HPWH::Fitter : public Sender
 
       protected:
         virtual std::vector<double>&
-        getCoefficients(HPWH::Condenser::PerformancePoint& perfPoint) = 0;
+        getCoefficients(HPWH::Condenser::PerformancePoly& perfPoint) = 0;
 
         /// check validity and retain pointer to HPWH member variable
         void assign()
@@ -76,7 +76,7 @@ struct HPWH::Fitter : public Sender
             {
                 send_error("Invalid performance representation.");
             }
-            auto& performanceMap = condenser->performanceMap;
+            auto& performanceMap = condenser->perfPolySet;
             if (temperatureIndex >= performanceMap.size())
             {
                 send_error("Invalid heat-source performance-map temperature index.");
@@ -112,9 +112,9 @@ struct HPWH::Fitter : public Sender
         [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
 
         std::vector<double>&
-        getCoefficients(HPWH::Condenser::PerformancePoint& performancePoint) override
+        getCoefficients(HPWH::Condenser::PerformancePoly& perfPoly) override
         {
-            return performancePoint.inputPower_coeffs;
+            return perfPoly.inputPower_coeffs;
         }
     };
 
@@ -135,9 +135,9 @@ struct HPWH::Fitter : public Sender
         [[nodiscard]] std::string getFormat() const override { return "COP[{}]: {}"; }
 
         std::vector<double>&
-        getCoefficients(HPWH::Condenser::PerformancePoint& performancePoint) override
+        getCoefficients(HPWH::Condenser::PerformancePoly& perfPoly) override
         {
-            return performancePoint.COP_coeffs;
+            return perfPoly.COP_coeffs;
         }
     };
 
