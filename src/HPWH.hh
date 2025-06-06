@@ -1044,6 +1044,8 @@ class HPWH : public Courier::Sender
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
+    bool getCondenser(Condenser* &condenser);
+
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
                                  double outTemp = 57.222,
@@ -1421,9 +1423,6 @@ class HPWH : public Courier::Sender
 
     struct Fitter;
 
-    void makeTier3();
-    void makeTier4();
-
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
@@ -1453,6 +1452,9 @@ class HPWH : public Courier::Sender
     {
         return makeGenericUEF(targetUEF, findFirstHourRating().designation);
     }
+
+    void makeTier3();
+    void makeTier4();
 
   private:
     void setAllDefaults(); /**< sets all the defaults */

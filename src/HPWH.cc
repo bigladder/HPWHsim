@@ -1696,6 +1696,12 @@ int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
 
+bool HPWH::getCondenser(Condenser* &condenser)
+{
+    condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return true;
+}
+
 int HPWH::getNumResistanceElements() const
 {
     int count = 0;
@@ -1755,16 +1761,16 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-            performance = cond_ptr->getPerformance(airTemp_C, averageTemp_C);
+            performance = cond_ptr->fPerformance(airTemp_C, averageTemp_C);
         }
         else
         {
-            performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
+            performance = cond_ptr->fPerformance(airTemp_C, inletTemp_C);
         }
     }
     else
     {
-        performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
+        performance = cond_ptr->fPerformance(airTemp_C, inletTemp_C);
     }
 
     switch (pwrUnit)
@@ -2759,53 +2765,6 @@ void HPWH::checkInputs()
                         "Heatsource {:d} is not an external heat source but has an external "
                         "secondary heat exchanger.",
                         i));
-                }
-            }
-
-            // Check performance map
-            // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal
-            // and that ;
-            if (cond_ptr->useBtwxtGrid)
-            {
-                // If useBtwxtGrid is true that the perfMap is empty
-                if (cond_ptr->perfPolySet.size() != 0)
-                {
-                    error_msgs.push("\n\tUsing the grid lookups but a regression-based performance "
-                                    "map is given.");
-                }
-
-                // Check length of vectors in perfGridValue are equal
-                if (cond_ptr->perfGridValues[0].size() != cond_ptr->perfGridValues[1].size() &&
-                    cond_ptr->perfGridValues[0].size() != 0)
-                {
-                    error_msgs.push("When using grid lookups for performance the vectors in "
-                                    "perfGridValues must "
-                                    "be the same length.");
-                }
-
-                // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
-                // lengths
-                size_t expLength = 1;
-                for (const auto& v : cond_ptr->perfGrid)
-                {
-                    expLength *= v.size();
-                }
-                if (expLength != cond_ptr->perfGridValues[0].size())
-                {
-                    error_msgs.push(
-                        "When using grid lookups for perfmance the vectors in perfGridValues must "
-                        "be the same length.");
-                }
-            }
-
-            else
-            {
-                // Check that perfmap only has 1 point if config_external and multipass
-                if (cond_ptr->isExternalMultipass() && cond_ptr->perfPolySet.size() != 1)
-                {
-                    error_msgs.push(
-                        "External multipass heat sources must have a perfMap of only one point "
-                        "with regression equations.");
                 }
             }
         }
@@ -4281,8 +4240,9 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
-    auto copCoefficient0 =
-        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), this);
+
+    auto copCoefficient0 = std::make_shared<HPWH::Fitter::COP_Coefficient>(
+        i_ambientT, 0, get_courier(), compressor);
     parameters.push_back(copCoefficient0);
 
     // auto copCoefficient1 =
@@ -4293,13 +4253,13 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     fitter.fit();
 
     auto performance1 =
-        compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
+        compressor->fPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
 
     if (performance1.cop < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
     /// low condenserT_C
-    auto performance0 = compressor->getPerformance(testConfiguration.ambientT_C, 0.);
+    auto performance0 = compressor->fPerformance(testConfiguration.ambientT_C, 0.);
 
     if (performance0.cop < performance1.cop)
         send_error("COP slope is positive.");
@@ -4320,17 +4280,16 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
     // pick the nearest temperature index
     int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    auto originalCoefficient = compressor->perfPolySet[i_ambientT].COP_coeffs[0];
+    double originalCoefficient = (*compressor->perfPolySet)[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
-    double dCOP_Coefficient =
-        compressor->perfPolySet[i_ambientT].COP_coeffs[0] - originalCoefficient;
+    double dCOP_Coefficient = (*compressor->perfPolySet)[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>(compressor->perfPolySet.size());
+    int nPerfPts = static_cast<int>((*compressor->perfPolySet).size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            compressor->perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
+            (*compressor->perfPolySet)[i].COP_coeffs[0] += dCOP_Coefficient;
     }
 
     return testSummary;
@@ -4359,33 +4318,11 @@ void HPWH::makeTier3()
         return;
 
     auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->perfPolySet.reserve(3);
-    compressor->perfPolySet.clear();
-
-    compressor->perfPolySet.push_back({
-        50,                           // Temperature (F)
-        {187.064124, 1.939747, 0.0},  // Input Power (W) Coefficients
-        {5.22288834, -0.0243008, 0.0} // COP Coefficients
-    });
-
-    compressor->perfPolySet.push_back({
-        67.5,                            // Temperature (F)
-        {152.9195905, 2.476598, 0.0},    // Input Power (W) Coefficients
-        {6.643934986, -0.032373288, 0.0} // COP Coefficients
-    });
-
-    compressor->perfPolySet.push_back({
-        95,                           // Temperature (F)
-        {99.263895, 3.320221, 0.0},   // Input Power (W) Coefficients
-        {8.87700829, -0.0450586, 0.0} // COP Coefficients
-
-    });
+    compressor->fPerformance = compressor->makeTier3_performance();
 
     compressor->minT = F_TO_C(42.0);
     compressor->maxT = F_TO_C(120.);
     compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-    compressor->setEvaluatePerformanceFunctionIHPWH_Legacy();
 }
 
 //-----------------------------------------------------------------------------
@@ -4397,30 +4334,9 @@ void HPWH::makeTier4()
         return;
 
     auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->perfPolySet.reserve(3);
-    compressor->perfPolySet.clear();
-
-    compressor->perfPolySet.push_back({
-        50,                    // Temperature (F)
-        {126.9, 2.215, 0.0},   // Input Power (W) Coefficients
-        {6.931, -0.03395, 0.0} // COP Coefficients
-    });
-
-    compressor->perfPolySet.push_back({
-        67.5,                  // Temperature (F)
-        {116.6, 2.467, 0.0},   // Input Power (W) Coefficients
-        {8.833, -0.04431, 0.0} // COP Coefficients
-    });
-
-    compressor->perfPolySet.push_back({
-        95,                     // Temperature (F)
-        {100.4, 2.863, 0.0},    // Input Power (W) Coefficients
-        {11.822, -0.06059, 0.0} // COP Coefficients
-    });
+    compressor->fPerformance = compressor->makeTier4_performance();
 
     compressor->minT = F_TO_C(37.);
     compressor->maxT = F_TO_C(120.);
     compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-    compressor->setEvaluatePerformanceFunctionIHPWH_Legacy();
 }

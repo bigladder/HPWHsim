@@ -132,7 +132,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "lattice", git = "https://github.com/bigladder/lattice?branch=main" }]
+requires-dist = [{ name = "lattice", git = "https://github.com/bigladder/lattice?branch=is-required-temp-fix" }]
 
 [[package]]
 name = "ghp-import"
@@ -197,7 +197,7 @@ wheels = [
 [[package]]
 name = "lattice"
 version = "0.0.0"
-source = { git = "https://github.com/bigladder/lattice?branch=main#47552e0d5d8ed43117be30a834ab62a371612e58" }
+source = { git = "https://github.com/bigladder/lattice?branch=is-required-temp-fix#c5f816189bdbdb238ecb468e61878cfdd9bb32c4" }
 dependencies = [
     { name = "cbor2" },
     { name = "jinja2" },

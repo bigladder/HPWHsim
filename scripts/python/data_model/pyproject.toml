@@ -9,4 +9,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-lattice = { git = "https://github.com/bigladder/lattice", branch = "main" }
+lattice = { git = "https://github.com/bigladder/lattice", branch = "is-required-temp-fix" }
