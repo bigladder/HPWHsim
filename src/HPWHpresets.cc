@@ -238,19 +238,10 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
-    compressor->perfPolySet.reserve(2);
+    std::vector<Condenser::PerformancePoly> perfPolySet = {
+        { 50., {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+        {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}};
 
-    compressor->perfPolySet.push_back({
-        50,                          // Temperature (F)
-        {187.064124, 1.939747, 0.0}, // Input Power Coefficients
-        {5.4977772, -0.0243008, 0.0} // COP Coefficients
-    });
-
-    compressor->perfPolySet.push_back({
-        70,                         // Temperature (F)
-        {148.0418, 2.553291, 0.0},  // Input Power Coefficients
-        {7.207307, -0.0335265, 0.0} // COP Coefficients
-    });
     compressor->useBtwxtGrid = false;
     compressor->minT = F_TO_C(45.);
     compressor->maxT = F_TO_C(120.);
@@ -300,22 +291,23 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     double fUEF = (energyFactor - 2.0) / uefSpan;
     double genericFudge = (1. - fUEF) * .7 + fUEF * .95;
 
-    compressor->perfPolySet[0].COP_coeffs[0] *= genericFudge;
-    compressor->perfPolySet[0].COP_coeffs[1] *= genericFudge;
-    compressor->perfPolySet[0].COP_coeffs[2] *= genericFudge;
+    perfPolySet[0].COP_coeffs[0] *= genericFudge;
+    perfPolySet[0].COP_coeffs[1] *= genericFudge;
+    perfPolySet[0].COP_coeffs[2] *= genericFudge;
 
-    compressor->perfPolySet[1].COP_coeffs[0] *= genericFudge;
-    compressor->perfPolySet[1].COP_coeffs[1] *= genericFudge;
-    compressor->perfPolySet[1].COP_coeffs[2] *= genericFudge;
+    perfPolySet[1].COP_coeffs[0] *= genericFudge;
+    perfPolySet[1].COP_coeffs[1] *= genericFudge;
+    perfPolySet[1].COP_coeffs[2] *= genericFudge;
 
-    compressor->perfPolySet[0].inputPower_coeffs[0] /= genericFudge;
-    compressor->perfPolySet[0].inputPower_coeffs[1] /= genericFudge;
-    compressor->perfPolySet[0].inputPower_coeffs[2] /= genericFudge;
+    perfPolySet[0].inputPower_coeffs[0] /= genericFudge;
+    perfPolySet[0].inputPower_coeffs[1] /= genericFudge;
+    perfPolySet[0].inputPower_coeffs[2] /= genericFudge;
 
-    compressor->perfPolySet[1].inputPower_coeffs[0] /= genericFudge;
-    compressor->perfPolySet[1].inputPower_coeffs[1] /= genericFudge;
-    compressor->perfPolySet[1].inputPower_coeffs[2] /= genericFudge;
-    compressor->setEvaluatePerformanceFunctionIHPWH_Legacy();
+    perfPolySet[1].inputPower_coeffs[0] /= genericFudge;
+    perfPolySet[1].inputPower_coeffs[1] /= genericFudge;
+    perfPolySet[1].inputPower_coeffs[2] /= genericFudge;
+
+    compressor->fPerformance = compressor->makePerformance(perfPolySet);
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
@@ -338,5 +330,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
-    compressor->sortPerformancePolySet();
+    Condenser::sortPerformancePolySet(perfPolySet);
+    compressor->fPerformance = compressor->makePerformance(perfPolySet);
 }
