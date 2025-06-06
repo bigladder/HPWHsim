@@ -280,10 +280,8 @@ std::shared_ptr<Btwxt::RegularGridInterpolator> HPWH::Condenser::makeBtwxt()
         ++iAxis;
     }
 
-    auto btwxt = std::make_shared<Btwxt::RegularGridInterpolator>(
+    return std::make_shared<Btwxt::RegularGridInterpolator>(
         grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
-
-    return btwxt;
 }
 
 void HPWH::Condenser::from(
@@ -870,11 +868,12 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(
         }
     }
 
-    std::vector<double> target = {externalT_C, condenserT_C};
+    std::vector<double> target = {externalT_C};
     if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
     { // outletT_C
         target.push_back(hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
     }
+    target.push_back(condenserT_C);
 
     auto performance = evaluatePerformance(target);
     performance.inputPower_W *= inputPowerScale;
