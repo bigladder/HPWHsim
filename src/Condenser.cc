@@ -68,6 +68,191 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     return *this;
 }
 
+/// create RGI using grid and model data; assign evaluate-performance function
+void HPWH::Condenser::makePerformanceBtwxt()
+{
+    auto is_integrated = (configuration != CONFIG_EXTERNAL);
+    auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
+    auto is_NyleMP =
+        ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
+
+    std::vector<Btwxt::GridAxis> grid_axes = {};
+    std::size_t iAxis = 0;
+    { // external T
+        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated)
+                                ? Btwxt::InterpolationMethod::linear
+                                : Btwxt::InterpolationMethod::cubic;
+        auto extrapMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
+                                                         : Btwxt::ExtrapolationMethod::linear;
+        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "ExternalT",
+                                            get_courier()));
+        ++iAxis;
+    }
+    if (perfGrid.size() > 2)
+    { // condenser outlet T (CWHS only)
+        auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
+                                            : Btwxt::InterpolationMethod::linear;
+        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
+                                            : Btwxt::ExtrapolationMethod::linear;
+        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "CondenserOutletT",
+                                            get_courier()));
+        ++iAxis;
+    }
+    { // heat-source T
+        auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
+                                                         : Btwxt::InterpolationMethod::cubic;
+        auto extrapMethod = (is_Mitsubishi)
+                                ? Btwxt::ExtrapolationMethod::linear
+                                : ((is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
+                                               : Btwxt::ExtrapolationMethod::linear);
+
+        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "HeatSourceT",
+                                            get_courier()));
+        ++iAxis;
+    }
+
+    perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+        grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
+
+    if (perfGrid.size() > 2)
+    {
+        getPerformanceTarget = [this](double externalT_C, double heatSourceT_C)
+        {
+            return std::vector<double>(
+                {externalT_C,
+                 hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                 heatSourceT_C});
+        };
+    }
+    else
+    {
+        getPerformanceTarget = [](double externalT_C, double heatSourceT_C) {
+            return std::vector<double>({externalT_C, heatSourceT_C});
+        };
+    }
+
+    evaluatePerformance = [this](double externalT_C, double heatSourceT_C)
+    {
+        auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
+        std::vector<double> result = perfRGI->get_values_at_target(target);
+        Performance performance({result[0], result[1] * result[0], result[1]});
+        return performance;
+    };
+
+    useBtwxtGrid = true;
+}
+
+void makePerformancePolySet()
+{
+    getPerformanceTarget = [](double externalT_C, double heatSourceT_C) {
+        return std::vector<double>({externalT_C, heatSourceT_C});
+    };
+
+    evaluatePerformance = [this](double externalT_C, double heatSourceT_C)
+    {
+        Performance performance = {0., 0., 0.};
+
+        size_t i_prev = 0;
+        size_t i_next = 1;
+
+        double externalT_F = C_TO_F(externalT_C);
+        double heatSourceT_F = C_TO_F(heatSourceT_C);
+        for (size_t i = 0; i < perfPolySet.size(); ++i)
+        {
+            if (externalT_F < perfPolySet[i].T_F)
+            {
+                if (i == 0)
+                {
+                    i_prev = 0;
+                    i_next = 1;
+                }
+                else
+                {
+                    i_prev = i - 1;
+                    i_next = i;
+                }
+                break;
+            }
+            else
+            {
+                if (i == perfPolySet.size() - 1)
+                {
+                    i_prev = i - 1;
+                    i_next = i;
+                    break;
+                }
+            }
+        }
+
+        // Calculate COP and Input Power at each of the two reference temperatures
+        double COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
+        COP_T1 += perfPolySet[i_prev].COP_coeffs[1] * heatSourceT_F;
+        COP_T1 += perfPolySet[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+        double COP_T2 = perfPolySet[i_next].COP_coeffs[0];
+        COP_T2 += perfPolySet[i_next].COP_coeffs[1] * heatSourceT_F;
+        COP_T2 += perfPolySet[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+        double inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
+        inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[1] * heatSourceT_F;
+        inputPower_T1_W +=
+            perfPolySet[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+        double inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
+        inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[1] * heatSourceT_F;
+        inputPower_T2_W +=
+            perfPolySet[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+        // Interpolate to get COP and input power at the current ambient temperature
+        Condenser::linearInterp(performance.cop,
+                                externalT_F,
+                                perfPolySet[i_prev].T_F,
+                                perfPolySet[i_next].T_F,
+                                COP_T1,
+                                COP_T2);
+        linearInterp(performance.inputPower_W,
+                     externalT_F,
+                     perfPolySet[i_prev].T_F,
+                     perfPolySet[i_next].T_F,
+                     inputPower_T1_W,
+                     inputPower_T2_W);
+        performance.outputPower_W = performance.cop * performance.inputPower_W;
+        return performance;
+    };
+
+    useBtwxtGrid = false;
+}
+
+void HPWH::Condenser::makeTier3_performance()
+{
+    perfPolySet = {{50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+                   {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+                   {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
+
+    makePerformancePolySet();
+}
+
+void HPWH::Condenser::makeTier4_performance()
+{
+    perfPolySet = {{50., {126.9, 2.215, 0.}, {6.931, -0.03395, 0.}},
+                   {67.5, {116.6, 2.467, 0.}, {8.833, -0.04431, 0.}},
+                   {95., {100.4, 2.863, 0.}, {11.822, -0.06059, 0.}}};
+
+    makePerformancePolySet();
+}
+
 int HPWH::Condenser::getAmbientT_index(double ambientT_C)
 {
     int nPerfPts = static_cast<int>(perfPolySet.size());
