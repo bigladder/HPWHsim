@@ -39,7 +39,7 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     lockedOut = cond_in.lockedOut;
 
     useBtwxtGrid = cond_in.useBtwxtGrid;
-    fPerformance = cond_in.fPerformance;
+    evaluatePerformance = cond_in.evaluatePerformance;
 
     defrostMap = cond_in.defrostMap;
     resDefrost = cond_in.resDefrost;
@@ -321,7 +321,7 @@ void HPWH::Condenser::from(
 
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
-        fPerformance = makePerformanceBtwxt();
+        makePerformanceBtwxt();
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -404,7 +404,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
 
-        fPerformance = makePerformanceBtwxt();
+        makePerformanceBtwxt();
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -745,7 +745,7 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
     {
         // calculate capacity btu/hr, input btu/hr, and cop
         hpwh->condenserInlet_C = getTankTemp();
-        performance = fPerformance(externalT_C, getTankTemp());
+        performance = getPerformance(externalT_C, getTankTemp());
         double cap_kJ = (performance.outputPower_W / 1000.) * (60. * minutesToRun);
 
         double leftoverCap_kJ = heat(cap_kJ, maxSetpoint_C);
@@ -782,10 +782,8 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
     energyOutput_kWh += (performance.outputPower_W / 1000.) * (runtime_min / min_per_hr);
 }
 
-HPWH::Condenser::Performance HPWH::Condenser::getPerformance(
-    double externalT_C,
-    double condenserT_C,
-    std::function<Performance(const std::vector<double>&)> evaluatePerformance) const
+HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
+                                                             double condenserT_C) const
 {
     bool resDefrostHeatingOn = false;
 
@@ -923,7 +921,7 @@ double HPWH::Condenser::addHeatExternal(double externalT_C,
         double& externalOutletT_C = hpwh->tank->nodeTs_C[externalOutletHeight];
 
         // how much heat is available in remaining time
-        Performance tempPerformance = fPerformance(externalT_C, externalOutletT_C);
+        auto tempPerformance = getPerformance(externalT_C, externalOutletT_C);
 
         double heatingPower_kW = tempPerformance.outputPower_W / 1000.;
 
@@ -1061,7 +1059,7 @@ double HPWH::Condenser::addHeatExternalMP(double externalT_C,
         double& externalOutletT_C = hpwh->tank->nodeTs_C[externalOutletHeight];
 
         // find heating capacity
-        auto tempPerformance = fPerformance(externalT_C, externalOutletT_C);
+        auto tempPerformance = getPerformance(externalT_C, externalOutletT_C);
 
         double heatingPower_kW = tempPerformance.outputPower_W / 1000.;
 
@@ -1250,7 +1248,8 @@ void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& temp
         {
             if (outletTemps_K.empty())
             {
-                Performance performance = fPerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
+                auto performance =
+                    evaluatePerformance({K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K)});
                 inputPowers_W[i] = performance.inputPower_W;
                 heatingCapacities_W[i] = performance.outputPower_W;
                 ++i;
