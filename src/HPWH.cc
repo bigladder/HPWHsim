@@ -2767,6 +2767,11 @@ void HPWH::checkInputs()
                         i));
                 }
             }
+
+            if (cond_ptr->evaluatePerformance == nullptr)
+            {
+                error_msgs.push("Condenser does not have a performance function.");
+            }
         }
     }
 
