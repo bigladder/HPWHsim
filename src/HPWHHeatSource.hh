@@ -11,7 +11,7 @@ class HPWH::HeatSource : public Sender
     static const int CONDENSITY_SIZE = 12;
 
     HeatSource(HPWH* hpwh_in = NULL,
-               const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+               std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
                const std::string& name_in = "heatsource");
 
     HeatSource(const HeatSource& heatSource); /// copy constructor

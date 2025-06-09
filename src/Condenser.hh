@@ -11,7 +11,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 {
   public:
     Condenser(HPWH* hpwh_in = NULL,
-              const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+              std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
               const std::string& name_in = "condenser");
 
     Condenser& operator=(const Condenser& hSource);
@@ -63,16 +63,6 @@ class HPWH::Condenser : public HPWH::HeatSource
         CONFIG_EXTERNAL
     };
 
-    /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
-    enum EXTRAP_METHOD
-    {
-        EXTRAP_LINEAR, /**< the default extrapolates linearly */
-        EXTRAP_NEAREST /**< extrapolates using nearest neighbor, will just continue from closest
-                          point  */
-    };
-
-    EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
-
     bool doDefrost;
     /**<  If and only if true will derate the COP of a compressor to simulate a defrost cycle  */
 
@@ -114,31 +104,8 @@ class HPWH::Condenser : public HPWH::HeatSource
     heat exchanger by adding extra input energy for the pump and an increaes in the water to the
     incoming waater temperature to the heatpump*/
 
-    /// Polynomials for evaluating input power and COP.
-    /// Three different representations of the temperature variations are used:
-    /// 1.  one-dimensional quadratic expansions (three terms each) wrt condenser temperature of
-    ///     input power and cop at the specified external temperature.
-    /// 2.  three-dimensional polynomial (11 terms each) wrt external, outlet, and condenser
-    ///     temperatures. The variation with external temperature
-    ///     is clipped at the specified temperature.
-    /// 3.  two-dimensional polynomial (six terms each) wrt external and condenser
-    ///     temperatures.The variation with external temperature
-    ///     is clipped at the specified temperature.
   public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
-
-    /// Performance map containing one or more performance points.
-    /// For case 1. above, the map typically contains multiple points, at various temperatures.
-    /// Linear interpolation is applied to the collection of points.
-    /// Only the first entry is used for cases 2. and 3.
-    // std::vector<PerformancePoly> perfPolySet;
-
-    struct PerformancePoly
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs;
-        std::vector<double> COP_coeffs;
-    };
 
     struct Performance
     {
@@ -147,15 +114,29 @@ class HPWH::Condenser : public HPWH::HeatSource
         double cop;
     };
 
-    std::vector<std::vector<double>> perfGrid = {};
-    std::vector<std::vector<double>> perfGridValues = {};
-    std::shared_ptr<Btwxt::RegularGridInterpolator> pPerfRGI = {};
+    /// performance polynomial to form a polynomial set of
+    /// multiple points at various temperatures.
+    /// Linear interpolation is applied to the collection of points.
+    struct PerformancePoly
+    {
+        double T_F;
+        std::vector<double> inputPower_coeffs;
+        std::vector<double> COP_coeffs;
+    };
     std::vector<PerformancePoly> perfPolySet = {};
 
+    /// performance grid data and values to form btwxt RGI
+    std::vector<std::vector<double>> perfGrid = {};
+    std::vector<std::vector<double>> perfGridValues = {};
+    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
+
+    /// core performance-evaluation function
     std::function<Performance(const std::vector<double>&)> evaluatePerformance;
 
+    /// general performance function used by all models
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 
+    /// create RGI using grid and model data; assign evaluate-performance function
     void makePerformanceBtwxt()
     {
         auto is_integrated = (configuration != CONFIG_EXTERNAL);
@@ -165,7 +146,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
         std::vector<Btwxt::GridAxis> grid_axes = {};
         std::size_t iAxis = 0;
-        {
+        { // external T
             auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated)
                                     ? Btwxt::InterpolationMethod::linear
                                     : Btwxt::InterpolationMethod::cubic;
@@ -175,13 +156,12 @@ class HPWH::Condenser : public HPWH::HeatSource
                                                 interpMethod,
                                                 extrapMethod,
                                                 {-DBL_MAX, DBL_MAX},
-                                                "TAir",
+                                                "ExternalT",
                                                 get_courier()));
             ++iAxis;
         }
-
         if (perfGrid.size() > 2)
-        {
+        { // condenser outlet T (CWHS only)
             auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
                                                 : Btwxt::InterpolationMethod::linear;
             auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
@@ -190,12 +170,11 @@ class HPWH::Condenser : public HPWH::HeatSource
                                                 interpMethod,
                                                 extrapMethod,
                                                 {-DBL_MAX, DBL_MAX},
-                                                "TOut",
+                                                "CondenserOutletT",
                                                 get_courier()));
             ++iAxis;
         }
-
-        {
+        { // heat-source T
             auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
                                                              : Btwxt::InterpolationMethod::cubic;
             auto extrapMethod = (is_Mitsubishi)
@@ -207,17 +186,17 @@ class HPWH::Condenser : public HPWH::HeatSource
                                                 interpMethod,
                                                 extrapMethod,
                                                 {-DBL_MAX, DBL_MAX},
-                                                "Tin",
+                                                "HeatSourceT",
                                                 get_courier()));
             ++iAxis;
         }
 
-        pPerfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+        perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
             grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
 
         evaluatePerformance = [this](const std::vector<double>& target)
         {
-            std::vector<double> result = pPerfRGI->get_values_at_target(target);
+            std::vector<double> result = perfRGI->get_values_at_target(target);
             Performance performance({result[0], result[1] * result[0], result[1]});
             return performance;
         };
@@ -225,6 +204,8 @@ class HPWH::Condenser : public HPWH::HeatSource
         useBtwxtGrid = true;
     }
 
+    /// one-dimensional quadratic expansions (three terms each) wrt condenser temperature of
+    ///     input power and cop at the specified external temperature.
     void makePerformancePolySet()
     {
         evaluatePerformance = [this](const std::vector<double>& target)
@@ -233,10 +214,6 @@ class HPWH::Condenser : public HPWH::HeatSource
             double heatSourceT_C = target[1];
 
             Performance performance = {0., 0., 0.};
-
-            double COP_T1, COP_T2; // cop at ambient temperatures T1 and T2
-            double inputPower_T1_W,
-                inputPower_T2_W; // input power at ambient temperatures T1 and T2
 
             size_t i_prev = 0;
             size_t i_next = 1;
@@ -271,20 +248,20 @@ class HPWH::Condenser : public HPWH::HeatSource
             }
 
             // Calculate COP and Input Power at each of the two reference temperatures
-            COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
+            double COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
             COP_T1 += perfPolySet[i_prev].COP_coeffs[1] * heatSourceT_F;
             COP_T1 += perfPolySet[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-            COP_T2 = perfPolySet[i_next].COP_coeffs[0];
+            double COP_T2 = perfPolySet[i_next].COP_coeffs[0];
             COP_T2 += perfPolySet[i_next].COP_coeffs[1] * heatSourceT_F;
             COP_T2 += perfPolySet[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-            inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
+            double inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
             inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[1] * heatSourceT_F;
             inputPower_T1_W +=
                 perfPolySet[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-            inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
+            double inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
             inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[1] * heatSourceT_F;
             inputPower_T2_W +=
                 perfPolySet[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
@@ -335,8 +312,8 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     /**< Does a simple linear interpolation between two points to the xnew point */
 
-    /// pick the nearest temperature index
-    static int getAmbientT_index(double ambientT_C);
+    /// pick the nearest temperature index in a PolySet
+    int getAmbientT_index(double ambientT_C);
 
     double standbyPower_kW;
 

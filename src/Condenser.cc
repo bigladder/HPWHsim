@@ -13,16 +13,15 @@
 #include "Condenser.hh"
 
 HPWH::Condenser::Condenser(HPWH* hpwh_in,
-                           const std::shared_ptr<Courier::Courier> courier,
+                           std::shared_ptr<Courier::Courier> courier,
                            const std::string& name_in)
     : HeatSource(hpwh_in, courier, name_in)
     , hysteresis_dC(0)
     , maxSetpoint_C(100.)
-
-    , extrapolationMethod(EXTRAP_LINEAR)
     , doDefrost(false)
     , maxOut_at_LowT {100, -273.15}
     , secondaryHeatExchanger {0., 0., 0.}
+    , evaluatePerformance({})
     , inputPowerScale(1.)
     , COP_scale(1.)
     , standbyPower_kW(0.)
@@ -38,6 +37,10 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     Tshrinkage_C = cond_in.Tshrinkage_C;
     lockedOut = cond_in.lockedOut;
 
+    perfGrid = cond_in.perfGrid;
+    perfGridValues = cond_in.perfGridValues;
+    perfRGI = cond_in.perfRGI;
+    perfPolySet = cond_in.perfPolySet;
     useBtwxtGrid = cond_in.useBtwxtGrid;
     evaluatePerformance = cond_in.evaluatePerformance;
 
@@ -52,7 +55,6 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     externalOutletHeight = cond_in.externalOutletHeight;
 
     lowestNode = cond_in.lowestNode;
-    extrapolationMethod = cond_in.extrapolationMethod;
     secondaryHeatExchanger = cond_in.secondaryHeatExchanger;
 
     hysteresis_dC = cond_in.hysteresis_dC;
@@ -66,15 +68,13 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     return *this;
 }
 
-/*static*/
 int HPWH::Condenser::getAmbientT_index(double ambientT_C)
 {
-    std::vector<double> ambientTs_C = {50., 67.5, 95.};
-    int nPerfPts = static_cast<int>(ambientTs_C.size());
+    int nPerfPts = static_cast<int>(perfPolySet.size());
     int i0 = 0, i1 = 0;
-    for (auto& perfPoint : ambientTs_C)
+    for (auto& perfPoint : perfPolySet)
     {
-        if (ambientT_C < F_TO_C(perfPoint))
+        if (C_TO_F(ambientT_C) < perfPoint.T_F)
             break;
         i0 = i1;
         ++i1;
@@ -82,7 +82,8 @@ int HPWH::Condenser::getAmbientT_index(double ambientT_C)
     double ratio = 0.;
     if ((i1 > i0) && (i1 < nPerfPts))
     {
-        ratio = (ambientT_C - ambientTs_C[i0]) / (ambientTs_C[i1] - ambientTs_C[i0]);
+        ratio = (C_TO_F(ambientT_C) - perfPolySet[i0].T_F) /
+                (perfPolySet[i1].T_F - perfPolySet[i0].T_F);
     }
     return (ratio < 0.5) ? i0 : i1;
 }
@@ -541,7 +542,7 @@ void HPWH::Condenser::to(
             for (auto& heatSourceTemp_K : heatSourceTemps_K)
             {
                 std::vector target = {K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K)};
-                std::vector<double> result = pPerfRGI->get_values_at_target(target);
+                std::vector<double> result = perfRGI->get_values_at_target(target);
 
                 inputPowers_W[i] = result[0];
                 heatingCapacities_W[i] = result[1] * inputPowers_W[i];
@@ -676,7 +677,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                 {
                     std::vector<double> target = {
                         K_TO_C(envTemp_K), K_TO_C(outletTemp_K), K_TO_C(heatSourceTemp_K)};
-                    std::vector<double> result = pPerfRGI->get_values_at_target(target);
+                    std::vector<double> result = perfRGI->get_values_at_target(target);
 
                     inputPowers_W[i] = result[0];
                     heatingCapacities_W[i] = result[1] * inputPowers_W[i];

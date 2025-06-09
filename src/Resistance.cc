@@ -6,7 +6,7 @@
 #include "Resistance.hh"
 
 HPWH::Resistance::Resistance(HPWH* hpwh_in,
-                             const std::shared_ptr<Courier::Courier> courier_in,
+                             std::shared_ptr<Courier::Courier> courier_in,
                              const std::string& name_in)
     : HPWH::HeatSource(hpwh_in, courier_in, name_in), power_kW(0.)
 {
