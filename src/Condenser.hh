@@ -130,8 +130,10 @@ class HPWH::Condenser : public HPWH::HeatSource
     std::vector<std::vector<double>> perfGridValues = {};
     std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
 
+    std::function<std::vector<double>(double externalT_C, double condenserT_C)> getPerformanceTarget;
+
     /// core performance-evaluation function
-    std::function<Performance(const std::vector<double>&)> evaluatePerformance;
+    std::function<Performance(double externalT_C, double condenserT_C)> evaluatePerformance;
 
     /// general performance function used by all models
     Performance getPerformance(double externalT_C, double condenserT_C) const;
@@ -194,8 +196,26 @@ class HPWH::Condenser : public HPWH::HeatSource
         perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
             grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
 
-        evaluatePerformance = [this](const std::vector<double>& target)
+        if (perfGrid.size() > 2)
         {
+            getPerformanceTarget = [this](double externalT_C, double heatSourceT_C)
+            {
+                return std::vector<double>({ externalT_C,
+                                            hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                                            heatSourceT_C });
+            };
+        }
+        else
+        {
+            getPerformanceTarget = [](double externalT_C, double heatSourceT_C)
+            {
+                return std::vector<double>({ externalT_C, heatSourceT_C });
+            };
+        }
+
+        evaluatePerformance = [this](double externalT_C, double heatSourceT_C)
+        {
+            auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
             std::vector<double> result = perfRGI->get_values_at_target(target);
             Performance performance({result[0], result[1] * result[0], result[1]});
             return performance;
@@ -208,21 +228,23 @@ class HPWH::Condenser : public HPWH::HeatSource
     ///     input power and cop at the specified external temperature.
     void makePerformancePolySet()
     {
-        evaluatePerformance = [this](const std::vector<double>& target)
+        getPerformanceTarget = [](double externalT_C, double heatSourceT_C)
         {
-            double environmentT_C = target[0];
-            double heatSourceT_C = target[1];
+            return std::vector<double>({externalT_C, heatSourceT_C});
+        };
 
+        evaluatePerformance = [this](double externalT_C, double heatSourceT_C)
+        {
             Performance performance = {0., 0., 0.};
 
             size_t i_prev = 0;
             size_t i_next = 1;
 
-            double environmentT_F = C_TO_F(environmentT_C);
+            double externalT_F = C_TO_F(externalT_C);
             double heatSourceT_F = C_TO_F(heatSourceT_C);
             for (size_t i = 0; i < perfPolySet.size(); ++i)
             {
-                if (environmentT_F < perfPolySet[i].T_F)
+                if (externalT_F < perfPolySet[i].T_F)
                 {
                     if (i == 0)
                     {
@@ -268,13 +290,13 @@ class HPWH::Condenser : public HPWH::HeatSource
 
             // Interpolate to get COP and input power at the current ambient temperature
             Condenser::linearInterp(performance.cop,
-                                    environmentT_F,
+                                    externalT_F,
                                     perfPolySet[i_prev].T_F,
                                     perfPolySet[i_next].T_F,
                                     COP_T1,
                                     COP_T2);
             linearInterp(performance.inputPower_W,
-                         environmentT_F,
+                         externalT_F,
                          perfPolySet[i_prev].T_F,
                          perfPolySet[i_next].T_F,
                          inputPower_T1_W,

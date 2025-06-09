@@ -802,14 +802,7 @@ HPWH::Condenser::Performance HPWH::Condenser::getPerformance(double externalT_C,
         }
     }
 
-    std::vector<double> target = {externalT_C};
-    if (configuration == COIL_CONFIG::CONFIG_EXTERNAL)
-    { // outletT_C
-        target.push_back(hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
-    }
-    target.push_back(condenserT_C);
-
-    auto performance = evaluatePerformance(target);
+    auto performance = evaluatePerformance(externalT_C, condenserT_C);
     performance.inputPower_W *= inputPowerScale;
     performance.cop *= COP_scale;
     performance.outputPower_W = performance.cop * performance.inputPower_W;
@@ -1250,7 +1243,7 @@ void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& temp
             if (outletTemps_K.empty())
             {
                 auto performance =
-                    evaluatePerformance({K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K)});
+                    evaluatePerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
                 inputPowers_W[i] = performance.inputPower_W;
                 heatingCapacities_W[i] = performance.outputPower_W;
                 ++i;
