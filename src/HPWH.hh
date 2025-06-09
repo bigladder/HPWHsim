@@ -1044,7 +1044,7 @@ class HPWH : public Courier::Sender
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    bool getCondenser(Condenser* &condenser);
+    bool getCondenser(Condenser*& condenser);
 
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,

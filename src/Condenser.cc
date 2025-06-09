@@ -225,65 +225,6 @@ void trimGridVector(std::vector<double>& V, const double minT, const double maxT
     }
 }
 
-std::shared_ptr<Btwxt::RegularGridInterpolator> HPWH::Condenser::makeBtwxt()
-{
-    auto is_integrated = (configuration != CONFIG_EXTERNAL);
-    auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
-    auto is_NyleMP =
-        ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
-
-    std::vector<Btwxt::GridAxis> grid_axes = {};
-    std::size_t iAxis = 0;
-    {
-        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated)
-                                ? Btwxt::InterpolationMethod::linear
-                                : Btwxt::InterpolationMethod::cubic;
-        auto extrapMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
-                                                         : Btwxt::ExtrapolationMethod::linear;
-        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                                            interpMethod,
-                                            extrapMethod,
-                                            {-DBL_MAX, DBL_MAX},
-                                            "TAir",
-                                            get_courier()));
-        ++iAxis;
-    }
-
-    if (perfGrid.size() > 2)
-    {
-        auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
-                                            : Btwxt::InterpolationMethod::linear;
-        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
-                                            : Btwxt::ExtrapolationMethod::linear;
-        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                                            interpMethod,
-                                            extrapMethod,
-                                            {-DBL_MAX, DBL_MAX},
-                                            "TOut",
-                                            get_courier()));
-        ++iAxis;
-    }
-
-    {
-        auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
-                                                         : Btwxt::InterpolationMethod::cubic;
-        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::linear
-                                            : ((is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
-                                                           : Btwxt::ExtrapolationMethod::linear);
-
-        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                                            interpMethod,
-                                            extrapMethod,
-                                            {-DBL_MAX, DBL_MAX},
-                                            "Tin",
-                                            get_courier()));
-        ++iAxis;
-    }
-
-    return std::make_shared<Btwxt::RegularGridInterpolator>(
-        grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
-}
-
 void HPWH::Condenser::from(
     const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs)
 {
@@ -307,8 +248,6 @@ void HPWH::Condenser::from(
     const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs)
 {
     description.from(hs);
-    productInformation.from(hs);
-
     productInformation.from(hs);
 
     auto& perf = hs.performance;
@@ -382,8 +321,7 @@ void HPWH::Condenser::from(
 
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
-
-        fPerformance = makePerformance(makeBtwxt());
+        fPerformance = makePerformanceBtwxt();
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -400,8 +338,6 @@ void HPWH::Condenser::from(
 void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
     description.from(hs);
-    productInformation.from(hs);
-
     productInformation.from(hs);
 
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
@@ -468,7 +404,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
 
-        fPerformance = makePerformance(makeBtwxt());
+        fPerformance = makePerformanceBtwxt();
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -498,7 +434,6 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         maxOut_at_LowT.airT_C = F_TO_C(40.);
     }
 }
-
 
 void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& hs) const
 {
@@ -606,7 +541,7 @@ void HPWH::Condenser::to(
             for (auto& heatSourceTemp_K : heatSourceTemps_K)
             {
                 std::vector target = {K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K)};
-                std::vector<double> result = perfRGI->get_values_at_target(target);
+                std::vector<double> result = pPerfRGI->get_values_at_target(target);
 
                 inputPowers_W[i] = result[0];
                 heatingCapacities_W[i] = result[1] * inputPowers_W[i];
@@ -741,7 +676,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                 {
                     std::vector<double> target = {
                         K_TO_C(envTemp_K), K_TO_C(outletTemp_K), K_TO_C(heatSourceTemp_K)};
-                    std::vector<double> result = perfRGI->get_values_at_target(target);
+                    std::vector<double> result = pPerfRGI->get_values_at_target(target);
 
                     inputPowers_W[i] = result[0];
                     heatingCapacities_W[i] = result[1] * inputPowers_W[i];
@@ -1220,11 +1155,10 @@ void HPWH::Condenser::linearInterp(
     ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
-/*static*/
-void HPWH::Condenser::sortPerformancePolySet(std::vector<PerformancePoly> &polySet)
+void HPWH::Condenser::sortPerformancePolySet()
 {
-    std::sort(polySet.begin(),
-              polySet.end(),
+    std::sort(perfPolySet.begin(),
+              perfPolySet.end(),
               [](const PerformancePoly& a, const PerformancePoly& b) -> bool
               { return a.T_F < b.T_F; });
 }
@@ -1233,9 +1167,9 @@ void HPWH::Condenser::sortPerformancePolySet(std::vector<PerformancePoly> &polyS
 ///	@brief	compute a grid representation for performance map of this condenser
 //-----------------------------------------------------------------------------
 void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
-                                            std::vector<std::vector<double>>& tempGridValues) const
+                                          std::vector<std::vector<double>>& tempGridValues) const
 {
-    std::size_t nEnvTempsOrig = perfPolySet->size();
+    std::size_t nEnvTempsOrig = perfPolySet.size();
     if (nEnvTempsOrig < 1)
         return;
 
@@ -1250,7 +1184,7 @@ void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& temp
     double maxCOPCurvature = 0.;
     envTemps_K.reserve(nEnvTempsOrig + 2); // # of map entries, plus endpoints
     envTemps_K.push_back(C_TO_K(minT));
-    for (auto& perfPoly : *perfPolySet)
+    for (auto& perfPoly : perfPolySet)
     {
         if ((F_TO_C(perfPoly.T_F) > minT) && (F_TO_C(perfPoly.T_F) < maxT))
         {
@@ -1316,8 +1250,7 @@ void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& temp
         {
             if (outletTemps_K.empty())
             {
-                Performance performance =
-                    fPerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
+                Performance performance = fPerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
                 inputPowers_W[i] = performance.inputPower_W;
                 heatingCapacities_W[i] = performance.outputPower_W;
                 ++i;
