@@ -1242,8 +1242,7 @@ void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& temp
         {
             if (outletTemps_K.empty())
             {
-                auto performance =
-                    evaluatePerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
+                auto performance = evaluatePerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
                 inputPowers_W[i] = performance.inputPower_W;
                 heatingCapacities_W[i] = performance.outputPower_W;
                 ++i;
