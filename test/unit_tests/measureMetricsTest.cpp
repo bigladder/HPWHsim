@@ -96,9 +96,9 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
     const std::string modelName = "Rheem2020Prem50";
     hpwh.initPreset(modelName);
 
-    HPWH::Condenser *condenser;
+    HPWH::Condenser* condenser;
     hpwh.getCondenser(condenser);
-    condenser->fPerformance = condenser->makeTier4_performance();
+    condenser->makeTier4_performance();
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating sequence.";
@@ -125,9 +125,9 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
     const std::string modelName = "Rheem2020Prem50";
     hpwh.initPreset(modelName);
 
-    HPWH::Condenser *condenser;
+    HPWH::Condenser* condenser;
     hpwh.getCondenser(condenser);
-    condenser->fPerformance = condenser->makeTier4_performance();
+    condenser->makeTier4_performance();
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";

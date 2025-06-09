@@ -152,12 +152,11 @@ class HPWH::Condenser : public HPWH::HeatSource
     std::shared_ptr<Btwxt::RegularGridInterpolator> pPerfRGI = {};
     std::vector<PerformancePoly> perfPolySet = {};
 
-    Performance getPerformance(
-        double externalT_C,
-        double condenserT_C,
-        std::function<Performance(const std::vector<double>& vars)> fEvaluatePerformance) const;
+    std::function<Performance(const std::vector<double>&)> evaluatePerformance;
 
-    std::function<Performance(double, double)> makePerformanceBtwxt()
+    Performance getPerformance(double externalT_C, double condenserT_C) const;
+
+    void makePerformanceBtwxt()
     {
         auto is_integrated = (configuration != CONFIG_EXTERNAL);
         auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
@@ -216,8 +215,7 @@ class HPWH::Condenser : public HPWH::HeatSource
         pPerfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
             grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
 
-        std::function<Performance(const std::vector<double>&)> fEval =
-            [this](const std::vector<double>& target)
+        evaluatePerformance = [this](const std::vector<double>& target)
         {
             std::vector<double> result = pPerfRGI->get_values_at_target(target);
             Performance performance({result[0], result[1] * result[0], result[1]});
@@ -225,14 +223,11 @@ class HPWH::Condenser : public HPWH::HeatSource
         };
 
         useBtwxtGrid = true;
-        return [this, fEval](double externalT_C, double condenserT_C)
-        { return getPerformance(externalT_C, condenserT_C, fEval); };
     }
 
-    std::function<Performance(double, double)> makePerformancePolySet()
+    void makePerformancePolySet()
     {
-        std::function<Performance(const std::vector<double>&)> fEval =
-            [this](const std::vector<double>& target)
+        evaluatePerformance = [this](const std::vector<double>& target)
         {
             double environmentT_C = target[0];
             double heatSourceT_C = target[1];
@@ -310,39 +305,30 @@ class HPWH::Condenser : public HPWH::HeatSource
             performance.outputPower_W = performance.cop * performance.inputPower_W;
             return performance;
         };
+
         useBtwxtGrid = false;
-        return [this, fEval](double externalT_C, double condenserT_C)
-        { return getPerformance(externalT_C, condenserT_C, fEval); };
     };
 
-    std::function<Performance(double, double)> makeTier3_performance()
+    void makeTier3_performance()
     {
         perfPolySet = {{50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
                        {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
                        {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
 
-        std::function<Performance(double, double)> fPerf =
-            [this](double externalT_C, double condenserT_C)
-        { return makePerformancePolySet()(externalT_C, condenserT_C); };
-        return fPerf;
+        makePerformancePolySet();
     }
 
-    std::function<Performance(double, double)> makeTier4_performance()
+    void makeTier4_performance()
     {
         perfPolySet = {{50., {126.9, 2.215, 0.}, {6.931, -0.03395, 0.}},
                        {67.5, {116.6, 2.467, 0.}, {8.833, -0.04431, 0.}},
                        {95., {100.4, 2.863, 0.}, {11.822, -0.06059, 0.}}};
 
-        std::function<Performance(double, double)> fPerf =
-            [this](double externalT_C, double condenserT_C)
-        { return makePerformancePolySet()(externalT_C, condenserT_C); };
-        return fPerf;
+        makePerformancePolySet();
     }
 
     void makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
                              std::vector<std::vector<double>>& tempGridValues) const;
-
-    std::function<Performance(double, double)> fPerformance;
 
     double inputPowerScale = 1.;
     double COP_scale = 1.;

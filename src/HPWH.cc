@@ -1761,16 +1761,16 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-            performance = cond_ptr->fPerformance(airTemp_C, averageTemp_C);
+            performance = cond_ptr->getPerformance(airTemp_C, averageTemp_C);
         }
         else
         {
-            performance = cond_ptr->fPerformance(airTemp_C, inletTemp_C);
+            performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
         }
     }
     else
     {
-        performance = cond_ptr->fPerformance(airTemp_C, inletTemp_C);
+        performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
     }
 
     switch (pwrUnit)
@@ -4253,13 +4253,13 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     fitter.fit();
 
     auto performance1 =
-        compressor->fPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
+        compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
 
     if (performance1.cop < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
     /// low condenserT_C
-    auto performance0 = compressor->fPerformance(testConfiguration.ambientT_C, 0.);
+    auto performance0 = compressor->getPerformance(testConfiguration.ambientT_C, 0.);
 
     if (performance0.cop < performance1.cop)
         send_error("COP slope is positive.");
@@ -4319,7 +4319,7 @@ void HPWH::makeTier3()
         return;
 
     auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->fPerformance = compressor->makeTier3_performance();
+    compressor->makeTier3_performance();
 
     compressor->minT = F_TO_C(42.0);
     compressor->maxT = F_TO_C(120.);
@@ -4335,7 +4335,7 @@ void HPWH::makeTier4()
         return;
 
     auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->fPerformance = compressor->makeTier4_performance();
+    compressor->makeTier4_performance();
 
     compressor->minT = F_TO_C(37.);
     compressor->maxT = F_TO_C(120.);
