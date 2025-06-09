@@ -72,12 +72,12 @@ struct HPWH::Fitter : public Sender
             {
                 send_error("Invalid performance representation.");
             }
-            if (temperatureIndex >= (*condenser->perfPolySet).size())
+            if (temperatureIndex >= (condenser->perfPolySet).size())
             {
                 send_error("Invalid heat-source performance-map temperature index.");
             }
 
-            auto& perfPoly = (*condenser->perfPolySet)[temperatureIndex];
+            auto& perfPoly = (condenser->perfPolySet)[temperatureIndex];
             auto& perfCoeffs = getCoefficients(perfPoly);
             if (exponent >= perfCoeffs.size())
             {

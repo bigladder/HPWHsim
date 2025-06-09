@@ -1696,7 +1696,7 @@ int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
 
-bool HPWH::getCondenser(Condenser* &condenser)
+bool HPWH::getCondenser(Condenser*& condenser)
 {
     condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
     return true;
@@ -4241,8 +4241,8 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     // set up parameters
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
 
-    auto copCoefficient0 = std::make_shared<HPWH::Fitter::COP_Coefficient>(
-        i_ambientT, 0, get_courier(), compressor);
+    auto copCoefficient0 =
+        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), compressor);
     parameters.push_back(copCoefficient0);
 
     // auto copCoefficient1 =
@@ -4280,16 +4280,17 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
     // pick the nearest temperature index
     int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    double originalCoefficient = (*compressor->perfPolySet)[i_ambientT].COP_coeffs[0];
+    double originalCoefficient = (compressor->perfPolySet)[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
-    double dCOP_Coefficient = (*compressor->perfPolySet)[i_ambientT].COP_coeffs[0] - originalCoefficient;
+    double dCOP_Coefficient =
+        (compressor->perfPolySet)[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>((*compressor->perfPolySet).size());
+    int nPerfPts = static_cast<int>((compressor->perfPolySet).size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            (*compressor->perfPolySet)[i].COP_coeffs[0] += dCOP_Coefficient;
+            (compressor->perfPolySet)[i].COP_coeffs[0] += dCOP_Coefficient;
     }
 
     return testSummary;
