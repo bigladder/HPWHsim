@@ -4285,17 +4285,17 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
     // pick the nearest temperature index
     int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    double originalCoefficient = (compressor->perfPolySet)[i_ambientT].COP_coeffs[0];
+    auto& perfPolySet = (*(compressor->pPerfPolySet));
+    double originalCoefficient = perfPolySet[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
 
-    double dCOP_Coefficient =
-        (compressor->perfPolySet)[i_ambientT].COP_coeffs[0] - originalCoefficient;
+    double dCOP_Coefficient = perfPolySet[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>((compressor->perfPolySet).size());
+    int nPerfPts = static_cast<int>(perfPolySet.size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            (compressor->perfPolySet)[i].COP_coeffs[0] += dCOP_Coefficient;
+            perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
     }
 
     return testSummary;
