@@ -156,17 +156,18 @@ class HPWH::Condenser : public HPWH::HeatSource
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 
     /// performance grid data and values to form btwxt RGI
-    std::vector<std::vector<double>> perfGrid = {};
-    std::vector<std::vector<double>> perfGridValues = {};
-    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
+    std::shared_ptr<std::vector<std::vector<double>>> pPerfGridValues = {};
+    std::shared_ptr<std::vector<std::vector<double>>> pPerfGrid = {};
+    std::shared_ptr<Btwxt::RegularGridInterpolator> pPerfRGI = {};
 
-    std::vector<PerformancePoly> perfPolySet = {};
+    std::shared_ptr<std::vector<PerformancePoly>> pPerfPolySet = {};
 
     /// create RGI using grid data; assign evaluate-performance function
-    void makePerformanceBtwxt();
+    void makePerformanceBtwxt(const std::vector<std::vector<double>>& perfGrid_in,
+                              const std::vector<std::vector<double>>& perfGridValues_in);
 
     /// assign evaluate-performance function using perfPolySet
-    void makePerformancePolySet();
+    void makePerformancePolySet(const std::vector<PerformancePoly>& perfPolySet_in);
 
     void makeTier3_performance();
     void makeTier4_performance();

@@ -37,10 +37,10 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     Tshrinkage_C = cond_in.Tshrinkage_C;
     lockedOut = cond_in.lockedOut;
 
-    perfGrid = cond_in.perfGrid;
-    perfGridValues = cond_in.perfGridValues;
-    perfRGI = cond_in.perfRGI;
-    perfPolySet = cond_in.perfPolySet;
+    pPerfGrid = cond_in.pPerfGrid;
+    pPerfGridValues = cond_in.pPerfGridValues;
+    pPerfRGI = cond_in.pPerfRGI;
+    pPerfPolySet = cond_in.pPerfPolySet;
     useBtwxtGrid = cond_in.useBtwxtGrid;
     evaluatePerformance = cond_in.evaluatePerformance;
 
@@ -69,8 +69,16 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
 }
 
 /// create RGI using grid and model data; assign evaluate-performance function
-void HPWH::Condenser::makePerformanceBtwxt()
+void HPWH::Condenser::makePerformanceBtwxt(
+    const std::vector<std::vector<double>>& perfGrid_in,
+    const std::vector<std::vector<double>>& perfGridValues_in)
 {
+    pPerfGrid = std::make_shared<std::vector<std::vector<double>>>(perfGrid_in);
+    pPerfGridValues = std::make_shared<std::vector<std::vector<double>>>(perfGridValues_in);
+
+    auto& perfGrid = *pPerfGrid;
+    auto& perfGridValues = *pPerfGridValues;
+
     auto is_integrated = (configuration != CONFIG_EXTERNAL);
     auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
     auto is_NyleMP =
@@ -121,9 +129,8 @@ void HPWH::Condenser::makePerformanceBtwxt()
         ++iAxis;
     }
 
-    Btwxt::RegularGridInterpolator RGI(
+    pPerfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
         grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
-    perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(RGI);
 
     /// internal function to form target vector
     std::function<std::vector<double>(double externalT_C, double condenserT_C)>
@@ -149,7 +156,7 @@ void HPWH::Condenser::makePerformanceBtwxt()
     evaluatePerformance = [this, getPerformanceTarget](double externalT_C, double heatSourceT_C)
     {
         auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
-        std::vector<double> result = perfRGI->get_values_at_target(target);
+        std::vector<double> result = pPerfRGI->get_values_at_target(target);
         Performance performance({result[0], result[1] * result[0], result[1]});
         return performance;
     };
@@ -157,8 +164,10 @@ void HPWH::Condenser::makePerformanceBtwxt()
     useBtwxtGrid = true;
 }
 
-void HPWH::Condenser::makePerformancePolySet()
+void HPWH::Condenser::makePerformancePolySet(const std::vector<PerformancePoly>& perfPolySet_in)
 {
+    pPerfPolySet = std::make_shared<std::vector<PerformancePoly>>(perfPolySet_in);
+
     evaluatePerformance = [this](double externalT_C, double heatSourceT_C)
     {
         Performance performance = {0., 0., 0.};
@@ -168,9 +177,9 @@ void HPWH::Condenser::makePerformancePolySet()
 
         double externalT_F = C_TO_F(externalT_C);
         double heatSourceT_F = C_TO_F(heatSourceT_C);
-        for (size_t i = 0; i < perfPolySet.size(); ++i)
+        for (size_t i = 0; i < pPerfPolySet->size(); ++i)
         {
-            if (externalT_F < perfPolySet[i].T_F)
+            if (externalT_F < (*pPerfPolySet)[i].T_F)
             {
                 if (i == 0)
                 {
@@ -186,7 +195,7 @@ void HPWH::Condenser::makePerformancePolySet()
             }
             else
             {
-                if (i == perfPolySet.size() - 1)
+                if (i == (*pPerfPolySet).size() - 1)
                 {
                     i_prev = i - 1;
                     i_next = i;
@@ -196,33 +205,35 @@ void HPWH::Condenser::makePerformancePolySet()
         }
 
         // Calculate COP and Input Power at each of the two reference temperatures
-        double COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
-        COP_T1 += perfPolySet[i_prev].COP_coeffs[1] * heatSourceT_F;
-        COP_T1 += perfPolySet[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+        double COP_T1 = (*pPerfPolySet)[i_prev].COP_coeffs[0];
+        COP_T1 += (*pPerfPolySet)[i_prev].COP_coeffs[1] * heatSourceT_F;
+        COP_T1 += (*pPerfPolySet)[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-        double COP_T2 = perfPolySet[i_next].COP_coeffs[0];
-        COP_T2 += perfPolySet[i_next].COP_coeffs[1] * heatSourceT_F;
-        COP_T2 += perfPolySet[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+        double COP_T2 = (*pPerfPolySet)[i_next].COP_coeffs[0];
+        COP_T2 += (*pPerfPolySet)[i_next].COP_coeffs[1] * heatSourceT_F;
+        COP_T2 += (*pPerfPolySet)[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-        double inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
-        inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[1] * heatSourceT_F;
-        inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+        double inputPower_T1_W = (*pPerfPolySet)[i_prev].inputPower_coeffs[0];
+        inputPower_T1_W += (*pPerfPolySet)[i_prev].inputPower_coeffs[1] * heatSourceT_F;
+        inputPower_T1_W +=
+            (*pPerfPolySet)[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
-        double inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
-        inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[1] * heatSourceT_F;
-        inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+        double inputPower_T2_W = (*pPerfPolySet)[i_next].inputPower_coeffs[0];
+        inputPower_T2_W += (*pPerfPolySet)[i_next].inputPower_coeffs[1] * heatSourceT_F;
+        inputPower_T2_W +=
+            (*pPerfPolySet)[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
 
         // Interpolate to get COP and input power at the current ambient temperature
         Condenser::linearInterp(performance.cop,
                                 externalT_F,
-                                perfPolySet[i_prev].T_F,
-                                perfPolySet[i_next].T_F,
+                                (*pPerfPolySet)[i_prev].T_F,
+                                (*pPerfPolySet)[i_next].T_F,
                                 COP_T1,
                                 COP_T2);
         linearInterp(performance.inputPower_W,
                      externalT_F,
-                     perfPolySet[i_prev].T_F,
-                     perfPolySet[i_next].T_F,
+                     (*pPerfPolySet)[i_prev].T_F,
+                     (*pPerfPolySet)[i_next].T_F,
                      inputPower_T1_W,
                      inputPower_T2_W);
         performance.outputPower_W = performance.cop * performance.inputPower_W;
@@ -234,27 +245,24 @@ void HPWH::Condenser::makePerformancePolySet()
 
 void HPWH::Condenser::makeTier3_performance()
 {
-    perfPolySet = {{50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
-                   {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
-                   {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
-
-    makePerformancePolySet();
+    makePerformancePolySet({{50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+                            {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+                            {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}});
 }
 
 void HPWH::Condenser::makeTier4_performance()
 {
-    perfPolySet = {{50., {126.9, 2.215, 0.}, {6.931, -0.03395, 0.}},
-                   {67.5, {116.6, 2.467, 0.}, {8.833, -0.04431, 0.}},
-                   {95., {100.4, 2.863, 0.}, {11.822, -0.06059, 0.}}};
 
-    makePerformancePolySet();
+    makePerformancePolySet({{50., {126.9, 2.215, 0.}, {6.931, -0.03395, 0.}},
+                            {67.5, {116.6, 2.467, 0.}, {8.833, -0.04431, 0.}},
+                            {95., {100.4, 2.863, 0.}, {11.822, -0.06059, 0.}}});
 }
 
 int HPWH::Condenser::getAmbientT_index(double ambientT_C)
 {
-    int nPerfPts = static_cast<int>(perfPolySet.size());
+    int nPerfPts = static_cast<int>(pPerfPolySet->size());
     int i0 = 0, i1 = 0;
-    for (auto& perfPoint : perfPolySet)
+    for (auto& perfPoint : *pPerfPolySet)
     {
         if (C_TO_F(ambientT_C) < perfPoint.T_F)
             break;
@@ -264,8 +272,8 @@ int HPWH::Condenser::getAmbientT_index(double ambientT_C)
     double ratio = 0.;
     if ((i1 > i0) && (i1 < nPerfPts))
     {
-        ratio = (C_TO_F(ambientT_C) - perfPolySet[i0].T_F) /
-                (perfPolySet[i1].T_F - perfPolySet[i0].T_F);
+        ratio = (C_TO_F(ambientT_C) - (*pPerfPolySet)[i0].T_F) /
+                ((*pPerfPolySet)[i1].T_F - (*pPerfPolySet)[i0].T_F);
     }
     return (ratio < 0.5) ? i0 : i1;
 }
@@ -469,6 +477,9 @@ void HPWH::Condenser::from(
 
         auto& grid_variables = perf_map.grid_variables;
 
+        std::vector<std::vector<double>> perfGrid = {};
+        std::vector<std::vector<double>> perfGridValues = {};
+
         perfGrid.reserve(3);
         // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
         if (grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
@@ -504,7 +515,7 @@ void HPWH::Condenser::from(
 
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
-        makePerformanceBtwxt();
+        makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -540,6 +551,9 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
     if (perf.performance_map_is_set)
     {
         auto& perf_map = perf.performance_map;
+
+        std::vector<std::vector<double>> perfGrid = {};
+        std::vector<std::vector<double>> perfGridValues = {};
 
         auto& grid_variables = perf_map.grid_variables;
         perfGrid.reserve(3);
@@ -587,7 +601,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
 
-        makePerformanceBtwxt();
+        makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -681,6 +695,8 @@ void HPWH::Condenser::to(
         auto& map = perf.performance_map;
         auto& grid_vars = map.grid_variables;
 
+        auto& perfGrid = *pPerfGrid;
+
         //
         int iElem = 0;
         std::vector<double> envTemps_K = {};
@@ -723,11 +739,9 @@ void HPWH::Condenser::to(
         for (auto& envTemp_K : envTemps_K)
             for (auto& heatSourceTemp_K : heatSourceTemps_K)
             {
-                std::vector target = {K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K)};
-                std::vector<double> result = perfRGI->get_values_at_target(target);
-
-                inputPowers_W[i] = result[0];
-                heatingCapacities_W[i] = result[1] * inputPowers_W[i];
+                auto performance = evaluatePerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
+                inputPowers_W[i] = performance.inputPower_W;
+                heatingCapacities_W[i] = performance.cop * performance.inputPower_W;
                 ++i;
             }
 
@@ -796,8 +810,9 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     if (useBtwxtGrid)
     {
         auto& map = perf.performance_map;
-
         auto& grid_vars = map.grid_variables;
+
+        auto& perfGrid = *pPerfGrid;
 
         //
         std::size_t nVals = 1;
@@ -859,7 +874,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                 {
                     std::vector<double> target = {
                         K_TO_C(envTemp_K), K_TO_C(outletTemp_K), K_TO_C(heatSourceTemp_K)};
-                    std::vector<double> result = perfRGI->get_values_at_target(target);
+                    std::vector<double> result = pPerfRGI->get_values_at_target(target);
 
                     inputPowers_W[i] = result[0];
                     heatingCapacities_W[i] = result[1] * inputPowers_W[i];
@@ -1331,8 +1346,8 @@ void HPWH::Condenser::linearInterp(
 
 void HPWH::Condenser::sortPerformancePolySet()
 {
-    std::sort(perfPolySet.begin(),
-              perfPolySet.end(),
+    std::sort(pPerfPolySet->begin(),
+              pPerfPolySet->end(),
               [](const PerformancePoly& a, const PerformancePoly& b) -> bool
               { return a.T_F < b.T_F; });
 }
@@ -1343,7 +1358,7 @@ void HPWH::Condenser::sortPerformancePolySet()
 void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
                                           std::vector<std::vector<double>>& tempGridValues) const
 {
-    std::size_t nEnvTempsOrig = perfPolySet.size();
+    std::size_t nEnvTempsOrig = pPerfPolySet->size();
     if (nEnvTempsOrig < 1)
         return;
 
@@ -1358,7 +1373,7 @@ void HPWH::Condenser::makeGridFromPolySet(std::vector<std::vector<double>>& temp
     double maxCOPCurvature = 0.;
     envTemps_K.reserve(nEnvTempsOrig + 2); // # of map entries, plus endpoints
     envTemps_K.push_back(C_TO_K(minT));
-    for (auto& perfPoly : perfPolySet)
+    for (auto& perfPoly : *pPerfPolySet)
     {
         if ((F_TO_C(perfPoly.T_F) > minT) && (F_TO_C(perfPoly.T_F) < maxT))
         {
