@@ -102,9 +102,8 @@ class HPWH::Condenser : public HPWH::HeatSource
     } secondaryHeatExchanger;
     /**< adjustments for a approximating a secondary
     heat exchanger by adding extra input energy for the pump and an increaes in the water to the
-    incoming waater temperature to the heatpump*/
+    incoming water temperature to the heatpump*/
 
-  public:
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
     struct Performance
@@ -113,50 +112,6 @@ class HPWH::Condenser : public HPWH::HeatSource
         double outputPower_W;
         double cop;
     };
-
-    /// performance polynomial to form a polynomial set of
-    /// multiple points at various temperatures.
-    /// Linear interpolation is applied to the collection of points.
-    struct PerformancePoly
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs;
-        std::vector<double> COP_coeffs;
-    };
-    std::vector<PerformancePoly> perfPolySet = {};
-
-    /// performance grid data and values to form btwxt RGI
-    std::vector<std::vector<double>> perfGrid = {};
-    std::vector<std::vector<double>> perfGridValues = {};
-    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
-
-    std::function<std::vector<double>(double externalT_C, double condenserT_C)>
-        getPerformanceTarget;
-
-    /// core performance-evaluation function
-    std::function<Performance(double externalT_C, double condenserT_C)> evaluatePerformance;
-
-    /// general performance function used by all models
-    Performance getPerformance(double externalT_C, double condenserT_C) const;
-
-    /// create RGI using grid and model data; assign evaluate-performance function
-    void makePerformanceBtwxt();
-
-    /// one-dimensional quadratic expansions (three terms each) wrt condenser temperature of
-    ///     input power and cop at the specified external temperature.
-    void makePerformancePolySet();
-
-    void makeTier3_performance();
-
-    void makeTier4_performance();
-
-    void makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
-                             std::vector<std::vector<double>>& tempGridValues) const;
-
-    double inputPowerScale = 1.;
-    double COP_scale = 1.;
-
-    /**< Does a simple linear interpolation between two points to the xnew point */
 
     /// pick the nearest temperature index in a PolySet
     int getAmbientT_index(double ambientT_C);
@@ -186,6 +141,45 @@ class HPWH::Condenser : public HPWH::HeatSource
     void addHeat(double externalT_C, double minutesToRun);
 
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
+
+    /// performance polynomial to form a polynomial set of
+    /// multiple points at various temperatures.
+    /// Linear interpolation is applied to the collection of points.
+    struct PerformancePoly
+    {
+        double T_F;
+        std::vector<double> inputPower_coeffs;
+        std::vector<double> COP_coeffs;
+    };
+
+    /// general performance function used by all models
+    Performance getPerformance(double externalT_C, double condenserT_C) const;
+
+    /// performance grid data and values to form btwxt RGI
+    std::vector<std::vector<double>> perfGrid = {};
+    std::vector<std::vector<double>> perfGridValues = {};
+    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
+
+    std::vector<PerformancePoly> perfPolySet = {};
+
+    /// create RGI using grid data; assign evaluate-performance function
+    void makePerformanceBtwxt();
+
+    /// assign evaluate-performance function using perfPolySet
+    void makePerformancePolySet();
+
+    void makeTier3_performance();
+    void makeTier4_performance();
+
+    /// internal performance-evaluation function
+    std::function<Performance(double externalT_C, double condenserT_C)> evaluatePerformance;
+
+    double inputPowerScale = 1.;
+    double COP_scale = 1.;
+
+  private:
+    void makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
+                             std::vector<std::vector<double>>& tempGridValues) const;
 
     void convertPolySetToGrid();
 };
