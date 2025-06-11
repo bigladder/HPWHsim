@@ -38,23 +38,24 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "HPWH.hh"
-#include "HPWHFitter.hh"
-#include "HPWHUtils.hh"
-#include "HPWHHeatingLogic.hh"
-#include "HPWHHeatSource.hh"
-#include "Tank.hh"
-#include "Condenser.hh"
-#include "Resistance.hh"
-
-#include <btwxt/btwxt.h>
-#include <fmt/format.h>
-
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <regex>
 #include <queue>
+
+#include <fmt/format.h>
+
+#include <btwxt/btwxt.h>
+
+#include "HPWH.hh"
+#include "HPWHUtils.hh"
+#include "HPWHFitter.hh"
+#include "HPWHHeatingLogic.hh"
+#include "HPWHHeatSource.hh"
+#include "Tank.hh"
+#include "Condenser.hh"
+#include "Resistance.hh"
 
 using std::cout;
 using std::endl;
@@ -217,6 +218,9 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     timerLimitTOT = hpwh.timerLimitTOT;
 
     usesSoCLogic = hpwh.usesSoCLogic;
+
+    // description = hpwh.description;
+    productInformation = hpwh.productInformation;
 
     return *this;
 }
@@ -1882,6 +1886,15 @@ bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
     return true;
 }
 
+HPWH::HeatSource* HPWH::getNthHeatSource(int N)
+{
+    if (N >= getNumHeatSources() || N < 0)
+    {
+        send_error("You have attempted to access the type of a heat source that does not exist.");
+    }
+    return heatSources[N].get();
+}
+
 double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
 {
     double volume = tank->getVolume_L();
@@ -3332,7 +3345,7 @@ void HPWH::initFromJSON(string modelName)
 
 #endif
 
-void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
+void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
     checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
 
@@ -3382,8 +3395,12 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
 }
 
-void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER& rswh)
 {
+    description.from(rswh);
+    productInformation.from(rswh);
+    rating10CFR430.from(rswh);
+
     auto& performance = rswh.performance;
 
     auto& rstank = performance.tank;
@@ -3478,7 +3495,8 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATE
     }
 }
 
-void HPWH::from(hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
+void HPWH::from(
+    const hpwh_data_model::central_water_heating_system::CentralWaterHeatingSystem& cwhs)
 {
     auto& rstank = cwhs.tank;
     tank->from(rstank);
@@ -3640,6 +3658,10 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATERHEATER&
         "RSINTEGRATEDWATERHEATER",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSINTEGRATEDWATERHEATER.schema.yaml");
+
+    description.to(rswh);
+    productInformation.to(rswh);
+    rating10CFR430.to(rswh);
 
     auto& performance = rswh.performance;
 

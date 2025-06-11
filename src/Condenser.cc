@@ -60,6 +60,9 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     hysteresis_dC = cond_in.hysteresis_dC;
     maxSetpoint_C = cond_in.maxSetpoint_C;
 
+    description = cond_in.description;
+    productInformation = cond_in.productInformation;
+
     return *this;
 }
 
@@ -290,6 +293,9 @@ void HPWH::Condenser::from(
 void HPWH::Condenser::from(
     const hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs)
 {
+    description.from(hs);
+    productInformation.from(hs);
+
     auto& perf = hs.performance;
 
     switch (perf.coil_configuration)
@@ -381,6 +387,9 @@ void HPWH::Condenser::from(
 
 void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP& hs)
 {
+    description.from(hs);
+    productInformation.from(hs);
+
     configuration = COIL_CONFIG::CONFIG_EXTERNAL;
 
     auto& perf = hs.performance;
@@ -509,6 +518,9 @@ void HPWH::Condenser::to(
         "RSCONDENSERWATERHEATSOURCE",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSCONDENSERWATERHEATSOURCE.schema.yaml");
+
+    description.to(hs);
+    productInformation.to(hs);
 
     auto& perf = hs.performance;
     switch (configuration)
@@ -643,6 +655,10 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/"
         "RSAIRTOWATERHEATPUMP.schema.yaml");
 
+    description.to(hs);
+    productInformation.to(hs);
+
+    //
     auto& perf = hs.performance;
     checkTo(doDefrost, perf.use_defrost_map_is_set, perf.use_defrost_map);
 
