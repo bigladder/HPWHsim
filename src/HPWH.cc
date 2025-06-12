@@ -1708,7 +1708,7 @@ void HPWH::makeCondenserPerformancePolySet(const std::vector<PerformancePoly>& p
 {
     auto condenser = getCompressor();
     if (condenser)
-        condenser->makePerformancePolySet(perfPolySet);
+        condenser->evaluatePerformance = makePerformancePolySet(perfPolySet);
 }
 
 int HPWH::getNumResistanceElements() const
@@ -1764,7 +1764,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
-    Condenser::Performance performance = {0., 0., 0.};
+    Performance performance = {0., 0., 0.};
     if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
         if (cond_ptr->isExternalMultipass())
@@ -4253,7 +4253,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
         targetEF, testConfiguration, designation, get_courier(), this);
     metrics.push_back(ef_metric);
 
-    compressor->usePerformancePolySet(perfPolySet);
+    compressor->evaluatePerformance = usePerformancePolySet(perfPolySet);
 
     int i_ambientT = compressor->getAmbientT_index(perfPolySet, testConfiguration.ambientT_C);
 
@@ -4266,7 +4266,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
 
-    compressor->makePerformancePolySet(perfPolySet);
+    compressor->evaluatePerformance = makePerformancePolySet(perfPolySet);
 
     auto performance1 =
         compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
@@ -4310,7 +4310,7 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
         if (i != i_ambientT)
             perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
     }
-    compressor->makePerformancePolySet(perfPolySet);
+    compressor->evaluatePerformance = makePerformancePolySet(perfPolySet);
     return testSummary;
 }
 

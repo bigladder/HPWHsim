@@ -5,6 +5,7 @@
 #include "HPWH.hh"
 #include "HPWHUtils.hh"
 #include "HPWHHeatSource.hh"
+#include "Condenser.hh"
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -238,4 +239,127 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
         return 0.;
     }
     return (tHot - tCold) / (tMix - tCold);
+}
+
+/*static*/
+std::function<HPWH::Performance(double, double)>
+HPWH::makePerformanceBtwxt(Condenser* condenser,
+                           const std::vector<std::vector<double>>& perfGrid,
+                           const std::vector<std::vector<double>>& perfGridValues)
+{
+    auto grid_axes = condenser->setUpGridAxes(perfGrid);
+
+    auto perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+        grid_axes, perfGridValues, "RegularGridInterpolator", condenser->get_courier());
+
+    condenser->perfRGI = perfRGI;
+
+    /// internal function to form target vector
+    std::function<std::vector<double>(double externalT_C, double condenserT_C)>
+        getPerformanceTarget;
+
+    if (perfGrid.size() > 2)
+    {
+        getPerformanceTarget = [condenser](double externalT_C, double heatSourceT_C)
+        {
+            return std::vector<double>(
+                {externalT_C,
+                 condenser->hpwh->getSetpoint() +
+                     condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                 heatSourceT_C});
+        };
+    }
+    else
+    {
+        getPerformanceTarget = [](double externalT_C, double heatSourceT_C) {
+            return std::vector<double>({externalT_C, heatSourceT_C});
+        };
+    }
+
+    return [perfRGI, getPerformanceTarget](double externalT_C, double heatSourceT_C)
+    {
+        auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
+        std::vector<double> result = perfRGI->get_values_at_target(target);
+        Performance performance({result[0], result[1] * result[0], result[1]});
+        return performance;
+    };
+}
+
+/*static*/
+void HPWH::linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1)
+{
+    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
+}
+
+/*static*/
+HPWH::Performance HPWH::evalPolySet(const std::vector<HPWH::PerformancePoly>& perfPolySet,
+                                    double externalT_C,
+                                    double heatSourceT_C)
+{
+    Performance performance = {0., 0., 0.};
+
+    size_t i_prev = 0;
+    size_t i_next = 1;
+
+    double externalT_F = C_TO_F(externalT_C);
+    double heatSourceT_F = C_TO_F(heatSourceT_C);
+    for (size_t i = 0; i < perfPolySet.size(); ++i)
+    {
+        if (externalT_F < perfPolySet[i].T_F)
+        {
+            if (i == 0)
+            {
+                i_prev = 0;
+                i_next = 1;
+            }
+            else
+            {
+                i_prev = i - 1;
+                i_next = i;
+            }
+            break;
+        }
+        else
+        {
+            if (i == perfPolySet.size() - 1)
+            {
+                i_prev = i - 1;
+                i_next = i;
+                break;
+            }
+        }
+    }
+
+    // Calculate COP and Input Power at each of the two reference temperatures
+    double COP_T1 = perfPolySet[i_prev].COP_coeffs[0];
+    COP_T1 += perfPolySet[i_prev].COP_coeffs[1] * heatSourceT_F;
+    COP_T1 += perfPolySet[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double COP_T2 = perfPolySet[i_next].COP_coeffs[0];
+    COP_T2 += perfPolySet[i_next].COP_coeffs[1] * heatSourceT_F;
+    COP_T2 += perfPolySet[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double inputPower_T1_W = perfPolySet[i_prev].inputPower_coeffs[0];
+    inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T1_W += perfPolySet[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double inputPower_T2_W = perfPolySet[i_next].inputPower_coeffs[0];
+    inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T2_W += perfPolySet[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    // Interpolate to get COP and input power at the current ambient temperature
+    linearInterp(performance.cop,
+                 externalT_F,
+                 perfPolySet[i_prev].T_F,
+                 perfPolySet[i_next].T_F,
+                 COP_T1,
+                 COP_T2);
+    linearInterp(performance.inputPower_W,
+                 externalT_F,
+                 perfPolySet[i_prev].T_F,
+                 perfPolySet[i_next].T_F,
+                 inputPower_T1_W,
+                 inputPower_T2_W);
+    performance.outputPower_W = performance.cop * performance.inputPower_W;
+    return performance;
 }
