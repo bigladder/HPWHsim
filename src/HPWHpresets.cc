@@ -238,11 +238,10 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
-    std::vector<Condenser::PerformancePoly> perfPolySet = {
+    std::vector<PerformancePoly> perfPolySet = {
         {50., {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
         {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}};
 
-    compressor->useBtwxtGrid = false;
     compressor->minT = F_TO_C(45.);
     compressor->maxT = F_TO_C(120.);
     compressor->hysteresis_dC = dF_TO_dC(2);
@@ -330,5 +329,4 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
-    compressor->sortPerformancePolySet();
 }

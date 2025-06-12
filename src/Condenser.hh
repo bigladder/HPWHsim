@@ -53,8 +53,6 @@ class HPWH::Condenser : public HPWH::HeatSource
     double maxSetpoint_C;
     /**< the maximum setpoint of the heat source can create, used for compressors predominately */
 
-    bool useBtwxtGrid;
-
     // start with a few type definitions
     enum COIL_CONFIG
     {
@@ -113,9 +111,6 @@ class HPWH::Condenser : public HPWH::HeatSource
         double cop;
     };
 
-    /// pick the nearest temperature index in a PolySet
-    int getAmbientT_index(double ambientT_C);
-
     double standbyPower_kW;
 
     bool isExternal() const;
@@ -142,47 +137,46 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
 
-    /// performance polynomial to form a polynomial set of
-    /// multiple points at various temperatures.
-    /// Linear interpolation is applied to the collection of points.
-    struct PerformancePoly
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs;
-        std::vector<double> COP_coeffs;
-    };
+    /// pick the nearest temperature index in a PolySet
+    static int getAmbientT_index(const std::vector<PerformancePoly>& perfPolySet,
+                                 double ambientT_C);
 
     /// general performance function used by all models
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 
     /// performance grid data and values to form btwxt RGI
-    std::shared_ptr<std::vector<std::vector<double>>> pPerfGridValues = {};
-    std::shared_ptr<std::vector<std::vector<double>>> pPerfGrid = {};
-    std::shared_ptr<Btwxt::RegularGridInterpolator> pPerfRGI = {};
+    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
 
-    std::shared_ptr<std::vector<PerformancePoly>> pPerfPolySet = {};
+    /// assign perfRGI member using grid data and capture
+    void makePerformanceBtwxt(const std::vector<std::vector<double>>& perfGrid,
+                              const std::vector<std::vector<double>>& perfGridValues);
 
-    /// create RGI using grid data; assign evaluate-performance function
-    void makePerformanceBtwxt(const std::vector<std::vector<double>>& perfGrid_in,
-                              const std::vector<std::vector<double>>& perfGridValues_in);
+    /// capture perfPolySet by reference
+    void usePerformancePolySet(std::vector<PerformancePoly>& perfPolySet);
 
-    /// assign evaluate-performance function using perfPolySet
+    /// capture perfPolySet by value
     void makePerformancePolySet(const std::vector<PerformancePoly>& perfPolySet_in);
 
-    void makeTier3_performance();
-    void makeTier4_performance();
+    /// common polySet algorithm
+    Performance evalPolySet(const std::vector<HPWH::PerformancePoly>& perfPolySet,
+                            double externalT_C,
+                            double heatSourceT_C);
+
+    inline static const std::vector<PerformancePoly> tier3PerfPolySet = {
+        {50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+        {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+        {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
+
+    inline static const std::vector<PerformancePoly> tier4PerfPolySet = {
+        {50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+        {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+        {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
 
     /// internal performance-evaluation function
     std::function<Performance(double externalT_C, double condenserT_C)> evaluatePerformance;
 
     double inputPowerScale = 1.;
     double COP_scale = 1.;
-
-  private:
-    void makeGridFromPolySet(std::vector<std::vector<double>>& tempGrid,
-                             std::vector<std::vector<double>>& tempGridValues) const;
-
-    void convertPolySetToGrid();
 };
 
 #endif

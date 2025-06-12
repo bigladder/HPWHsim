@@ -31,7 +31,7 @@ struct HPWH::Fitter : public Sender
     struct PerformanceCoefficient : public Parameter
     {
       private:
-        HPWH::Condenser* condenser;
+        std::vector<PerformancePoly>* pPerfPolySet;
         unsigned temperatureIndex;
         unsigned exponent;
 
@@ -39,20 +39,20 @@ struct HPWH::Fitter : public Sender
         PerformanceCoefficient(unsigned temperatureIndex_in,
                                unsigned exponent_in,
                                std::shared_ptr<Courier::Courier> courier,
-                               HPWH::Condenser* condenser_in = nullptr)
+                               std::vector<PerformancePoly>* pPerfPolySet_in)
             : Parameter(courier)
-            , condenser(condenser_in)
+            , pPerfPolySet(pPerfPolySet_in)
             , temperatureIndex(temperatureIndex_in)
             , exponent(exponent_in)
         {
         }
 
         PerformanceCoefficient(PerformanceCoefficient& performanceCoefficient,
-                               HPWH::Condenser* condenser_in = nullptr)
+                               std::vector<PerformancePoly>* pPerfPolySet_in = nullptr)
             : PerformanceCoefficient(performanceCoefficient.temperatureIndex,
                                      performanceCoefficient.exponent,
                                      performanceCoefficient.courier,
-                                     condenser_in)
+                                     pPerfPolySet_in)
         {
         }
 
@@ -62,22 +62,17 @@ struct HPWH::Fitter : public Sender
         }
 
       protected:
-        virtual std::vector<double>&
-        getCoefficients(HPWH::Condenser::PerformancePoly& perfPoly) = 0;
+        virtual std::vector<double>& getCoefficients(HPWH::PerformancePoly& perfPoly) = 0;
 
         /// check validity and retain pointer to HPWH member variable
         void assign()
         {
-            if (condenser->useBtwxtGrid)
-            {
-                send_error("Invalid performance representation.");
-            }
-            if (temperatureIndex >= (*(condenser->pPerfPolySet)).size())
+            if (temperatureIndex >= pPerfPolySet->size())
             {
                 send_error("Invalid heat-source performance-map temperature index.");
             }
 
-            auto& perfPoly = (*(condenser->pPerfPolySet))[temperatureIndex];
+            auto& perfPoly = (*pPerfPolySet)[temperatureIndex];
             auto& perfCoeffs = getCoefficients(perfPoly);
             if (exponent >= perfCoeffs.size())
             {
@@ -96,8 +91,8 @@ struct HPWH::Fitter : public Sender
         InputPowerCoefficient(unsigned temperatureIndex_in,
                               unsigned exponent_in,
                               std::shared_ptr<Courier::Courier> courier,
-                              HPWH::Condenser* condenser_in)
-            : PerformanceCoefficient(temperatureIndex_in, exponent_in, courier, condenser_in)
+                              std::vector<PerformancePoly>* pPerfPolySet_in)
+            : PerformanceCoefficient(temperatureIndex_in, exponent_in, courier, pPerfPolySet_in)
         {
             assign();
             increment = 1.e-5;
@@ -106,7 +101,7 @@ struct HPWH::Fitter : public Sender
       private:
         [[nodiscard]] std::string getFormat() const override { return "Pin[{}]: {}"; }
 
-        std::vector<double>& getCoefficients(HPWH::Condenser::PerformancePoly& perfPoly) override
+        std::vector<double>& getCoefficients(HPWH::PerformancePoly& perfPoly) override
         {
             return perfPoly.inputPower_coeffs;
         }
@@ -118,8 +113,8 @@ struct HPWH::Fitter : public Sender
         COP_Coefficient(unsigned temperatureIndex_in,
                         unsigned exponent_in,
                         std::shared_ptr<Courier::Courier> courier,
-                        HPWH::Condenser* condenser_in)
-            : PerformanceCoefficient(temperatureIndex_in, exponent_in, courier, condenser_in)
+                        std::vector<PerformancePoly>* pPerfPolySet_in)
+            : PerformanceCoefficient(temperatureIndex_in, exponent_in, courier, pPerfPolySet_in)
         {
             assign();
             increment = 1.e-9;
@@ -128,7 +123,7 @@ struct HPWH::Fitter : public Sender
       private:
         [[nodiscard]] std::string getFormat() const override { return "COP[{}]: {}"; }
 
-        std::vector<double>& getCoefficients(HPWH::Condenser::PerformancePoly& perfPoly) override
+        std::vector<double>& getCoefficients(HPWH::PerformancePoly& perfPoly) override
         {
             return perfPoly.COP_coeffs;
         }

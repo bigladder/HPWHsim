@@ -1696,10 +1696,19 @@ int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
 
-bool HPWH::getCondenser(Condenser*& condenser)
+HPWH::Condenser* HPWH::getCompressor()
 {
-    condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    return true;
+    Condenser* condenser = nullptr;
+    if (hasACompressor())
+        condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return condenser;
+}
+
+void HPWH::makeCondenserPerformancePolySet(const std::vector<PerformancePoly>& perfPolySet)
+{
+    auto condenser = getCompressor();
+    if (condenser)
+        condenser->makePerformancePolySet(perfPolySet);
 }
 
 int HPWH::getNumResistanceElements() const
@@ -4231,31 +4240,33 @@ std::string HPWH::TestSummary::report()
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
                                       TestConfiguration testConfiguration,
-                                      FirstHourRating::Designation designation)
+                                      FirstHourRating::Designation designation,
+                                      std::vector<PerformancePoly>& perfPolySet)
 {
-    // set up metrics
+    auto compressor = getCompressor();
+    if (!compressor)
+        send_error("No compressor");
+
+    // set up metric
     std::vector<std::shared_ptr<Fitter::Metric>> metrics = {};
     auto ef_metric = std::make_shared<HPWH::Fitter::EF_Metric>(
         targetEF, testConfiguration, designation, get_courier(), this);
     metrics.push_back(ef_metric);
 
-    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    compressor->usePerformancePolySet(perfPolySet);
 
-    int i_ambientT = compressor->getAmbientT_index(testConfiguration.ambientT_C);
+    int i_ambientT = compressor->getAmbientT_index(perfPolySet, testConfiguration.ambientT_C);
 
-    // set up parameters
+    // set up parameter
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
-
     auto copCoefficient0 =
-        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), compressor);
+        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), &perfPolySet);
     parameters.push_back(copCoefficient0);
-
-    // auto copCoefficient1 =
-    //     std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1, get_courier(), this);
-    // parameters.push_back(copCoefficient1);
 
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
+
+    compressor->makePerformancePolySet(perfPolySet);
 
     auto performance1 =
         compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
@@ -4278,16 +4289,18 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 /// @returns	Test summary using UEF configuration
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
-                                       HPWH::FirstHourRating::Designation designation)
+                                       HPWH::FirstHourRating::Designation designation,
+                                       std::vector<PerformancePoly>& perfPolySet)
 {
-    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    auto compressor = getCompressor();
+    if (!compressor)
+        send_error("No compressor");
 
     // pick the nearest temperature index
-    int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
+    int i_ambientT = Condenser::getAmbientT_index(perfPolySet, testConfiguration_UEF.ambientT_C);
 
-    auto& perfPolySet = (*(compressor->pPerfPolySet));
     double originalCoefficient = perfPolySet[i_ambientT].COP_coeffs[0];
-    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
+    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation, perfPolySet);
 
     double dCOP_Coefficient = perfPolySet[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
@@ -4297,7 +4310,7 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
         if (i != i_ambientT)
             perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
     }
-
+    compressor->makePerformancePolySet(perfPolySet);
     return testSummary;
 }
 
@@ -4307,42 +4320,11 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
 void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,
                                   double targetE95,
-                                  FirstHourRating::Designation designation)
+                                  FirstHourRating::Designation designation,
+                                  std::vector<PerformancePoly>& perfPolySet)
 {
-    // return test summaries unused
-    makeGenericEF(targetE50, testConfiguration_E50, designation);
-    makeGenericEF(targetUEF, testConfiguration_UEF, designation);
-    makeGenericEF(targetE95, testConfiguration_E95, designation);
-}
-
-//-----------------------------------------------------------------------------
-///	@brief	Replace compressor performance with that of AWHSTier3Generic
-//-----------------------------------------------------------------------------
-void HPWH::makeTier3()
-{
-    if (!hasACompressor())
-        return;
-
-    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->makeTier3_performance();
-
-    compressor->minT = F_TO_C(42.0);
-    compressor->maxT = F_TO_C(120.);
-    compressor->maxSetpoint_C = MAXOUTLET_R134A;
-}
-
-//-----------------------------------------------------------------------------
-///	@brief	Replace compressor performance with that of AWHSTier4Generic
-//-----------------------------------------------------------------------------
-void HPWH::makeTier4()
-{
-    if (!hasACompressor())
-        return;
-
-    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    compressor->makeTier4_performance();
-
-    compressor->minT = F_TO_C(37.);
-    compressor->maxT = F_TO_C(120.);
-    compressor->maxSetpoint_C = MAXOUTLET_R134A;
+    // returned test summaries are unused
+    makeGenericEF(targetE50, testConfiguration_E50, designation, perfPolySet);
+    makeGenericEF(targetUEF, testConfiguration_UEF, designation, perfPolySet);
+    makeGenericEF(targetE95, testConfiguration_E95, designation, perfPolySet);
 }
