@@ -18,7 +18,8 @@ static void make(const std::string& specType,
                  std::string sOutputDir,
                  bool saveTestData,
                  std::string sResultsFilename,
-                 std::string drawProfileName);
+                 std::string drawProfileName,
+                 std::vector<HPWH::PerformancePoly>& perfPolySet);
 
 CLI::App* add_make(CLI::App& app)
 {
@@ -77,10 +78,8 @@ CLI::App* add_make(CLI::App& app)
                 modelName = getModelNameFromFilename(modelFilename);
                 hpwh.initFromJSON(j, modelName);
             }
-            if (tier == 3)
-                hpwh.makeTier3();
-            else
-                hpwh.makeTier4();
+            auto perfPolySet =
+                (tier == 3) ? HPWH::Condenser::tier3PerfPolySet : HPWH::Condenser::tier4PerfPolySet;
 
             make(specType,
                  hpwh,
@@ -89,7 +88,8 @@ CLI::App* add_make(CLI::App& app)
                  sOutputDir,
                  saveTestData,
                  sResultsFilename,
-                 drawProfileName);
+                 drawProfileName,
+                 perfPolySet);
         });
 
     return subcommand;
@@ -102,7 +102,8 @@ void make(const std::string& specType,
           std::string sOutputDir,
           bool saveTestData,
           std::string sResultsFilename,
-          std::string drawProfileName)
+          std::string drawProfileName,
+          std::vector<HPWH::PerformancePoly>& perfPolySet)
 {
     // select test configuration
     transform(sTestConfig.begin(),
@@ -158,7 +159,7 @@ void make(const std::string& specType,
         results.append(firstHourRating.report());
     }
 
-    hpwh.makeGenericEF(targetEF, testConfiguration, designation);
+    hpwh.makeGenericEF(targetEF, testConfiguration, designation, perfPolySet);
 
     std::ofstream outputFile;
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);

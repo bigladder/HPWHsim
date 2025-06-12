@@ -1044,7 +1044,7 @@ class HPWH : public Courier::Sender
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    bool getCondenser(Condenser*& condenser);
+    Condenser* getCompressor();
 
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
@@ -1423,38 +1423,97 @@ class HPWH : public Courier::Sender
 
     struct Fitter;
 
+    /// performance polynomial to form a polynomial set of
+    /// multiple points at various temperatures.
+    /// Linear interpolation is applied to the collection of points.
+    struct PerformancePoly
+    {
+        double T_F;
+        std::vector<double> inputPower_coeffs;
+        std::vector<double> COP_coeffs;
+    };
+
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
-                              FirstHourRating::Designation designation);
-
-    TestSummary makeGenericEF(double targetEF, TestConfiguration testConfiguration)
+                              FirstHourRating::Designation designation,
+                              std::vector<PerformancePoly>& perfPolySet);
+    TestSummary makeGenericEF(double targetEF,
+                              TestConfiguration testConfiguration,
+                              std::vector<PerformancePoly>& perfPolySet)
     {
-        return makeGenericEF(targetEF, testConfiguration, findFirstHourRating().designation);
+        return makeGenericEF(
+            targetEF, testConfiguration, findFirstHourRating().designation, perfPolySet);
+    }
+    TestSummary makeGenericEF(double targetEF,
+                              TestConfiguration testConfiguration,
+                              FirstHourRating::Designation designation,
+                              const std::vector<PerformancePoly>& perfPolySet)
+    {
+        std::vector<PerformancePoly> perfCopy = perfPolySet;
+        return makeGenericEF(targetEF, testConfiguration, designation, perfCopy);
+    }
+    TestSummary makeGenericEF(double targetEF,
+                              TestConfiguration testConfiguration,
+                              const std::vector<PerformancePoly>& perfPolySet)
+    {
+        return makeGenericEF(
+            targetEF, testConfiguration, findFirstHourRating().designation, perfPolySet);
     }
 
     /// fit using each of three configurations, independently
     void makeGenericE50_UEF_E95(double targetE50,
                                 double targetUEF,
                                 double targetE95,
-                                FirstHourRating::Designation designation);
-
-    void makeGenericE50_UEF_E95(double targetE50, double targetUEF, double targetE95)
+                                FirstHourRating::Designation designation,
+                                std::vector<PerformancePoly>& perfPolySet);
+    void makeGenericE50_UEF_E95(double targetE50,
+                                double targetUEF,
+                                double targetE95,
+                                std::vector<PerformancePoly>& perfPolySet)
     {
         return makeGenericE50_UEF_E95(
-            targetE50, targetUEF, targetE95, findFirstHourRating().designation);
+            targetE50, targetUEF, targetE95, findFirstHourRating().designation, perfPolySet);
+    }
+    void makeGenericE50_UEF_E95(double targetE50,
+                                double targetUEF,
+                                double targetE95,
+                                FirstHourRating::Designation designation,
+                                const std::vector<PerformancePoly>& perfPolySet)
+    {
+        std::vector<PerformancePoly> perfCopy = perfPolySet;
+        return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, designation, perfCopy);
+    }
+    void makeGenericE50_UEF_E95(double targetE50,
+                                double targetUEF,
+                                double targetE95,
+                                const std::vector<PerformancePoly>& perfPolySet)
+    {
+        return makeGenericE50_UEF_E95(
+            targetE50, targetUEF, targetE95, findFirstHourRating().designation, perfPolySet);
     }
 
     /// fit using UEF config, then adjust E50, E95 coefficients
-    TestSummary makeGenericUEF(double targetUEF, FirstHourRating::Designation designation);
-
-    TestSummary makeGenericUEF(double targetUEF)
+    TestSummary makeGenericUEF(double targetUEF,
+                               FirstHourRating::Designation designation,
+                               std::vector<PerformancePoly>& perfPolySet);
+    TestSummary makeGenericUEF(double targetUEF, std::vector<PerformancePoly>& perfPolySet)
     {
-        return makeGenericUEF(targetUEF, findFirstHourRating().designation);
+        return makeGenericUEF(targetUEF, findFirstHourRating().designation, perfPolySet);
+    }
+    TestSummary makeGenericUEF(double targetUEF,
+                               FirstHourRating::Designation designation,
+                               const std::vector<PerformancePoly>& perfPolySet)
+    {
+        std::vector<PerformancePoly> perfCopy = perfPolySet;
+        return makeGenericUEF(targetUEF, designation, perfCopy);
+    }
+    TestSummary makeGenericUEF(double targetUEF, const std::vector<PerformancePoly>& perfPolySet)
+    {
+        return makeGenericUEF(targetUEF, findFirstHourRating().designation, perfPolySet);
     }
 
-    void makeTier3();
-    void makeTier4();
+    void makeCondenserPerformancePolySet(const std::vector<PerformancePoly>& perfPolySet);
 
   private:
     void setAllDefaults(); /**< sets all the defaults */
