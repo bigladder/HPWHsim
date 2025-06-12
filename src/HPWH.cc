@@ -149,6 +149,16 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
     hoursPerStep = minutesPerStep / min_per_hr;
 }
 
+const HPWH::PerformancePolySet HPWH::PerformancePolySet::tier3(
+    {{50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+     {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+     {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}});
+
+const HPWH::PerformancePolySet
+    HPWH::PerformancePolySet::tier4({{50., {126.9, 2.215, 0.0}, {6.931, -0.03395, 0.0}},
+                                     {67.5, {116.6, 2.467, 0.0}, {8.833, -0.04431, 0.0}},
+                                     {95., {100.4, 2.863, 0.0}, {11.822, -0.06059, 0.0}}});
+
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/)
     : Sender("HPWH", name_in, courier)
@@ -1704,11 +1714,11 @@ HPWH::Condenser* HPWH::getCompressor()
     return condenser;
 }
 
-void HPWH::makeCondenserPerformancePolySet(const std::vector<PerformancePoly>& perfPolySet)
+void HPWH::makeCondenserPerformance(const PerformancePolySet& perfPolySet)
 {
     auto condenser = getCompressor();
     if (condenser)
-        condenser->evaluatePerformance = makePerformancePolySet(perfPolySet);
+        condenser->evaluatePerformance = perfPolySet.make();
 }
 
 int HPWH::getNumResistanceElements() const
@@ -4241,7 +4251,7 @@ std::string HPWH::TestSummary::report()
 HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
                                       TestConfiguration testConfiguration,
                                       FirstHourRating::Designation designation,
-                                      std::vector<PerformancePoly>& perfPolySet)
+                                      PerformancePolySet& perfPolySet)
 {
     auto compressor = getCompressor();
     if (!compressor)
@@ -4253,9 +4263,9 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
         targetEF, testConfiguration, designation, get_courier(), this);
     metrics.push_back(ef_metric);
 
-    compressor->evaluatePerformance = usePerformancePolySet(perfPolySet);
+    compressor->evaluatePerformance = perfPolySet.use();
 
-    int i_ambientT = compressor->getAmbientT_index(perfPolySet, testConfiguration.ambientT_C);
+    int i_ambientT = perfPolySet.getAmbientT_index(testConfiguration.ambientT_C);
 
     // set up parameter
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
@@ -4266,7 +4276,7 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
 
-    compressor->evaluatePerformance = makePerformancePolySet(perfPolySet);
+    compressor->evaluatePerformance = perfPolySet.make();
 
     auto performance1 =
         compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
@@ -4290,14 +4300,14 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
                                        HPWH::FirstHourRating::Designation designation,
-                                       std::vector<PerformancePoly>& perfPolySet)
+                                       HPWH::PerformancePolySet& perfPolySet)
 {
     auto compressor = getCompressor();
     if (!compressor)
         send_error("No compressor");
 
     // pick the nearest temperature index
-    int i_ambientT = Condenser::getAmbientT_index(perfPolySet, testConfiguration_UEF.ambientT_C);
+    int i_ambientT = perfPolySet.getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
     double originalCoefficient = perfPolySet[i_ambientT].COP_coeffs[0];
     auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation, perfPolySet);
@@ -4310,7 +4320,7 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
         if (i != i_ambientT)
             perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
     }
-    compressor->evaluatePerformance = makePerformancePolySet(perfPolySet);
+    compressor->evaluatePerformance = perfPolySet.make();
     return testSummary;
 }
 
@@ -4321,10 +4331,94 @@ void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,
                                   double targetE95,
                                   FirstHourRating::Designation designation,
-                                  std::vector<PerformancePoly>& perfPolySet)
+                                  HPWH::PerformancePolySet& perfPolySet)
 {
     // returned test summaries are unused
     makeGenericEF(targetE50, testConfiguration_E50, designation, perfPolySet);
     makeGenericEF(targetUEF, testConfiguration_UEF, designation, perfPolySet);
     makeGenericEF(targetE95, testConfiguration_E95, designation, perfPolySet);
+}
+
+int HPWH::PerformancePolySet::getAmbientT_index(double ambientT_C) const
+{
+    int nPerfPts = static_cast<int>(size());
+    int i0 = 0, i1 = 0;
+    for (auto& perfPoint : *this)
+    {
+        if (C_TO_F(ambientT_C) < perfPoint.T_F)
+            break;
+        i0 = i1;
+        ++i1;
+    }
+    double ratio = 0.;
+    if ((i1 > i0) && (i1 < nPerfPts))
+    {
+        ratio = (C_TO_F(ambientT_C) - at(i0).T_F) / (at(i1).T_F - at(i0).T_F);
+    }
+    return (ratio < 0.5) ? i0 : i1;
+}
+
+HPWH::Performance HPWH::PerformancePolySet::evaluate(double externalT_C, double heatSourceT_C) const
+{
+    Performance performance = {0., 0., 0.};
+
+    size_t i_prev = 0;
+    size_t i_next = 1;
+
+    double externalT_F = C_TO_F(externalT_C);
+    double heatSourceT_F = C_TO_F(heatSourceT_C);
+    for (size_t i = 0; i < size(); ++i)
+    {
+        if (externalT_F < at(i).T_F)
+        {
+            if (i == 0)
+            {
+                i_prev = 0;
+                i_next = 1;
+            }
+            else
+            {
+                i_prev = i - 1;
+                i_next = i;
+            }
+            break;
+        }
+        else
+        {
+            if (i == size() - 1)
+            {
+                i_prev = i - 1;
+                i_next = i;
+                break;
+            }
+        }
+    }
+
+    // Calculate COP and Input Power at each of the two reference temperatures
+    double COP_T1 = at(i_prev).COP_coeffs[0];
+    COP_T1 += at(i_prev).COP_coeffs[1] * heatSourceT_F;
+    COP_T1 += at(i_prev).COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double COP_T2 = at(i_next).COP_coeffs[0];
+    COP_T2 += at(i_next).COP_coeffs[1] * heatSourceT_F;
+    COP_T2 += at(i_next).COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double inputPower_T1_W = at(i_prev).inputPower_coeffs[0];
+    inputPower_T1_W += at(i_prev).inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T1_W += at(i_prev).inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double inputPower_T2_W = at(i_next).inputPower_coeffs[0];
+    inputPower_T2_W += at(i_next).inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T2_W += at(i_next).inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    // Interpolate to get COP and input power at the current ambient temperature
+    linearInterp(performance.cop, externalT_F, at(i_prev).T_F, at(i_next).T_F, COP_T1, COP_T2);
+    linearInterp(performance.inputPower_W,
+                 externalT_F,
+                 at(i_prev).T_F,
+                 at(i_next).T_F,
+                 inputPower_T1_W,
+                 inputPower_T2_W);
+    performance.outputPower_W = performance.cop * performance.inputPower_W;
+    return performance;
 }

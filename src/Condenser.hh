@@ -128,10 +128,6 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
 
-    /// pick the nearest temperature index in a PolySet
-    static int getAmbientT_index(const std::vector<PerformancePoly>& perfPolySet,
-                                 double ambientT_C);
-
     /// general performance function used by all models
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 

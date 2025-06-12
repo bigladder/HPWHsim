@@ -1440,14 +1440,42 @@ class HPWH : public Courier::Sender
         std::vector<double> COP_coeffs;
     };
 
+    struct PerformancePolySet : public std::vector<PerformancePoly>
+    {
+        PerformancePolySet(const std::vector<PerformancePoly>& vect)
+            : std::vector<PerformancePoly>(vect)
+        {
+        }
+
+        static const PerformancePolySet tier3;
+        static const PerformancePolySet tier4;
+
+        /// pick the nearest temperature index in a PolySet
+        int getAmbientT_index(double ambientT_C) const;
+
+        Performance evaluate(double externalT_C, double heatSourceT_C) const;
+
+        inline std::function<Performance(double, double)> make() const
+        {
+            return [*this](double externalT_C, double heatSourceT_C)
+            { return evaluate(externalT_C, heatSourceT_C); };
+        }
+
+        inline std::function<Performance(double, double)> use() const
+        {
+            return [this](double externalT_C, double heatSourceT_C)
+            { return evaluate(externalT_C, heatSourceT_C); };
+        }
+    };
+
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
                               FirstHourRating::Designation designation,
-                              std::vector<PerformancePoly>& perfPolySet);
+                              PerformancePolySet& perfPolySet);
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
-                              std::vector<PerformancePoly>& perfPolySet)
+                              PerformancePolySet& perfPolySet)
     {
         return makeGenericEF(
             targetEF, testConfiguration, findFirstHourRating().designation, perfPolySet);
@@ -1455,14 +1483,14 @@ class HPWH : public Courier::Sender
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
                               FirstHourRating::Designation designation,
-                              const std::vector<PerformancePoly>& perfPolySet)
+                              const PerformancePolySet& perfPolySet)
     {
-        std::vector<PerformancePoly> perfCopy = perfPolySet;
+        PerformancePolySet perfCopy = perfPolySet;
         return makeGenericEF(targetEF, testConfiguration, designation, perfCopy);
     }
     TestSummary makeGenericEF(double targetEF,
                               TestConfiguration testConfiguration,
-                              const std::vector<PerformancePoly>& perfPolySet)
+                              const PerformancePolySet& perfPolySet)
     {
         return makeGenericEF(
             targetEF, testConfiguration, findFirstHourRating().designation, perfPolySet);
@@ -1473,11 +1501,11 @@ class HPWH : public Courier::Sender
                                 double targetUEF,
                                 double targetE95,
                                 FirstHourRating::Designation designation,
-                                std::vector<PerformancePoly>& perfPolySet);
+                                PerformancePolySet& perfPolySet);
     void makeGenericE50_UEF_E95(double targetE50,
                                 double targetUEF,
                                 double targetE95,
-                                std::vector<PerformancePoly>& perfPolySet)
+                                PerformancePolySet& perfPolySet)
     {
         return makeGenericE50_UEF_E95(
             targetE50, targetUEF, targetE95, findFirstHourRating().designation, perfPolySet);
@@ -1486,15 +1514,15 @@ class HPWH : public Courier::Sender
                                 double targetUEF,
                                 double targetE95,
                                 FirstHourRating::Designation designation,
-                                const std::vector<PerformancePoly>& perfPolySet)
+                                const PerformancePolySet& perfPolySet)
     {
-        std::vector<PerformancePoly> perfCopy = perfPolySet;
+        PerformancePolySet perfCopy = perfPolySet;
         return makeGenericE50_UEF_E95(targetE50, targetUEF, targetE95, designation, perfCopy);
     }
     void makeGenericE50_UEF_E95(double targetE50,
                                 double targetUEF,
                                 double targetE95,
-                                const std::vector<PerformancePoly>& perfPolySet)
+                                const PerformancePolySet& perfPolySet)
     {
         return makeGenericE50_UEF_E95(
             targetE50, targetUEF, targetE95, findFirstHourRating().designation, perfPolySet);
@@ -1503,24 +1531,24 @@ class HPWH : public Courier::Sender
     /// fit using UEF config, then adjust E50, E95 coefficients
     TestSummary makeGenericUEF(double targetUEF,
                                FirstHourRating::Designation designation,
-                               std::vector<PerformancePoly>& perfPolySet);
-    TestSummary makeGenericUEF(double targetUEF, std::vector<PerformancePoly>& perfPolySet)
+                               PerformancePolySet& perfPolySet);
+    TestSummary makeGenericUEF(double targetUEF, PerformancePolySet& perfPolySet)
     {
         return makeGenericUEF(targetUEF, findFirstHourRating().designation, perfPolySet);
     }
     TestSummary makeGenericUEF(double targetUEF,
                                FirstHourRating::Designation designation,
-                               const std::vector<PerformancePoly>& perfPolySet)
+                               const PerformancePolySet& perfPolySet)
     {
-        std::vector<PerformancePoly> perfCopy = perfPolySet;
+        PerformancePolySet perfCopy = perfPolySet;
         return makeGenericUEF(targetUEF, designation, perfCopy);
     }
-    TestSummary makeGenericUEF(double targetUEF, const std::vector<PerformancePoly>& perfPolySet)
+    TestSummary makeGenericUEF(double targetUEF, const PerformancePolySet& perfPolySet)
     {
         return makeGenericUEF(targetUEF, findFirstHourRating().designation, perfPolySet);
     }
 
-    void makeCondenserPerformancePolySet(const std::vector<PerformancePoly>& perfPolySet);
+    void makeCondenserPerformance(const PerformancePolySet& perfPolySet);
 
     /// assign perfRGI member using grid data and capture
     static std::function<Performance(double, double)>
@@ -1528,35 +1556,7 @@ class HPWH : public Courier::Sender
                          const std::vector<std::vector<double>>& perfGrid,
                          const std::vector<std::vector<double>>& perfGridValues);
 
-    static Performance evalPolySet(const std::vector<HPWH::PerformancePoly>& perfPolySet,
-                                   double externalT_C,
-                                   double heatSourceT_C);
-
-    inline static std::function<Performance(double, double)>
-    makePerformancePolySet(const std::vector<PerformancePoly>& perfPolySet)
-    {
-        return [perfPolySet](double externalT_C, double heatSourceT_C)
-        { return evalPolySet(perfPolySet, externalT_C, heatSourceT_C); };
-    }
-
-    inline static std::function<Performance(double externalT_C, double condenserT_C)>
-    usePerformancePolySet(std::vector<PerformancePoly>& perfPolySet)
-    {
-        return [&perfPolySet](double externalT_C, double heatSourceT_C)
-        { return evalPolySet(perfPolySet, externalT_C, heatSourceT_C); };
-    }
-
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
-
-        inline static const std::vector<PerformancePoly> tier3PerfPolySet = {
-            {50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
-            {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
-            {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
-
-        inline static const std::vector<PerformancePoly> tier4PerfPolySet = {
-            {50., {126.9, 2.215, 0.0}, {6.931, -0.03395, 0.0}},
-            {67.5, {116.6, 2.467, 0.0}, {8.833, -0.04431, 0.0}},
-            {95., {100.4, 2.863, 0.0}, {11.822, -0.06059, 0.0}}};
 
   private:
     void setAllDefaults(); /**< sets all the defaults */

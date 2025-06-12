@@ -78,7 +78,8 @@ CLI::App* add_make(CLI::App& app)
                 modelName = getModelNameFromFilename(modelFilename);
                 hpwh.initFromJSON(j, modelName);
             }
-            auto perfPolySet = (tier == 3) ? HPWH::tier3PerfPolySet : HPWH::tier4PerfPolySet;
+            auto perfPolySet =
+                (tier == 3) ? HPWH::PerformancePolySet::tier3 : HPWH::PerformancePolySet::tier4;
 
             make(specType,
                  hpwh,

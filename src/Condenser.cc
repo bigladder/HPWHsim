@@ -64,28 +64,6 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     return *this;
 }
 
-/*static*/
-int HPWH::Condenser::getAmbientT_index(const std::vector<PerformancePoly>& perfPolySet,
-                                       double ambientT_C)
-{
-    int nPerfPts = static_cast<int>(perfPolySet.size());
-    int i0 = 0, i1 = 0;
-    for (auto& perfPoint : perfPolySet)
-    {
-        if (C_TO_F(ambientT_C) < perfPoint.T_F)
-            break;
-        i0 = i1;
-        ++i1;
-    }
-    double ratio = 0.;
-    if ((i1 > i0) && (i1 < nPerfPts))
-    {
-        ratio = (C_TO_F(ambientT_C) - perfPolySet[i0].T_F) /
-                (perfPolySet[i1].T_F - perfPolySet[i0].T_F);
-    }
-    return (ratio < 0.5) ? i0 : i1;
-}
-
 bool HPWH::Condenser::toLockOrUnlock(double heatSourceAmbientT_C)
 {
     if (shouldLockOut(heatSourceAmbientT_C))

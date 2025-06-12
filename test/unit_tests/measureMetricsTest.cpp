@@ -95,13 +95,14 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
     HPWH hpwh;
     const std::string modelName = "Rheem2020Prem50";
     hpwh.initPreset(modelName);
-    hpwh.makeCondenserPerformancePolySet(HPWH::tier4PerfPolySet);
+    hpwh.makeCondenserPerformance(HPWH::PerformancePolySet::tier4);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating sequence.";
 
     constexpr double UEF = 4.3;
-    EXPECT_NO_THROW(hpwh.makeGenericUEF(UEF, firstHourRating.designation, HPWH::tier4PerfPolySet))
+    EXPECT_NO_THROW(
+        hpwh.makeGenericUEF(UEF, firstHourRating.designation, HPWH::PerformancePolySet::tier4))
         << "Could not make generic model.";
 
     { // verify UEF
@@ -121,7 +122,7 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
     HPWH hpwh;
     const std::string modelName = "Rheem2020Prem50";
     hpwh.initPreset(modelName);
-    hpwh.makeCondenserPerformancePolySet(HPWH::tier4PerfPolySet);
+    hpwh.makeCondenserPerformance(HPWH::PerformancePolySet::tier4);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
@@ -131,7 +132,7 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
     constexpr double E95 = 4.9;
 
     EXPECT_NO_THROW(hpwh.makeGenericE50_UEF_E95(
-        E50, UEF, E95, firstHourRating.designation, HPWH::tier4PerfPolySet))
+        E50, UEF, E95, firstHourRating.designation, HPWH::PerformancePolySet::tier4))
         << "Could not make generic model.";
 
     { // verify E50
