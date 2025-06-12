@@ -1548,6 +1548,16 @@ class HPWH : public Courier::Sender
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
+        inline static const std::vector<PerformancePoly> tier3PerfPolySet = {
+            {50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+            {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+            {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}};
+
+        inline static const std::vector<PerformancePoly> tier4PerfPolySet = {
+            {50., {126.9, 2.215, 0.0}, {6.931, -0.03395, 0.0}},
+            {67.5, {116.6, 2.467, 0.0}, {8.833, -0.04431, 0.0}},
+            {95., {100.4, 2.863, 0.0}, {11.822, -0.06059, 0.0}}};
+
   private:
     void setAllDefaults(); /**< sets all the defaults */
 
