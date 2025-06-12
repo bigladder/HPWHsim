@@ -306,7 +306,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     perfPolySet[1].inputPower_coeffs[1] /= genericFudge;
     perfPolySet[1].inputPower_coeffs[2] /= genericFudge;
 
-    compressor->makePerformancePolySet(perfPolySet);
+    makeCondenserPerformancePolySet(perfPolySet);
 
     //
     compressor->backupHeatSource = resistiveElementBottom;

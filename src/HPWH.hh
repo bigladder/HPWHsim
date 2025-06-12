@@ -1423,6 +1423,13 @@ class HPWH : public Courier::Sender
 
     struct Fitter;
 
+    struct Performance
+    {
+        double inputPower_W;
+        double outputPower_W;
+        double cop;
+    };
+
     /// performance polynomial to form a polynomial set of
     /// multiple points at various temperatures.
     /// Linear interpolation is applied to the collection of points.
@@ -1514,6 +1521,32 @@ class HPWH : public Courier::Sender
     }
 
     void makeCondenserPerformancePolySet(const std::vector<PerformancePoly>& perfPolySet);
+
+    /// assign perfRGI member using grid data and capture
+    static std::function<Performance(double, double)>
+    makePerformanceBtwxt(Condenser* condenser,
+                         const std::vector<std::vector<double>>& perfGrid,
+                         const std::vector<std::vector<double>>& perfGridValues);
+
+    static Performance evalPolySet(const std::vector<HPWH::PerformancePoly>& perfPolySet,
+                                   double externalT_C,
+                                   double heatSourceT_C);
+
+    inline static std::function<Performance(double, double)>
+    makePerformancePolySet(const std::vector<PerformancePoly>& perfPolySet)
+    {
+        return [perfPolySet](double externalT_C, double heatSourceT_C)
+        { return evalPolySet(perfPolySet, externalT_C, heatSourceT_C); };
+    }
+
+    inline static std::function<Performance(double externalT_C, double condenserT_C)>
+    usePerformancePolySet(std::vector<PerformancePoly>& perfPolySet)
+    {
+        return [&perfPolySet](double externalT_C, double heatSourceT_C)
+        { return evalPolySet(perfPolySet, externalT_C, heatSourceT_C); };
+    }
+
+    static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
   private:
     void setAllDefaults(); /**< sets all the defaults */

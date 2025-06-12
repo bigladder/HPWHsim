@@ -102,15 +102,6 @@ class HPWH::Condenser : public HPWH::HeatSource
     heat exchanger by adding extra input energy for the pump and an increaes in the water to the
     incoming water temperature to the heatpump*/
 
-    static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
-
-    struct Performance
-    {
-        double inputPower_W;
-        double outputPower_W;
-        double cop;
-    };
-
     double standbyPower_kW;
 
     bool isExternal() const;
@@ -130,8 +121,8 @@ class HPWH::Condenser : public HPWH::HeatSource
     /// Add heat from external source using a multi-pass configuration
     double addHeatExternalMP(double externalT_C, double minutesToRun, Performance& netPerformance);
 
-    void sortPerformancePolySet();
-    /**< sorts the Performance Map by increasing external temperatures */
+    /// Set evaluation methods
+    std::vector<Btwxt::GridAxis> setUpGridAxes(const std::vector<std::vector<double>>& perfGrid);
 
     void addHeat(double externalT_C, double minutesToRun);
 
@@ -146,21 +137,6 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     /// performance grid data and values to form btwxt RGI
     std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI = {};
-
-    /// assign perfRGI member using grid data and capture
-    void makePerformanceBtwxt(const std::vector<std::vector<double>>& perfGrid,
-                              const std::vector<std::vector<double>>& perfGridValues);
-
-    /// capture perfPolySet by reference
-    void usePerformancePolySet(std::vector<PerformancePoly>& perfPolySet);
-
-    /// capture perfPolySet by value
-    void makePerformancePolySet(const std::vector<PerformancePoly>& perfPolySet_in);
-
-    /// common polySet algorithm
-    Performance evalPolySet(const std::vector<HPWH::PerformancePoly>& perfPolySet,
-                            double externalT_C,
-                            double heatSourceT_C);
 
     inline static const std::vector<PerformancePoly> tier3PerfPolySet = {
         {50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
