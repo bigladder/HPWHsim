@@ -242,50 +242,6 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 }
 
 /*static*/
-std::function<HPWH::Performance(double, double)>
-HPWH::makePerformanceBtwxt(Condenser* condenser,
-                           const std::vector<std::vector<double>>& perfGrid,
-                           const std::vector<std::vector<double>>& perfGridValues)
-{
-    auto grid_axes = condenser->setUpGridAxes(perfGrid);
-
-    auto perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-        grid_axes, perfGridValues, "RegularGridInterpolator", condenser->get_courier());
-
-    condenser->perfRGI = perfRGI;
-
-    /// internal function to form target vector
-    std::function<std::vector<double>(double externalT_C, double condenserT_C)>
-        getPerformanceTarget;
-
-    if (perfGrid.size() > 2)
-    {
-        getPerformanceTarget = [condenser](double externalT_C, double heatSourceT_C)
-        {
-            return std::vector<double>(
-                {externalT_C,
-                 condenser->hpwh->getSetpoint() +
-                     condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                 heatSourceT_C});
-        };
-    }
-    else
-    {
-        getPerformanceTarget = [](double externalT_C, double heatSourceT_C) {
-            return std::vector<double>({externalT_C, heatSourceT_C});
-        };
-    }
-
-    return [perfRGI, getPerformanceTarget](double externalT_C, double heatSourceT_C)
-    {
-        auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
-        std::vector<double> result = perfRGI->get_values_at_target(target);
-        Performance performance({result[0], result[1] * result[0], result[1]});
-        return performance;
-    };
-}
-
-/*static*/
 void HPWH::linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1)
 {
     ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);

@@ -1550,12 +1550,6 @@ class HPWH : public Courier::Sender
 
     void makeCondenserPerformance(const PerformancePolySet& perfPolySet);
 
-    /// assign perfRGI member using grid data and capture
-    static std::function<Performance(double, double)>
-    makePerformanceBtwxt(Condenser* condenser,
-                         const std::vector<std::vector<double>>& perfGrid,
-                         const std::vector<std::vector<double>>& perfGridValues);
-
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
   private:
