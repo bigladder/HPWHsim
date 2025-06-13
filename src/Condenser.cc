@@ -301,7 +301,7 @@ void HPWH::Condenser::from(
 
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
-        evaluatePerformance = makePerformanceBtwxt(this, perfGrid, perfGridValues);
+        makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -387,7 +387,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         perfGridValues.push_back(inputPowers_W);
         perfGridValues.push_back(cops);
 
-        evaluatePerformance = makePerformanceBtwxt(this, perfGrid, perfGridValues);
+        makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -1127,4 +1127,42 @@ HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
         ++iAxis;
     }
     return grid_axes;
+}
+
+void HPWH::Condenser::makePerformanceBtwxt(const std::vector<std::vector<double>>& perfGrid,
+                                           const std::vector<std::vector<double>>& perfGridValues)
+{
+    auto grid_axes = setUpGridAxes(perfGrid);
+
+    perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+        grid_axes, perfGridValues, "RegularGridInterpolator", get_courier());
+
+    /// internal function to form target vector
+    std::function<std::vector<double>(double externalT_C, double condenserT_C)>
+        getPerformanceTarget;
+
+    if (perfGrid.size() > 2)
+    {
+        getPerformanceTarget = [this](double externalT_C, double heatSourceT_C)
+        {
+            return std::vector<double>(
+                {externalT_C,
+                 hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                 heatSourceT_C});
+        };
+    }
+    else
+    {
+        getPerformanceTarget = [](double externalT_C, double heatSourceT_C) {
+            return std::vector<double>({externalT_C, heatSourceT_C});
+        };
+    }
+    evaluatePerformance =
+        [&perfRGI = perfRGI, getPerformanceTarget](double externalT_C, double heatSourceT_C)
+    {
+        auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
+        std::vector<double> result = perfRGI->get_values_at_target(target);
+        Performance performance({result[0], result[1] * result[0], result[1]});
+        return performance;
+    };
 }
