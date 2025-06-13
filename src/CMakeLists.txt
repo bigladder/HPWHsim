@@ -11,32 +11,34 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
+get_filename_component(abs_presets_path "${PROJECT_BINARY_DIR}/presets" ABSOLUTE)
+file(GLOB preset_headers "${abs_presets_path}/presets.h" "${abs_presets_path}/include/*.h")
+
 set(headers
         HPWHversion.in.hh
         HPWH.hh
+        HPWHUtils.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
-
         Tank.hh
         Condenser.hh
         Resistance.hh
-
         hpwh-data-model.hh
         HPWHFitter.hh
+        "${preset_headers}"
         )
 
 set(sources
         HPWHversion.cc
+        HPWH.cc
         HPWHUtils.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
         HPWH.cc
         HPWHpresets.cc
-
         Tank.cc
         Condenser.cc
         Resistance.cc
-
         hpwh-data-model.cpp
         HPWHFitter.cc
         )
@@ -59,6 +61,8 @@ endif ()
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_BINARY_DIR}/src
         PUBLIC ${PROJECT_SOURCE_DIR}/src
+        PUBLIC "${abs_presets_path}"
+        PUBLIC "${abs_presets_path}/include"
         )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model)

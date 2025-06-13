@@ -1,10 +1,11 @@
 ﻿/*
- * Implementation of static HPWH utility functions
+ * Implementation of HPWH utility functions
  */
 
 #include "HPWH.hh"
 #include "HPWHUtils.hh"
 #include "HPWHHeatSource.hh"
+#include "Condenser.hh"
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -238,4 +239,10 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
         return 0.;
     }
     return (tHot - tCold) / (tMix - tCold);
+}
+
+/*static*/
+void HPWH::linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1)
+{
+    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }

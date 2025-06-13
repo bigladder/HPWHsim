@@ -208,7 +208,7 @@
    "number": 1153
  },
  {
-   "name": "Stiebel220E",
+   "name": "Stiebel220e",
    "number": 160
  },
  {
@@ -234,5 +234,9 @@
 	{
 		"name": "BradfordWhiteAeroThermRE2H80",
 		"number": 502
+	},
+	{
+		"name": "StorageTank",
+		"number": 180
 	}
 ]

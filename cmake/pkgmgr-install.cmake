@@ -10,3 +10,15 @@ macro(poetry_install pythonScriptDir)
             OUTPUT_VARIABLE outputs)
 
 endmacro()
+
+macro(uv_install pythonScriptDir)
+
+    execute_process(
+            COMMAND uv sync
+            WORKING_DIRECTORY "${pythonScriptDir}"
+            RESULT_VARIABLE result
+            ERROR_VARIABLE errors
+            OUTPUT_VARIABLE outputs)
+
+endmacro()
+
