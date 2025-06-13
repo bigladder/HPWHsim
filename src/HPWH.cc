@@ -1708,10 +1708,13 @@ int HPWH::getCompressorIndex() const { return compressorIndex; }
 
 HPWH::Condenser* HPWH::getCompressor()
 {
-    Condenser* condenser = nullptr;
-    if (hasACompressor())
-        condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    return condenser;
+    for (auto heatSource : heatSources)
+    {
+        auto obj = heatSource.get();
+        if (typeid(*obj) == typeid(Condenser))
+            return static_cast<Condenser*>(heatSource.get());
+    }
+    return nullptr;
 }
 
 void HPWH::makeCondenserPerformance(const PerformancePolySet& perfPolySet)
