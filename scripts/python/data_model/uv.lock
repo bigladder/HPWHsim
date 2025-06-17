@@ -128,11 +128,15 @@ name = "data-model"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cbor2" },
     { name = "lattice" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "lattice", git = "https://github.com/bigladder/lattice?branch=is-required-temp-fix" }]
+requires-dist = [
+    { name = "cbor2", specifier = ">=5.6.5" },
+    { name = "lattice", git = "https://github.com/bigladder/lattice?branch=is-required-temp-fix" },
+]
 
 [[package]]
 name = "ghp-import"
