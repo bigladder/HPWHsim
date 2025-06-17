@@ -61,11 +61,6 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					continue
 			
 				cbor_data = cbor2.dumps(json_data)
-				#print(cbor_data)
-				#c2 = cbor2.loads(cbor_data)
-				#json_data2 = json.dumps(c2)
-				#print(json_data2)
-				#sys.exit(0)
 					
 				guard_name = preset["name"].upper() + "_H"
 				
@@ -78,8 +73,6 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				preset_text += "namespace hpwh_presets {\n\n"
 				
 				nbytes = len(cbor_data)
-				#preset_text += "inline constexpr std::size_t name_" + preset["name"] + " = " + preset["name"] + ";\n"
-				#preset_text += "inline constexpr std::size_t size_" + preset["name"] + " = " + str(nbytes) + ";\n"
 				preset_text += "const std::array<uint8_t, " + str(nbytes) + "> cbor_" + preset["name"] + "{\n"
 				for i, entry  in enumerate(cbor_data):
 					preset_text += hex(entry) + ", "
@@ -104,7 +97,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				if not first:
 					presets_source_text += ",\n"
 					
-				presets_source_text += "\t{ " + str(preset["number"]) + ", {\"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0]}}"
+				presets_source_text += "\t{ " + str(preset["number"]) + ", \"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0]}"
 				first = False
 
 		# create library header
@@ -125,14 +118,15 @@ namespace hpwh_presets {
 
 struct Identifier
 {
-  std::string name;
-  const std::size_t size;
-  const std::uint8_t *cbor_data;
-  Identifier(const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
-      name(name_in), size(size_in), cbor_data(cbor_data_in){}
+\tint id;
+\tstd::string name;
+\tconst std::size_t size;
+\tconst std::uint8_t *cbor_data;
+\tIdentifier(const int id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
+\t\tid(id_in), name(name_in), size(size_in), cbor_data(cbor_data_in){}
 };
 
-inline std::unordered_map<int, Identifier> index({
+inline std::vector<Identifier> models({
 """	
 		presets_header  += presets_source_text + "\n"
 		presets_header  += "});\n}\n"
