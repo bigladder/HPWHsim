@@ -481,8 +481,8 @@ stringcase = ">=1.2.0"
 [package.source]
 type = "git"
 url = "https://github.com/bigladder/lattice.git"
-reference = "add-json-object-write"
-resolved_reference = "c810cf9910793eb796bf464baca0a3a3352ae59d"
+reference = "main"
+resolved_reference = "8a67266cdeb48f5f290f412d45decd54b314086c"
 
 [[package]]
 name = "markdown"
@@ -1315,4 +1315,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "b1e59e7ddd24a061208eb47122852c4f07251bbd21636b82b7b7429d7bbab4d8"
+content-hash = "a9e22f96aabfa7dd19ec8899fb58c22727994504741e10495d27e5ce13a88d1a"
