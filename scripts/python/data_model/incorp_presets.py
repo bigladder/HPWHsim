@@ -1,4 +1,4 @@
-# uv run --no-project incorp_presets.py JSON ../../../build IHPWH_models.json CWHS_models.json
+# uv run incorp_presets.py JSON ../../../build IHPWH_models.json CWHS_models.json
 
 # calls `hpwh convert' for each model in models_list_file json,
 # then creates a C++ header file containing that data.
@@ -18,6 +18,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 	os.chdir(orig_dir)
 
 	presets_headers_text = ""
+	presets_identifiers_text = ""
 	presets_models_text = ""
 	presets_vector_text = ""
 	
@@ -98,7 +99,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					
 				presets_headers_text += "#include \"" + preset["name"] + ".h\"\n"
 				presets_models_text += "\t" + preset["name"] + " = " + str(preset["number"])
-				presets_vector_text += "\t{ " + preset["name"] + ", \"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0] }"
+				presets_vector_text += "\t{ MODELS::" + preset["name"] + ", \"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0] }"
 				first = False
 
 		# create library header
@@ -108,31 +109,29 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 
 #include <iostream>
 #include <unordered_map>
-
 """
 		# add the includes	
 		presets_header += presets_headers_text
 	
-		presets_header += """		
-	
+		presets_header += """
 namespace hpwh_presets {
 
-using Identifier = std::pair<int, std::string>;
-
-struct Preset: public Identifier
+struct Identifier
 {
-\tconst std::size_t size;
-\tconst std::uint8_t *cbor_data;
-\tPreset(const int id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
-\t\tIdentifier(id_in, name_in), size(size_in), cbor_data(cbor_data_in){}
-}
+	int model_id;
+	std::string name;
+	const std::size_t size;
+	const std::uint8_t *cbor_data;
+	Identifier(const int model_id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
+		model_id(model_id_in), name(name_in), size(size_in), cbor_data(cbor_data_in){}
+};
 """
 
 		presets_header += """
 
 /// specifies the allowable preset HPWH models
 /// values may vary - names should be used
-enum Models
+enum MODELS: int
 {
 """
 		presets_header += presets_models_text + "\n};\n"
