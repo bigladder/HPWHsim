@@ -267,7 +267,7 @@ void HPWH::Condenser::from(
         std::vector<std::vector<double>> perfGridValues = {};
 
         perfGrid.reserve(3);
-        // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
+        // order based on hpwh_presets::MODELS::MITSUBISHI_QAHV_N136TAU_HPB_SP
         if (grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
         {
             std::vector<double> evapTs_C = {};
@@ -343,7 +343,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
 
         auto& grid_variables = perf_map.grid_variables;
         perfGrid.reserve(3);
-        // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
+        // order based on hpwh_presets::MODELS::MITSUBISHI_QAHV_N136TAU_HPB_SP
         if (grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
         {
             std::vector<double> evapTs_C = {};
@@ -400,18 +400,18 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         standbyPower_kW = perf.standby_power / 1000.;
     }
 
-    if (hpwh->model == MODELS_NyleC60A_C_MP)
+    if (hpwh->model == hpwh_presets::MODELS::NyleC60A_C_MP)
         resDefrost = {4.5, 5.0, 40.0}; // inputPower_KW, constTempLift_dF, onBelowTemp_F;
-    else if (hpwh->model == MODELS_NyleC90A_C_MP)
+    else if (hpwh->model == hpwh_presets::MODELS::NyleC90A_C_MP)
         resDefrost = {5.4, 5.0, 40.0};
-    else if (hpwh->model == MODELS_NyleC125A_C_MP)
+    else if (hpwh->model == hpwh_presets::MODELS::NyleC125A_C_MP)
         resDefrost = {9.0, 5.0, 40.0};
-    else if (hpwh->model == MODELS_NyleC185A_C_MP)
+    else if (hpwh->model == hpwh_presets::MODELS::NyleC185A_C_MP)
         resDefrost = {7.25, 5.0, 40.0};
-    else if (hpwh->model == MODELS_NyleC250A_C_MP)
+    else if (hpwh->model == hpwh_presets::MODELS::NyleC250A_C_MP)
         resDefrost = {18.0, 5.0, 40.0};
 
-    if ((MODELS_NyleC25A_SP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_SP))
+    if ((hpwh_presets::MODELS::NyleC25A_SP <= hpwh->model) && (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_SP))
     {
         maxOut_at_LowT.outT_C = F_TO_C(140.);
         maxOut_at_LowT.airT_C = F_TO_C(40.);
@@ -589,7 +589,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
 
         //
         std::size_t nVals = 1;
-        int iElem = 0; // order based on MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP
+        int iElem = 0; // order based on hpwh_presets::MODELS::MITSUBISHI_QAHV_N136TAU_HPB_SP
         std::vector<double> envTemps_K = {};
         std::vector<double> outletTemps_K = {};
         std::vector<double> heatSourceTemps_K = {};
@@ -1078,9 +1078,9 @@ std::vector<Btwxt::GridAxis>
 HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
 {
     auto is_integrated = (configuration != COIL_CONFIG::CONFIG_EXTERNAL);
-    auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
+    auto is_Mitsubishi = (hpwh->model == hpwh_presets::MODELS::QAHV_N136TAU_HPB_SP);
     auto is_NyleMP =
-        ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
+        ((hpwh_presets::MODELS::NyleC60A_MP <= hpwh->model) && (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_MP));
 
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;

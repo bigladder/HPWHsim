@@ -102,8 +102,6 @@ void HPWH::initResistanceTank(double tankVol_L,
         tank->UA_kJperHrC = 0.0;
     }
 
-    model = MODELS_CustomResTank;
-
     calcDerivedValues();
 
     checkInputs();
@@ -193,8 +191,6 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         }
         tank->UA_kJperHrC = 0.0;
     }
-
-    model = MODELS_CustomResTankGeneric;
 
     calcDerivedValues();
 
@@ -314,8 +310,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     resistiveElementTop->followedByHeatSource = resistiveElementBottom;
     resistiveElementBottom->followedByHeatSource = compressor;
-
-    model = MODELS_genericCustomUEF;
 
     calcDerivedValues();
 
