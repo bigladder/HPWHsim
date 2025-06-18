@@ -57,7 +57,7 @@ if (NOT ${PROJECT_NAME}_PRESETS_ARE_SETUP)
 	include(pkgmgr-install)
 	uv_install(${pythonScriptDir})
 	execute_process(
-	        COMMAND uv run --no-project incorp_presets.py JSON "${PROJECT_BINARY_DIR}" IHPWH_models.json CWHS_models.json
+	        COMMAND uv run --no-project incorp_presets.py JSON "${PROJECT_BINARY_DIR}" ../../../test/models_json/models.json
 	        WORKING_DIRECTORY "${pythonScriptDir}"
 	        RESULT_VARIABLE build_presets_result)
 
