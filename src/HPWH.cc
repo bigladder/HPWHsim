@@ -871,7 +871,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         }
         else if (lowestElementIndex == -1 && !hasACompressor())
         { // There are no heat sources here!
-            if (model == MODELS_StorageTank)
+            if (model == Models::StorageTank)
             {
                 returnVal = true; // The one pass the storage tank doesn't have any heating elements
                                   // so sure change the setpoint it does nothing!
@@ -2687,7 +2687,7 @@ void HPWH::checkInputs()
 {
     std::queue<std::string> error_msgs = {};
 
-    if (getNumHeatSources() <= 0 && (model != MODELS_StorageTank))
+    if (getNumHeatSources() <= 0 && (model != Models::StorageTank))
     {
         error_msgs.push("You must have at least one HeatSource.");
     }
@@ -2861,11 +2861,11 @@ void HPWH::checkInputs()
         }
         else if (modelName == "StorageTank")
         {
-            model = HPWH::MODELS_StorageTank;
+            model = hpwh_presets::Models::StorageTank;
             return true;
         }
     }
-    model = HPWH::MODELS_basicIntegrated;
+    model = hpwh_presets::Models::basicIntegrated;
     return false;
 }
 
@@ -2882,14 +2882,14 @@ bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS mo
 
 void HPWH::configure()
 { // adjustments for non-data-model properties
-    if (model == MODELS_GE2012)
+    if (model == Models::GE2012)
     {
         auto& condenser = heatSources[compressorIndex];
         auto logic = condenser->shutOffLogicSet[0];
         logic->description = "large draw";
     }
-    else if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP) ||
-             (model == MODELS_SANCO2_119) || (model == MODELS_SANCO2_43))
+    else if ((model == Models::SANCO2_83) || (model == Models::SANCO2_GS3_45HPA_US_SP) ||
+             (model == Models::SANCO2_119) || (model == Models::SANCO2_43))
     {
         setpointFixed = true;
         {
@@ -2897,35 +2897,35 @@ void HPWH::configure()
             logic->getIsEnteringWaterHighTempShutoff() = true;
             logic->checksStandby() = true;
         }
-        if ((model == MODELS_SANCO2_83) || (model == MODELS_SANCO2_GS3_45HPA_US_SP))
+        if ((model == Models::SANCO2_83) || (model == Models::SANCO2_GS3_45HPA_US_SP))
         {
             auto logic = heatSources[compressorIndex]->turnOnLogicSet[1];
             logic->checksStandby() = true;
         }
     }
-    else if ((MODELS_NyleC25A_SP <= model) && (model <= MODELS_NyleC250A_C_SP))
+    else if ((Models::NyleC25A_SP <= model) && (model <= Models::NyleC250A_C_SP))
     {
         auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    else if ((MODELS_ColmacCxV_5_SP <= model) && (model <= MODELS_ColmacCxA_30_SP))
+    else if ((Models::ColmacCxV_5_SP <= model) && (model <= Models::ColmacCxA_30_SP))
     {
         auto& condenser = heatSources[compressorIndex];
         auto logic = condenser->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    else if (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    else if (model == Models::MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
         auto& condenser = heatSources[compressorIndex];
         auto logic = condenser->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    else if (model == MODELS_Scalable_MP)
+    else if (model == Models::Scalable_MP)
     {
         canScale = true;
         tank->volumeFixed = false;
     }
-    else if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
+    else if ((Models::TamScalable_SP <= model) && (model <= Models::TamScalable_SP_Half))
     {
         canScale = true;
         tank->volumeFixed = false;
