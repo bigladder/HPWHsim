@@ -10,7 +10,7 @@ set(modelNames
         AOSmithHPTS50
         AOSmithPHPT60
         AOSmithHPTU80
-        Sanden80
+        Sanco80
         RheemHB50
         Stiebel220e
         GE502014
@@ -30,7 +30,7 @@ set(general_Tests
 
 set(JSON_modelNames
         AOSmithHPTS50
-        Sanden80
+        Sanco80
         )
 
 set(JSON_testNames
@@ -59,7 +59,7 @@ set(lockoutTestModels
 
 set(yearTestsModels
         AOSmithHPTU80
-        Sanden80
+        Sanco80
         GE502014
         Rheem2020Prem40
         Rheem2020Prem50
@@ -98,7 +98,7 @@ set(largeCompressorTests
         testLargeCompHot
         )
 set(largeCompressorNames
-        QAHV_N136TAU_HPB_SP
+        Mitsubishi_QAHV_N136TAU_HPB_SP
 
         AOSmithCAHP120
         ColmacCxV_5_SP
@@ -132,7 +132,7 @@ set(largeCompressorNames
         )
 
 set(yearLargeTestsModels
-        QAHV_N136TAU_HPB_SP
+        Mitsubishi_QAHV_N136TAU_HPB_SP
 
         ColmacCxV_5_SP
         ColmacCxA_10_SP
@@ -170,7 +170,7 @@ set(yearLargeTests
 
 #
 set(SancoModels 
-        Sanden80
+        Sanco80
 )
 set(SancoTests
         testSandenCombi
@@ -178,7 +178,7 @@ set(SancoTests
 
 #
 set(SoC_Models
-        Sanden120
+        Sanco120
         NyleC25A_SP
         )
 set(SoC_TestDir "SoC_tests")

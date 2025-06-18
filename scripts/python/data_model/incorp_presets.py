@@ -31,6 +31,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 			os.mkdir(presets_include_dir)	
 	
 	if spec_type == "Preset":			
+		
 		if not os.path.exists(output_dir):
 			os.mkdir(output_dir)	
 		app_cmd = os.path.join(abs_build_dir , 'src', 'hpwh', 'hpwh')
@@ -99,7 +100,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					
 				presets_headers_text += "#include \"" + preset["name"] + ".h\"\n"
 				presets_models_text += "\t" + preset["name"] + " = " + str(preset["number"])
-				presets_vector_text += "\t{ MODELS::" + preset["name"] + ", \"" + preset["name"] + "\", &cbor_" + preset["name"] + "[0] }"
+				presets_vector_text += "\t{ MODELS::" + preset["name"] + ", \"" + preset["name"] +"\", cbor_" + preset["name"] + ".data(), sizeof(cbor_" + preset["name"] + ")}"
 				first = False
 
 		# create library header
@@ -127,14 +128,14 @@ enum MODELS: int
 		presets_header += "};\n"
 
 		presets_header += """
-
 struct Model
 {
 	int id;
 	std::string name;
 	const std::uint8_t *cbor_data;
-	Model(const int id_in, const char* name_in, const std::uint8_t *cbor_data_in):
-		id(id_in), name(name_in), cbor_data(cbor_data_in){}
+	std::size_t size;
+	Model(const int id_in, const char* name_in, const std::uint8_t *cbor_data_in, const std::size_t size_in):
+		id(id_in), name(name_in), cbor_data(cbor_data_in), size(size_in){}
 	MODELS model() const {return static_cast<MODELS>(id);}
 };
 """
@@ -145,17 +146,17 @@ inline std::vector<Model> models({
 		presets_header  += presets_vector_text + "\n});\n"
 #		
 		presets_header  += """
-Model find_by_name(const std::string& name)
+inline Model find_by_name(const std::string& name)
 {
     auto it = find_if(models.begin(),
                       models.end(),
                       [&name](Model& model){ return model.name == name; });
     if (it != models.end())
         return *it;
-    return {-1, "unknown", nullptr};
+    return {MODELS::unknown, "unknown", nullptr, 0};
 }
 
-Model find_by_id(const int id)
+inline Model find_by_id(const MODELS id)
 {
     auto it =
         find_if(models.begin(),
@@ -163,18 +164,7 @@ Model find_by_id(const int id)
                 [&id](Model& model) { return model.id == id; });
     if (it != models.end())
         return *it;
-    return {-1, "unknown", nullptr};
-}
-
-Model find_by_id(const MODELS id)
-{
-    auto it =
-        find_if(models.begin(),
-                models.end(),
-                [&id](Model& model) { return model.id == id; });
-    if (it != models.end())
-        return *it;
-    return {-1, "unknown", nullptr};
+    return {MODELS::unknown, "unknown", nullptr, 0};
 }
 }
 #endif

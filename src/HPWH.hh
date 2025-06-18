@@ -631,17 +631,17 @@ class HPWH : public Courier::Sender
      * are taken from the GE2015_STDMode model.
      */
 
-    static bool getPresetNameFromNumber(std::string& modelName, const hpwh_presets::MODELS  model);
-    static bool getPresetNumberFromName(const std::string& modelName, hpwh_presets::MODELS & model);
+    static bool getPresetNameFromNumber(std::string& modelName, const hpwh_presets::MODELS model);
+    static bool getPresetNumberFromName(const std::string& modelName, hpwh_presets::MODELS& model);
 
     void configure();
 
     /// init general
-    void init(const std::string& specType, const hpwh_presets::MODELS  presetNum);
+    void init(const std::string& specType, const hpwh_presets::MODELS presetNum);
     void init(const std::string& specType, const std::string& modelName);
 
     /// init Preset from embedded CBOR representation
-    void initPreset(hpwh_presets::MODELS  presetNum);
+    void initPreset(hpwh_presets::MODELS presetNum);
     void initPreset(const std::string& modelName);
 
     /// init from hpwh-data-model in JSON format

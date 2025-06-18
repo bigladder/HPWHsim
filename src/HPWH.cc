@@ -2853,7 +2853,8 @@ void HPWH::checkInputs()
     }
 }
 
-/* static */ bool HPWH::getPresetNumberFromName(const std::string& modelName, hpwh_presets::MODELS& model_id)
+/* static */ bool HPWH::getPresetNumberFromName(const std::string& modelName,
+                                                hpwh_presets::MODELS& model_id)
 {
     model_id = hpwh_presets::find_by_name(modelName).model();
     return (model_id != -1);
@@ -2879,8 +2880,9 @@ void HPWH::configure()
         auto logic = condenser->shutOffLogicSet[0];
         logic->description = "large draw";
     }
-    else if ((model == hpwh_presets::MODELS::Sanco83) || (model == hpwh_presets::MODELS::Sanco_GS3_45HPA_US_SP) ||
-             (model == hpwh_presets::MODELS::Sanco119) || (model == hpwh_presets::MODELS::Sanco43))
+    else if ((model == hpwh_presets::MODELS::Sanco80) ||
+             (model == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP) ||
+             (model == hpwh_presets::MODELS::Sanco120) || (model == hpwh_presets::MODELS::Sanco40))
     {
         setpointFixed = true;
         {
@@ -2888,18 +2890,21 @@ void HPWH::configure()
             logic->getIsEnteringWaterHighTempShutoff() = true;
             logic->checksStandby() = true;
         }
-        if ((model == hpwh_presets::MODELS::Sanco83) || (model == hpwh_presets::MODELS::Sanco_GS3_45HPA_US_SP))
+        if ((model == hpwh_presets::MODELS::Sanco80) ||
+            (model == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP))
         {
             auto logic = heatSources[compressorIndex]->turnOnLogicSet[1];
             logic->checksStandby() = true;
         }
     }
-    else if ((hpwh_presets::MODELS::NyleC25A_SP <= model) && (model <= hpwh_presets::MODELS::NyleC250A_C_SP))
+    else if ((hpwh_presets::MODELS::NyleC25A_SP <= model) &&
+             (model <= hpwh_presets::MODELS::NyleC250A_C_SP))
     {
         auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
-    else if ((hpwh_presets::MODELS::ColmacCxV_5_SP <= model) && (model <= hpwh_presets::MODELS::ColmacCxA_30_SP))
+    else if ((hpwh_presets::MODELS::ColmacCxV_5_SP <= model) &&
+             (model <= hpwh_presets::MODELS::ColmacCxA_30_SP))
     {
         auto& condenser = heatSources[compressorIndex];
         auto logic = condenser->shutOffLogicSet[0];
@@ -2916,7 +2921,8 @@ void HPWH::configure()
         canScale = true;
         tank->volumeFixed = false;
     }
-    else if ((hpwh_presets::MODELS::TamScalable_SP <= model) && (model <= hpwh_presets::MODELS::TamScalable_SP_Half))
+    else if ((hpwh_presets::MODELS::TamScalable_SP <= model) &&
+             (model <= hpwh_presets::MODELS::TamScalable_SP_Half))
     {
         canScale = true;
         tank->volumeFixed = false;
@@ -2945,9 +2951,9 @@ void HPWH::configure()
 
 void HPWH::initPreset(hpwh_presets::MODELS presetNum)
 {
-    auto presetData = hpwh_presets::find_by_model_id(presetNum);
+    auto presetData = hpwh_presets::find_by_id(presetNum);
     nlohmann::json j =
-        nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.cbor_data.size());
+        nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
 
     hpwh_data_model::init(/*get_courier()*/);
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;

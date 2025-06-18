@@ -13,7 +13,7 @@ struct FixedSizeTest : public testing::Test
     const std::vector<std::string> modelNames = {"AOSmithHPTS50",
                                                  "AOSmithPHPT60",
                                                  "AOSmithHPTU80",
-                                                 "Sanden80",
+                                                 "Sanco80",
                                                  "RheemHB50",
                                                  "Stiebel220e",
                                                  "GE502014",

@@ -64,7 +64,7 @@ CLI::App* add_run(CLI::App& app)
             if (!modelName.empty())
                 hpwh.initPreset(modelName);
             else if (modelNumber != -1)
-                hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
+                hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
             else if (!modelFilename.empty())
             {
                 std::ifstream inputFile(modelFilename);
@@ -88,7 +88,7 @@ void run(const std::string specType,
          double airTemp)
 {
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
-    HPWH::MODELS model;
+    hpwh_presets::MODELS model;
 
     const double EBALTHRESHOLD = 1.e-6;
 
@@ -137,8 +137,8 @@ void run(const std::string specType,
     }
 
     newSetpoint = 0;
-    model = static_cast<HPWH::MODELS>(hpwh.getModel());
-    if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
+    model = static_cast<hpwh_presets::MODELS>(hpwh.getModel());
+    if (model == hpwh_presets::MODELS::Sanco80 || model == hpwh_presets::MODELS::Sanco40)
     {
         newSetpoint = (149 - 32) / 1.8;
     }

@@ -531,10 +531,10 @@ TEST_F(PerformanceMapTest, NyleC250A_MP)
 /*
  * QAHV_N136TAU_HPB_SP tests
  */
-TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
+TEST_F(PerformanceMapTest, Mitsubishi_QAHV_N136TAU_HPB_SP)
 {
     HPWH hpwh;
-    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
     hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
@@ -613,13 +613,13 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
 /*
  * QAHV_N136TAU_HPB_SP_extrapolation tests
  */
-TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
+TEST_F(PerformanceMapTest, Mitsubishi_QAHV_N136TAU_HPB_SP_extrapolation)
 {
     // Also test QAHV constant extrpolation at high air temperatures AND linear extrapolation to hot
     // water temperatures!
 
     HPWH hpwh;
-    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
     hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
@@ -700,12 +700,12 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
 }
 
 /*
- * Sanden120 tests
+ * Sanco120 tests
  */
-TEST_F(PerformanceMapTest, Sanden120)
+TEST_F(PerformanceMapTest, Sanco120)
 {
     HPWH hpwh;
-    const std::string modelName = "Sanden120";
+    const std::string modelName = "Sanco120";
     hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
@@ -813,7 +813,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
     {
-        const std::string modelName = "QAHV_N136TAU_HPB_SP";
+        const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
         hpwh.initPreset(modelName);
 
         PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
