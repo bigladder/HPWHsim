@@ -17,8 +17,9 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 	abs_build_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	presets_header_text = ""
-	presets_source_text = ""
+	presets_headers_text = ""
+	presets_models_text = ""
+	presets_vector_text = ""
 	
 	presets_dir = os.path.join(abs_build_dir, 'presets')
 	if not os.path.exists(presets_dir):
@@ -27,7 +28,6 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 	presets_include_dir = os.path.join(presets_dir, 'include')
 	if not os.path.exists(presets_include_dir):
 			os.mkdir(presets_include_dir)	
-
 	
 	if spec_type == "Preset":			
 		if not os.path.exists(output_dir):
@@ -91,13 +91,14 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 						preset_text_file.close()
 				except:
 					print("Failed to create file")
-
-				presets_header_text += "#include \"" + preset["name"] + ".h\"\n"
-				
+			
 				if not first:
-					presets_source_text += ",\n"
+					presets_vector_text += ",\n"
+					presets_models_text += ",\n"
 					
-				presets_source_text += "\t{ " + str(preset["number"]) + ", \"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0]}"
+				presets_headers_text += "#include \"" + preset["name"] + ".h\"\n"
+				presets_models_text += "\t" + preset["name"] + " = " + str(preset["number"])
+				presets_vector_text += "\t{ " + preset["name"] + ", \"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0] }"
 				first = False
 
 		# create library header
@@ -110,25 +111,37 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 
 """
 		# add the includes	
-		presets_header += presets_header_text
+		presets_header += presets_headers_text
 	
 		presets_header += """		
 	
 namespace hpwh_presets {
 
-struct Identifier
+using Identifier = std::pair<int, std::string>;
+
+struct Preset: public Identifier
 {
-\tint id;
-\tstd::string name;
 \tconst std::size_t size;
 \tconst std::uint8_t *cbor_data;
-\tIdentifier(const int id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
-\t\tid(id_in), name(name_in), size(size_in), cbor_data(cbor_data_in){}
-};
+\tPreset(const int id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
+\t\tIdentifier(id_in, name_in), size(size_in), cbor_data(cbor_data_in){}
+}
+"""
 
+		presets_header += """
+
+/// specifies the allowable preset HPWH models
+/// values may vary - names should be used
+enum Models
+{
+"""
+		presets_header += presets_models_text + "\n};\n"
+
+#
+		presets_header += """
 inline std::vector<Identifier> models({
 """	
-		presets_header  += presets_source_text + "\n"
+		presets_header  += presets_vector_text + "\n"
 		presets_header  += "});\n}\n"
 		presets_header  += "#endif\n"
 
