@@ -2850,31 +2850,28 @@ void HPWH::checkInputs()
     }
 }
 
-/* static */ bool HPWH::getPresetNumberFromName(const std::string& modelName, HPWH::MODELS& model)
+/* static */ bool HPWH::getPresetNumberFromName(const std::string& modelName, hpwh_presets::MODELS& model_id)
 {
-    for (auto& preset : hpwh_presets::index)
+    model_id = hpwh_presets::find_by_name(modelName).id;
+    return model_id;
+    for (auto& model : hpwh_presets::models)
     {
         if (modelName == preset.second.name)
         {
-            model = static_cast<HPWH::MODELS>(preset.first);
-            return true;
-        }
-        else if (modelName == "StorageTank")
-        {
-            model = hpwh_presets::Models::StorageTank;
+            model = static_cast<hpwh_presets::MODELS::>(preset.first);
             return true;
         }
     }
-    model = hpwh_presets::Models::basicIntegrated;
+    model = hpwh_presets::MODELS::basicIntegrated;
     return false;
 }
 
 /* static */
-bool HPWH::getPresetNameFromNumber(std::string& modelName, const HPWH::MODELS model)
+bool HPWH::getPresetNameFromNumber(std::string& modelName, const hpwh_presets::MODELS model)
 {
     if (hpwh_presets::index.find(model) != hpwh_presets::index.end())
     {
-        modelName = hpwh_presets::index.at(model).name;
+        modelName = hpwh_presets::find_by_model_id(model).name;
         return true;
     }
     return false;
@@ -2952,9 +2949,9 @@ void HPWH::configure()
     }
 }
 
-void HPWH::initPreset(HPWH::MODELS presetNum)
+void HPWH::initPreset(hpwh_presets::MODELS presetNum)
 {
-    auto presetData = hpwh_presets::index.at(presetNum);
+    auto presetData = hpwh_presets::find_by_model_id(presetNum);
     nlohmann::json j =
         nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
 
@@ -2969,7 +2966,7 @@ void HPWH::initPreset(HPWH::MODELS presetNum)
 
 void HPWH::initPreset(const std::string& presetName)
 {
-    HPWH::MODELS presetNum;
+    hpwh_presets::MODELS presetNum;
     if (getPresetNumberFromName(presetName, presetNum))
     {
         initPreset(presetNum);
@@ -2993,7 +2990,7 @@ void HPWH::initFromJSON(const nlohmann::json& j, const std::string& modelName)
     configure();
 }
 
-void HPWH::init(const std::string& specType, const MODELS presetNum)
+void HPWH::init(const std::string& specType, const hpwh_presets::MODELS presetNum)
 {
     std::string specType_mod = (specType != "") ? specType : "Preset";
     for (auto& c : specType_mod)

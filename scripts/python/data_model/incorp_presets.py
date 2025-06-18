@@ -112,22 +112,10 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 """
 		# add the includes	
 		presets_header += presets_headers_text
-	
+
 		presets_header += """
+
 namespace hpwh_presets {
-
-struct Identifier
-{
-	int model_id;
-	std::string name;
-	const std::size_t size;
-	const std::uint8_t *cbor_data;
-	Identifier(const int model_id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
-		model_id(model_id_in), name(name_in), size(size_in), cbor_data(cbor_data_in){}
-};
-"""
-
-		presets_header += """
 
 /// specifies the allowable preset HPWH models
 /// values may vary - names should be used
@@ -136,14 +124,59 @@ enum MODELS: int
 """
 		presets_header += presets_models_text + "\n};\n"
 
+		presets_header += """
+
+struct Model
+{
+	MODELS id;
+	std::string name;
+	const std::size_t size;
+	const std::uint8_t *cbor_data;
+	Model(const MODELS id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
+		id(id_in), name(name_in), size(size_in), cbor_data(cbor_data_in){}
+};
+"""
 #
 		presets_header += """
-inline std::vector<Identifier> models({
+inline std::vector<Model> models({
 """	
-		presets_header  += presets_vector_text + "\n"
-		presets_header  += "});\n}\n"
-		presets_header  += "#endif\n"
+		presets_header  += presets_vector_text + "\n});\n"
+#		
+		presets_header  += """
+Model find_by_name(const std::string& name)
+{
+    auto it = find_if(models.begin(),
+                      models.end(),
+                      [&name](Model& model){ return model.name == name; });
+    if (it != models.end())
+        return *it;
+    return {-1, "invalid", 0, nullptr};
+}
 
+Model find_by_id(const int id)
+{
+    auto it =
+        find_if(models.begin(),
+                models.end(),
+                [&id](Model& model) { return model.id == id; });
+    if (it != models.end())
+        return *it;
+    return {-1, "invalid", 0, nullptr};
+}
+
+Model find_by_id(const MODELS id)
+{
+    auto it =
+        find_if(models.begin(),
+                models.end(),
+                [&id](Model& model) { return model.id == id; });
+    if (it != models.end())
+        return *it;
+    return {-1, "invalid", 0, nullptr};
+}
+}
+#endif
+"""
 		try:	
 			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
 				presets_header_file.write(presets_header)

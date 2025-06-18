@@ -124,7 +124,7 @@ class HPWH : public Courier::Sender
 
     /// specifies the allowable preset HPWH models
     /// values may vary - names should be used
-    Models model;
+    hpwh_presets::MODELS model;
 
     /// data entry to/from schema
     template <typename T>
@@ -631,17 +631,17 @@ class HPWH : public Courier::Sender
      * are taken from the GE2015_STDMode model.
      */
 
-    static bool getPresetNameFromNumber(std::string& modelName, const Models model);
-    static bool getPresetNumberFromName(const std::string& modelName, Models& model);
+    static bool getPresetNameFromNumber(std::string& modelName, const hpwh_presets::MODELS  model);
+    static bool getPresetNumberFromName(const std::string& modelName, hpwh_presets::MODELS & model);
 
     void configure();
 
     /// init general
-    void init(const std::string& specType, const Models presetNum);
+    void init(const std::string& specType, const hpwh_presets::MODELS  presetNum);
     void init(const std::string& specType, const std::string& modelName);
 
     /// init Preset from embedded CBOR representation
-    void initPreset(Models presetNum);
+    void initPreset(hpwh_presets::MODELS  presetNum);
     void initPreset(const std::string& modelName);
 
     /// init from hpwh-data-model in JSON format
