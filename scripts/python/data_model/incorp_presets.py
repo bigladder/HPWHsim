@@ -1,4 +1,4 @@
-# uv run incorp_presets.py JSON ../../../build IHPWH_models.json CWHS_models.json
+# uv run incorp_presets.py JSON ../../../build ../../../test/models_json/models.json
 
 # calls `hpwh convert' for each model in models_list_file json,
 # then creates a C++ header file containing that data.
@@ -99,7 +99,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					
 				presets_headers_text += "#include \"" + preset["name"] + ".h\"\n"
 				presets_models_text += "\t" + preset["name"] + " = " + str(preset["number"])
-				presets_vector_text += "\t{ MODELS::" + preset["name"] + ", \"" + preset["name"] + "\", " + str(nbytes) + ", &cbor_" + preset["name"] + "[0] }"
+				presets_vector_text += "\t{ MODELS::" + preset["name"] + ", \"" + preset["name"] + "\", &cbor_" + preset["name"] + "[0] }"
 				first = False
 
 		# create library header
@@ -122,18 +122,20 @@ namespace hpwh_presets {
 enum MODELS: int
 {
 """
-		presets_header += presets_models_text + "\n};\n"
+		presets_header += presets_models_text + ",\n"
+		presets_header += "\tunknown = -1\n"
+		presets_header += "};\n"
 
 		presets_header += """
 
 struct Model
 {
-	MODELS id;
+	int id;
 	std::string name;
-	const std::size_t size;
 	const std::uint8_t *cbor_data;
-	Model(const MODELS id_in, const char* name_in, const std::size_t size_in, const std::uint8_t *cbor_data_in):
-		id(id_in), name(name_in), size(size_in), cbor_data(cbor_data_in){}
+	Model(const int id_in, const char* name_in, const std::uint8_t *cbor_data_in):
+		id(id_in), name(name_in), cbor_data(cbor_data_in){}
+	MODELS model() const {return static_cast<MODELS>(id);}
 };
 """
 #
@@ -150,7 +152,7 @@ Model find_by_name(const std::string& name)
                       [&name](Model& model){ return model.name == name; });
     if (it != models.end())
         return *it;
-    return {-1, "invalid", 0, nullptr};
+    return {-1, "unknown", nullptr};
 }
 
 Model find_by_id(const int id)
@@ -161,7 +163,7 @@ Model find_by_id(const int id)
                 [&id](Model& model) { return model.id == id; });
     if (it != models.end())
         return *it;
-    return {-1, "invalid", 0, nullptr};
+    return {-1, "unknown", nullptr};
 }
 
 Model find_by_id(const MODELS id)
@@ -172,7 +174,7 @@ Model find_by_id(const MODELS id)
                 [&id](Model& model) { return model.id == id; });
     if (it != models.end())
         return *it;
-    return {-1, "invalid", 0, nullptr};
+    return {-1, "unknown", nullptr};
 }
 }
 #endif
