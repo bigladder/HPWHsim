@@ -105,11 +105,11 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
 /*
  * QAHV_N136TAU_HPB_SP tests
  */
-TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
+TEST(MaxSetpointTest, Mitsubishi_QAHV_N136TAU_HPB_SP)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
     hpwh.initPreset(modelName);
 
     double num;
@@ -118,7 +118,7 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
     const double maxQAHVSetpoint = F_TO_C(176.1);
     const double qAHVHotSideTemepratureOffset = dF_TO_dC(15.);
 
-    // isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanden.
+    // isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanco.
     EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
     EXPECT_FALSE(hpwh.isNewSetpointPossible(99., num, why));  // Can't go to near boiling
 
@@ -183,13 +183,13 @@ TEST(MaxSetpointTest, StorageTank)
 }
 
 /*
- * Sanden80 tests
+ * Sanco80 tests
  */
-TEST(MaxSetpointTest, Sanden80)
+TEST(MaxSetpointTest, Sanco80)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "Sanden80"; // Fixed setpoint model
+    const std::string modelName = "Sanco80"; // Fixed setpoint model
     hpwh.initPreset(modelName);
 
     double num, num1;

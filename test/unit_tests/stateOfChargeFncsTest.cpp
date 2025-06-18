@@ -14,7 +14,7 @@ TEST(StateOfChargeFunctionsTest, getSoC)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "Sanden80";
+    const std::string modelName = "Sanco80";
     hpwh.initPreset(modelName);
 
     const double mainsT_C = F_TO_C(55.);

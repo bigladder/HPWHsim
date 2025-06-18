@@ -69,7 +69,7 @@ CLI::App* add_make(CLI::App& app)
             if (!modelName.empty())
                 hpwh.initPreset(modelName);
             else if (modelNumber != -1)
-                hpwh.initPreset(static_cast<HPWH::MODELS>(modelNumber));
+                hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
             else if (!modelFilename.empty())
             {
                 std::ifstream inputFile(modelFilename);
