@@ -42,16 +42,16 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 	first = True
 	for preset_list_file in presets_list_files:
 		with open(preset_list_file) as json_file:
-			json_list_data = json.load(json_file)
+			models_dict= json.load(json_file)
 			json_file.close()
 			
-			for preset in json_list_data:  
+			for name in models_dict:  
 				if spec_type == "Preset":
-					convert_list = [app_cmd, 'convert', '-m', preset["name"], '-d', output_dir, '-f', preset["name"]]
+					convert_list = [app_cmd, 'convert', '-m', name, '-d', output_dir, '-f', name]
 					result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)					
-					preset_json_path = os.path.join(output_dir, preset["name"] + ".json")
+					preset_json_path = os.path.join(output_dir, name + ".json")
 				else:
-					preset_json_path = os.path.join(test_json_dir, preset["name"] + ".json")
+					preset_json_path = os.path.join(test_json_dir, name + ".json")
 			  
 
 				json_data = {}
@@ -64,7 +64,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 			
 				cbor_data = cbor2.dumps(json_data)
 					
-				guard_name = preset["name"].upper() + "_H"
+				guard_name = name.upper() + "_H"
 				
 				preset_text = "#ifndef " + guard_name + "\n"
 				preset_text += "#define " + guard_name + "\n\n"
@@ -75,7 +75,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				preset_text += "namespace hpwh_presets {\n\n"
 				
 				nbytes = len(cbor_data)
-				preset_text += "const std::array<uint8_t, " + str(nbytes) + "> cbor_" + preset["name"] + "{\n"
+				preset_text += "const std::array<uint8_t, " + str(nbytes) + "> cbor_" + name + "{\n"
 				for i, entry  in enumerate(cbor_data):
 					preset_text += hex(entry) + ", "
 					if (i % 40 == 0) and (i != 0): 
@@ -87,7 +87,7 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 				preset_text += "#endif\n"
 				
 				try:	
-					preset_text_path = os.path.join(presets_include_dir, preset["name"] + ".h")
+					preset_text_path = os.path.join(presets_include_dir, name + ".h")
 					with open(preset_text_path, "w") as preset_text_file:
 						preset_text_file.write(preset_text)
 						preset_text_file.close()
@@ -98,9 +98,9 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					presets_vector_text += ",\n"
 					presets_models_text += ",\n"
 					
-				presets_headers_text += "#include \"" + preset["name"] + ".h\"\n"
-				presets_models_text += "\t" + preset["name"] + " = " + str(preset["number"])
-				presets_vector_text += "\t{ MODELS::" + preset["name"] + ", \"" + preset["name"] +"\", cbor_" + preset["name"] + ".data(), sizeof(cbor_" + preset["name"] + ")}"
+				presets_headers_text += "#include \"" + name + ".h\"\n"
+				presets_models_text += "\t" + name + " = " + str(models_dict[name])
+				presets_vector_text += "\t{ MODELS::" + name + ", \"" + name +"\", cbor_" + name + ".data(), sizeof(cbor_" + name + ")}"
 				first = False
 
 		# create library header

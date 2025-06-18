@@ -16,7 +16,7 @@ struct FixedSizeTest : public testing::Test
                                                  "Sanco80",
                                                  "RheemHB50",
                                                  "Stiebel220e",
-                                                 "GE502014",
+                                                 "GE2014_50",
                                                  "Rheem2020Prem40",
                                                  "Rheem2020Prem50",
                                                  "Rheem2020Build50"};

@@ -2874,7 +2874,7 @@ bool HPWH::getPresetNameFromNumber(std::string& modelName, const hpwh_presets::M
 
 void HPWH::configure()
 { // adjustments for non-data-model properties
-    if (model == hpwh_presets::MODELS::GE2012)
+    if (model == hpwh_presets::MODELS::GE2012_50)
     {
         auto& condenser = heatSources[compressorIndex];
         auto logic = condenser->shutOffLogicSet[0];

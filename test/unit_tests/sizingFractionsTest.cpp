@@ -88,7 +88,7 @@ TEST(SizingFractionsTest, GE_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "GE2012";
+    const std::string modelName = "GE2012_50";
     hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
