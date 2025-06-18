@@ -109,7 +109,6 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 #define PRESETS_H
 
 #include <iostream>
-#include <unordered_map>
 """
 		# add the includes	
 		presets_header += presets_headers_text
