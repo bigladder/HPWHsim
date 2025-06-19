@@ -311,7 +311,7 @@ void HPWH::Condenser::from(
 
     if (perf.standby_power_is_set)
     {
-        standbyPower_kW = perf.standby_power / 1000.;
+        standbyPower_kW = W_TO_KW(perf.standby_power);
     }
 }
 
@@ -397,7 +397,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
 
     if (perf.standby_power_is_set)
     {
-        standbyPower_kW = perf.standby_power / 1000.;
+        standbyPower_kW = W_TO_KW(perf.standby_power);
     }
 
     if (hpwh->model == hpwh_presets::MODELS::NyleC60A_C_MP)
@@ -683,7 +683,7 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
         // calculate capacity btu/hr, input btu/hr, and cop
         hpwh->condenserInlet_C = getTankTemp();
         performance = getPerformance(externalT_C, getTankTemp());
-        double cap_kJ = (performance.outputPower_W / 1000.) * (60. * minutesToRun);
+        double cap_kJ = W_TO_KW(performance.outputPower_W) * (60. * minutesToRun);
 
         double leftoverCap_kJ = heat(cap_kJ, maxSetpoint_C);
 
@@ -715,8 +715,8 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
     }
 
     // update the input & output energy
-    energyInput_kWh += (performance.inputPower_W / 1000.) * (runtime_min / min_per_hr);
-    energyOutput_kWh += (performance.outputPower_W / 1000.) * (runtime_min / min_per_hr);
+    energyInput_kWh += W_TO_KW(performance.inputPower_W) * (runtime_min / min_per_hr);
+    energyOutput_kWh += W_TO_KW(performance.outputPower_W) * (runtime_min / min_per_hr);
 }
 
 HPWH::Performance HPWH::Condenser::getPerformance(double externalT_C, double condenserT_C) const
@@ -852,7 +852,7 @@ double HPWH::Condenser::addHeatExternal(double externalT_C,
         // how much heat is available in remaining time
         auto tempPerformance = getPerformance(externalT_C, externalOutletT_C);
 
-        double heatingPower_kW = tempPerformance.outputPower_W / 1000.;
+        double heatingPower_kW = W_TO_KW(tempPerformance.outputPower_W);
 
         double targetT_C = setpointT_C;
 
