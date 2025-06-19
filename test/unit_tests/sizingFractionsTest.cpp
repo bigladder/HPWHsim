@@ -106,7 +106,7 @@ TEST(SizingFractionsTest, Stiebel220e_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "Stiebel220e";
+    const std::string modelName = "Stiebel220E";
     hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
