@@ -7,6 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
           - os: ubuntu
             os_ver: "22.04"
@@ -73,8 +74,8 @@ jobs:
           fi
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Set up Python
-        run: uv python install
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE="${{ matrix.config }}" -D${{ env.REPOSITORY_NAME }}_BUILD_TESTING="ON" -D${{ env.REPOSITORY_NAME }}_STATIC_LIB="${{ steps.cov.outputs.STATIC_LIB }}" -D${{ env.REPOSITORY_NAME }}_COVERAGE="${{ steps.cov.outputs.COVERAGE }}"
       - name: Build
