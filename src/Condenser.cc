@@ -1078,10 +1078,25 @@ bool HPWH::Condenser::isExternal() const { return (configuration == Condenser::C
 std::vector<Btwxt::GridAxis>
 HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
 {
+    // integrated condensers:
+    //   Legacy method used linear interpolation on externalT axis and quadratic evaluation on condenserT axis,
+    //   found to be most closely reproduced by cubic interpolation.
     auto is_integrated = (configuration != COIL_CONFIG::CONFIG_EXTERNAL);
+
+    // single-pass condensers:
+    // Legacy method used 3D quadratic polynomials with cross-terms. Cubic interpolation on the
+    //   externalT and condenserT axes most closely reproduced the performance curve.
+    //   (Linear best reproduced curves on the outletT axis, which typically has few points.)
+    //   Mitsubishi model used a grid with linear interpolation, preserved here.
     auto is_Mitsubishi = (hpwh->model == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP);
+
+    // multi-pass condensers:
+    // Legacy method used 2D quadratic polynomials with cross-terms. These were best reproduced with
+    //   cubic interpolation. Nyle-MP models used grids with default btwxt methods, preserved here.
     auto is_NyleMP = ((hpwh_presets::MODELS::NyleC60A_MP <= hpwh->model) &&
                       (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_MP));
+
+    // Linear extrapolation used in all legacy representation preserved here.
 
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;
