@@ -1561,6 +1561,8 @@ inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
 inline double BTU_TO_KWH(double btu) { return (btu / BTUperKWH); }
 inline double BTUperH_TO_KW(double btu) { return (btu / BTUperKWH); }
+inline double KW_TO_W(double kw) { return 1000. * kw; }
+inline double W_TO_KW(double w) { return w / 1000.; }
 inline double KW_TO_BTUperH(double kw) { return (kw * BTUperKWH); }
 inline double W_TO_BTUperH(double w) { return (w * BTUperKWH / 1000.); }
 inline double KJ_TO_KWH(double kj) { return (kj / sec_per_hr); }

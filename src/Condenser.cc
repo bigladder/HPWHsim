@@ -764,7 +764,7 @@ HPWH::Performance HPWH::Condenser::getPerformance(double externalT_C, double con
     // For accounting add the resistance defrost to the input energy
     if (resDefrostHeatingOn)
     {
-        performance.inputPower_W += 1000. * resDefrost.inputPwr_kW;
+        performance.inputPower_W += KW_TO_W(resDefrost.inputPwr_kW);
     }
 
     if (performance.cop < 0.)
@@ -990,7 +990,7 @@ double HPWH::Condenser::addHeatExternalMP(double externalT_C,
         // find heating capacity
         auto tempPerformance = getPerformance(externalT_C, externalOutletT_C);
 
-        double heatingPower_kW = tempPerformance.outputPower_W / 1000.;
+        double heatingPower_kW = W_TO_KW(tempPerformance.outputPower_W);
 
         // temperature increase at this power and flow rate
         double deltaT_C =
