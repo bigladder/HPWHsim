@@ -192,6 +192,8 @@ void arrangeGridVector(std::vector<double>& V)
 
 void trimGridVector(std::vector<double>& V, const double minT, const double maxT)
 {
+    V.push_back(minT);
+    V.push_back(maxT);
     arrangeGridVector(V);
     auto copyV = V;
     V.clear();
@@ -490,51 +492,51 @@ void HPWH::Condenser::to(
 
         std::vector<std::vector<double>> perfGridValues = {};
         for (std::size_t i = 0; i < perfRGI->get_number_of_grid_point_data_sets(); ++i)
-            perfGrid.push_back(perfRGI->get_grid_point_data_set(i).data);
+            perfGridValues.push_back(perfRGI->get_grid_point_data_set(i).data);
 
         //
+        std::size_t nVals = 1;
         int iElem = 0;
-        std::vector<double> envTemps_K = {};
-        envTemps_K.reserve(perfGrid[0].size());
-        for (auto T : perfGrid[0])
+        std::vector<double> envTs_K = {};
         {
-            envTemps_K.push_back(C_TO_K(F_TO_C(T)));
-        }
-        envTemps_K.push_back(C_TO_K(minT));
-        envTemps_K.push_back(C_TO_K(maxT));
-        trimGridVector(envTemps_K, C_TO_K(minT), C_TO_K(maxT));
-
-        checkTo(envTemps_K,
-                grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
-                grid_vars.evaporator_environment_dry_bulb_temperature);
-
-        ++iElem;
-
-        //
-        std::vector<double> heatSourceTemps_K = {};
-        heatSourceTemps_K.reserve(perfGrid[iElem].size());
-        for (auto T : perfGrid[iElem])
-        {
-            heatSourceTemps_K.push_back(C_TO_K(T));
-        }
-
-        checkTo(heatSourceTemps_K,
-                grid_vars.heat_source_temperature_is_set,
-                grid_vars.heat_source_temperature);
-
-        //
-        std::size_t nVals =
-            envTemps_K.size() * heatSourceTemps_K.size(); // perfGridValues[0].size();
-        std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
-        std::size_t i = 0;
-        for (auto& envTemp_K : envTemps_K)
-            for (auto& heatSourceTemp_K : heatSourceTemps_K)
+            envTs_K.reserve(perfGrid[0].size());
+            for (auto T_C : perfGrid[0])
             {
-                auto performance = evaluatePerformance(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K));
-                inputPowers_W[i] = performance.inputPower_W;
-                heatingCapacities_W[i] = performance.cop * performance.inputPower_W;
-                ++i;
+                envTs_K.push_back(C_TO_K(T_C));
             }
+
+            checkTo(envTs_K,
+                    grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
+                    grid_vars.evaporator_environment_dry_bulb_temperature);
+
+            ++iElem;
+            nVals *= envTs_K.size();
+        }
+
+        //
+        std::vector<double> heatSourceTs_K = {};
+        {
+            heatSourceTs_K.reserve(perfGrid[iElem].size());
+            for (auto T_C : perfGrid[iElem])
+            {
+                heatSourceTs_K.push_back(C_TO_K(T_C));
+            }
+
+            checkTo(heatSourceTs_K,
+                    grid_vars.heat_source_temperature_is_set,
+                    grid_vars.heat_source_temperature);
+
+            ++iElem;
+            nVals *= heatSourceTs_K.size();
+        }
+
+        //
+        std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
+        for (std::size_t i = 0; i < nVals; ++i)
+        {
+            inputPowers_W[i] = perfGridValues[0][i];
+            heatingCapacities_W[i] = perfGridValues[1][i] * inputPowers_W[i];
+        }
 
         checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
         checkTo(
@@ -630,74 +632,62 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
 
         std::vector<std::vector<double>> perfGridValues = {};
         for (std::size_t i = 0; i < perfRGI->get_number_of_grid_point_data_sets(); ++i)
-            perfGrid.push_back(perfRGI->get_grid_point_data_set(i).data);
+            perfGridValues.push_back(perfRGI->get_grid_point_data_set(i).data);
 
         //
         std::size_t nVals = 1;
-        int iElem = 0; // order based on hpwh_presets::MODELS::MITSUBISHI_QAHV_N136TAU_HPB_SP
-        std::vector<double> envTemps_K = {};
-        std::vector<double> outletTemps_K = {};
-        std::vector<double> heatSourceTemps_K = {};
+        int iElem = 0;
+        std::vector<double> envTs_K = {};
+        std::vector<double> outletTs_K = {};
+        std::vector<double> heatSourceTs_K = {};
         {
-            envTemps_K.reserve(perfGrid.size());
+            envTs_K.reserve(perfGrid.size());
             for (auto T_C : perfGrid[iElem])
             {
-                envTemps_K.push_back(C_TO_K(T_C));
+                envTs_K.push_back(C_TO_K(T_C));
             }
-            if (K_TO_C(envTemps_K.front()) > minT)
-                envTemps_K.push_back(C_TO_K(minT));
-            if (K_TO_C(envTemps_K.back()) < maxT)
-                envTemps_K.push_back(C_TO_K(maxT));
-            arrangeGridVector(envTemps_K);
 
-            checkTo(envTemps_K,
+            checkTo(envTs_K,
                     grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
                     grid_vars.evaporator_environment_dry_bulb_temperature);
 
             ++iElem;
-            nVals *= envTemps_K.size();
+            nVals *= envTs_K.size();
         }
         {
-            outletTemps_K.reserve(perfGrid[iElem].size());
+            outletTs_K.reserve(perfGrid[iElem].size());
             for (auto T_C : perfGrid[iElem])
             {
-                outletTemps_K.push_back(C_TO_K(T_C));
+                outletTs_K.push_back(C_TO_K(T_C));
             }
-            checkTo(outletTemps_K,
+
+            checkTo(outletTs_K,
                     grid_vars.condenser_leaving_temperature_is_set,
                     grid_vars.condenser_leaving_temperature);
 
             ++iElem;
-            nVals *= outletTemps_K.size();
+            nVals *= outletTs_K.size();
         }
         {
-            heatSourceTemps_K.reserve(perfGrid[iElem].size());
+            heatSourceTs_K.reserve(perfGrid[iElem].size());
             for (auto T_C : perfGrid[iElem])
             {
-                heatSourceTemps_K.push_back(C_TO_K(T_C));
+                heatSourceTs_K.push_back(C_TO_K(T_C));
             }
 
-            checkTo(heatSourceTemps_K,
+            checkTo(heatSourceTs_K,
                     grid_vars.condenser_entering_temperature_is_set,
                     grid_vars.condenser_entering_temperature);
             ++iElem;
-            nVals *= heatSourceTemps_K.size();
+            nVals *= heatSourceTs_K.size();
         }
 
         std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
-        std::size_t i = 0;
-        for (auto& envTemp_K : envTemps_K)
-            for (auto& outletTemp_K : outletTemps_K)
-                for (auto& heatSourceTemp_K : heatSourceTemps_K)
-                {
-                    std::vector<double> target = {
-                        K_TO_C(envTemp_K), K_TO_C(outletTemp_K), K_TO_C(heatSourceTemp_K)};
-                    std::vector<double> result = perfRGI->get_values_at_target(target);
-
-                    inputPowers_W[i] = result[0];
-                    heatingCapacities_W[i] = result[1] * inputPowers_W[i];
-                    ++i;
-                }
+        for (std::size_t i = 0; i < nVals; ++i)
+        {
+            inputPowers_W[i] = perfGridValues[0][i];
+            heatingCapacities_W[i] = perfGridValues[1][i] * inputPowers_W[i];
+        }
 
         auto& lookup_vars = map.lookup_variables;
         checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
