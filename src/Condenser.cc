@@ -477,11 +477,13 @@ void HPWH::Condenser::to(
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
 
+    //
+    auto& map = perf.performance_map;
+    auto& grid_vars = map.grid_variables;
+    auto& lookup_vars = map.lookup_variables;
+
     if (perfRGI)
     {
-        auto& map = perf.performance_map;
-        auto& grid_vars = map.grid_variables;
-
         std::vector<std::vector<double>> perfGrid = {};
         for (std::size_t i = 0; i < perfRGI->get_number_of_dimensions(); ++i)
             perfGrid.push_back(perfRGI->get_grid_axis(i).get_values());
@@ -520,11 +522,7 @@ void HPWH::Condenser::to(
                 grid_vars.heat_source_temperature_is_set,
                 grid_vars.heat_source_temperature);
 
-        map.grid_variables_is_set = true;
-
         //
-        auto& lookup_vars = map.lookup_variables;
-
         std::size_t nVals =
             envTemps_K.size() * heatSourceTemps_K.size(); // perfGridValues[0].size();
         std::vector<double> inputPowers_W(nVals), heatingCapacities_W(nVals);
@@ -542,12 +540,58 @@ void HPWH::Condenser::to(
         checkTo(
             heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
 
+        map.grid_variables_is_set = true;
         map.lookup_variables_is_set = true;
         perf.performance_map_is_set = true;
     }
-    else // convert legacy IHPWH map to grid
+    else // convert polySet to grid
     {
-        send_error("Condenser does not have grid data.\n");
+        std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
+        trimGridVector(envTs_C, minT, maxT);
+
+        // fill envT axis
+        std::vector<double> envTs_K = {};
+        for (auto& envT_C : envTs_C)
+            envTs_K.push_back(C_TO_K(envT_C));
+
+        // fill heat-sourceT axis
+        constexpr double minVals = 2.;  // retain endpoints only, if no curvature
+        constexpr double refVals = 11.; // typical value
+        const double rangeFac = (maxSetpoint_C - 0.) / (100. - 0.);
+        auto nVals = static_cast<std::size_t>(rangeFac * (refVals - minVals) + minVals);
+        std::vector<double> heatSourceTs_K = {};
+        {
+            double T_K = C_TO_K(0.);
+            double dT_K = (maxSetpoint_C - 0.) / static_cast<double>(nVals - 1);
+            for (auto& heatSourceT_K : heatSourceTs_K)
+            {
+                heatSourceT_K = T_K;
+                T_K += dT_K;
+            }
+        }
+
+        // fill grid values
+        std::size_t nTotVals = envTs_K.size() * heatSourceTs_K.size();
+        std::vector<double> inputPowers_W(nTotVals), heatingCapacities_W(nTotVals);
+        std::size_t i = 0;
+        for (auto& envT_K : envTs_K)
+            for (auto& heatSourceT_K : heatSourceTs_K)
+            {
+                auto performance = evaluatePerformance(K_TO_C(envT_K), K_TO_C(heatSourceT_K));
+                inputPowers_W[i] = performance.inputPower_W;
+                heatingCapacities_W[i] = performance.cop * performance.inputPower_W;
+                ++i;
+            }
+
+        std::vector<std::vector<double>> perfGrid = {envTs_K, heatSourceTs_K};
+        std::vector<std::vector<double>> perfGridValues = {inputPowers_W, heatingCapacities_W};
+        checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
+        checkTo(
+            heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
+
+        map.grid_variables_is_set = true;
+        map.lookup_variables_is_set = true;
+        perf.performance_map_is_set = true;
     }
     hs.performance_is_set = true;
 }
@@ -1079,8 +1123,8 @@ std::vector<Btwxt::GridAxis>
 HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
 {
     // integrated condensers:
-    //   Legacy method used linear interpolation on externalT axis and quadratic evaluation on condenserT axis,
-    //   found to be most closely reproduced by cubic interpolation.
+    //   Legacy method used linear interpolation on externalT axis and quadratic evaluation on
+    //   condenserT axis, found to be most closely reproduced by cubic interpolation.
     auto is_integrated = (configuration != COIL_CONFIG::CONFIG_EXTERNAL);
 
     // single-pass condensers:
