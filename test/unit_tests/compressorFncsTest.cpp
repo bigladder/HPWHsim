@@ -23,7 +23,7 @@ struct CompressorFncsTest : public testing::Test
 
     const std::vector<ModelSpecs> modelSpecs = {
         {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A, 42.},
-        {"Stiebel220e", true, 1, true, false, HPWH::MAXOUTLET_R134A, 32.},
+        {"Stiebel220E", true, 1, true, false, HPWH::MAXOUTLET_R134A, 32.},
         {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A, 47.},
         {"Sanco80", true, 2, false, false, HPWH::MAXOUTLET_R744, -25.},
         {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},

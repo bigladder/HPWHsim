@@ -30,7 +30,7 @@ struct HeatingLogicsTest : public testing::Test
 
     const std::vector<std::string> sNoHighShutOffIntegratedModelNames = {"AOSmithHPTU80",
                                                                          "Rheem2020Build80",
-                                                                         "Stiebel220e",
+                                                                         "Stiebel220E",
                                                                          "AOSmithCAHP120",
                                                                          "AWHSTier3Generic80",
                                                                          "Generic1",

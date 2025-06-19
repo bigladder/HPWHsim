@@ -12,7 +12,7 @@ set(modelNames
         AOSmithHPTU80
         Sanco80
         RheemHB50
-        Stiebel220e
+        Stiebel220E
         GE2014_50
         Rheem2020Prem40
         Rheem2020Prem50
@@ -53,7 +53,7 @@ set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
         RheemHB50
-        Stiebel220e
+        Stiebel220E
         GE2014_50
         )
 
@@ -85,7 +85,7 @@ set(maxTempModels
         AOSmithHPTU80
         Rheem2020Build50
         RheemHB50
-        Stiebel220e
+        Stiebel220E
         GE2014_50
         TamScalable_SP
         AOSmithCAHP120
@@ -343,7 +343,7 @@ foreach (model ${lockoutTestModels})
       set(airT_F "45")
   elseif (${model} STREQUAL "RheemHB50")
       set(airT_F "43")
-  elseif (${model} STREQUAL "Stiebel220e")
+  elseif (${model} STREQUAL "Stiebel220E")
       set(airT_F "35")
   elseif (${model} STREQUAL "GE2014_50")
       set(airT_F "40")
