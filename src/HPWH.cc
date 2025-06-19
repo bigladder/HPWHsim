@@ -1803,7 +1803,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     case UNITS_BTUperHr:
         return W_TO_BTUperH(performance.outputPower_W);
     case UNITS_KW:
-        return performance.outputPower_W / 1000.;
+        return W_TO_KW(performance.outputPower_W);
     default:
         send_error("Invalid units.");
     }
@@ -2289,7 +2289,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         send_error("Can not have a negative input power.");
     }
     // Unit conversion
-    double watts = 1000. * power;
+    double watts = KW_TO_W(power);
     switch (pwrUnit)
     {
     case UNITS_KW:
@@ -2380,9 +2380,9 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     switch (pwrUnit)
     {
     case UNITS_KW:
-        return returnPower_W / 1000.;
+        return W_TO_KW(returnPower_W);
     case UNITS_BTUperHr:
-        return KWH_TO_BTU(returnPower_W / 1000.); // kW to BTU/h
+        return KWH_TO_BTU(W_TO_KW(returnPower_W)); // kW to BTU/h
     default:
         send_error("Invalid units.");
     }
@@ -2452,7 +2452,7 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
     {
         if (heatDistribution_W[i] != 0)
         {
-            double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
+            double qAdd_BTUperHr = KWH_TO_BTU(W_TO_KW(heatDistribution_W[i]));
             double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
             addExtraHeatAboveNode(qAdd_KJ, i);
             tot_qAdded_BTUperHr += qAdd_BTUperHr;
