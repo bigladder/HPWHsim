@@ -1270,9 +1270,6 @@ class HPWH : public Courier::Sender
         {
         }
 
-        static const PerformancePolySet tier3;
-        static const PerformancePolySet tier4;
-
         /// pick the nearest temperature index in a PolySet
         int getAmbientT_index(double ambientT_C) const;
 
@@ -1290,6 +1287,9 @@ class HPWH : public Courier::Sender
             { return evaluate(externalT_C, heatSourceT_C); };
         }
     };
+
+    static const PerformancePolySet tier3;
+    static const PerformancePolySet tier4;
 
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
