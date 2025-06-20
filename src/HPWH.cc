@@ -2879,9 +2879,9 @@ void HPWH::configure()
         auto logic = condenser->shutOffLogicSet[0];
         logic->description = "large draw";
     }
-    else if ((model == hpwh_presets::MODELS::Sanco80) ||
+    else if ((model == hpwh_presets::MODELS::Sanco83) ||
              (model == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP) ||
-             (model == hpwh_presets::MODELS::Sanco120) || (model == hpwh_presets::MODELS::Sanco40))
+             (model == hpwh_presets::MODELS::Sanco119) || (model == hpwh_presets::MODELS::Sanco43))
     {
         setpointFixed = true;
         {
@@ -2889,7 +2889,7 @@ void HPWH::configure()
             logic->getIsEnteringWaterHighTempShutoff() = true;
             logic->checksStandby() = true;
         }
-        if ((model == hpwh_presets::MODELS::Sanco80) ||
+        if ((model == hpwh_presets::MODELS::Sanco83) ||
             (model == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP))
         {
             auto logic = heatSources[compressorIndex]->turnOnLogicSet[1];
