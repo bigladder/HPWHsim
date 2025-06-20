@@ -1263,7 +1263,7 @@ class HPWH : public Courier::Sender
         std::vector<double> COP_coeffs;
     };
 
-    struct PerformancePolySet : public std::vector<PerformancePoly>
+    static const struct PerformancePolySet : public std::vector<PerformancePoly>
     {
         PerformancePolySet(const std::vector<PerformancePoly>& vect)
             : std::vector<PerformancePoly>(vect)
@@ -1286,10 +1286,7 @@ class HPWH : public Courier::Sender
             return [this](double externalT_C, double heatSourceT_C)
             { return evaluate(externalT_C, heatSourceT_C); };
         }
-    };
-
-    static const PerformancePolySet tier3;
-    static const PerformancePolySet tier4;
+    } tier3, tier4;
 
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
