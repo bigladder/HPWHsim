@@ -17,14 +17,6 @@
 
 namespace hpwh_data_model
 {
-class QuietCourier : public Courier::DefaultCourier
-{
-  public:
-    static inline std::vector<std::string> warnings = {};
-
-  protected:
-    void receive_warning(const std::string& message) override { warnings.push_back(message); }
-};
-void init(std::shared_ptr<Courier::Courier> logger_in = std::make_shared<QuietCourier>());
+void init(std::shared_ptr<Courier::Courier> logger_in);
 } // namespace hpwh_data_model
 #endif
