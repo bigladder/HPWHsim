@@ -192,8 +192,6 @@ void arrangeGridVector(std::vector<double>& V)
 
 void trimGridVector(std::vector<double>& V, const double minT, const double maxT)
 {
-    V.push_back(minT);
-    V.push_back(maxT);
     arrangeGridVector(V);
     auto copyV = V;
     V.clear();
@@ -546,7 +544,7 @@ void HPWH::Condenser::to(
         map.lookup_variables_is_set = true;
         perf.performance_map_is_set = true;
     }
-    else // convert polySet to grid
+    else // convert evaluatePerformance function to grid
     {
         std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
         trimGridVector(envTs_C, minT, maxT);
@@ -585,8 +583,6 @@ void HPWH::Condenser::to(
                 ++i;
             }
 
-        std::vector<std::vector<double>> perfGrid = {envTs_K, heatSourceTs_K};
-        std::vector<std::vector<double>> perfGridValues = {inputPowers_W, heatingCapacities_W};
         checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
         checkTo(
             heatingCapacities_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
