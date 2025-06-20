@@ -1121,8 +1121,9 @@ HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
     auto is_Mitsubishi = (hpwh->model == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP);
 
     // multi-pass condensers:
-    //   Legacy method used 2D quadratic polynomials with cross-terms. These were best reproduced with
-    //   cubic interpolation. Nyle-MP models used grids with default btwxt methods, preserved here.
+    //   Legacy method used 2D quadratic polynomials with cross-terms. These were best reproduced
+    //   with cubic interpolation. Nyle-MP models used grids with default btwxt methods, preserved
+    //   here.
     auto is_NyleMP = ((hpwh_presets::MODELS::NyleC60A_MP <= hpwh->model) &&
                       (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_MP));
 
