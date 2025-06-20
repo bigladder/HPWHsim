@@ -138,7 +138,7 @@ void run(const std::string specType,
 
     newSetpoint = 0;
     model = static_cast<hpwh_presets::MODELS>(hpwh.getModel());
-    if (model == hpwh_presets::MODELS::Sanco80 || model == hpwh_presets::MODELS::Sanco40)
+    if (model == hpwh_presets::MODELS::Sanco83 || model == hpwh_presets::MODELS::Sanco43)
     {
         newSetpoint = (149 - 32) / 1.8;
     }
