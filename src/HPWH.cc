@@ -2954,7 +2954,7 @@ void HPWH::initPreset(hpwh_presets::MODELS presetNum)
     nlohmann::json j =
         nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
 
-    hpwh_data_model::init(/*get_courier()*/);
+    hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     name = presetData.name;
@@ -2978,7 +2978,7 @@ void HPWH::initPreset(const std::string& presetName)
 
 void HPWH::initFromJSON(const nlohmann::json& j, const std::string& modelName)
 {
-    hpwh_data_model::init(/*get_courier()*/);
+    hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
     from(hsi);
