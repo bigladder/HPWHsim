@@ -31,7 +31,7 @@ wheels = [
 [[package]]
 name = "dimes"
 version = "0.0.0"
-source = { git = "https://github.com/bigladder/dimes#e3d6166be1edecabf42a717956b9949f8a0c7c89" }
+source = { git = "https://github.com/bigladder/dimes?branch=main#74c09cd8d350e4942d58063c7c0274c39bad140c" }
 dependencies = [
     { name = "kaleido" },
     { name = "koozie" },
@@ -75,7 +75,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dimes", git = "https://github.com/bigladder/dimes" },
+    { name = "dimes", git = "https://github.com/bigladder/dimes?branch=main" },
     { name = "koozie" },
     { name = "pandas" },
     { name = "plotly" },
