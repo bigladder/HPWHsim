@@ -267,7 +267,7 @@ void HPWH::Condenser::from(
         std::vector<std::vector<double>> perfGridValues = {};
 
         perfGrid.reserve(3);
-        // order based on hpwh_presets::MODELS::MITSUBISHI_QAHV_N136TAU_HPB_SP
+        // order based on hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP
         if (grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
         {
             std::vector<double> evapTs_C = {};
@@ -1114,14 +1114,14 @@ HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
     auto is_integrated = (configuration != COIL_CONFIG::CONFIG_EXTERNAL);
 
     // single-pass condensers:
-    // Legacy method used 3D quadratic polynomials with cross-terms. Cubic interpolation on the
+    //   Legacy method used 3D quadratic polynomials with cross-terms. Cubic interpolation on the
     //   externalT and condenserT axes most closely reproduced the performance curve.
     //   (Linear best reproduced curves on the outletT axis, which typically has few points.)
     //   Mitsubishi model used a grid with linear interpolation, preserved here.
     auto is_Mitsubishi = (hpwh->model == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP);
 
     // multi-pass condensers:
-    // Legacy method used 2D quadratic polynomials with cross-terms. These were best reproduced with
+    //   Legacy method used 2D quadratic polynomials with cross-terms. These were best reproduced with
     //   cubic interpolation. Nyle-MP models used grids with default btwxt methods, preserved here.
     auto is_NyleMP = ((hpwh_presets::MODELS::NyleC60A_MP <= hpwh->model) &&
                       (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_MP));
