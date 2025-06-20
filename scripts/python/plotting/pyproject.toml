@@ -14,4 +14,4 @@ dependencies = [
 [tool.uv]
 
 [tool.uv.sources]
-dimes = { git = "https://github.com/bigladder/dimes#1b8082f06909d551b36e7b784816d7abd915b58a" }
+dimes = { git = "https://github.com/bigladder/dimes", branch = "main" }
