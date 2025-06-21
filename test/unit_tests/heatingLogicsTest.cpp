@@ -10,7 +10,7 @@
 
 struct HeatingLogicsTest : public testing::Test
 {
-    const std::vector<std::string> sHighShutOffSP_modelNames = {"Sanco80",
+    const std::vector<std::string> sHighShutOffSP_modelNames = {"Sanco83",
                                                                 "Mitsubishi_QAHV_N136TAU_HPB_SP",
                                                                 "ColmacCxA_20_SP",
                                                                 "ColmacCxV_5_SP",

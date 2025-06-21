@@ -25,7 +25,7 @@ struct CompressorFncsTest : public testing::Test
         {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A, 42.},
         {"Stiebel220E", true, 1, true, false, HPWH::MAXOUTLET_R134A, 32.},
         {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A, 47.},
-        {"Sanco80", true, 2, false, false, HPWH::MAXOUTLET_R744, -25.},
+        {"Sanco83", true, 2, false, false, HPWH::MAXOUTLET_R744, -25.},
         {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},
         {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
         {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},

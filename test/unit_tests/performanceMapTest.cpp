@@ -700,12 +700,12 @@ TEST_F(PerformanceMapTest, Mitsubishi_QAHV_N136TAU_HPB_SP_extrapolation)
 }
 
 /*
- * Sanco120 tests
+ * Sanco119 tests
  */
-TEST_F(PerformanceMapTest, Sanco120)
+TEST_F(PerformanceMapTest, Sanco119)
 {
     HPWH hpwh;
-    const std::string modelName = "Sanco120";
+    const std::string modelName = "Sanco119";
     hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW

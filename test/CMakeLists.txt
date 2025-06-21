@@ -10,7 +10,7 @@ set(modelNames
         AOSmithHPTS50
         AOSmithPHPT60
         AOSmithHPTU80
-        Sanco80
+        Sanco83
         RheemHB50
         Stiebel220E
         GE2014_50
@@ -30,7 +30,7 @@ set(general_Tests
 
 set(JSON_modelNames
         AOSmithHPTS50
-        Sanco80
+        Sanco83
         )
 
 set(JSON_testNames
@@ -59,7 +59,7 @@ set(lockoutTestModels
 
 set(yearTestsModels
         AOSmithHPTU80
-        Sanco80
+        Sanco83
         GE2014_50
         Rheem2020Prem40
         Rheem2020Prem50
@@ -170,7 +170,7 @@ set(yearLargeTests
 
 #
 set(SancoModels 
-        Sanco80
+        Sanco83
 )
 set(SancoTests
         testSandenCombi
@@ -178,7 +178,7 @@ set(SancoTests
 
 #
 set(SoC_Models
-        Sanco120
+        Sanco119
         NyleC25A_SP
         )
 set(SoC_TestDir "SoC_tests")

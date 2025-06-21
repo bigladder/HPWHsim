@@ -183,13 +183,13 @@ TEST(MaxSetpointTest, StorageTank)
 }
 
 /*
- * Sanco80 tests
+ * Sanco83 tests
  */
-TEST(MaxSetpointTest, Sanco80)
+TEST(MaxSetpointTest, Sanco83)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "Sanco80"; // Fixed setpoint model
+    const std::string modelName = "Sanco83"; // Fixed setpoint model
     hpwh.initPreset(modelName);
 
     double num, num1;
