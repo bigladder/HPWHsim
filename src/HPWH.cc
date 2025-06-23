@@ -1782,6 +1782,12 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     Performance performance = {0., 0., 0.};
     if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
+        std::string why;
+        if (!isNewSetpointPossible(outTemp_C, maxAllowedSetpoint_C, why, UNITS_C))
+            send_error(why);
+
+        double orig_setpointT_C = getSetpoint(UNITS_C);
+        setSetpoint(outTemp_C, UNITS_C);
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
@@ -1791,6 +1797,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         {
             performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
         }
+        setSetpoint(orig_setpointT_C, UNITS_C);
     }
     else
     {
