@@ -1730,7 +1730,7 @@ void HPWH::makeCondenserPerformance(const PerformancePoly_CWHS_SP& perfPoly_cwhs
 {
     auto condenser = getCompressor();
     if (condenser)
-        condenser->evaluatePerformance = perfPoly_cwhs_sp.make();
+        condenser->evaluatePerformance = perfPoly_cwhs_sp.make(condenser);
 }
 
 void HPWH::makeCondenserPerformance(const PerformancePoly_CWHS_MP& perfPoly_cwhs_mp)
@@ -4470,7 +4470,7 @@ HPWH::PerformancePoly_CWHS_SP::make(Condenser* condenser) const
         double T3 = C_TO_F(heatSourceT_C);
 
         performance.inputPower_W = KW_TO_W(regressedMethod(inputPower_coeffs, T1, T2, T3));
-        performance.cop = regressedMethod(COP_coeffs, T1, T2, T3));
+        performance.cop = regressedMethod(COP_coeffs, T1, T2, T3);
         performance.outputPower_W = performance.cop * performance.inputPower_W;
         return performance;
     };
