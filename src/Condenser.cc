@@ -497,8 +497,8 @@ void HPWH::Condenser::to(
         int iElem = 0;
         std::vector<double> envTs_K = {};
         {
-            envTs_K.reserve(perfGrid[0].size());
-            for (auto T_C : perfGrid[0])
+            envTs_K.reserve(perfGrid[iElem].size());
+            for (auto T_C : perfGrid[iElem])
             {
                 envTs_K.push_back(C_TO_K(T_C));
             }

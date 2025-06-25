@@ -44,8 +44,8 @@ CLI::App* add_run(CLI::App& app)
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
 
-   static std::string modelFilename = "";
-   model_group->add_option("-f,--filename", modelFilename, "Model filename");
+    static std::string modelFilename = "";
+    model_group->add_option("-f,--filename", modelFilename, "Model filename");
 
     model_group->required(1);
 
@@ -74,8 +74,9 @@ CLI::App* add_run(CLI::App& app)
             {
                 if (!modelFilename.empty())
                 {
-                    std::ifstream inputFile(modelFilename  + ".json");
+                    std::ifstream inputFile(modelFilename + ".json");
                     nlohmann::json j = nlohmann::json::parse(inputFile);
+                    modelName = getModelNameFromFilename(modelFilename);
                     hpwh.initFromJSON(j, modelName);
                 }
             }
