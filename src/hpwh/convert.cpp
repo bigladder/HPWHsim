@@ -50,13 +50,15 @@ CLI::App* add_convert(CLI::App& app)
                     hpwh.initPreset(modelName);
                 else if (modelNumber != -1)
                     hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
-            } else if (specType == "JSON")
+            }
+            else if (specType == "JSON")
             {
-                if (modelName.empty() && (modelNumber != -1))
-                    modelName = hpwh_presets::find_by_id(static_cast<hpwh_presets::MODELS>(modelNumber)).name;
-                std::ifstream inputFile(modelName);
-                nlohmann::json j = nlohmann::json::parse(inputFile);
-                hpwh.initFromJSON(j, modelName);
+                if (!modelName.empty())
+                {
+                    std::ifstream inputFile(modelName);
+                    nlohmann::json j = nlohmann::json::parse(inputFile);
+                    hpwh.initFromJSON(j, modelName);
+                }
             }
             else if (specType == "Legacy")
             {
