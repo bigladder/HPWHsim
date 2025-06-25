@@ -1266,8 +1266,11 @@ class HPWH : public Courier::Sender
 
         PerformancePoly(double T_F_in,
                         const std::vector<double>& inputPower_coeffs_in,
-                        const std::vector<double>& COP_coeffs_in): T_F(T_F_in), inputPower_coeffs(inputPower_coeffs_in), COP_coeffs(COP_coeffs_in){}
-   };
+                        const std::vector<double>& COP_coeffs_in)
+            : T_F(T_F_in), inputPower_coeffs(inputPower_coeffs_in), COP_coeffs(COP_coeffs_in)
+        {
+        }
+    };
 
     struct PerformancePolySet : public std::vector<PerformancePoly>
     {
@@ -1275,6 +1278,9 @@ class HPWH : public Courier::Sender
             : std::vector<PerformancePoly>(vect)
         {
         }
+
+        /// pick the nearest temperature index in a PolySet
+        int getAmbientT_index(double ambientT_C) const;
 
         Performance evaluate(double externalT_C, double heatSourceT_C) const;
 
@@ -1299,8 +1305,11 @@ class HPWH : public Courier::Sender
         PerformancePoly_CWHS_SP(const PerformancePoly& perfPoly) : PerformancePoly(perfPoly) {}
 
         PerformancePoly_CWHS_SP(double T_F_in,
-                        const std::vector<double>& inputPower_coeffs_in,
-                        const std::vector<double>& COP_coeffs_in): PerformancePoly(T_F_in, inputPower_coeffs_in, COP_coeffs_in){}
+                                const std::vector<double>& inputPower_coeffs_in,
+                                const std::vector<double>& COP_coeffs_in)
+            : PerformancePoly(T_F_in, inputPower_coeffs_in, COP_coeffs_in)
+        {
+        }
 
         std::function<Performance(double, double)> make(Condenser* condenser) const;
     };
@@ -1314,7 +1323,10 @@ class HPWH : public Courier::Sender
 
         PerformancePoly_CWHS_MP(double T_F_in,
                                 const std::vector<double>& inputPower_coeffs_in,
-                                const std::vector<double>& COP_coeffs_in): PerformancePoly(T_F_in, inputPower_coeffs_in, COP_coeffs_in){}
+                                const std::vector<double>& COP_coeffs_in)
+            : PerformancePoly(T_F_in, inputPower_coeffs_in, COP_coeffs_in)
+        {
+        }
 
         std::function<Performance(double, double)> make() const;
     };

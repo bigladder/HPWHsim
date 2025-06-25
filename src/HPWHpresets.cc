@@ -3722,7 +3722,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->compressor->evaluatePerformance = tier3.make();
+        compressor->evaluatePerformance = tier3.make();
 
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
