@@ -3010,54 +3010,6 @@ void HPWH::initFromJSON(const nlohmann::json& j, const std::string& modelName)
     configure();
 }
 
-void HPWH::init(const std::string& specType, const hpwh_presets::MODELS presetNum)
-{
-    std::string specType_mod = (specType != "") ? specType : "Preset";
-    for (auto& c : specType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (specType_mod == "preset")
-    {
-        specType_mod = "Preset";
-        initPreset(presetNum);
-    }
-    else if (specType_mod == "json")
-    {
-        specType_mod = "JSON";
-        initFromJSON(presetNum);
-    }
-    else
-    {
-        send_error(fmt::format("Invalid specification type: '{}'\n", specType_mod));
-    }
-}
-
-void HPWH::init(const std::string& specType, const std::string& modelName)
-{
-    getPresetNumberFromName(modelName, model);
-
-    std::string specType_mod = (specType != "") ? specType : "Preset";
-    for (auto& c : specType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (specType_mod == "preset")
-    {
-        specType_mod = "Preset";
-        initPreset(model);
-    }
-    else if (specType_mod == "json")
-    {
-        specType_mod = "JSON";
-        initFromJSON(model);
-    }
-    else
-    {
-        send_error(fmt::format("Invalid specification type: '{}'\n", specType_mod));
-    }
-}
-
 void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
     checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
