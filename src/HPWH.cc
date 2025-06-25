@@ -1726,6 +1726,20 @@ void HPWH::makeCondenserPerformance(const PerformancePolySet& perfPolySet)
         condenser->evaluatePerformance = perfPolySet.make();
 }
 
+void HPWH::makeCondenserPerformance(const PerformancePoly_CWHS_SP& perfPoly_cwhs_sp)
+{
+    auto condenser = getCompressor();
+    if (condenser)
+        condenser->evaluatePerformance = perfPoly_cwhs_sp.make();
+}
+
+void HPWH::makeCondenserPerformance(const PerformancePoly_CWHS_MP& perfPoly_cwhs_mp)
+{
+    auto condenser = getCompressor();
+    if (condenser)
+        condenser->evaluatePerformance = perfPoly_cwhs_mp.make();
+}
+
 int HPWH::getNumResistanceElements() const
 {
     int count = 0;
@@ -4427,4 +4441,53 @@ HPWH::Performance HPWH::PerformancePolySet::evaluate(double externalT_C, double 
                  inputPower_T2_W);
     performance.outputPower_W = performance.cop * performance.inputPower_W;
     return performance;
+}
+
+static double regressedMethod(const std::vector<double>& coef, double x1, double x2, double x3)
+{
+    return coef[0] + coef[1] * x1 + coef[2] * x2 + coef[3] * x3 + coef[4] * x1 * x1 +
+           coef[5] * x2 * x2 + coef[6] * x3 * x3 + coef[7] * x1 * x2 + coef[8] * x1 * x3 +
+           coef[9] * x2 * x3 + coef[10] * x1 * x2 * x3;
+}
+
+static double regressedMethodMP(const std::vector<double>& coef, double x1, double x2)
+{
+    // Const Tair Tin Tair2 Tin2 TairTin
+    return coef[0] + coef[1] * x1 + coef[2] * x2 + coef[3] * x1 * x1 + coef[4] * x2 * x2 +
+           coef[5] * x1 * x2;
+}
+
+std::function<HPWH::Performance(double, double)>
+HPWH::PerformancePoly_CWHS_SP::make(Condenser* condenser) const
+{
+    return [this, condenser](double externalT_C, double heatSourceT_C)
+    {
+        Performance performance = {0., 0., 0.};
+
+        double T1 = C_TO_F(externalT_C);
+        double T2 = C_TO_F(condenser->hpwh->getSetpoint() +
+                           condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC);
+        double T3 = C_TO_F(heatSourceT_C);
+
+        performance.inputPower_W = KW_TO_W(regressedMethod(inputPower_coeffs, T1, T2, T3));
+        performance.cop = regressedMethod(COP_coeffs, T1, T2, T3));
+        performance.outputPower_W = performance.cop * performance.inputPower_W;
+        return performance;
+    };
+}
+
+std::function<HPWH::Performance(double, double)> HPWH::PerformancePoly_CWHS_MP::make() const
+{
+    return [this](double externalT_C, double heatSourceT_C)
+    {
+        Performance performance = {0., 0., 0.};
+
+        double T1 = C_TO_F(externalT_C);
+        double T2 = C_TO_F(heatSourceT_C);
+
+        performance.inputPower_W = KW_TO_W(regressedMethodMP(inputPower_coeffs, T1, T2));
+        performance.cop = regressedMethodMP(COP_coeffs, T1, T2);
+        performance.outputPower_W = performance.cop * performance.inputPower_W;
+        return performance;
+    };
 }
