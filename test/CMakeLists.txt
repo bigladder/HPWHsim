@@ -2,7 +2,7 @@
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
 # "Preset", "JSON", or "Legacy"
-set(TestSpec "Legacy")
+set(TestSpec "JSON")
 set(RefSpec "Preset")
 
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY_${TestSpec}.csv")
@@ -234,7 +234,11 @@ function(add_model_test)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    if (${ARG_SPEC_TYPE} STREQUAL "JSON")
+        set(hpwhArgs run -s ${ARG_SPEC_TYPE} -f "models_json/${ARG_MODEL_NAME}" -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    else()
+        set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    endif()
 
     if (DEFINED ARG_AIR_T_F)
         set(hpwhArgs ${hpwhArgs} -a ${ARG_AIR_T_F})

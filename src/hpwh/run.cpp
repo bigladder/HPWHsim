@@ -44,6 +44,9 @@ CLI::App* add_run(CLI::App& app)
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
 
+   static std::string modelFilename = "";
+   model_group->add_option("-f,--filename", modelFilename, "Model filename");
+
     model_group->required(1);
 
     //
@@ -66,13 +69,15 @@ CLI::App* add_run(CLI::App& app)
                     hpwh.initPreset(modelName);
                 else if (modelNumber != -1)
                     hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
-            } else if (specType == "JSON")
+            }
+            else if (specType == "JSON")
             {
-                if (modelName.empty() && (modelNumber != -1))
-                    modelName = hpwh_presets::find_by_id(static_cast<hpwh_presets::MODELS>(modelNumber)).name;
-                std::ifstream inputFile(modelName);
-                nlohmann::json j = nlohmann::json::parse(inputFile);
-                hpwh.initFromJSON(j, modelName);
+                if (!modelFilename.empty())
+                {
+                    std::ifstream inputFile(modelFilename  + ".json");
+                    nlohmann::json j = nlohmann::json::parse(inputFile);
+                    hpwh.initFromJSON(j, modelName);
+                }
             }
             else if (specType == "Legacy")
             {
