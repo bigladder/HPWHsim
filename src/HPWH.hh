@@ -644,6 +644,8 @@ class HPWH : public Courier::Sender
     void initPreset(hpwh_presets::MODELS presetNum);
     void initPreset(const std::string& modelName);
 
+    void initLegacy(hpwh_presets::MODELS presetNum);
+
     /// init from hpwh-data-model in JSON format
     void initFromJSON(const nlohmann::json& j, const std::string& modelName = "custom");
 
@@ -1261,7 +1263,11 @@ class HPWH : public Courier::Sender
         double T_F;
         std::vector<double> inputPower_coeffs;
         std::vector<double> COP_coeffs;
-    };
+
+        PerformancePoly(double T_F_in,
+                        const std::vector<double>& inputPower_coeffs_in,
+                        const std::vector<double>& COP_coeffs_in): T_F(T_F_in), inputPower_coeffs(inputPower_coeffs_in), COP_coeffs(COP_coeffs_in){}
+   };
 
     struct PerformancePolySet : public std::vector<PerformancePoly>
     {
@@ -1292,6 +1298,10 @@ class HPWH : public Courier::Sender
     {
         PerformancePoly_CWHS_SP(const PerformancePoly& perfPoly) : PerformancePoly(perfPoly) {}
 
+        PerformancePoly_CWHS_SP(double T_F_in,
+                        const std::vector<double>& inputPower_coeffs_in,
+                        const std::vector<double>& COP_coeffs_in): PerformancePoly(T_F_in, inputPower_coeffs_in, COP_coeffs_in){}
+
         std::function<Performance(double, double)> make(Condenser* condenser) const;
     };
 
@@ -1301,6 +1311,10 @@ class HPWH : public Courier::Sender
     struct PerformancePoly_CWHS_MP : public PerformancePoly
     {
         PerformancePoly_CWHS_MP(const PerformancePoly& perfPoly) : PerformancePoly(perfPoly) {}
+
+        PerformancePoly_CWHS_MP(double T_F_in,
+                                const std::vector<double>& inputPower_coeffs_in,
+                                const std::vector<double>& COP_coeffs_in): PerformancePoly(T_F_in, inputPower_coeffs_in, COP_coeffs_in){}
 
         std::function<Performance(double, double)> make() const;
     };
