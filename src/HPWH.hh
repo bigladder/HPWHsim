@@ -645,6 +645,7 @@ class HPWH : public Courier::Sender
     void initPreset(const std::string& modelName);
 
     void initLegacy(hpwh_presets::MODELS presetNum);
+    void initLegacy(const std::string& modelName);
 
     /// init from hpwh-data-model in JSON format
     void initFromJSON(const nlohmann::json& j, const std::string& modelName = "custom");

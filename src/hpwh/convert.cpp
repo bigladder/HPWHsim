@@ -20,16 +20,16 @@ CLI::App* add_convert(CLI::App& app)
     const auto subcommand = app.add_subcommand("convert", "Convert to JSON");
 
     //
-    auto model_group = subcommand->add_option_group("model");
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
+
+    auto model_group = subcommand->add_option_group("Model options");
 
     static std::string modelName = "";
     model_group->add_option("-m,--model", modelName, "Model name");
 
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
-
-    static std::string modelFilename = "";
-    model_group->add_option("-f,--filename", modelFilename, "Model filename");
 
     model_group->required(1);
 
@@ -44,18 +44,26 @@ CLI::App* add_convert(CLI::App& app)
         [&]()
         {
             HPWH hpwh;
-            std::string specType = "Preset";
-            if (!modelName.empty())
-                hpwh.initPreset(modelName);
-            else if (modelNumber != -1)
-                hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
-            else if (!modelFilename.empty())
+            if (specType == "Preset")
             {
-                std::ifstream inputFile(modelFilename);
+                if (!modelName.empty())
+                    hpwh.initPreset(modelName);
+                else if (modelNumber != -1)
+                    hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
+            } else if (specType == "JSON")
+            {
+                if (modelName.empty() && (modelNumber != -1))
+                    modelName = hpwh_presets::find_by_id(static_cast<hpwh_presets::MODELS>(modelNumber)).name;
+                std::ifstream inputFile(modelName);
                 nlohmann::json j = nlohmann::json::parse(inputFile);
-                specType = "JSON";
-                modelName = getModelNameFromFilename(modelFilename);
                 hpwh.initFromJSON(j, modelName);
+            }
+            else if (specType == "Legacy")
+            {
+                if (!modelName.empty())
+                    hpwh.initPreset(modelName);
+                else if (modelNumber != -1)
+                    hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
             convert(specType, hpwh, sOutputDir, sOutputFilename);
         });

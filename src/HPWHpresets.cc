@@ -326,6 +326,19 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     }
 }
 
+void HPWH::initLegacy(const std::string& modelName)
+{
+    hpwh_presets::MODELS modelID;
+    if (getPresetNumberFromName(modelName, modelID))
+    {
+        initLegacy(modelID);
+    }
+    else
+    {
+        send_error("Unable to initialize model.");
+    }
+}
+
 void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 {
     setAllDefaults();
@@ -4320,6 +4333,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resetTankToSetpoint();
 
     model = presetNum;
+    name = hpwh_presets::find_by_id(model).name;
     calcDerivedValues();
 
     checkInputs();
