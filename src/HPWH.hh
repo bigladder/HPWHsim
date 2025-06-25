@@ -636,10 +636,6 @@ class HPWH : public Courier::Sender
 
     void configure();
 
-    /// init general
-    void init(const std::string& specType, const hpwh_presets::MODELS presetNum);
-    void init(const std::string& specType, const std::string& modelName);
-
     /// init Preset from embedded CBOR representation
     void initPreset(hpwh_presets::MODELS presetNum);
     void initPreset(const std::string& modelName);
