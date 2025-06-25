@@ -1263,15 +1263,12 @@ class HPWH : public Courier::Sender
         std::vector<double> COP_coeffs;
     };
 
-    static const struct PerformancePolySet : public std::vector<PerformancePoly>
+    struct PerformancePolySet : public std::vector<PerformancePoly>
     {
         PerformancePolySet(const std::vector<PerformancePoly>& vect)
             : std::vector<PerformancePoly>(vect)
         {
         }
-
-        /// pick the nearest temperature index in a PolySet
-        int getAmbientT_index(double ambientT_C) const;
 
         Performance evaluate(double externalT_C, double heatSourceT_C) const;
 
@@ -1286,7 +1283,29 @@ class HPWH : public Courier::Sender
             return [this](double externalT_C, double heatSourceT_C)
             { return evaluate(externalT_C, heatSourceT_C); };
         }
-    } tier3, tier4;
+    } static const tier3, tier4;
+
+    void makeCondenserPerformance(const PerformancePolySet& perfPolySet);
+
+    ///
+    struct PerformancePoly_CWHS_SP : public PerformancePoly
+    {
+        PerformancePoly_CWHS_SP(const PerformancePoly& perfPoly) : PerformancePoly(perfPoly) {}
+
+        std::function<Performance(double, double)> make(Condenser* condenser) const;
+    };
+
+    void makeCondenserPerformance(const PerformancePoly_CWHS_SP& perfPoly_cwhs_sp);
+
+    ///
+    struct PerformancePoly_CWHS_MP : public PerformancePoly
+    {
+        PerformancePoly_CWHS_MP(const PerformancePoly& perfPoly) : PerformancePoly(perfPoly) {}
+
+        std::function<Performance(double, double)> make() const;
+    };
+
+    void makeCondenserPerformance(const PerformancePoly_CWHS_MP& perfPoly_cwhs_mp);
 
     /// fit using a single configuration
     TestSummary makeGenericEF(double targetEF,
@@ -1367,8 +1386,6 @@ class HPWH : public Courier::Sender
     {
         return makeGenericUEF(targetUEF, findFirstHourRating().designation, perfPolySet);
     }
-
-    void makeCondenserPerformance(const PerformancePolySet& perfPolySet);
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
