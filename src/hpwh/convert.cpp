@@ -97,7 +97,7 @@ void convert(const std::string& specType,
         hpwh.get_courier()->send_error(
             fmt::format("Could not open output file {}\n", sOutputFilename));
     }
-    outputFile << j.dump(2);
+    outputFile << j.dump(2) << "\n";
     outputFile.close();
 }
 

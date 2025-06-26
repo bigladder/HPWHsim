@@ -1490,6 +1490,10 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              {C_TO_F(setpoint_C)},                // Grid Axis 2 Tout (F)
              {40., 60., 80., 100., 130., 150.}}); // Grid Axis 3 Tin (F)
 
+        for (auto& axis : perfGrid)
+            for (auto& val : axis)
+                val = F_TO_C(val);
+
         std::vector<std::vector<double>> perfGridValues = {};
 
         if (presetNum == hpwh_presets::MODELS::NyleC60A_MP ||
@@ -1639,6 +1643,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                                       5.71801705, 4.40237768, 2.92489673, 2.21419054});
         }
 
+        for (auto& val : perfGridValues[0])
+            val = KW_TO_W(val);
+
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
     // if rheem multipass
@@ -1785,6 +1792,10 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
               71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
              {140., 158., 176.},                                            // Grid Axis 2 Tout (F)
              {41, 48.2, 62.6, 75.2, 84.2}});                                // Grid Axis 3 Tin (F)
+
+        for (auto& axis : perfGrid)
+            for (auto& val : axis)
+                val = F_TO_C(val);
 
         std::vector<std::vector<double>> perfGridValues = {};
 
@@ -1985,6 +1996,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              3.988941, 3.713376, 3.614928, 3.712969, 3.470484, 3.264466, 3.153648, 4.522957,
              4.520572, 4.213452, 3.993147, 3.713376, 4.522957, 4.520572, 4.213452, 3.993147,
              3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959});
+
+        for (auto& val : perfGridValues[0])
+            val = BTUperH_TO_W(val);
 
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
 
