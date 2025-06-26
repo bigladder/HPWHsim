@@ -1292,7 +1292,9 @@ class HPWH : public Courier::Sender
             return [this](double externalT_C, double heatSourceT_C)
             { return evaluate(externalT_C, heatSourceT_C); };
         }
-    } static const tier3, tier4;
+    };
+
+    static const PerformancePolySet tier3, tier4;
 
     void makeCondenserPerformance(const PerformancePolySet& perfPolySet);
 
