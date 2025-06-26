@@ -3002,11 +3002,9 @@ void HPWH::initFromJSON(const nlohmann::json& j, const std::string& modelName)
     hpwh_data_model::init(get_courier());
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
-    from(hsi);
-
     name = modelName;
     getPresetNumberFromName(name, model);
-
+    from(hsi);
     configure();
 }
 
