@@ -714,13 +714,14 @@ TEST_F(PerformanceMapTest, Sanco119)
         checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
-    // Cold outlet temperature
+    // Setpoint fixed; outlet temperature has no effect
     checkPoint = {60, 125.0, 41.0, 15001.488136029287};
-    EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
-        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F));
+    outputBTUH = hpwh.getCompressorCapacity(
+        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+    EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
     // tests fails when output high
-    checkPoint = {60, 200, 41.0, 15001.488136029287};
+    checkPoint = {60, 200, 41.0, 15059.59167};
     EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
         checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F));
 }
