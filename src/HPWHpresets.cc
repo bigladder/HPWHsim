@@ -1490,7 +1490,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              {C_TO_F(setpoint_C)},                // Grid Axis 2 Tout (F)
              {40., 60., 80., 100., 130., 150.}}); // Grid Axis 3 Tin (F)
 
-        std::vector<std::vector<double>> perfGridValues = {{}};
+        std::vector<std::vector<double>> perfGridValues = {};
 
         if (presetNum == hpwh_presets::MODELS::NyleC60A_MP ||
             presetNum == hpwh_presets::MODELS::NyleC60A_C_MP)
@@ -1786,7 +1786,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              {140., 158., 176.},                                            // Grid Axis 2 Tout (F)
              {41, 48.2, 62.6, 75.2, 84.2}});                                // Grid Axis 3 Tin (F)
 
-        std::vector<std::vector<double>> perfGridValues = {{}};
+        std::vector<std::vector<double>> perfGridValues = {};
 
         // Grid values in long format, table 1, input power (Btu/hr)
         perfGridValues.push_back(
