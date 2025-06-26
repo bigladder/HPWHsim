@@ -535,9 +535,6 @@ void HPWH::Condenser::to(
         {
             std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
             trimGridVector(envTs_C, minT, maxT);
-
-            // fill envT axis
-
             for (auto& envT_C : envTs_C)
                 envTs_K.push_back(C_TO_K(envT_C));
         }
@@ -558,14 +555,12 @@ void HPWH::Condenser::to(
             std::size_t nTotVals = envTs_K.size() * heatSourceTs_K.size();
             inputPowers_W.reserve(nTotVals);
             heatingCapacities_W.reserve(nTotVals);
-            std::size_t i = 0;
             for (auto& envT_K : envTs_K)
                 for (auto& heatSourceT_K : heatSourceTs_K)
                 {
                     auto performance = evaluatePerformance(K_TO_C(envT_K), K_TO_C(heatSourceT_K));
                     inputPowers_W.push_back(performance.inputPower_W);
                     heatingCapacities_W.push_back(performance.cop * performance.inputPower_W);
-                    ++i;
                 }
         }
     }
