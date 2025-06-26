@@ -345,6 +345,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
     heatSources.clear();
 
+    model = presetNum;
+    name = hpwh_presets::find_by_id(model).name;
+
     bool hasInitialTankTemp = false;
     double initialTankT_C = F_TO_C(120.);
 
@@ -4346,8 +4349,6 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
     else // start tank off at setpoint
         resetTankToSetpoint();
 
-    model = presetNum;
-    name = hpwh_presets::find_by_id(model).name;
     calcDerivedValues();
 
     checkInputs();
