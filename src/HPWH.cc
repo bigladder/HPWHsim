@@ -4412,7 +4412,7 @@ static double regressedMethodMP(const std::vector<double>& coef, double x1, doub
 std::function<HPWH::Performance(double, double)>
 HPWH::PerformancePoly_CWHS_SP::make(Condenser* condenser) const
 {
-    return [this, condenser](double externalT_C, double heatSourceT_C)
+    return [*this, condenser](double externalT_C, double heatSourceT_C)
     {
         Performance performance = {0., 0., 0.};
 
@@ -4430,7 +4430,7 @@ HPWH::PerformancePoly_CWHS_SP::make(Condenser* condenser) const
 
 std::function<HPWH::Performance(double, double)> HPWH::PerformancePoly_CWHS_MP::make() const
 {
-    return [this](double externalT_C, double heatSourceT_C)
+    return [*this](double externalT_C, double heatSourceT_C)
     {
         Performance performance = {0., 0., 0.};
 

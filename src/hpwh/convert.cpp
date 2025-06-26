@@ -63,9 +63,9 @@ CLI::App* add_convert(CLI::App& app)
             else if (specType == "Legacy")
             {
                 if (!modelName.empty())
-                    hpwh.initPreset(modelName);
+                    hpwh.initLegacy(modelName);
                 else if (modelNumber != -1)
-                    hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
+                    hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
             convert(specType, hpwh, sOutputDir, sOutputFilename);
         });
