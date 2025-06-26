@@ -832,3 +832,34 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
 }
+
+/*
+ * ColmacCxA_15_SP tests
+ */
+TEST_F(PerformanceMapTest, LegacyTest)
+{
+    HPWH hpwh;
+    {
+        const std::string modelName = "Rheem2020Prem50";
+        hpwh.initLegacy(modelName);
+
+        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+
+        // using polynomial map
+        checkPoint = {67., 50.2857, 135, 1.66080299485364};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
+
+        reloadFromDataModel(hpwh);
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
+    }
+}
