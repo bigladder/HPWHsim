@@ -501,8 +501,15 @@ void HPWH::Condenser::to(
         std::size_t nVals = 1;
         int iElem = 0;
         {
-            envTs_K.reserve(perfGrid[iElem].size());
+            std::vector<double> envTs_C = {minT, maxT};
             for (auto T_C : perfGrid[iElem])
+            {
+                envTs_C.push_back(T_C);
+            }
+            trimGridVector(envTs_C, minT, maxT);
+
+            envTs_K.reserve(envTs_C.size());
+            for (auto T_C : envTs_C)
             {
                 envTs_K.push_back(C_TO_K(T_C));
             }
@@ -634,10 +641,10 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             {
                 envTs_C.push_back(T_C);
             }
-            trimGridVector(envTs_K, minT, maxT);
+            trimGridVector(envTs_C, minT, maxT);
 
             envTs_K.reserve(envTs_C.size());
-            for (auto T_C : perfGrid[iElem])
+            for (auto T_C : envTs_C)
             {
                 envTs_K.push_back(C_TO_K(T_C));
             }
@@ -691,12 +698,15 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             std::vector<double> outletTs_C = {hpwh->setpoint_C};
             if (!isMultipass)
             {
-                outletTs_C.push_back(0.);
-                outletTs_C.push_back(maxSetpoint_C);
-                outletTs_C.push_back(maxOut_at_LowT.outT_C);
-                outletTs_C.push_back(65.);          // from testLargeCompHot
-                outletTs_C.push_back(F_TO_C(120.)); // from dhw_mfsizing.cse
-                trimGridVector(outletTs_C, 0., maxSetpoint_C);
+                if (!hpwh->isSetpointFixed())
+                {
+                    outletTs_C.push_back(0.);
+                    outletTs_C.push_back(maxSetpoint_C);
+                    outletTs_C.push_back(maxOut_at_LowT.outT_C);
+                    outletTs_C.push_back(65.);          // from testLargeCompHot
+                    outletTs_C.push_back(F_TO_C(120.)); // from dhw_mfsizing.cse
+                    trimGridVector(outletTs_C, 0., maxSetpoint_C);
+                }
             }
             for (auto& outletT_C : outletTs_C)
                 outletTs_K.push_back(
