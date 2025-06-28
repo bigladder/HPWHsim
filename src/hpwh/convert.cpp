@@ -85,7 +85,10 @@ void convert(const std::string& specType,
     hpwh_data_model::hpwh_sim_input::to_json(j, hsi);
 
     if (sOutputFilename == "")
-        sOutputFilename = hpwh.name + "_" + specType + ".json";
+        sOutputFilename = hpwh.name + "_" + specType;
+
+    if (sOutputFilename.substr(sOutputFilename.length() - 5) != ".json")
+        sOutputFilename += ".json";
 
     if (sOutputDir != "")
         sOutputFilename = sOutputDir + "/" + sOutputFilename;

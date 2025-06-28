@@ -1,4 +1,4 @@
-# 'poetry run python convert_models.py ../../../test/models_json/models.json ../../../build ../../../test/models_json'
+# 'poetry run python convert_models.py ../../../test/models_json/models_CWHS.json ../../../build ../../../test/models_json'
 #
 # calls `hpwh convert' for each model in models_list_file json
 
@@ -28,7 +28,7 @@ def convert_models(models_list_file, build_dir, output_dir):
 
     for model,id in json_data.items():  
       #convert_list = [app_cmd, 'convert', '-n', str(model["number"]), '-d', output_dir, '-f', model["name"]]
-      convert_list = [app_cmd, 'convert', '-s', 'Preset', '-n', str(id), '-d', output_dir, '-f', model]
+      convert_list = [app_cmd, 'convert', '-s', 'Legacy', '-n', str(id), '-d', output_dir, '-f', model]
       print(convert_list)
       result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)
 
