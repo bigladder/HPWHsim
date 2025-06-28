@@ -1254,7 +1254,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         {
             if (presetNum == hpwh_presets::MODELS::NyleC60A_SP)
                 compressor->productInformation.model_number = {"C60A_SP"};
-            else if (presetNum == hpwh_presets::MODELS::NyleC60A_SP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC60A_C_SP)
                 compressor->productInformation.model_number = {"C60A_C_SP"};
 
             setTankSize_adjustUA(300., UNITS_GAL);

@@ -202,6 +202,7 @@ class HPWH : public Courier::Sender
         {
         }
         bool empty() const { return !(manufacturer.isSet() || model_number.isSet()); }
+        bool full() const { return (manufacturer.isSet() && model_number.isSet()); }
 
         //-----------------------------------------------------------------------------
         ///	@brief	Transfer fields from schema
@@ -233,9 +234,9 @@ class HPWH : public Courier::Sender
             manufacturer.to(prod_info.manufacturer, prod_info.manufacturer_is_set);
             model_number.to(prod_info.model_number, prod_info.model_number_is_set);
 
-            checkTo(prod_info, desc.product_information_is_set, desc.product_information, !empty());
-
-            checkTo(desc, rs.description_is_set, rs.description, !empty());
+            // data model requires both or none
+            checkTo(prod_info, desc.product_information_is_set, desc.product_information, full());
+            checkTo(desc, rs.description_is_set, rs.description, full());
         }
 
     } productInformation;
