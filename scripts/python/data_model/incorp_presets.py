@@ -46,14 +46,8 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 			json_file.close()
 			
 			for name in models_dict:  
-				if spec_type == "Preset":
-					convert_list = [app_cmd, 'convert', '-m', name, '-d', output_dir, '-f', name]
-					result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)					
-					preset_json_path = os.path.join(output_dir, name + ".json")
-				else:
-					preset_json_path = os.path.join(test_json_dir, name + ".json")
+				preset_json_path = os.path.join(test_json_dir, name + ".json")
 			  
-
 				json_data = {}
 				try:
 					with open(preset_json_path, 'r', encoding='utf-8') as f:
