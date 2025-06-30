@@ -681,10 +681,11 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     else
     {
         { // fill vector of environment temps, selected from tests
-            std::vector<double> envTs_C = {
-                minT, 0.,   0.5, 1.,     1.5, 2.,   2.5, 3.,   3.5,        4.,  4.5,  5.,  5.5,
-                6.,   6.5,  7.,  7.2223, 7.5, 8.,   8.5, 9.,   9.5,        10., 10.5, 11., 11.5,
-                12.,  12.5, 13., 13.5,   14., 14.5, 15., 15.5, 15.5555556, 20., 30.,  maxT};
+            std::vector<double> envTs_C = {minT,   0.,  0.5,  1.,         1.5,  2.,  2.5,  3.,
+                                           3.5,    4.,  4.5,  5.,         5.5,  6.,  6.5,  7.,
+                                           7.2223, 7.5, 8.,   8.28,       8.5,  9.,  9.5,  10.,
+                                           10.5,   11., 11.5, 12.,        12.5, 13., 13.5, 14.,
+                                           14.5,   15., 15.5, 15.5555556, 20.,  29., 30.,  maxT};
 
             trimGridVector(envTs_C, minT, maxT);
             for (auto& envT_C : envTs_C)
@@ -730,16 +731,18 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             double orig_setpointT_C = hpwh->getSetpoint(UNITS_C);
             for (auto& envT_K : envTs_K)
                 for (auto& outletT_K : outletTs_K)
+                {
+                    hpwh->setSetpoint(K_TO_C(outletT_K) -
+                                          secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                                      UNITS_C);
                     for (auto& heatSourceT_K : heatSourceTs_K)
                     {
-                        hpwh->setSetpoint(K_TO_C(outletT_K) -
-                                              secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                                          UNITS_C);
                         auto performance =
                             evaluatePerformance(K_TO_C(envT_K), K_TO_C(heatSourceT_K));
                         inputPowers_W.push_back(performance.inputPower_W);
                         heatingCapacities_W.push_back(performance.cop * performance.inputPower_W);
                     }
+                }
             hpwh->setSetpoint(orig_setpointT_C, UNITS_C);
         }
     }

@@ -238,16 +238,16 @@ TEST_F(PerformanceMapTest, ColmacCxA_10_MP)
     checkPoint = {60.0, 114.0, 27.7407144};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 37.91882962};
+    checkPoint = {80.0, 66.0, 37.495308988};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 35.58671626};
+    checkPoint = {80.0, 114.0, 35.045980198};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 46.804577};
+    checkPoint = {100.0, 66.0, 46.67696396};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 43.6522995};
+    checkPoint = {100.0, 114.0, 43.4890502};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
