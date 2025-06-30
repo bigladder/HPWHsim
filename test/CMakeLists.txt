@@ -2,8 +2,8 @@
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
 # "Preset", "JSON", or "Legacy"
-set(TestSpec "Preset")
-set(RefSpec "Preset")
+set(TestSpec "JSON")
+set(RefSpec "JSON")
 
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY_${TestSpec}.csv")
 

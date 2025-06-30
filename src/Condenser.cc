@@ -701,8 +701,11 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                     outletTs_C.push_back(0.);
                     outletTs_C.push_back(maxSetpoint_C);
                     outletTs_C.push_back(maxOut_at_LowT.outT_C);
+                    outletTs_C.push_back(50.);          // from testSoCSetpointChange
+                    outletTs_C.push_back(55.);          // from testSoCSetpointChange
                     outletTs_C.push_back(65.);          // from testLargeCompHot
                     outletTs_C.push_back(F_TO_C(120.)); // from dhw_mfsizing.cse
+                    outletTs_C.push_back(93.);          // from testLargeCompHot
                     trimGridVector(outletTs_C, 0., maxSetpoint_C);
                 }
             }
