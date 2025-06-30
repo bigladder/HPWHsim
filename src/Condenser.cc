@@ -503,16 +503,12 @@ void HPWH::Condenser::to(
         trimGridVector(envTs_C, minT, maxT);
 
         std::vector<double>& heatSourceTs_C = perfGrid[1];
-
-        int iElem = 0;
         {
             envTs_K.reserve(envTs_C.size());
             for (auto T_C : envTs_C)
             {
                 envTs_K.push_back(C_TO_K(T_C));
             }
-
-            ++iElem;
             nVals *= envTs_K.size();
         }
         {
@@ -521,8 +517,6 @@ void HPWH::Condenser::to(
             {
                 heatSourceTs_K.push_back(C_TO_K(T_C));
             }
-
-            ++iElem;
             nVals *= heatSourceTs_K.size();
         }
 
@@ -638,29 +632,22 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         std::vector<double>& outletTs_C = perfGrid[1];
         std::vector<double>& heatSourceTs_C = perfGrid[2];
 
-        int iElem = 0;
         {
             envTs_K.reserve(envTs_C.size());
             for (auto T_C : envTs_C)
                 envTs_K.push_back(C_TO_K(T_C));
-
-            ++iElem;
             nVals *= envTs_K.size();
         }
         {
             outletTs_K.reserve(outletTs_C.size());
             for (auto T_C : outletTs_C)
                 outletTs_K.push_back(C_TO_K(T_C));
-
-            ++iElem;
             nVals *= outletTs_K.size();
         }
         {
-            heatSourceTs_K.reserve(perfGrid[iElem].size());
-            for (auto T_C : perfGrid[iElem])
+            heatSourceTs_K.reserve(heatSourceTs_C.size());
+            for (auto T_C : heatSourceTs_C)
                 heatSourceTs_K.push_back(C_TO_K(T_C));
-
-            ++iElem;
             nVals *= heatSourceTs_K.size();
         }
 
