@@ -309,7 +309,7 @@ function(add_plot_test)
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
 
         add_test(NAME "${plotTestName}"
-                COMMAND uv run --no-project "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py"
+                COMMAND uv run "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py"
                 ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath}
                 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python/plotting"
                 )
