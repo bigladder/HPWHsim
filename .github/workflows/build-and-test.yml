@@ -71,10 +71,8 @@ jobs:
           echo "COVERAGE=OFF" >> $GITHUB_OUTPUT
           echo "STATIC_LIB=ON" >> $GITHUB_OUTPUT
           fi
-      - name: Install uv
+      - name: Install uv and set the python version
         uses: astral-sh/setup-uv@v5
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - name: Configure CMake

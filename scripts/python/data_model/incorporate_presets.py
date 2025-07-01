@@ -1,4 +1,4 @@
-# uv run incorp_presets.py JSON ../../../build ../../../test/models_json/models.json
+# uv run incorporate_presets.py JSON ../../../build ../../../test/models_json/models.json
 
 # calls `hpwh convert' for each model in models_list_file json,
 # then creates a C++ header file containing that data.
