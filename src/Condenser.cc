@@ -415,7 +415,8 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
     {
         maxOut_at_LowT.outT_C =
             K_TO_C(perf.low_temperature_setpoint_limit.maximum_setpoint_at_low_temperature);
-        maxOut_at_LowT.airT_C = K_TO_C(perf.low_temperature_setpoint_limit.low_temperature_threshold);
+        maxOut_at_LowT.airT_C =
+            K_TO_C(perf.low_temperature_setpoint_limit.low_temperature_threshold);
     }
 }
 
@@ -757,7 +758,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     map.lookup_variables_is_set = true;
     perf.performance_map_is_set = true;
 
-    if (maxOut_at_LowT.airT_C < 100.)
+    if (maxOut_at_LowT.airT_C > -273.15)
     {
         auto& limit = perf.low_temperature_setpoint_limit;
         checkTo(C_TO_K(maxOut_at_LowT.airT_C),
