@@ -411,11 +411,11 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
     else if (hpwh->model == hpwh_presets::MODELS::NyleC250A_C_MP)
         resDefrost = {18.0, 5.0, 40.0};
 
-    if ((hpwh_presets::MODELS::NyleC25A_SP <= hpwh->model) &&
-        (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_SP))
+    if (perf.low_temperature_setpoint_limit_is_set)
     {
-        maxOut_at_LowT.outT_C = F_TO_C(140.);
-        maxOut_at_LowT.airT_C = F_TO_C(40.);
+        maxOut_at_LowT.outT_C =
+            K_TO_C(perf.low_temperature_setpoint_limit.maximum_setpoint_at_low_temperature);
+        maxOut_at_LowT.airT_C = K_TO_C(perf.low_temperature_setpoint_limit.low_temperature_threshold);
     }
 }
 
@@ -756,6 +756,18 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     map.grid_variables_is_set = true;
     map.lookup_variables_is_set = true;
     perf.performance_map_is_set = true;
+
+    if (maxOut_at_LowT.airT_C < 100.)
+    {
+        auto& limit = perf.low_temperature_setpoint_limit;
+        checkTo(C_TO_K(maxOut_at_LowT.airT_C),
+                limit.low_temperature_threshold_is_set,
+                limit.low_temperature_threshold);
+        checkTo(C_TO_K(maxOut_at_LowT.outT_C),
+                limit.maximum_setpoint_at_low_temperature_is_set,
+                limit.maximum_setpoint_at_low_temperature);
+        perf.low_temperature_setpoint_limit_is_set = true;
+    }
 
     hs.performance_is_set = true;
 }

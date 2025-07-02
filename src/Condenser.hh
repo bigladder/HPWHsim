@@ -70,9 +70,7 @@ class HPWH::Condenser : public HPWH::HeatSource
         double inputPwr_kW {0.0};
         double constTempLift_dF {0.0};
         double onBelowT_F {-999};
-    };
-
-    resistanceElementDefrost resDefrost;
+    } resDefrost;
 
     struct defrostPoint
     {
@@ -87,8 +85,7 @@ class HPWH::Condenser : public HPWH::HeatSource
     {
         double outT_C;
         double airT_C;
-    };
-    maxOut_minAir maxOut_at_LowT;
+    } maxOut_at_LowT;
     /**<  maximum output temperature at the minimum operating temperature of HPWH environment
      * (minT)*/
 

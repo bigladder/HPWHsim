@@ -79,6 +79,18 @@ namespace hpwh_data_model {
 			static constexpr std::string_view lookup_variables_description = "Data group defining the lookup variables for heating performance";
 			static constexpr std::string_view lookup_variables_name = "lookup_variables";
 		};
+        struct LowTemperatureSetpointLimit {
+            double low_temperature_threshold;
+            bool low_temperature_threshold_is_set = false;
+            static constexpr std::string_view low_temperature_threshold_units = "K";
+            static constexpr std::string_view low_temperature_threshold_description = "Low-environment-temperature threshold for setpoint-temperature control";
+            static constexpr std::string_view low_temperature_threshold_name = "low_temperature_threshold";
+            double maximum_setpoint_at_low_temperature;
+            bool maximum_setpoint_at_low_temperature_is_set = false;
+            static constexpr std::string_view maximum_setpoint_at_low_temperature_units = "K";
+            static constexpr std::string_view maximum_setpoint_at_low_temperature_description = "Maximum setpoint temperature below low-environment-temperature threshold";
+            static constexpr std::string_view maximum_setpoint_at_low_temperature_name = "maximum_setpoint_at_low_temperature";
+        };
 		struct Performance {
 			rsairtowaterheatpump::PerformanceMap performance_map;
 			bool performance_map_is_set = false;
@@ -105,8 +117,13 @@ namespace hpwh_data_model {
 			static constexpr std::string_view use_defrost_map_units = "";
 			static constexpr std::string_view use_defrost_map_description = "Use defrost map";
 			static constexpr std::string_view use_defrost_map_name = "use_defrost_map";
+			rsairtowaterheatpump::LowTemperatureSetpointLimit low_temperature_setpoint_limit;
+			bool low_temperature_setpoint_limit_is_set = false;
+			static constexpr std::string_view low_temperature_setpoint_limit_units = "";
+			static constexpr std::string_view low_temperature_setpoint_limit_description = "Maximum setpoint temperature at low environment temperature.";
+			static constexpr std::string_view low_temperature_setpoint_limit_name = "low_temperature_setpoint_limit";
 		};
-		struct RSAIRTOWATERHEATPUMP : ashrae205::HeatSourceTemplate {
+        struct RSAIRTOWATERHEATPUMP : ashrae205::HeatSourceTemplate {
 			core::Metadata metadata;
 			bool metadata_is_set = false;
 			static constexpr std::string_view metadata_units = "";
@@ -129,6 +146,8 @@ namespace hpwh_data_model {
 		void to_json(nlohmann::json& j, const Description& x);
 		void from_json(const nlohmann::json& j, ProductInformation& x);
 		void to_json(nlohmann::json& j, const ProductInformation& x);
+		void from_json(const nlohmann::json& j, LowTemperatureSetpointLimit& x);
+		void to_json(nlohmann::json& j, const LowTemperatureSetpointLimit& x);
 		void from_json(const nlohmann::json& j, Performance& x);
 		void to_json(nlohmann::json& j, const Performance& x);
 		void from_json(const nlohmann::json& j, PerformanceMap& x);
