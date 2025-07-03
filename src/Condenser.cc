@@ -400,16 +400,13 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         standbyPower_kW = W_TO_KW(perf.standby_power);
     }
 
-    if (hpwh->model == hpwh_presets::MODELS::NyleC60A_C_MP)
-        resDefrost = {4.5, 5.0, 40.0}; // inputPower_KW, constTempLift_dF, onBelowTemp_F;
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC90A_C_MP)
-        resDefrost = {5.4, 5.0, 40.0};
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC125A_C_MP)
-        resDefrost = {9.0, 5.0, 40.0};
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC185A_C_MP)
-        resDefrost = {7.25, 5.0, 40.0};
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC250A_C_MP)
-        resDefrost = {18.0, 5.0, 40.0};
+    if (perf.resistance_element_defrost_is_set)
+    {
+        auto& resdef = perf.resistance_element_defrost;
+        resDefrost = {W_TO_KW(resdef.input_power),
+                      dC_TO_dF(resdef.temperature_lift),
+                      K_TO_F(resdef.activation_temperature_threshold)};
+    }
 
     if (perf.low_temperature_setpoint_limit_is_set)
     {
@@ -757,6 +754,21 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     map.grid_variables_is_set = true;
     map.lookup_variables_is_set = true;
     perf.performance_map_is_set = true;
+
+    if (resDefrost.inputPwr_kW > 0.)
+    {
+        auto& resdef = perf.resistance_element_defrost;
+        checkTo(KW_TO_W(resDefrost.inputPwr_kW),
+                resdef.input_power_is_set,
+                resdef.input_power);
+        checkTo(dF_TO_dC(resDefrost.constTempLift_dF),
+                resdef.temperature_lift_is_set,
+                resdef.temperature_lift);
+        checkTo(F_TO_K(resDefrost.onBelowT_F),
+                resdef.activation_temperature_threshold_is_set,
+                resdef.activation_temperature_threshold);
+        perf.resistance_element_defrost_is_set = true;
+    }
 
     if (maxOut_at_LowT.airT_C > -273.15)
     {
