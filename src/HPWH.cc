@@ -2896,8 +2896,7 @@ void HPWH::configure()
 { // adjustments for non-data-model properties
     if (model == hpwh_presets::MODELS::GE2012_50)
     {
-        auto& condenser = heatSources[compressorIndex];
-        auto logic = condenser->shutOffLogicSet[0];
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->description = "large draw";
     }
     else if ((model == hpwh_presets::MODELS::Sanco83) ||
@@ -2908,13 +2907,6 @@ void HPWH::configure()
         {
             auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
             logic->getIsEnteringWaterHighTempShutoff() = true;
-            logic->checksStandby() = true;
-        }
-        if ((model == hpwh_presets::MODELS::Sanco83) ||
-            (model == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP))
-        {
-            auto logic = heatSources[compressorIndex]->turnOnLogicSet[1];
-            logic->checksStandby() = true;
         }
     }
     else if ((hpwh_presets::MODELS::NyleC25A_SP <= model) &&
@@ -2926,33 +2918,28 @@ void HPWH::configure()
     else if ((hpwh_presets::MODELS::ColmacCxV_5_SP <= model) &&
              (model <= hpwh_presets::MODELS::ColmacCxA_30_SP))
     {
-        auto& condenser = heatSources[compressorIndex];
-        auto logic = condenser->shutOffLogicSet[0];
+         auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
     else if (model == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP)
     {
-        auto& condenser = heatSources[compressorIndex];
-        auto logic = condenser->shutOffLogicSet[0];
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
     else if (model == hpwh_presets::MODELS::Scalable_MP)
     {
         canScale = true;
-        tank->volumeFixed = false;
     }
     else if ((hpwh_presets::MODELS::TamScalable_SP <= model) &&
              (model <= hpwh_presets::MODELS::TamScalable_SP_Half))
     {
         canScale = true;
-        tank->volumeFixed = false;
 
         // hard-code fix: two VIPs assigned in preset
         heatSources[0]->isVIP = heatSources[2]->isVIP = true;
 
         auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
-        logic->checksStandby() = true;
     }
 
     // calculate oft-used derived values
@@ -3015,6 +3002,9 @@ void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     int number_of_nodes;
     checkFrom(number_of_nodes, hsi.number_of_nodes_is_set, hsi.number_of_nodes, 12);
     tank->setNumNodes(number_of_nodes);
+    checkFrom(
+        tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, true);
+
     checkFrom(
         setpoint_C, hsi.standard_setpoint_is_set, K_TO_C(hsi.standard_setpoint), F_TO_C(135.));
 
