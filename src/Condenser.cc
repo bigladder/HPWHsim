@@ -530,24 +530,76 @@ void HPWH::Condenser::to(
     }
     else // convert evaluatePerformance function to grid
     {
-        {
-            std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
+        std::vector<double> envTs_C = {};
+        double refHeatSourceT_C = (0. + maxSetpoint_C) / 2.;
+        { // find envTs
+            double denvT_C = 0.001;
+            double dInputPower_dT0 = 1.e12;
+            double dCOP_dT0 = 1.e12;
+            for (auto envT_C = minT ; envT_C <= maxT; envT_C += 0.1)
+            {
+                auto performance0 = evaluatePerformance(envT_C, refHeatSourceT_C);
+                auto performance1 = evaluatePerformance(envT_C + denvT_C, refHeatSourceT_C);
+                double dInputPower_dT = (performance1.inputPower_W - performance0.inputPower_W) / denvT_C;
+                double dCOP_dT = (performance1.cop - performance0.cop) / denvT_C;
+                if ((dInputPower_dT != dInputPower_dT0) || (dCOP_dT != dCOP_dT0))
+                {
+                    envTs_C.push_back(envT_C);
+                }
+                dInputPower_dT0 = dInputPower_dT;
+                dCOP_dT = dCOP_dT0;
+            }
+            envTs_C.push_back(maxT);
+
+            //std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
             trimGridVector(envTs_C, minT, maxT);
             for (auto& envT_C : envTs_C)
                 envTs_K.push_back(C_TO_K(envT_C));
         }
+
+        std::vector<double> heatSourceTs_C = {};
         {
+            double maxPowerCurvature = 0.; // curvature used to determine # of points
+            double maxCOPCurvature = 0.;
+            double dHeatSourceT_C = 0.001;
+            for (auto& envT_C : envTs_C)
+            {
+                auto performance_m = evaluatePerformance(envT_C, refHeatSourceT_C - dHeatSourceT_C);
+                auto performance_0 = evaluatePerformance(envT_C , refHeatSourceT_C);
+                auto performance_p = evaluatePerformance(envT_C, refHeatSourceT_C + dHeatSourceT_C);
+                double d2InputPower_dT2 = (performance_m.inputPower_W + performance_p.inputPower_W - 2. * performance_0.inputPower_W)/ dHeatSourceT_C/ dHeatSourceT_C;
+                double d2COP_dT2 = (performance_m.cop + performance_p.cop- 2. * performance_0.cop)/ dHeatSourceT_C/ dHeatSourceT_C;
+                double magPowerCurvature = fabs(d2InputPower_dT2);
+                double magCOPCurvature = fabs(d2COP_dT2);
+                maxPowerCurvature =
+                    magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
+                maxCOPCurvature =
+                    magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
+            }
+
+            // relate to reference values (from AOSmithPHPT60)
+            constexpr double refPowerVals = 11.;
+            constexpr double refCOP_vals = 11.;
+            constexpr double refPowerCurvature = 0.0570;
+            constexpr double refCOP_curvature = 0.0006;
+
             constexpr double minVals = 2.;  // retain endpoints only, if no curvature
-            constexpr double refVals = 11.; // typical value
             const double rangeFac = (maxSetpoint_C - 0.) / (100. - 0.);
-            auto nVals = static_cast<std::size_t>(rangeFac * (refVals - minVals) + minVals);
+            // find # of values needed along heat-sourceT axis for inputPower and COP;
+            // take the larger one
+            auto nPowerVals = static_cast<std::size_t>(
+                rangeFac * (maxPowerCurvature / refPowerCurvature) * (refPowerVals - minVals) +
+                minVals);
+            auto nCOP_vals = static_cast<std::size_t>(
+                rangeFac * (maxCOPCurvature / refCOP_curvature) * (refCOP_vals - minVals) + minVals);
+            std::size_t nVals = std::max(nPowerVals, nCOP_vals);
             double dT_C = (maxSetpoint_C - 0.) / static_cast<double>(nVals - 1);
-            std::vector<double> heatSourceTs_C = {};
             for (double T_C = 0.; T_C <= maxSetpoint_C; T_C += dT_C)
             {
                 heatSourceTs_K.push_back(C_TO_K(T_C));
             }
         }
+
         {
             // fill grid values
             std::size_t nTotVals = envTs_K.size() * heatSourceTs_K.size();
