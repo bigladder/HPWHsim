@@ -367,7 +367,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             {
                 dist = DistributionType::TopOfTank;
                 label = "top of tank";
-                //checksStandby = true;
+                // checksStandby = true;
                 break;
             }
             case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
@@ -467,10 +467,8 @@ void HPWH::TempBasedHeatingLogic::to(
             logic.differential_temperature,
             !isAbsolute);
 
-    checkTo(checkStandby,
-            logic.checks_standby_logic_is_set,
-            logic.checks_standby_logic,
-            checkStandby);
+    checkTo(
+        checkStandby, logic.checks_standby_logic_is_set, logic.checks_standby_logic, checkStandby);
 
     if (compare(1., 2.))
     {

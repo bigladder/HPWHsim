@@ -758,9 +758,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     if (resDefrost.inputPwr_kW > 0.)
     {
         auto& resdef = perf.resistance_element_defrost;
-        checkTo(KW_TO_W(resDefrost.inputPwr_kW),
-                resdef.input_power_is_set,
-                resdef.input_power);
+        checkTo(KW_TO_W(resDefrost.inputPwr_kW), resdef.input_power_is_set, resdef.input_power);
         checkTo(dF_TO_dC(resDefrost.constTempLift_dF),
                 resdef.temperature_lift_is_set,
                 resdef.temperature_lift);

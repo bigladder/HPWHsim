@@ -2918,7 +2918,7 @@ void HPWH::configure()
     else if ((hpwh_presets::MODELS::ColmacCxV_5_SP <= model) &&
              (model <= hpwh_presets::MODELS::ColmacCxA_30_SP))
     {
-         auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
         logic->getIsEnteringWaterHighTempShutoff() = true;
     }
     else if (model == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP)
@@ -3002,8 +3002,7 @@ void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     int number_of_nodes;
     checkFrom(number_of_nodes, hsi.number_of_nodes_is_set, hsi.number_of_nodes, 12);
     tank->setNumNodes(number_of_nodes);
-    checkFrom(
-        tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, true);
+    checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, true);
 
     checkFrom(
         setpoint_C, hsi.standard_setpoint_is_set, K_TO_C(hsi.standard_setpoint), F_TO_C(135.));
