@@ -1272,6 +1272,11 @@ class HPWH : public Courier::Sender
 
     struct PerformancePolySet : public std::vector<PerformancePoly>
     {
+        PerformancePolySet()
+            : std::vector<PerformancePoly>({})
+        {
+        }
+
         PerformancePolySet(const std::vector<PerformancePoly>& vect)
             : std::vector<PerformancePoly>(vect)
         {

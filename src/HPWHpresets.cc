@@ -2156,8 +2156,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-50(?:N|DR|CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:69|86|87)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(66.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 66.;
             rating10CFR430.recovery_efficiency = 4.07;
             rating10CFR430.uniform_energy_factor = 3.45;
         }
@@ -2253,8 +2253,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-66(?:N:DR:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:70|86|98)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 66.;
+            rating10CFR430.first_hour_rating = 79.;
             rating10CFR430.recovery_efficiency = 2.65;
             rating10CFR430.uniform_energy_factor = 3.45;
             tank->volume_L = 244.6;
@@ -2356,8 +2356,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 86.;
             rating10CFR430.recovery_efficiency = 2.33;
             rating10CFR430.uniform_energy_factor = 3.45;
         }
@@ -2448,8 +2448,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
     {
         productInformation = {"A. O. Smith", "HPTU-80DR 1.."};
         rating10CFR430.certified_reference_number = {"206428809"};
-        rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-        rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+        rating10CFR430.nominal_tank_volume = 80.;
+        rating10CFR430.first_hour_rating = 86.;
         rating10CFR430.recovery_efficiency = 2.33;
         rating10CFR430.uniform_energy_factor = 3.45;
 
@@ -2603,8 +2603,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ProLine XE® Voltex® AL 50-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-50 2.."};
             rating10CFR430.certified_reference_number = {"208531033"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 65.;
             rating10CFR430.recovery_efficiency = 4.52;
             rating10CFR430.uniform_energy_factor = 3.80;
             tank->volume_L = GAL_TO_L(45.6);
@@ -2616,8 +2616,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ProLine XE® Voltex® AL 66-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-66 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(82.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 66.;
+            rating10CFR430.first_hour_rating = 82.;
             rating10CFR430.recovery_efficiency = 4.25;
             rating10CFR430.uniform_energy_factor = 3.70;
             tank->volume_L = GAL_TO_L(67.63);
@@ -2629,8 +2629,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ProLine XE® Voltex® AL 80-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-80 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(95.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 95.;
             rating10CFR430.recovery_efficiency = 4.30;
             rating10CFR430.uniform_energy_factor = 3.88;
             tank->volume_L = GAL_TO_L(81.94);
@@ -3205,8 +3205,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE40T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471723."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(40.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(45.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 40.;
+            rating10CFR430.first_hour_rating = 45.;
             rating10CFR430.recovery_efficiency = 3.87;
             rating10CFR430.uniform_energy_factor = 2.80;
             tank->volume_L = GAL_TO_L(36.0);
@@ -3219,8 +3219,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE50T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471724."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(55.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 55.;
             rating10CFR430.recovery_efficiency = 3.67;
             rating10CFR430.uniform_energy_factor = 3.00;
             tank->volume_L = GAL_TO_L(45.0);
@@ -3233,8 +3233,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE65T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471725."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(63.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 65.;
+            rating10CFR430.first_hour_rating = 63.;
             rating10CFR430.recovery_efficiency = 3.98;
             rating10CFR430.uniform_energy_factor = 3.33;
             tank->volume_L = GAL_TO_L(58.5);
@@ -3247,8 +3247,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE80T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471726."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(84.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 84.;
             rating10CFR430.recovery_efficiency = 3.93;
             rating10CFR430.uniform_energy_factor = 3.46;
             tank->volume_L = GAL_TO_L(72.0);
@@ -4104,8 +4104,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ENERGY STAR Certified Aerotherm 50 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H50S.-....."};
             rating10CFR430.certified_reference_number = {"200094643"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 65.;
             rating10CFR430.recovery_efficiency = 4.06;
             rating10CFR430.uniform_energy_factor = 3.44;
             tank->volume_L = GAL_TO_L(45.0);
@@ -4117,8 +4117,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ENERGY STAR Certified Aerotherm 65 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H65T..-....."};
             rating10CFR430.certified_reference_number = {"204835481"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 65.;
+            rating10CFR430.first_hour_rating = 79.;
             rating10CFR430.recovery_efficiency = 3.91;
             rating10CFR430.uniform_energy_factor = 3.64;
             tank->volume_L = GAL_TO_L(64.0);
@@ -4130,8 +4130,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ENERGY STAR Certified Aerotherm 80 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H80T.-....."};
             rating10CFR430.certified_reference_number = {"200094645"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(88.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 88.;
             rating10CFR430.recovery_efficiency = 3.92;
             rating10CFR430.uniform_energy_factor = 3.59;
             tank->volume_L = GAL_TO_L(75.0);
@@ -4199,8 +4199,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC501."};
             rating10CFR430.certified_reference_number = {"213352429"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(58.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(76.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 58.;
+            rating10CFR430.first_hour_rating = 76.;
             rating10CFR430.recovery_efficiency = 4.10;
             rating10CFR430.uniform_energy_factor = 3.93;
             tank->volume_L = GAL_TO_L(52.8);
@@ -4212,8 +4212,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC801."};
             rating10CFR430.certified_reference_number = {"213363354"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(94.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 94.;
             rating10CFR430.recovery_efficiency = 4.10;
             rating10CFR430.uniform_energy_factor = 3.90;
             tank->volume_L = GAL_TO_L(72.0);
