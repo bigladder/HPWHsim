@@ -550,6 +550,10 @@ void HPWH::Condenser::to(
                 dCOP_dT = dCOP_dT0;
             }
             envTs_C.push_back(maxT);
+            envTs_C.push_back(0.);
+            envTs_C.push_back(20.);
+            envTs_C.push_back(22.);
+            envTs_C.push_back(30.);
 
             //std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
             trimGridVector(envTs_C, minT, maxT);

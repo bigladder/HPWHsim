@@ -125,6 +125,8 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
 
+    PerformancePolySet perfPolySet;
+
     /// general performance function used by all models
     Performance getPerformance(double externalT_C, double condenserT_C) const;
 
