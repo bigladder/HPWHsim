@@ -66,7 +66,7 @@ namespace hpwh_data_model {
 			static constexpr std::string_view bottom_fraction_of_tank_mixing_on_draw_name = "bottom_fraction_of_tank_mixing_on_draw";
 			double heat_exchanger_effectiveness;
 			bool heat_exchanger_effectiveness_is_set = false;
-			static constexpr std::string_view heat_exchanger_effectiveness_units = "";
+			static constexpr std::string_view heat_exchanger_effectiveness_units = "-";
 			static constexpr std::string_view heat_exchanger_effectiveness_description = "Effectiveness for heat exchange";
 			static constexpr std::string_view heat_exchanger_effectiveness_name = "heat_exchanger_effectiveness";
 		};

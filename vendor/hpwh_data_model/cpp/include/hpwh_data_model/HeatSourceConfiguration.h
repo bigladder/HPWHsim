@@ -172,12 +172,12 @@ namespace hpwh_data_model {
 		struct StateOfChargeBasedHeatingLogic : heat_source_configuration::HeatingLogicTemplate {
 			double decision_point;
 			bool decision_point_is_set = false;
-			static constexpr std::string_view decision_point_units = "";
+			static constexpr std::string_view decision_point_units = "-";
 			static constexpr std::string_view decision_point_description = "Decision point";
 			static constexpr std::string_view decision_point_name = "decision_point";
 			double minimum_useful_temperature;
 			bool minimum_useful_temperature_is_set = false;
-			static constexpr std::string_view minimum_useful_temperature_units = "";
+			static constexpr std::string_view minimum_useful_temperature_units = "K";
 			static constexpr std::string_view minimum_useful_temperature_description = "Minimum useful temperature";
 			static constexpr std::string_view minimum_useful_temperature_name = "minimum_useful_temperature";
 			double hysteresis_fraction;
