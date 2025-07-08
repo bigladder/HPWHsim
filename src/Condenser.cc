@@ -534,7 +534,7 @@ void HPWH::Condenser::to(
     else // convert evaluatePerformance function to grid
     {
         // fill envT axis
-        std::vector<double> envTs_C = {minT, 50., 67.5, 90., maxT};
+        std::vector<double> envTs_C = {minT, F_TO_C(50.), F_TO_C(67.5), F_TO_C(95.), maxT};
         envTs_C.push_back(0.);
         envTs_C.push_back(20.);
         envTs_C.push_back(22.);
