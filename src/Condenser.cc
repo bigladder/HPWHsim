@@ -534,177 +534,52 @@ void HPWH::Condenser::to(
     else // convert evaluatePerformance function to grid
     {
         // fill envT axis
-        std::vector<double> envTs_C = {};
-        double maxPowerCurvature = 0.; // curvature used to determine # of points
-        double maxCOPCurvature = 0.;
+        std::vector<double> envTs_C = {minT, 50., 67.5, 90., maxT};
+        envTs_C.push_back(0.);
+        envTs_C.push_back(20.);
+        envTs_C.push_back(22.);
+        envTs_C.push_back(30.);
+
+        trimGridVector(envTs_C, minT, maxT);
+        for (auto& envT_C : envTs_C)
+            envTs_K.push_back(C_TO_K(envT_C));
+
+        // find maximimum curvatures to determine # of points
+        constexpr double refPowerVals = 11.;
+        constexpr double refCOP_vals = 11.;
+        constexpr double refPowerCoef = 0.03;
+        constexpr double refCOP_Coef = 0.0002;
+        const double refRange_dC = dF_TO_dC(160. - 0.); // F
+
+        double powerCoefRatioMax = 0.;
+        double COP_CoefRatioMax = 0.;
         {
-            double refHeatSourceT_C = F_TO_C(0.);
+            double hsT_C = F_TO_C(0.);
 
-            double dInputPower_dTa_prev;
-            double dCOP_dTa_prev;
-
-            double d2InputPower_dT_dTa_prev;
-            double d2COP_dT_dTa_prev;
-
-            double d3InputPower_dT2_dTa_prev;
-            double d3COP_dT2_dTa_prev;
-
-            double dhsT_F = 0.001;
+            double dhsT_F = 0.00001;
             double dhsT_C = dF_TO_dC(dhsT_F);
 
-            const double denvT_C = 1.e-8;
-            Performance performance_m, performance_0, performance_p;
-
-            bool first = true;
-            for (auto envT_C = minT; envT_C <= maxT; envT_C += dF_TO_dC(0.1))
-            {
-                std::cout << "---------\n";
-
-                // -
-                performance_m = evaluatePerformance(envT_C - denvT_C, refHeatSourceT_C - dhsT_C);
-                std::cout << "envT: " << envT_C - denvT_C << "\n";
-                std::cout << "hsT: " << refHeatSourceT_C - dhsT_C;
-                std::cout << ", Pin: " << performance_m.inputPower_W;
-                std::cout << ", Pout: " << performance_m.outputPower_W;
-                std::cout << ", cop: " << performance_m.cop << "\n";
-
-                performance_0 = evaluatePerformance(envT_C - denvT_C, refHeatSourceT_C);
-                std::cout << "hsT: " << refHeatSourceT_C;
-                std::cout << ", Pin: " << performance_0.inputPower_W;
-                std::cout << ", Pout: " << performance_0.outputPower_W;
-                std::cout << ", cop: " << performance_0.cop << "\n";
-
-                performance_p = evaluatePerformance(envT_C - denvT_C, refHeatSourceT_C + dhsT_C);
-                std::cout << "hsT: " << refHeatSourceT_C + dhsT_C;
-                std::cout << ", Pin: " << performance_p.inputPower_W;
-                std::cout << ", Pout: " << performance_p.outputPower_W;
-                std::cout << ", cop: " << performance_p.cop << "\n";
-
-                double inputPower_m = performance_0.inputPower_W;
-                double COP_m = performance_0.cop;
-
-                double dInputPower_dTm =
-                    (performance_p.inputPower_W - performance_m.inputPower_W) / dhsT_F;
-                double dCOP_dTm = (performance_p.cop - performance_m.cop) / dhsT_F;
-
-                double d2InputPower_dT2m =
-                    (performance_m.inputPower_W + performance_p.inputPower_W -
-                     2. * performance_0.inputPower_W) /
-                    dhsT_F / dhsT_F;
-                double d2COP_dT2m =
-                    (performance_m.cop + performance_p.cop - 2. * performance_0.cop) / dhsT_F /
-                    dhsT_F;
-
-                std::cout << "dInputPower_dT: " << dInputPower_dTm;
-                std::cout << ", d2InputPower_dT2: " << d2InputPower_dT2m;
-                std::cout << ", dCOP_dT: " << dCOP_dTm;
-                std::cout << ", d2COP_dT2: " << d2COP_dT2m << "\n";
-
-                // +
-                std::cout << "\nenvT: " << envT_C + denvT_C << "\n";
-
-                performance_m = evaluatePerformance(envT_C + denvT_C, refHeatSourceT_C - dhsT_C);
-                std::cout << "hsT: " << refHeatSourceT_C - dhsT_C;
-                std::cout << ", Pin: " << performance_m.inputPower_W;
-                std::cout << ", Pout: " << performance_m.outputPower_W;
-                std::cout << ", cop: " << performance_m.cop << "\n";
-
-                performance_0 = evaluatePerformance(envT_C + denvT_C, refHeatSourceT_C);
-                std::cout << "hsT: " << refHeatSourceT_C;
-                std::cout << ", Pin: " << performance_0.inputPower_W;
-                std::cout << ", Pout: " << performance_0.outputPower_W;
-                std::cout << ", cop: " << performance_0.cop << "\n";
-
-                performance_p = evaluatePerformance(envT_C + denvT_C, refHeatSourceT_C + dhsT_C);
-                std::cout << "hsT: " << refHeatSourceT_C + dhsT_C;
-                std::cout << ", Pin: " << performance_p.inputPower_W;
-                std::cout << ", Pout: " << performance_p.outputPower_W;
-                std::cout << ", cop: " << performance_p.cop << "\n";
-
-                double inputPower_p = performance_0.inputPower_W;
-                double COP_p = performance_0.cop;
-
-                double dInputPower_dTp =
-                    (performance_p.inputPower_W - performance_m.inputPower_W) / dhsT_F;
-                double dCOP_dTp = (performance_p.cop - performance_m.cop) / dhsT_F;
-
-                double d2InputPower_dT2p =
-                    (performance_m.inputPower_W + performance_p.inputPower_W -
-                     2. * performance_0.inputPower_W) /
-                    dhsT_F / dhsT_F;
-                double d2COP_dT2p =
-                    (performance_m.cop + performance_p.cop - 2. * performance_0.cop) / dhsT_F /
-                    dhsT_F;
-                std::cout << "dInputPower_dT: " << dInputPower_dTp;
-                std::cout << ", d2InputPower_dT2: " << d2InputPower_dT2p;
-                std::cout << ", dCOP_dT: " << dCOP_dTp;
-                std::cout << ", d2COP_dT2: " << d2COP_dT2p << "\n";
-
-                //
-                double dInputPower_dTa = (inputPower_p - inputPower_m) / denvT_C;
-                double dCOP_dTa = (COP_p - COP_m) / denvT_C;
-
-                double d2InputPower_dT_dTa = (dInputPower_dTp - dInputPower_dTm) / denvT_C;
-                double d2COP_dT_dTa = (dCOP_dTp - dCOP_dTm) / denvT_C;
-
-                double d3InputPower_dT2_dTa = (d2InputPower_dT2p - d2InputPower_dT2m) / denvT_C;
-                double d3COP_dT2_dTa = (d2COP_dT2p - d2COP_dT2m) / denvT_C;
-
-                std::vector<double> diffs = {};
-                diffs.push_back((dInputPower_dTa - dInputPower_dTa_prev) / 1.e-1);
-                diffs.push_back((dCOP_dTa - dCOP_dTa_prev) / 1.e-1);
-
-                diffs.push_back((d2InputPower_dT_dTa - d2InputPower_dT_dTa_prev) / 1.e-2);
-                diffs.push_back((d2COP_dT_dTa - d2COP_dT_dTa_prev) / 1.e-2);
-
-                diffs.push_back((d3InputPower_dT2_dTa - d3InputPower_dT2_dTa_prev) / 10.);
-                diffs.push_back((d3COP_dT2_dTa - d3COP_dT2_dTa_prev) / 1.e-3);
-
-                double diff2 = 0;
-                bool firstdiff = true;
-                for(auto& diff: diffs)
-                {
-                    if (!firstdiff)
-                        std::cout << ", ";
-                    std::cout << diff;
-                    firstdiff = false;
-
-                    diff2 += diff * diff;
-                }
-
-                std::cout <<", diff2: " << diff2 <<"\n";
-                if (first || (diff2 > 1.))
-                {
-                    envTs_C.push_back(envT_C);
-
-                    dInputPower_dTa_prev = dInputPower_dTa;
-                    dCOP_dTa_prev = dCOP_dTa;
-
-                    d2InputPower_dT_dTa_prev = d2InputPower_dT_dTa;
-                    d2COP_dT_dTa_prev = d2COP_dT_dTa;
-
-                    d3InputPower_dT2_dTa_prev = d3InputPower_dT2_dTa;
-                    d3COP_dT2_dTa_prev = d3COP_dT2_dTa;
-
-                    double magPowerCurvature = fabs(d2InputPower_dT2p);
-                    double magCOPCurvature = fabs(d2COP_dT2p);
-                    maxPowerCurvature = magPowerCurvature > maxPowerCurvature ? magPowerCurvature
-                                                                              : maxPowerCurvature;
-                    maxCOPCurvature =
-                        magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
-                }
-                first = false;
-            }
-
-            envTs_C.push_back(maxT);
-            envTs_C.push_back(0.);
-            envTs_C.push_back(20.);
-            envTs_C.push_back(22.);
-            envTs_C.push_back(30.);
-
-            trimGridVector(envTs_C, minT, maxT);
             for (auto& envT_C : envTs_C)
-                envTs_K.push_back(C_TO_K(envT_C));
+            {
+                Performance performance_m = evaluatePerformance(envT_C, hsT_C - dhsT_C);
+                Performance performance_0 = evaluatePerformance(envT_C, hsT_C);
+                Performance performance_p = evaluatePerformance(envT_C, hsT_C + dhsT_C);
+
+                double powerCoef = (performance_m.inputPower_W + performance_p.inputPower_W -
+                                    2. * performance_0.inputPower_W) /
+                                   dhsT_F / dhsT_F / 2.;
+                double COP_Coef = (performance_m.cop + performance_p.cop - 2. * performance_0.cop) /
+                                  dhsT_F / dhsT_F / 2.;
+
+                double powerCoefRatio = fabs(powerCoef / refPowerCoef);
+                double COP_CoefRatio = fabs(COP_Coef / refCOP_Coef);
+
+                if (powerCoefRatio > powerCoefRatioMax)
+                    powerCoefRatioMax = powerCoefRatio;
+
+                if (COP_Coef > COP_CoefRatioMax)
+                    COP_CoefRatioMax = COP_CoefRatio;
+            }
         }
 
         // fill heat-sourceT axis
@@ -712,32 +587,23 @@ void HPWH::Condenser::to(
         {
             const double minHeatSourceT_C = 0.; // none specified in HPWH
             const double maxHeatSourceT_C = maxSetpoint_C;
-            const double heatSourceTempRange_dC = maxHeatSourceT_C - minHeatSourceT_C;
-            const double heatSourceTempRangeRef_dC = 100. - 0.;
-            const double rangeFac = heatSourceTempRange_dC / heatSourceTempRangeRef_dC;
+            const double range_dC = maxHeatSourceT_C - minHeatSourceT_C;
+            const double rangeFac = range_dC / refRange_dC;
 
             constexpr double minVals = 2.; // retain endpoints only, if no curvature
-
-            // relate to reference values (from AOSmithPHPT60)
-            constexpr double refPowerVals = 11.;
-            constexpr double refCOP_vals = 11.;
-            constexpr double refPowerCurvature = 0.0176;
-            constexpr double refCOP_curvature = 0.0002;
 
             // find # of values needed along heat-sourceT axis for inputPower and COP;
             // take the larger one
             auto nPowerVals = static_cast<std::size_t>(
-                rangeFac * (maxPowerCurvature / refPowerCurvature) * (refPowerVals - minVals) +
-                minVals);
+                rangeFac * powerCoefRatioMax * (refPowerVals - minVals) + minVals);
             auto nCOP_vals = static_cast<std::size_t>(
-                rangeFac * (maxCOPCurvature / refCOP_curvature) * (refCOP_vals - minVals) +
-                minVals);
+                rangeFac * COP_CoefRatioMax * (refCOP_vals - minVals) + minVals);
             std::size_t nVals = std::max(nPowerVals, nCOP_vals);
 
             heatSourceTs_C.resize(nVals);
             {
                 double hsT_C = 0.;
-                double dhsT_C = heatSourceTempRange_dC / static_cast<double>(nVals - 1);
+                double dhsT_C = range_dC / static_cast<double>(nVals - 1);
                 for (auto& heatSourceT_C : heatSourceTs_C)
                 {
                     heatSourceT_C = hsT_C;
