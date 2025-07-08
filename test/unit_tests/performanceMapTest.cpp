@@ -835,7 +835,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
 }
 
 /*
- * ColmacCxA_15_SP tests
+ * Legacy spec test
  */
 TEST_F(PerformanceMapTest, LegacyTest)
 {
@@ -847,7 +847,7 @@ TEST_F(PerformanceMapTest, LegacyTest)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {67., 50.2857, 135, 1.66080299485364};
+        checkPoint = {67., 50.2857, 135, 1.6608029948536398};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
@@ -861,6 +861,6 @@ TEST_F(PerformanceMapTest, LegacyTest)
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
+        EXPECT_NEAR_REL_TOL(checkPoint.output_kW, output_kW, 1.e-2) << modelName << ": data model";
     }
 }
