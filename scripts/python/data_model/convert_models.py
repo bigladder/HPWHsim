@@ -1,4 +1,4 @@
-# 'poetry run python convert_models.py ../../../test/models_json/models.json ../../../build ../../../test/models_json'
+# 'uv run convert_models.py ../../../test/models_json/models.json ../../../build ../../../test/models_json'
 #
 # calls `hpwh convert' for each model in models_list_file json
 
