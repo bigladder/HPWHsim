@@ -261,6 +261,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
     compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+    compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
 
     // custom adjustment for poorer performance
     // compressor->addShutOffLogic(lowT(F_TO_C(37)));
@@ -372,6 +373,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->isVIP = true;
@@ -402,6 +404,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
+        resistiveElementBottom->addTurnOnLogic(standby(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -432,6 +435,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
+        resistiveElementBottom->addTurnOnLogic(standby(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -479,6 +483,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
+        resistiveElementBottom->addTurnOnLogic(standby(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -506,6 +511,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(bottomThird(20));
+        compressor->addTurnOnLogic(standby(15));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
@@ -565,7 +571,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(43.6);
+        double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -627,7 +635,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(43.6);
+        double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -688,7 +698,10 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         // logic conditions
         //     double compStart = dF_TO_dC(24.4);
         double compStart = dF_TO_dC(40.0);
+        double standbyT = dF_TO_dC(5.2);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
+        // compressor->addShutOffLogic(largeDraw(F_TO_C(66)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
@@ -2091,6 +2104,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         setpointFixed = true;
 
         tank->volume_L = 160;
+        // tank->UA_kJperHrC = 10; //0 to turn off
         tank->UA_kJperHrC = 5;
 
         doTempDepression = false;
@@ -2224,7 +2238,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(35);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2327,7 +2343,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(35);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2424,7 +2442,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(35);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2497,7 +2517,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(34.1636);
+        double standbyT = dF_TO_dC(7.1528);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80.108)));
 
@@ -2565,7 +2587,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions for
         double compStart = dF_TO_dC(5.25);
+        double standbyT = dF_TO_dC(5.); // Given CMP_T test
         compressor->addTurnOnLogic(secondSixth(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         double resistanceStart = 12.;
         resistiveElementTop->addTurnOnLogic(topThird(resistanceStart));
@@ -2670,7 +2694,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(30.2);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(11.87)));
 
@@ -2734,6 +2760,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -2785,6 +2812,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
         compressor->minT = F_TO_C(37);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
@@ -2905,6 +2933,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        // compressor->addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -2964,6 +2994,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird_absolute(F_TO_C(87)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
 
@@ -3022,6 +3053,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -3095,10 +3127,13 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
+        ;
 
         // logic conditions
         double compStart = dF_TO_dC(32);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3182,7 +3217,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(30);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3284,7 +3321,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(32);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
     }
     else if (presetNum == hpwh_presets::MODELS::RheemPlugInDedicated40 ||
              presetNum == hpwh_presets::MODELS::RheemPlugInDedicated50)
@@ -3330,7 +3369,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(20);
+        double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
     }
     else if (presetNum == hpwh_presets::MODELS::RheemHB50)
     {
@@ -3378,7 +3419,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         double compStart = dF_TO_dC(38);
+        double standbyT = dF_TO_dC(13.2639);
         compressor->addTurnOnLogic(bottomThird(compStart));
+        compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(76.7747)));
 
@@ -3476,6 +3519,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40.0)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3532,6 +3576,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(60)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3591,6 +3636,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(55)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(60)));
@@ -3651,6 +3697,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -3725,6 +3772,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -3966,6 +4014,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(wholeTank(111, UNITS_F, true));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(14)));
     }
     else if (presetNum == hpwh_presets::MODELS::GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
@@ -4001,6 +4050,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(11.)));
 
         // top resistor values
         resistiveElementTop->setup(6, 4500.);
@@ -4082,6 +4132,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(12.0)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.0)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(9.0)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -4180,6 +4231,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(25)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -4268,6 +4320,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(52.9)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
 
         // top resistor values
         resistiveElementTop->setup(8, 5000.);
