@@ -3921,7 +3921,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
     {
         description = {"AquaThermAire-CHT2021-48A"};
         productInformation = {"Villara", "AquaThermAire - CHT2021-48A"};
-        rating10CFR430.first_hour_rating = GAL_TO_L(78.) / 1000.;
+        rating10CFR430.first_hour_rating = 78.;
         rating10CFR430.recovery_efficiency = 3.837;
         rating10CFR430.uniform_energy_factor = 2.95;
 
