@@ -79,36 +79,36 @@ namespace hpwh_data_model {
 			static constexpr std::string_view lookup_variables_description = "Data group defining the lookup variables for heating performance";
 			static constexpr std::string_view lookup_variables_name = "lookup_variables";
 		};
-        struct LowTemperatureSetpointLimit {
-            double low_temperature_threshold;
-            bool low_temperature_threshold_is_set = false;
-            static constexpr std::string_view low_temperature_threshold_units = "K";
-            static constexpr std::string_view low_temperature_threshold_description = "Low-environment-temperature threshold for setpoint-temperature control";
-            static constexpr std::string_view low_temperature_threshold_name = "low_temperature_threshold";
-            double maximum_setpoint_at_low_temperature;
-            bool maximum_setpoint_at_low_temperature_is_set = false;
-            static constexpr std::string_view maximum_setpoint_at_low_temperature_units = "K";
-            static constexpr std::string_view maximum_setpoint_at_low_temperature_description = "Maximum setpoint temperature below low-environment-temperature threshold";
-            static constexpr std::string_view maximum_setpoint_at_low_temperature_name = "maximum_setpoint_at_low_temperature";
-        };
-        struct ResistanceElementDefrost {
-            double input_power;
-            bool input_power_is_set = false;
-            static constexpr std::string_view input_power_units = "K";
-            static constexpr std::string_view input_power_description = "Input power";
-            static constexpr std::string_view input_power_name = "input_power";
-            double temperature_lift;
-            bool temperature_lift_is_set = false;
-            static constexpr std::string_view temperature_lift_units = "K";
-            static constexpr std::string_view temperature_lift_description = "Resulting increase of environment temperature";
-            static constexpr std::string_view temperature_lift_name = "temperature_lift";
-            double activation_temperature_threshold;
-            bool activation_temperature_threshold_is_set = false;
-            static constexpr std::string_view activation_temperature_threshold_units = "K";
-            static constexpr std::string_view activation_temperature_threshold_description = "Low-environment-temperature threshold for activation";
-            static constexpr std::string_view activation_temperature_threshold_name = "activation_temperature_threshold";
-        };
-        struct Performance {
+		struct LowTemperatureSetpointLimit {
+			double low_temperature_threshold;
+			bool low_temperature_threshold_is_set = false;
+			static constexpr std::string_view low_temperature_threshold_units = "K";
+			static constexpr std::string_view low_temperature_threshold_description = "Low-environment-temperature threshold for setpoint-temperature control";
+			static constexpr std::string_view low_temperature_threshold_name = "low_temperature_threshold";
+			double maximum_setpoint_at_low_temperature;
+			bool maximum_setpoint_at_low_temperature_is_set = false;
+			static constexpr std::string_view maximum_setpoint_at_low_temperature_units = "K";
+			static constexpr std::string_view maximum_setpoint_at_low_temperature_description = "Maximum setpoint temperature below low-environment-temperature threshold";
+			static constexpr std::string_view maximum_setpoint_at_low_temperature_name = "maximum_setpoint_at_low_temperature";
+		};
+		struct ResistanceElementDefrost {
+			double input_power;
+			bool input_power_is_set = false;
+			static constexpr std::string_view input_power_units = "K";
+			static constexpr std::string_view input_power_description = "Input power";
+			static constexpr std::string_view input_power_name = "input_power";
+			double temperature_lift;
+			bool temperature_lift_is_set = false;
+			static constexpr std::string_view temperature_lift_units = "K";
+			static constexpr std::string_view temperature_lift_description = "Resulting increase of environment temperature";
+			static constexpr std::string_view temperature_lift_name = "temperature_lift";
+			double activation_temperature_threshold;
+			bool activation_temperature_threshold_is_set = false;
+			static constexpr std::string_view activation_temperature_threshold_units = "K";
+			static constexpr std::string_view activation_temperature_threshold_description = "Low-environment-temperature threshold for activation";
+			static constexpr std::string_view activation_temperature_threshold_name = "activation_temperature_threshold";
+		};
+		struct Performance {
 			rsairtowaterheatpump::PerformanceMap performance_map;
 			bool performance_map_is_set = false;
 			static constexpr std::string_view performance_map_units = "";
@@ -168,10 +168,6 @@ namespace hpwh_data_model {
 		void to_json(nlohmann::json& j, const Description& x);
 		void from_json(const nlohmann::json& j, ProductInformation& x);
 		void to_json(nlohmann::json& j, const ProductInformation& x);
-		void from_json(const nlohmann::json& j, LowTemperatureSetpointLimit& x);
-		void to_json(nlohmann::json& j, const LowTemperatureSetpointLimit& x);
-		void from_json(const nlohmann::json& j, ResistanceElementDefrost& x);
-		void to_json(nlohmann::json& j, const ResistanceElementDefrost& x);
 		void from_json(const nlohmann::json& j, Performance& x);
 		void to_json(nlohmann::json& j, const Performance& x);
 		void from_json(const nlohmann::json& j, PerformanceMap& x);
@@ -180,6 +176,10 @@ namespace hpwh_data_model {
 		void to_json(nlohmann::json& j, const GridVariables& x);
 		void from_json(const nlohmann::json& j, LookupVariables& x);
 		void to_json(nlohmann::json& j, const LookupVariables& x);
+		void from_json(const nlohmann::json& j, LowTemperatureSetpointLimit& x);
+		void to_json(nlohmann::json& j, const LowTemperatureSetpointLimit& x);
+		void from_json(const nlohmann::json& j, ResistanceElementDefrost& x);
+		void to_json(nlohmann::json& j, const ResistanceElementDefrost& x);
 	}
 }
 #endif

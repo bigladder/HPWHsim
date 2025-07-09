@@ -75,6 +75,7 @@ void HPWH::initResistanceTank(double tankVol_L,
 
     // standard logic conditions
     resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+    resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
 
     if (resistiveElementTop && resistiveElementBottom)
     {
@@ -169,6 +170,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         resistiveElementBottom->setup(0, lowerPower_W);
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
+        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10.)));
     }
 
     if (resistiveElementTop && resistiveElementBottom)
@@ -2842,6 +2844,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
