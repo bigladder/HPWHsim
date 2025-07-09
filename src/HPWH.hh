@@ -235,8 +235,8 @@ class HPWH : public Courier::Sender
             model_number.to(prod_info.model_number, prod_info.model_number_is_set);
 
             // data model requires both or none
-            checkTo(prod_info, desc.product_information_is_set, desc.product_information, full());
-            checkTo(desc, rs.description_is_set, rs.description, full());
+            desc.product_information_is_set = full();
+            rs.description_is_set |= desc.product_information_is_set;
         }
 
     } productInformation;
@@ -305,8 +305,8 @@ class HPWH : public Courier::Sender
             uniform_energy_factor.to(rating.uniform_energy_factor,
                                      rating.uniform_energy_factor_is_set);
 
-            checkTo(rating, desc.rating_10_cfr_430_is_set, desc.rating_10_cfr_430, !empty());
-            checkTo(desc, rs.description_is_set, rs.description, !empty());
+            desc.rating_10_cfr_430_is_set = !empty();
+            rs.description_is_set |= desc.rating_10_cfr_430_is_set;
         }
 
     } rating10CFR430;
