@@ -571,7 +571,6 @@ class HPWH : public Courier::Sender
 
     std::shared_ptr<TempBasedHeatingLogic> standby(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topNode(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomNode(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic>
     bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff = false);
@@ -1272,10 +1271,7 @@ class HPWH : public Courier::Sender
 
     struct PerformancePolySet : public std::vector<PerformancePoly>
     {
-        PerformancePolySet()
-            : std::vector<PerformancePoly>({})
-        {
-        }
+        PerformancePolySet() : std::vector<PerformancePoly>({}) {}
 
         PerformancePolySet(const std::vector<PerformancePoly>& vect)
             : std::vector<PerformancePoly>(vect)
