@@ -10,7 +10,9 @@ import json
 import subprocess
 import cbor2
 
-def incorp_presets(presets_list_files, build_dir, spec_type):
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+def incorporate_presets(presets_list_files, build_dir, spec_type):
     
 	orig_dir = str(Path.cwd())
 	os.chdir(build_dir)
@@ -38,7 +40,20 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 		output_dir = os.path.join(abs_build_dir , "test", "output")
 	else:	
 		test_json_dir = os.path.join("../../..", "test", "models_json")	
-														 
+
+	template_dir = '../templates'
+	env = Environment(
+	    loader=FileSystemLoader(template_dir),
+	    autoescape=select_autoescape(["html", "xml"]),
+	    trim_blocks=True,
+	    lstrip_blocks=True,
+	    comment_start_string="{##",
+	    comment_end_string="##}",
+    )
+		
+	preset_model_h = env.get_template("preset_model.h.j2")											 
+
+	models_out = []
 	first = True
 	for preset_list_file in presets_list_files:
 		with open(preset_list_file) as json_file:
@@ -60,31 +75,19 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					
 				guard_name = name.upper() + "_H"
 				
-				preset_text = "#ifndef " + guard_name + "\n"
-				preset_text += "#define " + guard_name + "\n\n"
-
-
-				preset_text += "#include <array>\n\n"
-				
-				preset_text += "namespace hpwh_presets {\n\n"
-				
 				nbytes = len(cbor_data)
-				preset_text += "const std::array<uint8_t, " + str(nbytes) + "> cbor_" + name + "{\n"
+				cbor_text = ""
 				for i, entry  in enumerate(cbor_data):
-					preset_text += hex(entry) + ", "
+					cbor_text += hex(entry) + ", "
 					if (i % 40 == 0) and (i != 0): 
-						preset_text += "\n";
-				
-				preset_text += " };\n\n"
-				
-				preset_text += "}\n"
-				preset_text += "#endif\n"
-				
-				try:	
-					preset_text_path = os.path.join(presets_include_dir, name + ".h")
-					with open(preset_text_path, "w") as preset_text_file:
-						preset_text_file.write(preset_text)
-						preset_text_file.close()
+						cbor_text += "\n";
+								
+				try:
+					preset_model_header = preset_model_h.render(name = name, size = nbytes, cbor = cbor_text, guard_name = guard_name)
+					preset_model_header_path = os.path.join(presets_include_dir, name + ".h")
+					with open(preset_model_header_path, "w") as preset_model_header_file:
+						preset_model_header_file.write(preset_model_header )
+						preset_model_header_file.close()
 				except:
 					print("Failed to create file")
 			
@@ -92,76 +95,16 @@ def incorp_presets(presets_list_files, build_dir, spec_type):
 					presets_vector_text += ",\n"
 					presets_models_text += ",\n"
 					
-				presets_headers_text += "#include \"" + name + ".h\"\n"
+				models_out.append({'name': name, 'number': str(models_dict[name]), 'size': str(nbytes)})
+				#presets_headers_text += "#include \"" + name + ".h\"\n"
 				presets_models_text += "\t" + name + " = " + str(models_dict[name])
 				presets_vector_text += "\t{ MODELS::" + name + ", \"" + name +"\", cbor_" + name + ".data(), sizeof(cbor_" + name + ")}"
 				first = False
 
 		# create library header
-		presets_header =  """
-#ifndef PRESETS_H
-#define PRESETS_H
+		presets_h = env.get_template("presets.h.j2")											 
+		presets_header =  presets_h.render(models = models_out)
 
-#include <iostream>
-"""
-		# add the includes	
-		presets_header += presets_headers_text
-
-		presets_header += """
-
-namespace hpwh_presets {
-
-/// specifies the allowable preset HPWH models
-/// values may vary - names should be used
-enum MODELS: int
-{
-"""
-		presets_header += presets_models_text + ",\n"
-		presets_header += "\tunknown = -1\n"
-		presets_header += "};\n"
-
-		presets_header += """
-struct Model
-{
-	int id;
-	std::string name;
-	const std::uint8_t *cbor_data;
-	std::size_t size;
-	Model(const int id_in, const char* name_in, const std::uint8_t *cbor_data_in, const std::size_t size_in):
-		id(id_in), name(name_in), cbor_data(cbor_data_in), size(size_in){}
-	MODELS model() const {return static_cast<MODELS>(id);}
-};
-"""
-#
-		presets_header += """
-inline std::vector<Model> models({
-"""	
-		presets_header  += presets_vector_text + "\n});\n"
-#		
-		presets_header  += """
-inline Model find_by_name(const std::string& name)
-{
-    auto it = find_if(models.begin(),
-                      models.end(),
-                      [&name](Model& model){ return model.name == name; });
-    if (it != models.end())
-        return *it;
-    return {MODELS::unknown, "unknown", nullptr, 0};
-}
-
-inline Model find_by_id(const MODELS id)
-{
-    auto it =
-        find_if(models.begin(),
-                models.end(),
-                [&id](Model& model) { return model.id == id; });
-    if (it != models.end())
-        return *it;
-    return {MODELS::unknown, "unknown", nullptr, 0};
-}
-}
-#endif
-"""
 		try:	
 			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
 				presets_header_file.write(presets_header)
@@ -181,5 +124,5 @@ if __name__ == "__main__":
 		for i in range(3, n_args + 1):
 			presets_list_files.append(sys.argv[i])
 
-		incorp_presets(presets_list_files, build_dir, spec_type)
+		incorporate_presets(presets_list_files, build_dir, spec_type)
 
