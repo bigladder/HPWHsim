@@ -1590,6 +1590,13 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
         "standby", dist, decisionPoint, this, false, std::less<double>(), false, true);
 }
 
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNode(double decisionPoint)
+{
+    HPWH::Distribution dist = DistributionType::TopOfTank;
+    return std::make_shared<HPWH::TempBasedHeatingLogic>(
+        "top of tank", dist, decisionPoint, this, false, std::less<double>(), false, false);
+}
+
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
     HPWH::Distribution dist = DistributionType::TopOfTank;
