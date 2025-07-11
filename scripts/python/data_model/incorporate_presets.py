@@ -80,7 +80,7 @@ def incorporate_presets(presets_list_files, build_dir, spec_type):
 				for i, entry  in enumerate(cbor_data):
 					cbor_text += hex(entry) + ", "
 					if (i % 40 == 0) and (i != 0): 
-						cbor_text += "\n";
+						cbor_text += "\n"
 								
 				try:
 					preset_model_header = preset_model_h.render(name = name, size = nbytes, cbor = cbor_text, guard_name = guard_name)
