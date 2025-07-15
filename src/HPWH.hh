@@ -1416,6 +1416,11 @@ class HPWH : public Courier::Sender
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
+    static void swapGridAxes(std::vector<std::vector<double>>& perfGrid,
+                             std::vector<std::vector<double>>& perfGridValues,
+                             std::size_t axis_i,
+                             std::size_t axis_j);
+
   private:
     void setAllDefaults(); /**< sets all the defaults */
 

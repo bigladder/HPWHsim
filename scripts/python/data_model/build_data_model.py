@@ -1,6 +1,6 @@
 # uv run build_data_model.py
 # generates source code based on hpwh_data_model schema.
-# schema repo is cloned in repo
+# schema repo is cloned in build directory
 
 from lattice import Lattice
 from pathlib import Path

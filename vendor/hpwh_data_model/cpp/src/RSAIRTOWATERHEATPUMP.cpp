@@ -47,23 +47,23 @@ namespace hpwh_data_model  {
 			json_set<rsairtowaterheatpump::GridVariables>(j, "grid_variables", x.grid_variables, x.grid_variables_is_set);
 			json_set<rsairtowaterheatpump::LookupVariables>(j, "lookup_variables", x.lookup_variables, x.lookup_variables_is_set);
 		}
-		void from_json(const nlohmann::json& j, LowTemperatureSetpointLimit& x) {
-			json_get<double>(j, logger.get(), "low_temperature_threshold", x.low_temperature_threshold, x.low_temperature_threshold_is_set, true);
-			json_get<double>(j, logger.get(), "maximum_setpoint_at_low_temperature", x.maximum_setpoint_at_low_temperature, x.maximum_setpoint_at_low_temperature_is_set, true);
+		void from_json(const nlohmann::json& j, MaximumSetpointAtLowTemperature& x) {
+			json_get<double>(j, logger.get(), "threshold_environment_temperature", x.threshold_environment_temperature, x.threshold_environment_temperature_is_set, true);
+			json_get<double>(j, logger.get(), "maximum_setpoint_temperature", x.maximum_setpoint_temperature, x.maximum_setpoint_temperature_is_set, true);
 		}
-		void to_json(nlohmann::json& j, const LowTemperatureSetpointLimit& x) {
-			json_set<double>(j, "low_temperature_threshold", x.low_temperature_threshold, x.low_temperature_threshold_is_set);
-			json_set<double>(j, "maximum_setpoint_at_low_temperature", x.maximum_setpoint_at_low_temperature, x.maximum_setpoint_at_low_temperature_is_set);
+		void to_json(nlohmann::json& j, const MaximumSetpointAtLowTemperature& x) {
+			json_set<double>(j, "threshold_environment_temperature", x.threshold_environment_temperature, x.threshold_environment_temperature_is_set);
+			json_set<double>(j, "maximum_setpoint_temperature", x.maximum_setpoint_temperature, x.maximum_setpoint_temperature_is_set);
 		}
 		void from_json(const nlohmann::json& j, ResistanceElementDefrost& x) {
 			json_get<double>(j, logger.get(), "input_power", x.input_power, x.input_power_is_set, true);
-			json_get<double>(j, logger.get(), "temperature_lift", x.temperature_lift, x.temperature_lift_is_set, true);
-			json_get<double>(j, logger.get(), "activation_temperature_threshold", x.activation_temperature_threshold, x.activation_temperature_threshold_is_set, true);
+			json_get<double>(j, logger.get(), "lift_temperature", x.lift_temperature, x.lift_temperature_is_set, true);
+			json_get<double>(j, logger.get(), "activation_temperature", x.activation_temperature, x.activation_temperature_is_set, true);
 		}
 		void to_json(nlohmann::json& j, const ResistanceElementDefrost& x) {
 			json_set<double>(j, "input_power", x.input_power, x.input_power_is_set);
-			json_set<double>(j, "temperature_lift", x.temperature_lift, x.temperature_lift_is_set);
-			json_set<double>(j, "activation_temperature_threshold", x.activation_temperature_threshold, x.activation_temperature_threshold_is_set);
+			json_set<double>(j, "lift_temperature", x.lift_temperature, x.lift_temperature_is_set);
+			json_set<double>(j, "activation_temperature", x.activation_temperature, x.activation_temperature_is_set);
 		}
 		void from_json(const nlohmann::json& j, Performance& x) {
 			json_get<rsairtowaterheatpump::PerformanceMap>(j, logger.get(), "performance_map", x.performance_map, x.performance_map_is_set, true);
@@ -71,7 +71,7 @@ namespace hpwh_data_model  {
 			json_get<double>(j, logger.get(), "maximum_refrigerant_temperature", x.maximum_refrigerant_temperature, x.maximum_refrigerant_temperature_is_set, false);
 			json_get<double>(j, logger.get(), "compressor_lockout_temperature_hysteresis", x.compressor_lockout_temperature_hysteresis, x.compressor_lockout_temperature_hysteresis_is_set, false);
 			json_get<bool>(j, logger.get(), "use_defrost_map", x.use_defrost_map, x.use_defrost_map_is_set, false);
-			json_get<rsairtowaterheatpump::LowTemperatureSetpointLimit>(j, logger.get(), "low_temperature_setpoint_limit", x.low_temperature_setpoint_limit, x.low_temperature_setpoint_limit_is_set, false);
+			json_get<rsairtowaterheatpump::MaximumSetpointAtLowTemperature>(j, logger.get(), "maximum_setpoint_at_low_temperature", x.maximum_setpoint_at_low_temperature, x.maximum_setpoint_at_low_temperature_is_set, false);
 			json_get<rsairtowaterheatpump::ResistanceElementDefrost>(j, logger.get(), "resistance_element_defrost", x.resistance_element_defrost, x.resistance_element_defrost_is_set, false);
 		}
 		void to_json(nlohmann::json& j, const Performance& x) {
@@ -80,7 +80,7 @@ namespace hpwh_data_model  {
 			json_set<double>(j, "maximum_refrigerant_temperature", x.maximum_refrigerant_temperature, x.maximum_refrigerant_temperature_is_set);
 			json_set<double>(j, "compressor_lockout_temperature_hysteresis", x.compressor_lockout_temperature_hysteresis, x.compressor_lockout_temperature_hysteresis_is_set);
 			json_set<bool>(j, "use_defrost_map", x.use_defrost_map, x.use_defrost_map_is_set);
-			json_set<rsairtowaterheatpump::LowTemperatureSetpointLimit>(j, "low_temperature_setpoint_limit", x.low_temperature_setpoint_limit, x.low_temperature_setpoint_limit_is_set);
+			json_set<rsairtowaterheatpump::MaximumSetpointAtLowTemperature>(j, "maximum_setpoint_at_low_temperature", x.maximum_setpoint_at_low_temperature, x.maximum_setpoint_at_low_temperature_is_set);
 			json_set<rsairtowaterheatpump::ResistanceElementDefrost>(j, "resistance_element_defrost", x.resistance_element_defrost, x.resistance_element_defrost_is_set);
 		}
 		void from_json(const nlohmann::json& j, RSAIRTOWATERHEATPUMP& x) {
