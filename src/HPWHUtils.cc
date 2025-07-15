@@ -247,9 +247,11 @@ void HPWH::linearInterp(double& ynew, double xnew, double x0, double x1, double 
     ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
-
 /*static*/
-void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid, std::vector<std::vector<double>>& perfGridValues, std::size_t axis_i, std::size_t axis_j)
+void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid,
+                        std::vector<std::vector<double>>& perfGridValues,
+                        std::size_t axis_i,
+                        std::size_t axis_j)
 {
     auto nAxes = perfGrid.size();
     std::size_t nVals = perfGridValues[0].size();
@@ -263,7 +265,7 @@ void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid, std::vector<
     axes_subind.reserve(nAxes);
     for (std::size_t iAxis = 0; iAxis < nAxes; ++iAxis)
     {
-        axes_ind.push_back(iAxis);//(iAxis == axis_i) ? axis_j : ((iAxis == axis_j) ? axis_i : iAxis));
+        axes_ind.push_back((iAxis == axis_i) ? axis_j : ((iAxis == axis_j) ? axis_i : iAxis));
         axes_subind.push_back(0);
     }
     for (std::size_t iVal = 0; iVal < nVals; ++iVal)
@@ -273,12 +275,12 @@ void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid, std::vector<
         {
             std::size_t dimSize = 1;
             for (std::size_t ip = axes_ind[iAxis] + 1; ip < nAxes; ++ip)
-               dimSize *= perfGrid[ip].size();
+                dimSize *= perfGrid[ip].size();
             iNewVal += dimSize * axes_subind[axes_ind[iAxis]];
         }
 
-        perfGridValues[0][iNewVal] = origPerfGridValues[0][iVal];
-        perfGridValues[1][iNewVal] = origPerfGridValues[1][iVal];
+        perfGridValues[0][iVal] = origPerfGridValues[0][iNewVal];
+        perfGridValues[1][iVal] = origPerfGridValues[1][iNewVal];
 
         for (int iAxis = nAxes - 1; iAxis >= 0; --iAxis)
         {
@@ -290,12 +292,9 @@ void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid, std::vector<
             else
             {
                 axes_subind[axes_ind[iAxis]] = 0;
-
             }
         }
-
     }
 
     std::swap(perfGrid[axis_i], perfGrid[axis_j]);
-
 }

@@ -1796,7 +1796,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
              71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
             {140., 158., 176.},                                            // Grid Axis 2 Tout (F)
-            {41, 48.2, 62.6, 75.2, 84.2}                                  // Grid Axis 3 Tin (F)
+            {41, 48.2, 62.6, 75.2, 84.2}                                   // Grid Axis 3 Tin (F)
         });
 
         std::vector<std::vector<double>> perfGridValues = {};
@@ -1999,42 +1999,17 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              4.520572, 4.213452, 3.993147, 3.713376, 4.522957, 4.520572, 4.213452, 3.993147,
              3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959});
 
-        /*
-
-        // Performance grid: externalT_F, Tout_F, condenserTemp_F
-       perfGrid =
-            {{1., 2., 3., 4.}, // Grid Axis 1 Tair (F)
-             {11, 12, 13}};                                // Grid Axis 3 Tin (F)
-
-       perfGridValues = {{}, {}};
-       double x= 1.;
-       double y = 101.;
-
-       std::size_t nVals = 1;
-       for (auto& axis: perfGrid)
-            nVals *= axis.size();
-
-        for (std::size_t i = 0; i < nVals; ++i)
-        {
-            perfGridValues[0].push_back(x);
-            perfGridValues[1].push_back(y);
-            x += 1.;
-            y += 1.;
-        }
-*/
-
-        swapGridAxes(perfGrid, perfGridValues, 1, 2);
-        //       swapGridAxes(perfGrid, perfGridValues, 1, 2);
-
         for (auto& axis : perfGrid)
             for (auto& val : axis)
                 val = F_TO_C(val);
         for (auto& val : perfGridValues[0])
             val = BTUperH_TO_W(val);
 
-        compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
 
         compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
+
+        compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
     else if (presetNum == hpwh_presets::MODELS::Sanco83 ||
