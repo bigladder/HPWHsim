@@ -7,7 +7,6 @@ from pathlib import Path
 import os
 import sys
 import json
-import subprocess
 import cbor2
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -19,8 +18,6 @@ def incorporate_presets(presets_list_files, build_dir, spec_type):
 	abs_build_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	presets_headers_text = ""
-	presets_identifiers_text = ""
 	presets_models_text = ""
 	presets_vector_text = ""
 	
@@ -36,7 +33,6 @@ def incorporate_presets(presets_list_files, build_dir, spec_type):
 		
 		if not os.path.exists(output_dir):
 			os.mkdir(output_dir)	
-		app_cmd = os.path.join(abs_build_dir , 'src', 'hpwh', 'hpwh')
 		output_dir = os.path.join(abs_build_dir , "test", "output")
 	else:	
 		test_json_dir = os.path.join("../../..", "test", "models_json")	
