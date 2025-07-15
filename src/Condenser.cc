@@ -357,14 +357,13 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         }
 
         if (grid_variables.condenser_entering_temperature_is_set)
-            if (grid_variables.condenser_entering_temperature_is_set)
-            {
-                std::vector<double> heatSourceTs_C = {};
-                heatSourceTs_C.reserve(grid_variables.condenser_entering_temperature.size());
-                for (auto& T_K : grid_variables.condenser_entering_temperature)
-                    heatSourceTs_C.push_back(K_TO_C(T_K));
-                perfGrid.push_back(heatSourceTs_C);
-            }
+        {
+            std::vector<double> heatSourceTs_C = {};
+            heatSourceTs_C.reserve(grid_variables.condenser_entering_temperature.size());
+            for (auto& T_K : grid_variables.condenser_entering_temperature)
+                heatSourceTs_C.push_back(K_TO_C(T_K));
+            perfGrid.push_back(heatSourceTs_C);
+        }
 
         if (grid_variables.condenser_leaving_temperature_is_set)
         {
@@ -743,6 +742,20 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                 envTs_K.push_back(C_TO_K(envT_C));
         }
 
+        { // fill vector of heat source temps
+            auto tempRange_dC = maxSetpoint_C - 0.;
+            constexpr double steps_per_degC = 51. / 100.;
+            auto nSteps = static_cast<std::size_t>(std::max(steps_per_degC * tempRange_dC, 2.));
+            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nSteps);
+            heatSourceTs_K.reserve(nSteps + 1);
+            for (std::size_t i = 0; i <= nSteps; ++i)
+            {
+                double heatSourceT_C = 0. + dHeatSourceT_dC * static_cast<double>(i);
+                heatSourceTs_K.push_back(C_TO_K(heatSourceT_C));
+            }
+            arrangeGridVector(heatSourceTs_K);
+        }
+
         { // fill vector of outlet temps
             std::vector<double> outletTs_C = {hpwh->setpoint_C};
             if (!isMultipass)
@@ -765,21 +778,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                     C_TO_K(outletT_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
         }
 
-        { // fill vector of heat source temps
-            auto tempRange_dC = maxSetpoint_C - 0.;
-            constexpr double steps_per_degC = 51. / 100.;
-            auto nSteps = static_cast<std::size_t>(std::max(steps_per_degC * tempRange_dC, 2.));
-            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nSteps);
-            heatSourceTs_K.reserve(nSteps + 1);
-            for (std::size_t i = 0; i <= nSteps; ++i)
-            {
-                double heatSourceT_C = 0. + dHeatSourceT_dC * static_cast<double>(i);
-                heatSourceTs_K.push_back(C_TO_K(heatSourceT_C));
-            }
-            arrangeGridVector(heatSourceTs_K);
-        }
         { // fill grid values
-            std::size_t nTotVals = envTs_K.size() * outletTs_K.size() * heatSourceTs_K.size();
+            std::size_t nTotVals = envTs_K.size() * heatSourceTs_K.size() * outletTs_K.size();
             inputPowers_W.reserve(nTotVals);
             heatingCapacities_W.reserve(nTotVals);
             double orig_setpointT_C = hpwh->getSetpoint(UNITS_C);
@@ -789,7 +789,7 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                     {
                         hpwh->setSetpoint(K_TO_C(outletT_K) -
                                               secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                                          UNITS_C);
+                                          UNITS_C); // correct for offset
                         auto performance =
                             evaluatePerformance(K_TO_C(envT_K), K_TO_C(heatSourceT_K));
                         inputPowers_W.push_back(performance.inputPower_W);
