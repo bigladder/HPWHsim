@@ -1646,6 +1646,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                                       5.71801705, 4.40237768, 2.92489673, 2.21419054});
         }
 
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
+
         for (auto& val : perfGridValues[0])
             val = KW_TO_W(val);
 
@@ -1788,13 +1790,14 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
             "lowest node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor->depressesTemperature = false;
 
-       // Performance grid: externalT_F, Tout_F, condenserTemp_F
-        std::vector<std::vector<double>> perfGrid(
-            {{-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
-              28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
-              71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
-             {140., 158., 176.},                                            // Grid Axis 2 Tout (F)
-             {41, 48.2, 62.6, 75.2, 84.2}});                                // Grid Axis 3 Tin (F)
+        // Performance grid: externalT_F, Tout_F, condenserTemp_F
+        std::vector<std::vector<double>> perfGrid({
+            {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
+             28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
+             71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
+            {140., 158., 176.},                                            // Grid Axis 2 Tout (F)
+            {41, 48.2, 62.6, 75.2, 84.2}                                  // Grid Axis 3 Tin (F)
+        });
 
         std::vector<std::vector<double>> perfGridValues = {};
 
@@ -2021,6 +2024,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 */
 
         swapGridAxes(perfGrid, perfGridValues, 1, 2);
+        //       swapGridAxes(perfGrid, perfGridValues, 1, 2);
 
         for (auto& axis : perfGrid)
             for (auto& val : axis)
