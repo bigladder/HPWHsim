@@ -552,9 +552,9 @@ void HPWH::Condenser::to(
         double powerCoefRatioMax = 0.;
         double COP_CoefRatioMax = 0.;
         {
-            double hsT_C = F_TO_C(0.);
+            double hsT_C = F_TO_C((0. + maxSetpoint_C) / 2.);
 
-            double dhsT_F = 0.00001;
+            double dhsT_F = 1.e-5;
             double dhsT_C = dF_TO_dC(dhsT_F);
 
             for (auto& envT_C : envTs_C)
