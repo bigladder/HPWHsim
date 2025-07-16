@@ -253,45 +253,45 @@ void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid,
                         std::size_t axis_i,
                         std::size_t axis_j)
 {
-    auto nAxes = perfGrid.size();
-    std::size_t nVals = perfGridValues[0].size();
+    std::size_t nAxes = perfGrid.size();
+    std::size_t nElems = perfGridValues[0].size();
 
     std::vector<std::vector<double>> origPerfGridValues = perfGridValues;
 
     std::vector<std::size_t> axes_ind = {};
-    std::vector<std::size_t> axes_subind = {};
+    std::vector<std::size_t> elem_ind = {};
 
     axes_ind.reserve(nAxes);
-    axes_subind.reserve(nAxes);
+    elem_ind.reserve(nAxes);
     for (std::size_t iAxis = 0; iAxis < nAxes; ++iAxis)
     {
         axes_ind.push_back((iAxis == axis_i) ? axis_j : ((iAxis == axis_j) ? axis_i : iAxis));
-        axes_subind.push_back(0);
+        elem_ind.push_back(0);
     }
-    for (std::size_t iVal = 0; iVal < nVals; ++iVal)
+    for (std::size_t iElem = 0; iElem < nElems; ++iElem)
     {
-        std::size_t iNewVal = 0;
+        std::size_t iElemNew = 0;
         for (std::size_t iAxis = 0; iAxis < nAxes; ++iAxis)
         {
             std::size_t dimSize = 1;
             for (std::size_t ip = axes_ind[iAxis] + 1; ip < nAxes; ++ip)
                 dimSize *= perfGrid[ip].size();
-            iNewVal += dimSize * axes_subind[axes_ind[iAxis]];
+            iElemNew += dimSize * elem_ind[axes_ind[iAxis]];
         }
 
-        perfGridValues[0][iVal] = origPerfGridValues[0][iNewVal];
-        perfGridValues[1][iVal] = origPerfGridValues[1][iNewVal];
+        perfGridValues[0][iElem] = origPerfGridValues[0][iElemNew];
+        perfGridValues[1][iElem] = origPerfGridValues[1][iElemNew];
 
-        for (int iAxis = nAxes - 1; iAxis >= 0; --iAxis)
+        for (int iAxis = static_cast<int>(nAxes) - 1; iAxis >= 0; --iAxis)
         {
-            ++axes_subind[axes_ind[iAxis]];
-            if (axes_subind[axes_ind[iAxis]] < perfGrid[axes_ind[iAxis]].size())
+            ++elem_ind[axes_ind[iAxis]];
+            if (elem_ind[axes_ind[iAxis]] < perfGrid[axes_ind[iAxis]].size())
             {
                 break;
             }
             else
             {
-                axes_subind[axes_ind[iAxis]] = 0;
+                elem_ind[axes_ind[iAxis]] = 0;
             }
         }
     }
