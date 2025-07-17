@@ -163,7 +163,7 @@ set(yearLargeTests
         )
 
 #
-set(SancoModels 
+set(SancoModels
         Sanco83
 )
 set(SancoTests

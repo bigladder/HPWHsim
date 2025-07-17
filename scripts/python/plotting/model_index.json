@@ -5,17 +5,17 @@
 		{"id": "BradfordWhiteAeroThermRE2H65", "name": "AeroThermRE2H65", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "specs": ["Preset", "File", "JSON"]},
 		{"id": "BradfordWhiteAeroThermRE2H80", "name": "AeroThermRE2H80", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "specs": ["Preset", "File", "JSON"]},
 
-		{"id": "AOSmithHPTS45", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
+		{"id": "AOSmithHPTS40", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
 		{"id": "AOSmithHPTS50", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
-		{"id": "AOSmithHPTS65", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
-		{"id": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "File", "JSON"]},
+		{"id": "AOSmithHPTS66", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "JSON"]},
+		{"id": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "JSON"]},
 
-		{"id": "Rheem2020Prem45", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
+		{"id": "Rheem2020Prem40", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem50", "series": "2020Prem", "manufacturer": "Rheem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem65", "manufacturer": "Rheem", "series": "2020Prem", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Prem80", "manufacturer": "Rheem", "series": "2020Prem", "specs": ["Preset", "File", "JSON"]},
 
-		{"id": "Rheem2020Build45", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
+		{"id": "Rheem2020Build40", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Build50", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Build65", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
 		{"id": "Rheem2020Build80", "manufacturer": "Rheem", "series": "2020Build", "specs": ["Preset", "File", "JSON"]},
@@ -31,11 +31,11 @@
 		{"id": "ColmacCxV_5_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		{"id": "ColmacCxV_5_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 
-		{"id": "ColmacCxV_10_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
-		{"id": "ColmacCxV_10_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_10_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_10_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 
-		{"id": "ColmacCxV_15_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
-		{"id": "ColmacCxV_15_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_15_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "ColmacCxA_15_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 
 		{"id": "ColmacCxA_20_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		{"id": "ColmacCxA_20_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
@@ -78,6 +78,11 @@
 		{"id": "Sanden120", "manufacturer": "Sanden", "specs": ["Preset", "JSON"], "type": "Central"},
 
 		{"id": "RheemHPHD60", "manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"},
-		{"id": "RheemHPHD135", "manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"}
+		{"id": "RheemHPHD135", "manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"},
+
+		{"id": "Scalable_MP", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "TamScalable_SP", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "TamScalable_SP_2X", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"id": "TamScalable_SP_Half", "series": "scalable", "specs": ["Preset", "JSON"], "type": "Central"}
   ]
 }

@@ -3,547 +3,202 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>HPWH analysis</title>
+	<title>HPWH analysis</title>
 
-<style>
-body {font-family: Arial;}
+	<style>
+		body {
+			font-family: Arial;
+		}
 
-.collapsible {
-  background-color: #777;
-  color: white;
-  cursor: pointer;
-  padding: 18px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 15px;
-}
+		.collapsible {
+			background-color: #777;
+			color: white;
+			cursor: pointer;
+			padding: 18px;
+			width: 100%;
+			border: none;
+			text-align: left;
+			outline: none;
+			font-size: 15px;
+		}
 
-.active, .collapsible:hover {
-  background-color: #555;
-}
+		.active,
+		.collapsible:hover {
+			background-color: #555;
+		}
 
-.content {
-  padding: 0 18px;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.2s ease-out;
-  background-color: #f1f1f1;
-}
-</style>
+		.content {
+			padding: 0 18px;
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.2s ease-out;
+			background-color: #f1f1f1;
+		}
+
+		table, th, td {
+		  border: 1px solid black;
+		  border-collapse: collapse;
+		}
+		th, td {
+		  padding-top: 10px;
+		  padding-bottom: 10px;
+		  padding-left: 10px;
+		  padding-right: 10px;
+		}
+	</style>
 
 </head>
 
 <body>
-<script>
-	async function read_json_file(filename) {
-    fst = 'filename=' +  filename;
-	  const response = await fetch('http://localhost:8000/read_json?' + fst,
-		{
-			method: 'GET'
-		}
-	  );
-		json_data = await response.json();
-		return json_data
-	}
+	<script src="main.js"></script>
 
-	async function write_json_file(filename, json_data) {
-    fst = 'filename=' +  filename;
-		fst += '&json_data=' + JSON.stringify(json_data);
-	  await fetch('http://localhost:8000/write_json?' + fst,
-		{
-			method: 'GET'
-		}
-	  );
-	}
- 
-	function set_menu_values(prefs)
-	{
-	  const model_form = document.getElementById('model_form');
-	  const build_form = document.getElementById('build_form');
-	  const test_form = document.getElementById('test_form');
+	<!-- model -->
+	<form id="model_form">
+		<label for="model_name">model name:</label>
+		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();FillPropertiesTables();">
+		</select><br><br>
 
-		model_form.model_name.value = ("model_id" in prefs) ? prefs["model_id"] : "LG_APHWC50"
-		model_form.model_spec.value = ("model_spec" in prefs) ? prefs["model_spec"] : "Preset";
-		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
-		test_form.test_list.value = ("test_list" in prefs) ? prefs["test_list"] : "All tests";
-		test_form.test_name.value = ("test_id" in prefs) ? prefs["test_id"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
-		test_form.show_simulated.value = ("show_simulated" in prefs) ? prefs["show_simulated"] : true;
-		test_form.show_measured.value = ("show_measured" in prefs) ? prefs["show_measured"] : true;
-		test_form.draw_profile.value = ("draw_profile" in prefs) ? prefs["draw_profile"] : "auto";
-	}
-
-	function get_menu_values()
-	{
-	  const model_form = document.getElementById('model_form');
-	  const build_form = document.getElementById('build_form');
-	  const test_form = document.getElementById('test_form');
-
-		prefs = {}
-		prefs["model_id"] = model_form.model_name.value;
-		prefs["model_spec"] = model_form.model_spec.value;
-		prefs["build_dir"] = build_form.build_dir.value;
-		prefs["test_list"] = test_form.test_list.value;
-		prefs["test_id"] = test_form.test_name.value;
-		prefs["show_simulated"] = test_form.show_simulated.checked;
-		prefs["show_measured"] = test_form.show_measured.checked;
-		prefs["draw_profile"] = test_form.draw_profile.value;
-		return prefs;
-	}
-
-	async function set_elements(prefs)
-	{
-		const model_index = await read_json_file("./model_index.json")
-
-		var model_names = []
-		var model_specs = []
-
-		// get model_specs list from model_index
-		for (let model of model_index["models"]){
-			if ("id" in model)
-			{
-				const model_id = model["id"];
-				model_names.push(model_id);
-				if (!model_id.localeCompare(prefs["model_id"]))
-				{
-					if ("specs" in model)
-						for(let i = 0; i < model["specs"].length; i++)
-							model_specs.push(model["specs"][i]);
-				}
-			}
-		}
-
-		if (!(model_names.includes(prefs["model_id"])))
-			model_names = [model_names, prefs["model_id"]];
-			
-		if (!(model_specs.includes(prefs["model_spec"])))
-			prefs["model_spec"] = model_specs[0];
-
-		// set model_name control
-		let select_model = document.getElementById('model_name');
-		while (select_model.hasChildNodes()) {
-		  select_model.removeChild(select_model.firstChild);
-		}
-		for (let model_name of model_names){
-		  let option = document.createElement("option");
-		  option.text = model_name;
-		  option.value = model_name;
-		  select_model.appendChild(option);
-		}
-
-		// set model_spec control
-		let select_model_spec = document.getElementById('model_spec');
-		while (select_model_spec.hasChildNodes()) {
-		  select_model_spec.removeChild(select_model_spec.firstChild);
-		}
-		for (let model_spec of model_specs){
-		  let option = document.createElement("option");
-		  option.text = model_spec;
-		  option.value = model_spec;
-		  select_model_spec.appendChild(option);
-		}
-
-		// get available tests
-		var have_test = false;
-
-		const test_index = await read_json_file("./test_index.json")
-		var test_names = []
-		var show_all_tests = !prefs["test_list"].localeCompare("All tests");
-		var show_tests_with_data = !prefs["test_list"].localeCompare("Tests with data");
-		var show_standard_tests = show_all_tests || !prefs["test_list"].localeCompare("Standard tests");
-		for (let test of test_index["tests"])
-		{
-			var show_test = false;
-			var test_name = "";
-			if ("id" in test)
-			{
-				const test_id = test["id"];
-				test_name = test_id;
-				show_test = show_all_tests;
-				if ("group" in test)
-				{
-					const test_group = test["group"];
-					show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
-					if (show_all_tests || show_tests_with_data)
-						if ("measured" in test)
-						{	 // get test list from model_index
-							const measureds = test["measured"];
-							for (let measured of measureds)
-								if ("id" in measured)
-									if (!measured["id"].localeCompare(prefs["model_id"]))
-									{
-										show_test = true;
-										break;
-									}
-						}
-				}
-
-				if(show_test)
-				{
-					test_names.push(test_name);
-					have_test = true;
-				}
-			}
-		}
-
-		if (have_test && !(test_names.includes(prefs["test_id"])))
-			prefs["test_id"] = test_names[0];
-
-		var have_measured = false;
-		for (let test of test_index["tests"])
-		{
-				var test_id = "";
-				if ("id" in test)
-					test_id = test["id"];
-					if (test_id == prefs["test_id"])
-						if ("measured" in test)
-							for (let measured of test["measured"])
-								if ("id" in measured)
-									if (measured["id"] == prefs["model_id"])
-									{
-										have_measured = true;
-										break;
-									}
-			}
-
-		var is_standard_test = false;
-		for (let test of test_index["tests"])
-			if (("id" in test) && !test["id"].localeCompare(prefs["test_id"]))
-				if(("group" in test) && !test["group"].localeCompare("Standard tests"))
-				{
-					is_standard_test = true;
-					break;
-				}
-
-		// set select_test control
-		let select_test = document.getElementById('test_name');
-		while (select_test.hasChildNodes())
-		  select_test.removeChild(select_test.firstChild);
-					
-		var show_simulated = prefs["show_simulated"] && have_test;
-		var show_measured = prefs["show_measured"] && have_measured;
-		show_simulated = show_simulated || (have_test && !show_measured);
-		show_measured = show_measured ||(have_measured && !show_simulated);
- 		
-		if (!have_test)
-		{
-			prefs["test_id"] = "";
-			select_test.disabled = true;
-			document.getElementById('test_btn').disabled = true;
-		}
-		else
-		{
-			// set test_name control
-			for (let test_name of test_names)
-			{
-			  let option = document.createElement("option");
-			  option.text = test_name;
-			  option.value = test_name;
-			  select_test.appendChild(option);
-			}
-
-			select_test.disabled = false;
-			document.getElementById('test_btn').disabled = false;
-		}
-
-		// set select_show_type control
-		let show_measured_checkbox= document.getElementById('show_measured');
-		let show_simulated_checkbox = document.getElementById('show_simulated');
-
-		show_simulated_checkbox.checked = prefs["show_simulated"] = show_simulated;
-		show_simulated_checkbox.disabled = !have_test;
-		show_measured_checkbox.checked = prefs["show_measured"] = show_measured;
-		show_measured_checkbox.disabled = !have_measured;
-
-		// set draw_profile dropdown
-		let draw_profile_dropdown = document.getElementById('draw_profile');
-		draw_profile_dropdown.value = prefs["draw_profile"];
-		draw_profile_dropdown.disabled= !is_standard_test;	
-
-		set_menu_values(prefs);
-		await write_json_file("./prefs.json", prefs)
-	}
-
-	async function change_menu_value()
-	{
-		prefs = get_menu_values();
-		set_elements(prefs)
-	}
-
-	async function init_elements()
-	{
-		var prefs = await read_json_file("./prefs.json")
-		set_elements(prefs)
-	}
-</script>
-
-<script>
-	async function callPyServer(cmd, fst)
-	{
-	  await fetch('http://localhost:8000/' + cmd + '?' + fst);
-	}
-
-	async function callPyServerJSON(cmd, fst)
-	{
-	  const response = await fetch('http://localhost:8000/' + cmd + '?' + fst);
-		data = await response.json();
-		return data;
-	}
-
-  async function test() {
-
-    const build_form = document.getElementById('build_form');
-    const build_dir = build_form.build_dir.value;
-
-    const model_form = document.getElementById('model_form');
-    const model_spec = model_form.model_spec.value;
-    const model_name = model_form.model_name.value;
-
-    const test_form = document.getElementById('test_form');
-
-		var measured_filename = "none";
-
-		var prefs = await read_json_file("./prefs.json")
-
-		// get test path
-		const test_index = await read_json_file("./test_index.json")
-		var test_dir = ""
-		var test_name = prefs["test_id"];
-		
-		// get test list from model_index
-		var is_standard_test = false;
-		for (let test of test_index["tests"])
-		{
-				if (("id" in test) && (!test["id"].localeCompare(test_name)))
-				{
-						if (("group" in test) && !test["group"].localeCompare("Standard tests"))
-						{
-							is_standard_test = true;
-							test_dir = "none";
-						}
-						else
-							test_dir = test_name;
-						if("path" in test)
-							test_dir = test["path"] + "/" + test_name;
-
-						if ("measured" in test)
-							for (let measured of test["measured"])
-								if (("id" in measured) && !measured["id"].localeCompare(prefs["model_id"]))
-									if ("filename" in measured)
-									{
-										measured_filename = measured["filename"];										
-										break;
-									}
-				}
-		}
-
-    document.getElementById("test_btn").disabled = true;
-
-		var show_types = 0;
-		if (prefs["show_measured"])
-				show_types += 1;
-		if (prefs["show_simulated"])
-				show_types += 2;
-
-		if(is_standard_test)
-		{
-	    const draw_profile = test_form.draw_profile.value;
-
-	    fst = 'model_spec=' +  model_spec;
-	    fst += '&model_name=' + model_name;
-	    fst += '&build_dir=' + build_dir;
-	    fst += '&draw_profile=' + draw_profile;
-	   	await callPyServer("measure", fst)
-			simulated_filename = "test24hr_" + model_spec + "_" + model_name  + ".csv";
-
-	    document.getElementById("measure_results").style="display:block;"
-			document.getElementById("measure_results").height="1800px;"
-	    document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
-		}
-		else
-		{
-	    fst = 'model_spec=' +  model_spec;
-	    fst += '&model_name=' + model_name;
-	    fst += '&test_dir=' + test_dir;
-	    fst += '&build_dir=' + build_dir;
-	    await callPyServer("simulate", fst)
-			simulated_filename = test_name + "_" + model_spec + "_" + model_name + ".csv";
-		}
-	
-		document.getElementById("plots").src	 = "";
-    fst = 'test_dir=' +  test_dir;
-    fst += '&build_dir=' + build_dir;
-		fst += '&show_types=' + show_types;
-    fst += '&simulated_filename=' + simulated_filename;
-    fst += '&measured_filename=' + measured_filename;
-
-	 	plot_results = await callPyServerJSON("test_plot", fst);
-		let energy_data = plot_results["energy_data"];
-		const dash_port = plot_results["port_num"];
-
-		let energy_measured_p = document.getElementById("energy_measured")
-		if ("measuredE_Wh" in energy_data)
-    	energy_measured_p.innerHTML = "Measured energy consumption (Wh): " + energy_data["measuredE_Wh"].toFixed(2);
-		else
-			energy_measured_p.innerHTML = ""
-
-		let energy_simulated_p = document.getElementById("energy_simulated")
-		if ("simulatedE_Wh" in energy_data)
-    	energy_simulated_p.innerHTML = "Simulated consumption (Wh): " + energy_data["simulatedE_Wh"].toFixed(2);
-		else
-			energy_simulated_p.innerHTML = ""
-
-    model_form.model_spec.value = model_spec;
-    model_form.model_name.value = model_name;
-
-    document.getElementById("model_spec").value = model_spec; 
-    document.getElementById("model_name").value = model_name;
-    document.getElementById("test_name").value = test_name; 
-    document.getElementById("build_dir").value = build_dir; 
-
-    document.getElementById("model_spec").defaultValue = model_spec; 
-    document.getElementById("model_name").defaultValue = model_name; 
-    document.getElementById("test_name").defaultValue = test_name; 
-    document.getElementById("build_dir").defaultValue = build_dir; 
- 
-    localStorage.setItem("model_spec", model_spec);
-    localStorage.setItem("model_name", model_name);
-    localStorage.setItem("build_dir", build_dir);
-    localStorage.setItem("test_name", test_name);
-
-    document.getElementById("plots").src = "http://localhost:" + dash_port
-    document.getElementById("plots").style = "display:block;"
-
-    document.getElementById("test_btn").disabled = false;
-  }
-
-  async function show_perf() {
-
-    const build_form = document.getElementById('build_form');
-    const build_dir = build_form.build_dir.value;
-
-    const model_form = document.getElementById('model_form');
-    const model_spec = model_form.model_spec.value;
-    const model_name = model_form.model_name.value;
-
-    const perf_form = document.getElementById('perf_form');
-
-	  fst = 'model_name=' + model_name;
-	  let perf_results = await callPyServerJSON("perf_plot", fst)
-		const dash_port = perf_results["port_num"];
-
-    document.getElementById("perf_plot").src = "http://localhost:" + dash_port
-    document.getElementById("perf_plot").style = "display:block;"
-
-    document.getElementById("perf_btn").disabled = false;
-  }
-</script>
-
-
-<!-- content -->
-<form id="model_form">
-    <label for="model_name">model name:</label>
-		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();"> 
- 		</select><br><br>
-
-    <label for="model_spec">model spec:</label>
-	  <select name="model_spec" id="model_spec" style="width: 150px" onchange="change_menu_value();">    
-	    <option selected="selected" value="File">File</option>
+		<label for="model_spec">model spec:</label>
+		<select name="model_spec" id="model_spec" style="width: 150px" onchange="change_menu_value();">
+			<option selected="selected" value="File">File</option>
 			<option value="Preset">Preset</option>
 			<option value="JSON">JSON</option>
-	  </select><br><br>
-</form>
-
-<!-- content -->
-<form id="build_form">
-    <label for="build_dir">build directory:</label>
-    <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
-</form>
-
-<!-- content -->
-<button id="perf_tab" class="collapsible">Performance</button>
-<div class="content">
-  <form id="perf_form">
-    <button type="button" id="perf_btn" onclick="show_perf();">show</button>
-  </form>
-
-  <iframe title="perf_plot" src="" id="perf_plot" width=1200 height=1200 style="display:none;"></iframe>
-</div>
-
-<!-- content -->
-<button id="test_tab" class="collapsible">Test</button>
-<div class="content">
-  <form id="test_form">
-
-    <select name="test_list" id="test_list" style="width: 200px" onchange="change_menu_value();">
-			<option selected="All tests" value="All tests">All tests</option>
-      <option value="Tests with data">Tests with data</option>
-			<option value="Standard tests">Standard tests</option>
 		</select><br><br>
+	</form>
 
-    <label for="test_name">test name:</label>
-    <select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
-		</select><br><br>
+	<!-- build dir -->
+	<form id="build_form">
+		<label for="build_dir">build directory:</label>
+		<input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
+	</form>
 
-		<label for="show_simulated">show simulated</label>
-		<input type="checkbox" id="show_simulated" style="width: 200px" onchange="change_menu_value();">
-		</select><br><br>
+	<!-- Properties -->
+	<button id="properties_tab" class="collapsible">Properties</button>
+	<div class="content">
+		<table>
+		<tr>
+			<td>
+				<table id="general_table"></table>
+			</td>
+		</tr>
 
-		<label for="show_measured">show measured</label>
-		<input type="checkbox" id="show_measured" style="width: 200px" onchange="change_menu_value();">
-		</select><br><br>
+		<tr>
+			<td>
+				<table id="tank_table"></table>
+			</td><br>
+		</tr>
 
-    <label for="draw_profile">draw profile:</label>
-    <select name="draw_profile" id="draw_profile">
-      <option selected="auto" value="auto">auto</option>
-      <option value="High">High</option>
-      <option value="Medium">Medium</option>
-      <option value="Low">Low</option>
-      <option value="VerySmall">Very Small</option>
-    </select><br><br>
+		<tr>
+			<td>
+				<label for="heat_source">heat source:</label>
+				<select name="heat_source" id="heat_source" style="width: 400px" onchange="change_menu_value();">
+				</select><br><br>
+				<table id="heat_source_table"></table>
+			</td>
+		</tr>
 
-    <button type="button" id="test_btn" onclick="test();">test</button>
-  </form>
+		</table>
+		<br>
+	</div>
 
-  <iframe title="plots" src="" id="plots" width=1200 height=1000 style="display:none;"></iframe>
+	<!-- Performance -->
+	<button id="perf_tab" class="collapsible">Performance</button>
+	<div class="content">
+		<form id="perf_form">
+			<button type="button" id="perf_btn" onclick="launch_perf_proc();">show</button>
+		</form>
 
-  <p id="energy_measured"></p>
-  <p id="energy_simulated"></p>
+		<div id="perf_plot_div">
+			<iframe title="perf_plot" src="" id="perf_plot" width=1200 height=1200 style="display:none;"></iframe>
+		</div>
+	</div>
 
-  <object id="measure_results" data="" width=800 height=1800 style="display:none;"></object>
+	<!-- Test -->
+	<button id="test_tab" class="collapsible">Test</button>
+	<div class="content">
+		<form id="test_form">
 
-</div>
+			<select name="test_list" id="test_list" style="width: 200px" onchange="change_menu_value();">
+				<option selected="All tests" value="All tests">All tests</option>
+				<option value="Tests with data">Tests with data</option>
+				<option value="Standard tests">Standard tests</option>
+			</select><br><br>
 
-<script>
-var coll = document.getElementsByClassName("collapsible");
-var i;
+			<label for="test_name">test name:</label>
+			<select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
+			</select><br><br>
 
-for (i = 0; i < coll.length; i++) {
-  coll[i].addEventListener("click", function() {
-    this.classList.toggle("active");
-    var content = this.nextElementSibling;
-    if (content.style.maxHeight){
-      content.style.maxHeight = null;
-    } else {
-      if(this.id == "test_tab")
-        content.style.maxHeight = "2200px";
-      else if(this.id == "measure_tab")
-        content.style.maxHeight = "320px";
-      else if(this.id == "perf_tab")
-        content.style.maxHeight = "800px";
-    } 
-  });
-}
-</script>
+			<label for="draw_profile">draw profile:</label>
+			<select name="draw_profile" id="draw_profile" onchange="change_menu_value();">
+				<option selected="auto" value="auto">auto</option>
+				<option value="High">High</option>
+				<option value="Medium">Medium</option>
+				<option value="Low">Low</option>
+				<option value="VerySmall">Very Small</option>
+			</select><br><br>
+
+			<button type="button" id="test_btn" onclick="launch_test_proc();">test</button>
+		</form>
+
+		<iframe title="plots" src="" id="test-plots" width=1200 height=1000 style="display:none;"></iframe>
+
+		<p "" id="measure_results" width=800 height=1800 style="display:none;"></object>
+	</div>
+
+	<!-- Fitting -->
+	<button id="fit_tab" class="collapsible">Fitting</button>
+	<div class="content">
+		<table>
+		<tr>
+			<td>
+				<table id="params_table"></table>
+				<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
+			</td>
+
+			<td padding="30px">
+				<table id="metrics_table"></table>
+				<button type="button" id="clear_metrics_btn" onclick="clear_metrics();">clear metrics</button>
+			</td>
+		</tr>
+		</table>
+		<br>
+		<button type="button" id="fit_btn" onclick="launch_fit_proc();">fit</button>
+	</div>
+
+	<script>
+		var coll = document.getElementsByClassName("collapsible");
+		var i;
+
+		for (i = 0; i < coll.length; i++) {
+			coll[i].addEventListener("click", function () {
+				this.classList.toggle("active");
+				var content = this.nextElementSibling;
+				if (content.style.maxHeight) {
+					content.style.maxHeight = null;
+				} else {
+					if (this.id == "properties_tab")
+						content.style.maxHeight = "1100px";
+					else if (this.id == "test_tab")
+						content.style.maxHeight = "2200px";
+					else if (this.id == "fit_tab")
+						content.style.maxHeight = "1200px";
+					else if (this.id == "perf_tab")
+						content.style.maxHeight = "1400px";
+				}
+			});
+		}
+	</script>
 
 </body>
 
 <script>
-init_elements().then({},{})
+	init_websocket().then({}, {})
+	init_elements().then({}, {})
+	FillFitTables().then({}, {})
+	FillPropertiesTables().then({}, {})
 </script>
 
 </html>
