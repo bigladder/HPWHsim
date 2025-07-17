@@ -329,13 +329,13 @@ class TestPlotter:
         if have_traces:
             self.plot.finalize_plot()
             self.have_fig = True
+            print("have fig")
         return self
 
 def plot(data):
     plotter = TestPlotter(data)
     if "model_id" in data:
         plotter.model_id = data["model_id"]
-
     if "measured_filepath" in data:
         plotter.read_measured(data["measured_filepath"])
     if "simulated_filepath" in data:
