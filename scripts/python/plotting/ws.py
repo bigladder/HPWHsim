@@ -1,4 +1,4 @@
-# From enclosing folder launch with "poetry run python wstest/ws.py".
+# uv run ws.py
 
 import socketserver
 import urllib.parse as urlparse

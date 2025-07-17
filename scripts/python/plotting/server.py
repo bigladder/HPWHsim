@@ -1,6 +1,6 @@
 # Launches a simple tcp server for dispatching commands initiated from a web page.
 # Two command strings are supported currently: 'test' and 'measure'.
-# Launch the server with "poetry run python server.py".
+# Launch the server with "uv run server.py".
 # Exit the server with "ctrl-c".
 # Open the local file "index.html" in a browser to access the server functions.
 
