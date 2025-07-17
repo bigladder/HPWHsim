@@ -90,7 +90,7 @@ def check_perfmaps(models_list_filename, output_dir):
 					cop11 = outP11 / inP11				
 		
 					if (cop00 < 1) or (cop10 < 1) or (cop01 < 1) or (cop11 < 1) or (inP00 < 0) or (inP10 < 0) or (inP01 < 0) or (inP11 < 0):
-						# remove hpwh-data-model repo dir, then recreate
+
 						if not os.path.exists(output_dir):
 							os.mkdir(output_dir)
 													
