@@ -1,0 +1,61 @@
+
+#ifndef PRESETS_H
+#define PRESETS_H
+
+#include <iostream>
+
+{% for model in models %}
+#include "{{ model.name }}.h"
+{% endfor %}
+
+namespace hpwh_presets {
+
+/// specifies the allowable preset HPWH models
+/// values may vary - names should be used
+enum MODELS: int
+{
+{% for model in models %}
+	{{ model.name }} = {{ model.number }},
+{% endfor %}	
+	unknown = -1
+};
+
+struct Model
+{
+	int id;
+	std::string name;
+	const std::uint8_t *cbor_data;
+	std::size_t size;
+	Model(const int id_in, const char* name_in, const std::uint8_t *cbor_data_in, const std::size_t size_in):
+		id(id_in), name(name_in), cbor_data(cbor_data_in), size(size_in){}
+	MODELS model() const {return static_cast<MODELS>(id);}
+};
+
+inline std::vector<Model> models({
+{% for model in models %}
+	{ MODELS::{{ model.name }}, "{{ model.name }}", cbor_{{ model.name }}.data(), sizeof(cbor_{{ model.name }})},
+{% endfor %}	
+});
+
+inline Model find_by_name(const std::string& name)
+{
+    auto it = find_if(models.begin(),
+                      models.end(),
+                      [&name](Model& model){ return model.name == name; });
+    if (it != models.end())
+        return *it;
+    return {MODELS::unknown, "unknown", nullptr, 0};
+}
+
+inline Model find_by_id(const MODELS id)
+{
+    auto it =
+        find_if(models.begin(),
+                models.end(),
+                [&id](Model& model) { return model.id == id; });
+    if (it != models.end())
+        return *it;
+    return {MODELS::unknown, "unknown", nullptr, 0};
+}
+}
+#endif

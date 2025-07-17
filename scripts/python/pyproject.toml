@@ -1,17 +1,18 @@
 [project]
 name = "HPWHsim-python-scripts"
-version = "0.0.0"
-description = ""
-authors = []
-requires-python = ">=3.10, <4.0"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
 dependencies = [
+    "cbor2>=5.6.5",
+    "lattice",
     "pandas",
     "plotly",
     "koozie",
     "dimes",
 ]
 
-[tool.uv]
-
 [tool.uv.sources]
+lattice = { git = "https://github.com/bigladder/lattice", branch = "main" }
 dimes = { git = "https://github.com/bigladder/dimes", branch = "main" }
+
