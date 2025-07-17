@@ -26,7 +26,7 @@
 		{"id": "LG_APHWC80", "manufacturer": "LG", "specs": ["Preset", "File", "JSON"]},
 
 		{"id": "Stiebel220e", "manufacturer": "Stiebel", "specs": ["Preset", "File", "JSON"]},
-		{"id": "GE502014", "manufacturer": "GE", "specs": ["Preset", "File", "JSON"]},
+		{"id": "GE2014_50", "manufacturer": "GE", "specs": ["Preset", "File", "JSON"]},
 
 		{"id": "ColmacCxV_5_SP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		{"id": "ColmacCxV_5_MP", "manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},

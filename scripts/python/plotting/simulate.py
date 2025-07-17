@@ -27,12 +27,12 @@ def simulate(data):
 	if not os.path.exists(output_dir):
 		os.mkdir(output_dir)
       
-	filepath = "../../../test/models_json/" + model_name + ".json"
+	filepath = "models_json/" + model_name
 	if model_spec == 'JSON':
 		run_list = [app_cmd, 'run', '-s', model_spec, '-f', filepath, '-t', test_dir, '-d', output_dir]
 	else:	
 		run_list = [app_cmd, 'run', '-s', model_spec, '-m', model_name, '-t', test_dir, '-d', output_dir]
-	print(run_list)  
+	print(run_list)	
 	result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
 	os.chdir(orig_dir)
 

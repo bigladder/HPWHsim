@@ -329,7 +329,6 @@ class TestPlotter:
         if have_traces:
             self.plot.finalize_plot()
             self.have_fig = True
-            print("have fig")
         return self
 
 def plot(data):

@@ -52,7 +52,6 @@ def test_proc(data):
 		data['test_id'] = test_proc.prefs['test_id']
 		test_proc.plotter = plot(data)
 		if test_proc.plotter.have_fig:
-			print("have_fig")
 			test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
 			measured_msg = ""
 			simulated_msg = ""
@@ -95,7 +94,6 @@ def test_proc(data):
 								continue
 							hide_uef_input_val = False
 
-			print(test_proc.plotter.plot.figure)
 			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, True, hide_uef_fit, test_proc.uef_val, uef_out_text, False, False
 		
 		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
@@ -173,7 +171,6 @@ def test_proc(data):
 				prevent_initial_call=True
 			)
 	def message(msg):
-		print(msg)
 		if 'data' in msg:
 			data = json.loads(msg['data'])
 			if 'dest' in data and data['dest'] == 'test-proc':
@@ -319,7 +316,6 @@ def test_proc(data):
 		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
 		return json.dumps(msg)
 	
-	print("Now run")
 	app.run(debug=True, use_reloader=False, port = test_proc.port_num)
 
 test_proc.port_num = 8050
