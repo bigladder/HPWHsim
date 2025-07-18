@@ -293,15 +293,14 @@ void HPWH::Condenser::from(
         perfGridValues.reserve(2);
 
         std::size_t nVals = lookup_variables.input_power.size();
-        std::vector<double> inputPowers_W(nVals), cops(nVals);
+        std::vector<double> inputPowers_W(nVals), outputPowers_W(nVals);
         for (std::size_t i = 0; i < nVals; ++i)
         {
             inputPowers_W[i] = lookup_variables.input_power[i];
-            cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
+            outputPowers_W[i] = lookup_variables.heating_capacity[i];
         }
-
         perfGridValues.push_back(inputPowers_W);
-        perfGridValues.push_back(cops);
+        perfGridValues.push_back(outputPowers_W);
         makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
@@ -378,15 +377,14 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         perfGridValues.reserve(2);
 
         std::size_t nVals = lookup_variables.input_power.size();
-        std::vector<double> inputPowers_W(nVals), cops(nVals);
+        std::vector<double> inputPowers_W(nVals), outputPowers_W(nVals);
         for (std::size_t i = 0; i < nVals; ++i)
         {
             inputPowers_W[i] = lookup_variables.input_power[i];
-            cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
+            outputPowers_W[i] = lookup_variables.heating_capacity[i];
         }
-
         perfGridValues.push_back(inputPowers_W);
-        perfGridValues.push_back(cops);
+        perfGridValues.push_back(outputPowers_W);
 
         makePerformanceBtwxt(perfGrid, perfGridValues);
     }
@@ -1334,7 +1332,7 @@ void HPWH::Condenser::makePerformanceBtwxt(const std::vector<std::vector<double>
     {
         auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
         std::vector<double> result = perfRGI->get_values_at_target(target);
-        Performance performance({result[0], result[1] * result[0], result[1]});
+        Performance performance({result[0], result[1], result[1] / result[0]});
         return performance;
     };
 }
