@@ -1650,7 +1650,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
             val = KW_TO_W(val);
 
         for (std::size_t i = 0; i < perfGridValues[0].size(); ++i)
-            perfGridValues[1][i] *= perfGridValues[0][i];
+            perfGridValues[1][i] *= perfGridValues[0][i]; // cop -> heating capacity
 
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
@@ -2007,8 +2007,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
             val = BTUperH_TO_W(val);
 
         for (std::size_t i = 0; i < perfGridValues[0].size(); ++i)
-            perfGridValues[1][i] *= perfGridValues[0][i];
-        
+            perfGridValues[1][i] *= perfGridValues[0][i]; // cop -> heating capacity
+
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
 
         compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
