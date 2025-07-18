@@ -193,7 +193,7 @@ class PerfPlotter():
 		if not self.have_data:
 			self.fig = {}
 			return
-				
+	
 		graph_title = self.label
 		if graph_title != "":
 			graph_title += " - "

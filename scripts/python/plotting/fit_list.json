@@ -1,17 +1,5 @@
 {
-  "parameters": [
-    {
-      "type": "perf-point",
-      "model_id": "Rheem2020Build50",
-      "variable": "Pout",
-      "dependent": "COP",
-      "coords": [
-        2,
-        4,
-        0
-      ]
-    }
-  ],
+  "parameters": [],
   "metrics": [
     {
       "type": "time-series",

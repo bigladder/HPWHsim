@@ -1,9 +1,9 @@
 {
-  "model_id": "GE2014_50",
+  "model_id": "AquaThermAire",
   "model_spec": "JSON",
   "build_dir": "../../../build",
   "test_list": "All tests",
-  "test_id": "test95",
+  "test_id": "RE2H80_UEF50",
   "show_simulated": true,
   "show_measured": false,
   "draw_profile": "Medium",

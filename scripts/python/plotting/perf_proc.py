@@ -512,7 +512,7 @@ def launch_perf_proc(data):
 	time.sleep(1)
 	
 	launch_perf_proc.proc.start()
-	time.sleep(1)
+	time.sleep(2)
 	
 	results = {}
 	results["port_num"] = perf_proc.port_num
