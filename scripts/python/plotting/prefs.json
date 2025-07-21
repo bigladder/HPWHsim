@@ -2,7 +2,7 @@
   "model_id": "LG_APHWC50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
-  "test_list": "Standard tests",
+  "test_list": "All tests",
   "test_id": "standard24hr",
   "show_simulated": true,
   "show_measured": false,

@@ -81,6 +81,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]
 				data = json.loads(data_str)
+
 				measure(data)
 
 				self.send_response(200)

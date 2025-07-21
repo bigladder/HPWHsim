@@ -1,47 +1,4 @@
 {
   "parameters": [],
-  "metrics": [
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 257
-    },
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 231
-    },
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 280
-    },
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 452
-    },
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 1279
-    },
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 7
-    }
-  ]
+  "metrics": []
 }

@@ -4032,6 +4032,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     double removedMass_kg = DENSITYWATER_kgperL * testSummary.removedVolume_L;
     double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
 
+    testSummary.designation = designation;
+
     // require heating during 24-hr test for unit to qualify as consumer water heater
     if (hasHeated && !isDrawing)
     {
@@ -4155,58 +4157,51 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
 //-----------------------------------------------------------------------------
 ///	@brief	first-hour rating as a verbose string
 //-----------------------------------------------------------------------------
-std::string HPWH::FirstHourRating::report()
+nlohmann::json HPWH::FirstHourRating::report()
 {
-    std::string results = "\tFirst-Hour Rating:\n";
-
-    results.append(fmt::format("\t\tVolume Drawn (L): {:g}\n", drawVolume_L));
-
-    results.append(fmt::format("\t\tDesignation: {}\n", DesignationMap[designation]));
-
-    return results;
+    nlohmann::json j_results = {};
+    j_results["volume_drawn_L"] = drawVolume_L;
+    j_results["designation"] = DesignationMap[designation];
+    return j_results;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	24-hr test summary as a verbose string
 //-----------------------------------------------------------------------------
-std::string HPWH::TestSummary::report()
+nlohmann::json HPWH::TestSummary::report()
 {
-    std::string results = "\t24-Hour Test Results:\n";
+    nlohmann::json j_results = {};
+
+    j_results["designation"] = FirstHourRating::DesignationMap[designation];
     if (!qualifies)
     {
-        results.append("\t\tDoes not qualify as consumer water heater.\n");
+        j_results["alert"] = "Does not qualify as consumer water heater.";
     }
 
-    results.append(fmt::format("\t\tRecovery Efficiency: {:g}\n", recoveryEfficiency));
+    j_results["recovery_efficiency"] = recoveryEfficiency;
 
-    results.append(fmt::format("\t\tStandby Loss Coefficient (kJ/h degC): {:g}\n",
-                               standbyLossCoefficient_kJperhC));
+    j_results["standby_loss_coefficient_kJperhC"] = standbyLossCoefficient_kJperhC;
 
-    results.append(fmt::format("\t\tEF: {:g}\n", EF));
+    j_results["EF"] = EF;
 
-    results.append(fmt::format("\t\tAverage Inlet Temperature (degC): {:g}\n", averageInletT_C));
+    j_results["average_inlet_temperature_degC"] = averageInletT_C;
 
-    results.append(fmt::format("\t\tAverage Outlet Temperature (degC): {:g}\n", averageOutletT_C));
+    j_results["average_outlet_temperature_degC"] = averageOutletT_C;
 
-    results.append(fmt::format("\t\tTotal Volume Drawn (L): {:g}\n", removedVolume_L));
+    j_results["total_volume_drawn_L"] = removedVolume_L;
 
-    results.append(fmt::format("\t\tDaily Water-Heating Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(waterHeatingEnergy_kJ)));
+    j_results["daily_water_heating_energy_consumption_kWh"] =
+                               KJ_TO_KWH(waterHeatingEnergy_kJ);
 
-    results.append(fmt::format("\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(adjustedConsumedWaterHeatingEnergy_kJ)));
+    j_results["adjusted_daily_water_heating_energy_consumption_kWh"] = KJ_TO_KWH(adjustedConsumedWaterHeatingEnergy_kJ);
 
-    results.append(fmt::format("\t\tModified Daily Water-Heating Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(modifiedConsumedWaterHeatingEnergy_kJ)));
+    j_results["modified_daily_water_heating_energy_consumption_kWh"] = KJ_TO_KWH(modifiedConsumedWaterHeatingEnergy_kJ);
 
-    results.append("\tAnnual Values:\n");
-    results.append(fmt::format("\t\tAnnual Electrical Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(annualConsumedElectricalEnergy_kJ)));
+    j_results["annual_electrical_energy_consumption_kWh"] = KJ_TO_KWH(annualConsumedElectricalEnergy_kJ);
 
-    results.append(fmt::format("\t\tAnnual Energy Consumption (kWh): {:g}\n",
-                               KJ_TO_KWH(annualConsumedEnergy_kJ)));
+    j_results["annual_energy_consumption_kWh"] = KJ_TO_KWH(annualConsumedEnergy_kJ);
 
-    return results;
+    return j_results;
 }
 
 //-----------------------------------------------------------------------------

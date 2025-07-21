@@ -27,7 +27,11 @@ def measure(data):
 		os.mkdir(output_dir)
          
 	results_filename = "results"
-	run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_filename]
+	filepath = "models_json/" + model_name
+	if model_spec == 'JSON':
+		run_list = [app_cmd, 'measure', '-s', model_spec, '-f', filepath, '-d', output_dir, '-r', results_filename]
+	else:
+		run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_filename]
 	if draw_profile != "auto":
 		run_list.append('-p')
 		run_list.append(draw_profile)
@@ -54,7 +58,7 @@ if __name__ == "__main__":
 
 	else:
 			print('measure arguments:')
-			print('1. model specification (Preset or File)')
+			print('1. model specification (Preset, JSON, Legacy)')
 			print('2. model name')
 			print('3. build directory')
 			print('4. draw profile')

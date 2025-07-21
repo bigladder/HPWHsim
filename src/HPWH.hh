@@ -1120,7 +1120,7 @@ class HPWH : public Courier::Sender
             {Designation::High, "High"}};
 
         double drawVolume_L;
-        std::string report();
+        nlohmann::json report();
     };
 
     /// fields for test output to csv
@@ -1182,12 +1182,13 @@ class HPWH : public Courier::Sender
         double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
         double annualConsumedEnergy_kJ = 0.;           // E_annual
 
+        FirstHourRating::Designation designation = FirstHourRating::Designation::Medium;
         bool qualifies = false;
 
         std::vector<TestData> testDataSet = {};
 
         // return a verbose string summary
-        std::string report();
+        nlohmann::json report();
     };
 
     struct TestConfiguration

@@ -42,8 +42,8 @@ if __name__ == "__main__":
 	if n_args == 4:
 		data['model_spec'] = sys.argv[1]
 		data['model_name'] = sys.argv[2]
-		data['test_name'] = sys.argv[3]
 		data['build_dir'] = sys.argv[4]
+		data['test_dir'] = sys.argv[3]
 
 		simulate(data)
 
@@ -51,5 +51,6 @@ if __name__ == "__main__":
 		print('run_simulation arguments:')
 		print('1. model specification (Preset or File)')
 		print('2. model name')
-		print('3. test name')
-		print('4. build directory')
+		print('3. build directory')
+		print('4. test directory')
+		
