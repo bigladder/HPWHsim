@@ -1,11 +1,11 @@
 {
-  "model_id": "AquaThermAire",
+  "model_id": "LG_APHWC50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
-  "test_list": "All tests",
-  "test_id": "RE2H80_UEF50",
+  "test_list": "Tests with data",
+  "test_id": "DOE2014_LGC50_24hr50",
   "show_simulated": true,
-  "show_measured": false,
+  "show_measured": true,
   "draw_profile": "Medium",
   "heat_source_id": "resistiveElementTop",
   "performance_plots": {

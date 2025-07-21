@@ -9,7 +9,11 @@ dependencies = [
     "pandas",
     "plotly",
     "koozie",
+		"dash",
+		"dash_extensions",
+		"scipy",
     "dimes",
+		"websockets",
 ]
 
 [tool.uv.sources]
