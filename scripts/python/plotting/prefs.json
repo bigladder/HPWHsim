@@ -2,10 +2,10 @@
   "model_id": "LG_APHWC50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
-  "test_list": "Tests with data",
-  "test_id": "DOE2014_LGC50_24hr50",
+  "test_list": "Standard tests",
+  "test_id": "standard24hr",
   "show_simulated": true,
-  "show_measured": true,
+  "show_measured": false,
   "draw_profile": "Medium",
   "heat_source_id": "resistiveElementTop",
   "performance_plots": {

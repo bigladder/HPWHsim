@@ -262,8 +262,8 @@ def test_proc(data):
 		return fig, False
 			
 	@callback(
+		Output('ws', 'send', allow_duplicate=True),
 		Output('test-graph', 'figure', allow_duplicate=True),
-		Output('select-div', 'hidden', allow_duplicate=True),
 		Input('test-graph', 'clickData'),
 		State('test-graph', 'figure'),
 		prevent_initial_call=True
@@ -271,14 +271,30 @@ def test_proc(data):
 	def click_data(clickData, fig):
 		prev_layout = fig['layout']
 		if not clickData:
-			return no_update, True
+			return no_update, fig
 		
 		#print(clickData)
 		if not "points" in clickData:
-			return no_update, True
+			return no_update, fig
 				
 		test_proc.plotter.click_data(clickData)	
-		return fig, False
+		
+		fit_list = read_file("fit_list.json")
+		if 'metrics' in fit_list:
+			metrics = fit_list['metrics']
+		else:
+			metrics = []		
+		
+		for metric in test_proc.plotter.metrics:
+			metrics.append(metric)
+		
+		new_metrics = metrics
+		
+		fit_list['metrics'] = new_metrics			
+		write_file("fit_list.json", fit_list)
+		test_proc.i_send = test_proc.i_send + 1
+		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
+		return json.dumps(msg), test_proc.plotter.plot.figure
 	
 	@app.callback(
 			Output('ws', 'send', allow_duplicate=True),

@@ -198,7 +198,7 @@ class TestPlotter:
 			self.measured.filepath = filepath
 		except:
 			self.measured.df = {}
-		return	
+			return	
 
 		# remove rows from dataframes outside of inclusive range [1,1440]
 		self.measured.df = self.filter_dataframe_range(self.measured)
@@ -258,7 +258,6 @@ class TestPlotter:
 							self.metrics.append(metric)
 
 	def click_data(self, clickData):
-		print(clickData)
 		self.metrics = []
 		if self.measured.have_data:
 			if "points" in clickData:
