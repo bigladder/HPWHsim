@@ -163,6 +163,21 @@ void measure(HPWH& hpwh,
 
        if (saveTestData)
        {
+           std::string outputFileName = outputDir + "/" + standard24hr + "_" + hpwh.name + ".csv";
+
+           auto outputFile = std::make_shared<std::ofstream>();
+           outputFile->open(outputFileName.c_str(), std::ifstream::out);
+           if (outputFile->is_open())
+           {
+               for
+           }
+           else
+           {
+               std::cout << "Could not open output file " << outputFileName << "\n";
+               exit(1);
+           }
+
+       }
            if ((outputDir != "") && (resultsFilename != ""))
            {
                std::ofstream resultsFile;
