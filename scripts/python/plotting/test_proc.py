@@ -251,15 +251,34 @@ def test_proc(data):
 		prevent_initial_call=True
 	)
 	def select_data(selectedData, fig):
+		prev_layout = fig['layout']
 		if not selectedData:
-			return fig, True
+			return no_update, True
 		
 		if not "range" in selectedData:
-			return fig, True
+			return no_update, True
 				
 		test_proc.plotter.select_data(selectedData)	
 		return fig, False
-
+			
+	@callback(
+		Output('test-graph', 'figure', allow_duplicate=True),
+		Output('select-div', 'hidden', allow_duplicate=True),
+		Input('test-graph', 'clickData'),
+		State('test-graph', 'figure'),
+		prevent_initial_call=True
+	)
+	def click_data(clickData, fig):
+		prev_layout = fig['layout']
+		if not clickData:
+			return no_update, True
+		
+		#print(clickData)
+		if not "points" in clickData:
+			return no_update, True
+				
+		test_proc.plotter.click_data(clickData)	
+		return fig, False
 	
 	@app.callback(
 			Output('ws', 'send', allow_duplicate=True),
