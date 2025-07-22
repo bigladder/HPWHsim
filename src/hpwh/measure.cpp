@@ -1,6 +1,6 @@
 /*
-* Measure the performance metrics of a HPWH model
-*/
+ * Measure the performance metrics of a HPWH model
+ */
 
 #include <CLI/CLI.hpp>
 #include "HPWH.hh"
@@ -10,187 +10,175 @@ namespace hpwh_cli
 
 /// measure
 static void measure(HPWH& hpwh,
-                   std::string sOutputDir,
-                   bool sSupressOutput,
-                   std::string sResultsFilename,
-                   std::string customDrawProfile,
-                   std::string sTestConfig);
+                    std::string sOutputDir,
+                    bool sSupressOutput,
+                    std::string sResultsFilename,
+                    std::string customDrawProfile,
+                    std::string sTestConfig);
 
 CLI::App* add_measure(CLI::App& app)
 {
-   const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
+    const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
 
-   //
-   static std::string specType = "Preset";
-   subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
+    //
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
 
-   auto model_group = subcommand->add_option_group("Model options");
+    auto model_group = subcommand->add_option_group("Model options");
 
-   static std::string modelName = "";
-   model_group->add_option("-m,--model", modelName, "Model name");
+    static std::string modelName = "";
+    model_group->add_option("-m,--model", modelName, "Model name");
 
-   static int modelNumber = -1;
-   model_group->add_option("-n,--number", modelNumber, "Model number");
+    static int modelNumber = -1;
+    model_group->add_option("-n,--number", modelNumber, "Model number");
 
-   static std::string modelFilename = "";
-   model_group->add_option("-f,--filename", modelFilename, "Model filename");
+    static std::string modelFilename = "";
+    model_group->add_option("-f,--filename", modelFilename, "Model filename");
 
-   model_group->required(1);
+    model_group->required(1);
 
-   //
-   static std::string outputDir = ".";
-   subcommand->add_option("-d,--dir", outputDir, "Output directory");
+    //
+    static std::string outputDir = ".";
+    subcommand->add_option("-d,--dir", outputDir, "Output directory");
 
-   static bool saveTestData = true;
-   subcommand->add_flag("-v,--save_data", saveTestData, "Save test data");
+    static bool saveTestData = true;
+    subcommand->add_flag("-v,--save_data", saveTestData, "Save test data");
 
-   static std::string resultsFilename = "";
-   subcommand->add_option("-r,--results", resultsFilename, "Results filename");
+    static std::string resultsFilename = "";
+    subcommand->add_option("-r,--results", resultsFilename, "Results filename");
 
-   static std::string drawProfileName = "";
-   subcommand->add_option("-p,--profile", drawProfileName, "Draw profile");
+    static std::string drawProfileName = "";
+    subcommand->add_option("-p,--profile", drawProfileName, "Draw profile");
 
-   static std::string testConfig = "UEF";
-   subcommand->add_option("-c,--config", testConfig, "test configuration");
+    static std::string testConfig = "UEF";
+    subcommand->add_option("-c,--config", testConfig, "test configuration");
 
-   subcommand->callback(
-       [&]()
-       {
-           HPWH hpwh;
-           if (specType == "Preset")
-           {
-               if (!modelName.empty())
-                   hpwh.initPreset(modelName);
-               else if (modelNumber != -1)
-                   hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
-           }
-           else if (specType == "JSON")
-           {
-               if (!modelFilename.empty())
-               {
-                   std::ifstream inputFile(modelFilename + ".json");
-                   nlohmann::json j = nlohmann::json::parse(inputFile);
-                   modelName = getModelNameFromFilename(modelFilename);
-                   hpwh.initFromJSON(j, modelName);
-               }
-           }
-           else if (specType == "Legacy")
-           {
-               if (!modelName.empty())
-                   hpwh.initLegacy(modelName);
-               else if (modelNumber != -1)
-                   hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
-           }
-           measure(hpwh, outputDir, saveTestData, resultsFilename, drawProfileName, testConfig);
-       });
+    subcommand->callback(
+        [&]()
+        {
+            HPWH hpwh;
+            if (specType == "Preset")
+            {
+                if (!modelName.empty())
+                    hpwh.initPreset(modelName);
+                else if (modelNumber != -1)
+                    hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
+            }
+            else if (specType == "JSON")
+            {
+                if (!modelFilename.empty())
+                {
+                    std::ifstream inputFile(modelFilename + ".json");
+                    nlohmann::json j = nlohmann::json::parse(inputFile);
+                    modelName = getModelNameFromFilename(modelFilename);
+                    hpwh.initFromJSON(j, modelName);
+                }
+            }
+            else if (specType == "Legacy")
+            {
+                if (!modelName.empty())
+                    hpwh.initLegacy(modelName);
+                else if (modelNumber != -1)
+                    hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
+            }
+            measure(hpwh, outputDir, saveTestData, resultsFilename, drawProfileName, testConfig);
+        });
 
-   return subcommand;
+    return subcommand;
 }
 
 void measure(HPWH& hpwh,
-            std::string outputDir,
-            bool saveTestData,
-            std::string resultsFilename,
-            std::string drawProfileName,
-            std::string testConfig)
+             std::string outputDir,
+             bool saveTestData,
+             std::string resultsFilename,
+             std::string drawProfileName,
+             std::string testConfig)
 {
-   auto designation = HPWH::FirstHourRating::Designation::Medium;
+    auto designation = HPWH::FirstHourRating::Designation::Medium;
 
-   nlohmann::json j_results = {};
-   // set draw profile
-   if (drawProfileName != "")
-   {
-       bool foundProfile = false;
-       if (drawProfileName.length() > 0)
-       {
-           // make lowercase
-           for (auto& c : drawProfileName)
-           {
-               c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-           }
+    nlohmann::json j_results = {};
+    // set draw profile
+    if (drawProfileName != "")
+    {
+        bool foundProfile = false;
+        if (drawProfileName.length() > 0)
+        {
+            // make lowercase
+            for (auto& c : drawProfileName)
+            {
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
 
-           // make first char upper
-           drawProfileName[0] =
-               static_cast<char>(std::toupper(static_cast<unsigned char>(drawProfileName[0])));
-       }
-       for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
-       {
-           if (value == drawProfileName)
-           {
-               designation = key;
-               foundProfile = true;
-               break;
-           }
-       }
-       if (!foundProfile)
-       {
-           hpwh.get_courier()->send_error("Invalid input: Draw profile name not found.");
-       }
-   }
-   else
-   {
-       auto firstHourRating = hpwh.findFirstHourRating();
-       designation = firstHourRating.designation;
-       j_results["first_hour_rating"] = firstHourRating.report();
-   }
+            // make first char upper
+            drawProfileName[0] =
+                static_cast<char>(std::toupper(static_cast<unsigned char>(drawProfileName[0])));
+        }
+        for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
+        {
+            if (value == drawProfileName)
+            {
+                designation = key;
+                foundProfile = true;
+                break;
+            }
+        }
+        if (!foundProfile)
+        {
+            hpwh.get_courier()->send_error("Invalid input: Draw profile name not found.");
+        }
+    }
+    else
+    {
+        auto firstHourRating = hpwh.findFirstHourRating();
+        designation = firstHourRating.designation;
+        j_results["first_hour_rating"] = firstHourRating.report();
+    }
 
-   // select test configuration
-   transform(testConfig.begin(),
-             testConfig.end(),
-             testConfig.begin(),
-             ::toupper); // make uppercase
-   HPWH::TestConfiguration testConfiguration = HPWH::testConfiguration_UEF;
-   if (testConfig == "E50")
-       testConfiguration = HPWH::testConfiguration_E50;
-   else if (testConfig == "E95")
-       testConfiguration = HPWH::testConfiguration_E95;
+    // select test configuration
+    transform(testConfig.begin(),
+              testConfig.end(),
+              testConfig.begin(),
+              ::toupper); // make uppercase
+    HPWH::TestConfiguration testConfiguration = HPWH::testConfiguration_UEF;
+    if (testConfig == "E50")
+        testConfiguration = HPWH::testConfiguration_E50;
+    else if (testConfig == "E95")
+        testConfiguration = HPWH::testConfiguration_E95;
 
-   auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
+    auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
 
-   j_results["24_h_test"] = testSummary.report();
-   if ((outputDir != "") && (resultsFilename != ""))
-   {
-       std::ofstream resultsFile;
-       std::string sFilepath = outputDir + "/" + resultsFilename + ".json";
-       resultsFile.open(sFilepath.c_str(), std::ifstream::out | std::ofstream::trunc);
-       if (!resultsFile.is_open())
-       {
-           std::cout << "Could not open output file " << resultsFilename << "\n";
-           exit(1);
-       }
-       resultsFile << j_results.dump(2);
-       resultsFile.close();
+    j_results["24_h_test"] = testSummary.report();
+    if ((resultsFilename != ""))
+    {
+        std::ofstream resultsFile;
+        std::string filepath = resultsFilename + ".json";
+        if (outputDir != "")
+            filepath = outputDir + "/" + filepath;
+        resultsFile.open(filepath.c_str(), std::ifstream::out | std::ofstream::trunc);
+        if (!resultsFile.is_open())
+        {
+            std::cout << "Could not open output file " << resultsFilename << "\n";
+            exit(1);
+        }
+        resultsFile << j_results.dump(2);
+        resultsFile.close();
+    }
 
-       if (saveTestData)
-       {
-           std::string outputFileName = outputDir + "/" + standard24hr + "_" + hpwh.name + ".csv";
-
-           auto outputFile = std::make_shared<std::ofstream>();
-           outputFile->open(outputFileName.c_str(), std::ifstream::out);
-           if (outputFile->is_open())
-           {
-               for
-           }
-           else
-           {
-               std::cout << "Could not open output file " << outputFileName << "\n";
-               exit(1);
-           }
-
-       }
-           if ((outputDir != "") && (resultsFilename != ""))
-           {
-               std::ofstream resultsFile;
-               std::string sFilepath = outputDir + "/" + resultsFilename + ".json";
-               resultsFile.open(sFilepath.c_str(), std::ifstream::out | std::ofstream::trunc);
-               if (!resultsFile.is_open())
-               {
-                   std::cout << "Could not open output file " << resultsFilename << "\n";
-                   exit(1);
-               }
-               resultsFile << j_results.dump(2);
-               resultsFile.close();
-           }
-       }
+    if (saveTestData)
+    {
+        std::ofstream outputFile;
+        std::string filepath = "standard24hr_" + hpwh.name + ".csv";
+        if (outputDir != "")
+            filepath = outputDir + "/" + filepath;
+        outputFile.open(filepath.c_str(), std::ifstream::out);
+        if (!outputFile.is_open())
+        {
+            std::cout << "Could not open output file " << filepath << "\n";
+            exit(1);
+        }
+        hpwh.writeCSVHeading(&outputFile);
+        for (auto& testData : testSummary.testDataSet)
+            hpwh.writeCSVRow(&outputFile, testData);
+    }
 }
 } // namespace hpwh_cli

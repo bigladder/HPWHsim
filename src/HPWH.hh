@@ -703,20 +703,6 @@ class HPWH : public Courier::Sender
 
     void setMinutesPerStep(double newMinutesPerStep);
 
-    int writeCSVHeading(std::ofstream& outFILE,
-                        const char* preamble = "",
-                        int nTCouples = 6,
-                        int options = CSVOPT_NONE) const;
-
-    int writeCSVRow(std::ofstream& outFILE,
-                    const char* preamble = "",
-                    int nTCouples = 6,
-                    int options = CSVOPT_NONE) const;
-    /**< a couple of function to write the outputs to a file
-        they both will return 0 for success
-        the preamble should be supplied with a trailing comma, as these functions do
-        not add one.  Additionally, a newline is written with each call.  */
-
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
     void setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
@@ -1053,6 +1039,7 @@ class HPWH : public Courier::Sender
     /**< functions to check for and set specific high temperature shut off logics.
     HPWHs can only have one of these, which is at least typical */
 
+    double _targetSoC;
     void setTargetSoCFraction(double target);
 
     bool canUseSoCControls();
@@ -1126,6 +1113,7 @@ class HPWH : public Courier::Sender
     /// fields for test output to csv
     struct TestData
     {
+        static const int nTCouples = 6;
         int time_min;
         double ambientT_C;
         double setpointT_C;
@@ -1137,6 +1125,15 @@ class HPWH : public Courier::Sender
         std::vector<double> thermocoupleT_C;
         double outletT_C;
     };
+
+    void writeCSVHeading(std::ostream* out, int options = CSVOPT_NONE) const;
+
+    void writeCSVRow(std::ostream* out, TestData& testData, int options = CSVOPT_NONE) const;
+
+    /**< a couple of function to write the outputs to a file
+        they both will return 0 for success
+        the preamble should be supplied with a trailing comma, as these functions do
+        not add one.  Additionally, a newline is written with each call.  */
 
     /// collection of information derived from standard 24-h test
     struct TestSummary

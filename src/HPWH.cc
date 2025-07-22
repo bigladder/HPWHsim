@@ -667,71 +667,79 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
 }
 
 // public members to write to CSV file
-int HPWH::writeCSVHeading(std::ofstream& outFILE,
-                          const char* preamble,
-                          int nTCouples,
-                          int options) const
+void HPWH::writeCSVHeading(std::ostream* out, int options) const
 {
-
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    outFILE << preamble;
+    *out << "minutes,Ta,Tsetpoint,inletT,draw,DRstatus";
 
-    outFILE << "DRstatus";
+    if (isCompressorExternalMultipass())
+        *out << ",condenserInletT,condenserOutletT,externalVolGPM";
+
+    if (usesSoCLogic)
+        *out << ",targetSoCFract,soCFract,";
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        outFILE << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
+        *out << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
     }
 
-    for (int iTC = 0; iTC < nTCouples; iTC++)
+    for (int iTC = 0; iTC < TestData::nTCouples; iTC++)
     {
-        outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
+        *out << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
     }
 
-    outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
-
-    return 0;
+    *out << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
 }
 
-int HPWH::writeCSVRow(std::ofstream& outFILE,
-                      const char* preamble,
-                      int nTCouples,
-                      int options) const
+void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
 {
-
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    outFILE << preamble;
+    *out << testData.time_min;
+    *out << fmt::format(", {:0.2f}", testData.ambientT_C);
+    *out << fmt::format(", {:0.2f}", testData.setpointT_C);
+    *out << fmt::format(", {:0.2f}", testData.inletT_C);
+    *out << fmt::format(", {:0.2f}", testData.drawVolume_L);
 
-    outFILE << prevDRstatus;
+    if (isCompressorExternalMultipass() == 1)
+    {
+        *out << fmt::format(", {:0.2f}", getCondenserWaterInletTemp());
+        *out << fmt::format(", {:0.2f}", getCondenserWaterOutletTemp());
+        *out << fmt::format(", {:0.2f}", getExternalVolumeHeated(HPWH::UNITS_GAL));
+    }
+    if (usesSoCLogic)
+    {
+        *out << fmt::format(", {:0.6f}", _targetSoC);
+        *out << fmt::format(", {:0.6f}", getSoCFraction());
+    }
+
+    *out << ", " << prevDRstatus;
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
+        *out << fmt::format(",{:0.2f},{:0.2f}",
+                            testData.h_srcIn_kWh[iHS] * 1000.,
+                            testData.h_srcOut_kWh[iHS] * 1000.);
     }
 
-    for (int iTC = 0; iTC < nTCouples; iTC++)
+    for (int iTC = 0; iTC < TestData::nTCouples; iTC++)
     {
-        outFILE << fmt::format(",{:0.2f}",
-                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+        *out << fmt::format(",{:0.2f}",
+                            doIP ? C_TO_F(testData.thermocoupleT_C[iTC])
+                                 : testData.thermocoupleT_C[iTC]);
     }
 
-    if (options & HPWH::CSVOPT_IS_DRAWING)
+    if (testData.drawVolume_L > 0.)
     {
-        outFILE << fmt::format(",{:0.2f}",
-                               doIP ? C_TO_F(tank->getOutletT_C()) : tank->getOutletT_C());
+        *out << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.outletT_C) : testData.outletT_C);
     }
     else
     {
-        outFILE << ",";
+        *out << ",";
     }
 
-    outFILE << std::endl;
-
-    return 0;
+    *out << std::endl;
 }
 
 bool HPWH::isSetpointFixed() const { return setpointFixed; }
@@ -1368,6 +1376,7 @@ void HPWH::setTargetSoCFraction(double target)
             logic->setDecisionPoint(target);
         }
     }
+    _targetSoC = target;
 }
 
 bool HPWH::isSoCControlled() const { return usesSoCLogic; }
@@ -3676,7 +3685,6 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
 
     prepareForTest(testConfiguration);
 
-    const int nTestTCouples = 6;
     TestSummary testSummary;
     testSummary.testDataSet = {};
 
@@ -3719,10 +3727,10 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                 testData.h_srcOut_kWh.push_back(getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
 
-            for (int iTC = 0; iTC < nTestTCouples; ++iTC)
+            for (int iTC = 0; iTC < TestData::nTCouples; ++iTC)
             {
                 testData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, nTestTCouples, UNITS_C));
+                    getNthSimTcouple(iTC + 1, TestData::nTCouples, UNITS_C));
             }
             testData.outletT_C = 0.;
 
@@ -3878,10 +3886,10 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                 testData.h_srcOut_kWh.push_back(getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
 
-            for (int iTC = 0; iTC < nTestTCouples; ++iTC)
+            for (int iTC = 0; iTC < TestData::nTCouples; ++iTC)
             {
                 testData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, nTestTCouples, UNITS_C));
+                    getNthSimTcouple(iTC + 1, TestData::nTCouples, UNITS_C));
             }
             testData.outletT_C = tank->getOutletT_C();
 
@@ -4190,14 +4198,16 @@ nlohmann::json HPWH::TestSummary::report()
 
     j_results["total_volume_drawn_L"] = removedVolume_L;
 
-    j_results["daily_water_heating_energy_consumption_kWh"] =
-                               KJ_TO_KWH(waterHeatingEnergy_kJ);
+    j_results["daily_water_heating_energy_consumption_kWh"] = KJ_TO_KWH(waterHeatingEnergy_kJ);
 
-    j_results["adjusted_daily_water_heating_energy_consumption_kWh"] = KJ_TO_KWH(adjustedConsumedWaterHeatingEnergy_kJ);
+    j_results["adjusted_daily_water_heating_energy_consumption_kWh"] =
+        KJ_TO_KWH(adjustedConsumedWaterHeatingEnergy_kJ);
 
-    j_results["modified_daily_water_heating_energy_consumption_kWh"] = KJ_TO_KWH(modifiedConsumedWaterHeatingEnergy_kJ);
+    j_results["modified_daily_water_heating_energy_consumption_kWh"] =
+        KJ_TO_KWH(modifiedConsumedWaterHeatingEnergy_kJ);
 
-    j_results["annual_electrical_energy_consumption_kWh"] = KJ_TO_KWH(annualConsumedElectricalEnergy_kJ);
+    j_results["annual_electrical_energy_consumption_kWh"] =
+        KJ_TO_KWH(annualConsumedElectricalEnergy_kJ);
 
     j_results["annual_energy_consumption_kWh"] = KJ_TO_KWH(annualConsumedEnergy_kJ);
 
