@@ -43,7 +43,7 @@ def test_proc(data):
 	test_proc.prefs = read_file("prefs.json")
 	test_proc.i_send = 0
 	test_proc.prev_show = 0
-	test_proc.uef_val = 0
+	test_proc.ef_val = 0
 	test_proc.plotter = {}
 	
 	def replot(data):
@@ -71,30 +71,31 @@ def test_proc(data):
 				value_list.append('simulated')
 				test_proc.prev_show |= 2
 			
-			hide_uef_fit = True
-			hide_uef_input_val = True
-			uef_out_text = "" 
+			hide_ef_fit = True
+			hide_ef_input_val = True
+			ef_out_text = "" 
 			if 'is_standard_test' in data:
 				if data['is_standard_test'] == 1:
-					hide_uef_fit = False
+					hide_ef_fit = False
 					build_dir = data['build_dir']
 					output_dir = os.path.join(build_dir, 'test', 'output')
 					results_filename = os.path.join(output_dir, "results.json")
 					results = read_file(results_filename)
-					test_proc.uef_val = results['UEF']
-					uef_out_text = "simulated UEF: {:.4f}".format(test_proc.uef_val)
+					summary = results["24_hr_test"]
+					test_proc.ef_val = summary['EF']
+					ef_out_text = "simulated EF: {:.4f}".format(test_proc.ef_val)
 					
 					fit_list = read_file("fit_list.json")
 					if 'metrics' in fit_list:
 						metrics = fit_list['metrics']
 						for index, metric in reversed(list(enumerate(metrics))):
-							if 'type' not in metric or metric['type'] != 'UEF':
+							if 'type' not in metric or metric['type'] != 'EF':
 								continue
 							if 'model' not in metric or (metric['model'] != test_proc.prefs['model_id']):
 								continue
-							hide_uef_input_val = False
+							hide_ef_input_val = False
 
-			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, True, hide_uef_fit, test_proc.uef_val, uef_out_text, False, False
+			return test_proc.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, hide_ef_fit, hide_ef_fit, test_proc.ef_val, ef_out_text, False, False
 		
 		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 	
@@ -125,21 +126,21 @@ def test_proc(data):
 			html.Div([
 				html.Div([
 					html.P(
-						id='UEF-output',
-						children="simulated UEF: 0",
+						id='EF-output',
+						children="simulated EF: 0",
 						style = {'fontSize': 16, 'display': 'inline-block'}),
 					dcc.Checklist(
 				    options = [{'label': 'fit', 'value': 'fit'}],
 						value = [],
-						id="fit-UEF-check",
+						id="fit-EF-check",
 						style = {'fontSize': 16, 'display': 'inline-block', 'marginLeft': 8})]),
 				html.Div(
-					[html.Label("target:", htmlFor="target-UEF-input", style = {'fontSize': 16, 'display': 'inline-block'}),
-					dcc.Input(id='target-UEF-input', type='number', value = 0)],
-					id='UEF-input-div', 
+					[html.Label("target:", htmlFor="target-EF-input", style = {'fontSize': 16, 'display': 'inline-block'}),
+					dcc.Input(id='target-EF-input', type='number', value = 0)],
+					id='EF-input-div', 
 					hidden=True)
 				],
-				id='fit-UEF-div',
+				id='fit-EF-div',
 				hidden = True)
 		],
 		id='main-div', hidden=True)
@@ -161,10 +162,10 @@ def test_proc(data):
 				Output('show-check', 'value'),
 				Output('energy_measured_p', 'children'),
 				Output('energy_simulated_p', 'children'),
-				Output('fit-UEF-div', 'hidden'),
-				Output('UEF-input-div', 'hidden', allow_duplicate=True),
-				Output('target-UEF-input', 'value'),
-				Output('UEF-output', 'children'),
+				Output('fit-EF-div', 'hidden'),
+				Output('EF-input-div', 'hidden', allow_duplicate=True),
+				Output('target-EF-input', 'value'),
+				Output('EF-output', 'children'),
 				Output('main-div', 'hidden'),
 				Output('select-div', 'hidden'),
 				[Input("ws", "message")],
@@ -182,12 +183,12 @@ def test_proc(data):
 
 	@app.callback( 
 		Output('ws', 'send', allow_duplicate=True),
-		Output('UEF-input-div', 'hidden', allow_duplicate=True),
-		Input('fit-UEF-check', 'value'),
-		Input('target-UEF-input', 'value'),
+		Output('EF-input-div', 'hidden', allow_duplicate=True),
+		Input('fit-EF-check', 'value'),
+		Input('target-EF-input', 'value'),
 		prevent_initial_call=True
 	)
-	def change_fit_UEF(value, uef_in):	
+	def change_fit_EF(value, ef_in):	
 		fit_list = read_file("fit_list.json")
 		if 'metrics' in fit_list:
 			metrics = fit_list['metrics']
@@ -197,7 +198,7 @@ def test_proc(data):
 		hide_input = True
 		new_metrics = metrics
 		for index, metric in reversed(list(enumerate(metrics))):
-			if 'type' not in metric or metric['type'] != 'UEF':
+			if 'type' not in metric or metric['type'] != 'EF':
 				continue
 			if 'model_id' not in metric or (metric['model_id'] != test_proc.prefs['model_id']):
 					continue
@@ -205,7 +206,7 @@ def test_proc(data):
 			del new_metrics[index]	
 		
 		if 'fit' in value:
-			new_metrics.append({'type': 'UEF', 'model_id': test_proc.prefs['model_id'], 'target': uef_in})
+			new_metrics.append({'type': 'EF', 'model_id': test_proc.prefs['model_id'], 'target': ef_in})
 			hide_input = False
 
 		fit_list['metrics'] = new_metrics

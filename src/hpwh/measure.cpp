@@ -108,13 +108,18 @@ void measure(HPWH& hpwh,
             {
                 c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             }
-
-            // make first char upper
-            drawProfileName[0] =
-                static_cast<char>(std::toupper(static_cast<unsigned char>(drawProfileName[0])));
+            // remove spaces
+            remove(drawProfileName.begin(), drawProfileName.end(), ' ');
         }
-        for (const auto& [key, value] : HPWH::FirstHourRating::DesignationMap)
+        for (auto [key, value] : HPWH::FirstHourRating::DesignationMap)
         {
+            // make lowercase
+            for (auto& c : value)
+            {
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
+            // remove spaces
+            remove(value.begin(), value.end(), ' ');
             if (value == drawProfileName)
             {
                 designation = key;

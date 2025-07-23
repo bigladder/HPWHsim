@@ -34,8 +34,8 @@ def measure(data):
 		run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_filename]
 	if draw_profile != "auto":
 		run_list.append('-p')
-		run_list.append(draw_profile)
-
+		run_list.append(draw_profile.replace(" ", ""))
+	print(run_list)
 	result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
 	os.chdir(orig_dir)
 

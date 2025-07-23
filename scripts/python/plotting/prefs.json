@@ -6,7 +6,7 @@
   "test_id": "standard24hr",
   "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "Medium",
+  "draw_profile": "High",
   "heat_source_id": "resistiveElementTop",
   "performance_plots": {
     "contour_variable": 1,
