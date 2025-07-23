@@ -63,7 +63,7 @@ def launch_ws():
 		time.sleep(1)
 	handler.clients = []
 	launch_ws.proc = mp.Process(target=run_main, args=(), name='ws')
-	time.sleep(1)
+	time.sleep(2)
 
 	launch_ws.proc.start()
 	time.sleep(2)

@@ -193,24 +193,30 @@ def test_proc(data):
 		if 'metrics' in fit_list:
 			metrics = fit_list['metrics']
 		else:
-			metrics = []
+			metrics = {}
 		
+		if 'energy_factors' in metrics:
+			energy_factors = metrics['energy_factors']
+		else:
+			energy_factors = []
+			
 		hide_input = True
-		new_metrics = metrics
-		for index, metric in reversed(list(enumerate(metrics))):
-			if 'type' not in metric or metric['type'] != 'simulated':
-				continue
-			if 'model_id' not in metric or (metric['model_id'] != test_proc.prefs['model_id']):
+		new_energy_factors = energy_factors
+		for index, energy_factor in reversed(list(enumerate(energy_factors))):
+			if 'model_id' not in energy_factor or (energy_factor['model_id'] != test_proc.prefs['model_id']):
 					continue			
-			if 'variable' not in metric or metric['variable'] != 'EF':
+			if 'draw_profile' not in energy_factor or energy_factor['draw_profile'] != test_proc.prefs['draw_profile']:
 					continue			
-			del new_metrics[index]	
+			del new_energy_factors[index]	
 		
 		if 'fit' in value:
-			new_metrics.append({'type': 'simulated', 'model_id': test_proc.prefs['model_id'], 'variable': 'EF', 'value': ef_in})
+			new_energy_factors.append({'model_id': test_proc.prefs['model_id'], 'draw_profile': test_proc.prefs['draw_profile'], 'value': ef_in})
 			hide_input = False
 
-		fit_list['metrics'] = new_metrics
+		print(metrics)
+		print(new_energy_factors)
+		metrics['energy_factors'] = new_energy_factors
+		fit_list['metrics'] = metrics
 		write_file("fit_list.json", fit_list)		
 		test_proc.i_send = test_proc.i_send + 1
 		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
@@ -285,14 +291,20 @@ def test_proc(data):
 		if 'metrics' in fit_list:
 			metrics = fit_list['metrics']
 		else:
-			metrics = []		
+			metrics = {}		
+
+		if 'test_points' in metrics:
+			test_points = metrics['test_points']
+		else:
+			test_points = []	
 		
-		for metric in test_proc.plotter.metrics:
-			metrics.append(metric)
+		for test_point in test_proc.plotter.test_points:
+			test_points.append(test_point)
 		
-		new_metrics = metrics
+		if test_points:
+			metrics['test_points'] = test_points
 		
-		fit_list['metrics'] = new_metrics			
+		fit_list['metrics'] = metrics			
 		write_file("fit_list.json", fit_list)
 		test_proc.i_send = test_proc.i_send + 1
 		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}
@@ -308,14 +320,20 @@ def test_proc(data):
 		if 'metrics' in fit_list:
 			metrics = fit_list['metrics']
 		else:
-			metrics = []		
+			metrics = {}		
 		
-		for metric in test_proc.plotter.metrics:
-			metrics.append(metric)
+		if 'test_points' in metrics:
+			test_points = metrics['test_points']
+		else:
+			test_points = []
+		for test_point in test_proc.plotter.test_points:
+			test_points.append(test_point)
 		
-		new_metrics = metrics
+		if test_points:
+			metrics['test_points'] = test_points
 		
-		fit_list['metrics'] = new_metrics			
+		if metrics:
+			fit_list['metrics'] = metrics			
 		write_file("fit_list.json", fit_list)
 		test_proc.i_send = test_proc.i_send + 1
 		msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": test_proc.i_send}

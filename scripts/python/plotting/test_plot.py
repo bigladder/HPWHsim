@@ -82,7 +82,7 @@ class TestPlotter:
 		self.measured = DataSet("Measured")
 		self.simulated = DataSet("Simulated")
 		self.have_fig = False
-		self.metrics = {}
+		self.test_points = []
 		self.model_id = ""
 
 		self.variables = {
@@ -240,7 +240,7 @@ class TestPlotter:
 		self.simulated.have_data = True
 
 	def select_data(self, selectedData):
-		self.metrics = []
+		self.test_points = []
 		if self.measured.have_data:
 			if "range" in selectedData:
 				range = selectedData["range"]
@@ -249,16 +249,16 @@ class TestPlotter:
 					Pins = self.measured.df["PowerIn(W)"]
 					for t_min, Pin in zip(t_mins, Pins):
 						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
-							metric = {}
-							metric['type'] = "measured"
-							metric['model_id'] = self.label
-							metric['test_id'] = self.test_id
-							metric['variable'] = "Pin"
-							metric['t_min'] = t_min
-							self.metrics.append(metric)
+							test_point = {}
+							test_point['model_id'] = self.label
+							test_point['test_id'] = self.test_id
+							test_point['variable'] = "Pin(W)"
+							test_point['value'] = Pin
+							test_point['t_min'] = t_min
+							self.test_points.append(test_point)
 
 	def click_data(self, clickData):
-		self.metrics = []
+		self.test_points = []
 		if self.measured.have_data:
 			if "points" in clickData:
 				for point in clickData["points"]:
@@ -268,15 +268,14 @@ class TestPlotter:
 						Pins = self.measured.df["PowerIn(W)"]
 						for t_min, Pin in zip(t_mins, Pins):
 							if Pin == point["y"] and t_min == point["x"]:
-								metric = {}
-								metric['type'] = "measured"
-								metric['model_id'] = self.label
-								metric['test_id'] = self.test_id
-								metric['variable'] = "Pin(W)"
-								metric['value'] = Pin
-								metric['t_min'] = t_min
-								self.metrics.append(metric)
-								print(metric)
+								test_point = {}
+								test_point['model_id'] = self.label
+								test_point['test_id'] = self.test_id
+								test_point['variable'] = "Pin(W)"
+								test_point['value'] = Pin
+								test_point['t_min'] = t_min
+								self.test_points.append(test_point)
+								print(test_point)
 								break
 								            
 	def plot_graphs(self, data_set, variable, value, row):

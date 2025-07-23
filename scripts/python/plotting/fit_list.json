@@ -1,19 +1,42 @@
 {
   "parameters": [],
-  "metrics": [
-    {
-      "type": "measured",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin(W)",
-      "value": 297.08335,
-      "t_min": 282
-    },
-    {
-      "type": "simulated",
-      "model_id": "LG_APHWC50",
-      "variable": "EF",
-      "value": 3.8503527346293396
-    }
-  ]
+  "metrics": {
+    "energy_factors": [
+      {
+        "model_id": "LG_APHWC50",
+        "draw_profile": "Medium",
+        "value": 3.8503527346293396
+      }
+    ],
+    "test_points": [
+      {
+        "model_id": "LG_APHWC50",
+        "test_id": "DOE2014_LGC50_24hr50",
+        "variable": "Pin(W)",
+        "value": 262.48333,
+        "t_min": 193
+      },
+      {
+        "model_id": "LG_APHWC50",
+        "test_id": "DOE2014_LGC50_24hr50",
+        "variable": "Pin(W)",
+        "value": 319.39998,
+        "t_min": 346
+      },
+      {
+        "model_id": "LG_APHWC50",
+        "test_id": "DOE2014_LGC50_24hr50",
+        "variable": "Pin(W)",
+        "value": 2.0000001000000003,
+        "t_min": 492
+      },
+      {
+        "model_id": "LG_APHWC50",
+        "test_id": "DOE2014_LGC50_24hr67",
+        "variable": "Pin(W)",
+        "value": 171.30001,
+        "t_min": 156
+      }
+    ]
+  }
 }

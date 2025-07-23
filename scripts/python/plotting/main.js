@@ -369,7 +369,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 	async function clear_metrics() {
 			var fit_list = await read_json_file("./fit_list.json")
-			fit_list['metrics'] = []
+			fit_list['metrics'] = {}
 			await write_json_file("./fit_list.json", fit_list)
 			await FillFitTables()
 		}
@@ -412,20 +412,19 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 	}
 
 	async function FillMetricsTable(fit_list) {
-		let tableHTML = ''
-
-		have_point = false;
+		let tableHTML = '<table>';
 		if ('metrics' in fit_list)
 		{		
 			let metrics = fit_list['metrics']
-			metrics.forEach(metric =>
-			{		
-				if ('type' in metric)
+			have_metric = false;
+			if('test_points' in metrics)
+			{
+				const tableHeaders = ['model_id', 'test_id', 't_min', 'variable', 'value'];
+				for(const test_point of metrics['test_points'])
 				{
-					const tableHeaders = ['type', 'model_id', 'variable', 'value', 't_min'];
 					if (!have_point)
 					{
-						tableHTML = '<table><thead><tr>';
+						tableHTML += '<thead><tr>';
 						tableHeaders.forEach(header => {
 						    tableHTML += `<th>${header}</th>`;
 						  });
@@ -435,14 +434,43 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 						
 					tableHTML += '<tr>';
 					tableHeaders.forEach(header => {
-						tableHTML += `<td>${metric[header] || ''}</td>`; 
+						tableHTML += `<td>${test_point[header] || ''}</td>`; 
+					});
+					tableHTML += '</tr>';
+				  have_point = true;
+				};
+				tableHTML += '</tbody>';
+				have_metric |= have_point;
+			}
+
+			have_energy_factor = false;
+			if('energy_factors' in metrics)
+			{
+				const tableHeaders = ['model_id', 'draw_profile', 'value'];
+				for (const energy_factor of metrics['energy_factors'])
+				{
+					if (!have_energy_factor)
+					{
+						tableHTML += '<thead><tr>';
+						tableHeaders.forEach(header => {
+						    tableHTML += `<th>${header}</th>`;
+						  });
+						tableHTML += '</tr></thead><tbody>';
+						have_energy_factor = true;	
+					}
+						
+					tableHTML += '<tr>';
+					tableHeaders.forEach(header => {
+						tableHTML += `<td>${energy_factor[header] || ''}</td>`; 
 					});
 				   tableHTML += '</tr>';
-				  have_point = true;
+				  have_energy_factor = true;
 				}
-			});
+				tableHTML += '</tbody>';
+				have_metric |= have_energy_factor;
+			}
 		}
-		if (!have_point)
+		if (!have_metric)
 			tableHTML = '<div>No metrics.</div>'
 		document.getElementById('metrics_table').innerHTML = tableHTML;
 	}
