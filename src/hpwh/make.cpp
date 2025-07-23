@@ -93,8 +93,7 @@ CLI::App* add_make(CLI::App& app)
             }
             auto perfPolySet = (tier == 3) ? HPWH::tier3 : HPWH::tier4;
 
-            make(
-                 hpwh,
+            make(hpwh,
                  targetUEF,
                  sTestConfig,
                  outputDir,
@@ -107,8 +106,7 @@ CLI::App* add_make(CLI::App& app)
     return subcommand;
 }
 
-void make(
-          HPWH& hpwh,
+void make(HPWH& hpwh,
           double targetEF,
           std::string sTestConfig,
           std::string outputDir,
@@ -171,7 +169,7 @@ void make(
     hpwh.makeGenericEF(targetEF, testConfiguration, designation, perfPolySet);
 
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
-    j_results["24_h_test"] = testSummary.report();
+    j_results["24_hr_test"] = testSummary.report();
 
     if (saveTestData)
     {

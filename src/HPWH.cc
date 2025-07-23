@@ -671,13 +671,15 @@ void HPWH::writeCSVHeading(std::ostream* out, int options) const
 {
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    *out << "minutes,Ta,Tsetpoint,inletT,draw,DRstatus";
+    *out << "minutes,Ta,Tsetpoint,inletT,draw";
 
     if (isCompressorExternalMultipass())
         *out << ",condenserInletT,condenserOutletT,externalVolGPM";
 
     if (usesSoCLogic)
-        *out << ",targetSoCFract,soCFract,";
+        *out << ",targetSoCFract,soCFract";
+
+    *out << ",DRstatus";
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
@@ -697,16 +699,16 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     *out << testData.time_min;
-    *out << fmt::format(", {:0.2f}", testData.ambientT_C);
-    *out << fmt::format(", {:0.2f}", testData.setpointT_C);
-    *out << fmt::format(", {:0.2f}", testData.inletT_C);
-    *out << fmt::format(", {:0.2f}", testData.drawVolume_L);
+    *out << fmt::format(", {:0.6f}", testData.ambientT_C);
+    *out << fmt::format(", {:0.6f}", testData.setpointT_C);
+    *out << fmt::format(", {:0.6f}", testData.inletT_C);
+    *out << fmt::format(", {:0.6f}", testData.drawVolume_L);
 
     if (isCompressorExternalMultipass() == 1)
     {
-        *out << fmt::format(", {:0.2f}", getCondenserWaterInletTemp());
-        *out << fmt::format(", {:0.2f}", getCondenserWaterOutletTemp());
-        *out << fmt::format(", {:0.2f}", getExternalVolumeHeated(HPWH::UNITS_GAL));
+        *out << fmt::format(", {:0.6f}", getCondenserWaterInletTemp());
+        *out << fmt::format(", {:0.6f}", getCondenserWaterOutletTemp());
+        *out << fmt::format(", {:0.6f}", getExternalVolumeHeated(HPWH::UNITS_GAL));
     }
     if (usesSoCLogic)
     {
@@ -714,7 +716,7 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
         *out << fmt::format(", {:0.6f}", getSoCFraction());
     }
 
-    *out << ", " << prevDRstatus;
+    *out << fmt::format(", {:d}", static_cast<int>(prevDRstatus));
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {

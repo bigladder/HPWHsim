@@ -282,7 +282,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 				const draw_profile = test_form.draw_profile.value;
 				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
 				await callPyServer("measure", "data=" + JSON.stringify(data))
-				simulated_filename = "test24hr_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
+				simulated_filename = "test24hrEF_"+ prefs["model_id"] + ".csv";
 
 				let res_path = prefs['build_dir'] + "/test/output/results.json"
 			  var results = await read_json_file(res_path)

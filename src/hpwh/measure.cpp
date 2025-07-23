@@ -147,7 +147,7 @@ void measure(HPWH& hpwh,
 
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
 
-    j_results["24_h_test"] = testSummary.report();
+    j_results["24_hr_test"] = testSummary.report();
     if ((resultsFilename != ""))
     {
         std::ofstream resultsFile;
@@ -167,7 +167,7 @@ void measure(HPWH& hpwh,
     if (saveTestData)
     {
         std::ofstream outputFile;
-        std::string filepath = "standard24hr_" + hpwh.name + ".csv";
+        std::string filepath = "test24hrEF_" + hpwh.name + ".csv";
         if (outputDir != "")
             filepath = outputDir + "/" + filepath;
         outputFile.open(filepath.c_str(), std::ifstream::out);
