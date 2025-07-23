@@ -103,7 +103,7 @@ def perf_proc(data):
 					
 		html.Div([
 			html.P("coloring", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
-			dcc.Dropdown(options = [{'label': 'heatmap', 'value': 0}, {'label': 'lines', 'value': 1}],
+			dcc.Dropdown(options = [{'label': 'none', 'value': 0}, {'label': 'heatmap', 'value': 1}, {'label': 'lines', 'value': 2}],
 				id='coloring-dropdown',
 				style= {'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 				clearable=False)

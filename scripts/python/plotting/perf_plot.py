@@ -78,7 +78,7 @@ class PerfPlotter():
 				self.extT1s.append(self.T1s[i1x])
 				self.extT2s.append(self.T2s[i2y])
 				
-				elem = nT2s * (nT3s * i1x + self.iT3) + i2y																
+				elem = nT3s * (nT2s * i1x + i2y) + self.iT3																
 				self.Pins.append(zPins[elem])
 				self.Pouts.append(zPouts[elem])
 				self.COPs.append(zCOPs[elem])
@@ -235,11 +235,18 @@ class PerfPlotter():
 		zc = np.array(self.vals[2]).reshape(np.size(self.vals[1]), np.size(self.vals[0]))	
 		self.coords = [xc, yc, zc]
 								
-		coloring = 'lines'	
+		coloring = 'none'
+		lineWidth = 0
+		showLabels = False
 		if 'contour_coloring' in prefs:
-			if prefs['contour_coloring'] == 0:
+			if prefs['contour_coloring'] == 1:
 				coloring = 'heatmap'
-
+				lineWidth = 2
+				showLabels = True
+			if prefs['contour_coloring'] == 2:
+				coloring = 'lines'
+				lineWidth = 2
+				showLabels = True
 		self.fig = go.Figure(data =
 										go.Contour(
 											x = self.coords[0],
@@ -249,13 +256,13 @@ class PerfPlotter():
 											showscale = False,
 											contours=dict(
 						            coloring = coloring,
-						            showlabels = True, # show labels on contours
+						            showlabels = showLabels, # show labels on contours
 						            labelfont = dict( # label font properties
 						                size = 14,
 						                color = 'black',
 	          							)																					
 											),
-											line_width = 2,
+											line_width = lineWidth,
 											line_color = 'black',
 											showlegend = False,
 											)
