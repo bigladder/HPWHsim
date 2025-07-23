@@ -1,12 +1,12 @@
 {
-  "model_id": "ColmacCxA_15_SP",
+  "model_id": "LG_APHWC50",
   "model_spec": "JSON",
   "build_dir": "../../../build",
-  "test_list": "Tests with data",
-  "test_id": "",
-  "show_simulated": false,
+  "test_list": "Standard tests",
+  "test_id": "standard24hr",
+  "show_simulated": true,
   "show_measured": false,
-  "draw_profile": "Low",
+  "draw_profile": "auto",
   "heat_source_id": "resistiveElementTop",
   "performance_plots": {
     "contour_variable": 1,

@@ -422,7 +422,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			{		
 				if ('type' in metric)
 				{
-					const tableHeaders = ['type', 'model_id', 'target'];
+					const tableHeaders = ['type', 'model_id', 'variable', 'value', 't_min'];
 					if (!have_point)
 					{
 						tableHTML = '<table><thead><tr>';

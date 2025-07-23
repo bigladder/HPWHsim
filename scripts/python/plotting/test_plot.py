@@ -250,7 +250,7 @@ class TestPlotter:
 					for t_min, Pin in zip(t_mins, Pins):
 						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
 							metric = {}
-							metric['type'] = "time-series"
+							metric['type'] = "measured"
 							metric['model_id'] = self.label
 							metric['test_id'] = self.test_id
 							metric['variable'] = "Pin"
@@ -269,10 +269,11 @@ class TestPlotter:
 						for t_min, Pin in zip(t_mins, Pins):
 							if Pin == point["y"] and t_min == point["x"]:
 								metric = {}
-								metric['type'] = "time-series"
+								metric['type'] = "measured"
 								metric['model_id'] = self.label
 								metric['test_id'] = self.test_id
-								metric['variable'] = "Pin"
+								metric['variable'] = "Pin(W)"
+								metric['value'] = Pin
 								metric['t_min'] = t_min
 								self.metrics.append(metric)
 								print(metric)

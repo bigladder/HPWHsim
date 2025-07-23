@@ -198,15 +198,16 @@ def test_proc(data):
 		hide_input = True
 		new_metrics = metrics
 		for index, metric in reversed(list(enumerate(metrics))):
-			if 'type' not in metric or metric['type'] != 'EF':
+			if 'type' not in metric or metric['type'] != 'simulated':
 				continue
 			if 'model_id' not in metric or (metric['model_id'] != test_proc.prefs['model_id']):
-					continue
-			
+					continue			
+			if 'variable' not in metric or metric['variable'] != 'EF':
+					continue			
 			del new_metrics[index]	
 		
 		if 'fit' in value:
-			new_metrics.append({'type': 'EF', 'model_id': test_proc.prefs['model_id'], 'target': ef_in})
+			new_metrics.append({'type': 'simulated', 'model_id': test_proc.prefs['model_id'], 'variable': 'EF', 'value': ef_in})
 			hide_input = False
 
 		fit_list['metrics'] = new_metrics

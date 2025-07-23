@@ -2,35 +2,18 @@
   "parameters": [],
   "metrics": [
     {
-      "type": "EF",
-      "model_id": "Stiebel220e",
-      "target": 2.9102443925596653
-    },
-    {
-      "type": "EF",
-      "model_id": "LG_APHWC50",
-      "target": 2.9102443925596653
-    },
-    {
-      "type": "time-series",
+      "type": "measured",
       "model_id": "LG_APHWC50",
       "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 148
+      "variable": "Pin(W)",
+      "value": 297.08335,
+      "t_min": 282
     },
     {
-      "type": "time-series",
+      "type": "simulated",
       "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 293
-    },
-    {
-      "type": "time-series",
-      "model_id": "LG_APHWC50",
-      "test_id": "DOE2014_LGC50_24hr50",
-      "variable": "Pin",
-      "t_min": 135
+      "variable": "EF",
+      "value": 3.8503527346293396
     }
   ]
 }
