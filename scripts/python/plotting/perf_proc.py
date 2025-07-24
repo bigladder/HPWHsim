@@ -308,7 +308,7 @@ def perf_proc(data):
 
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
-			Output('select-div', 'hidden'),
+			Output('select-div', 'hidden', allow_duplicate=True),
 			Input('perf-graph', 'selectedData'),	
 			State('perf-graph', 'figure'),
 			prevent_initial_call=True
@@ -343,6 +343,28 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])	
 		return perf_proc.plotter.fig
 
+	@app.callback(
+		Output('perf-graph', 'figure', allow_duplicate=True),
+		Output('select-div', 'hidden', allow_duplicate=True),
+		Input('perf-graph', 'clickData'),
+		prevent_initial_call=True
+	)
+	def click_data(clickData):
+		hide_buttons = not(perf_proc.plotter.have_selected())
+		if not clickData:
+			return no_update, hide_buttons
+		if 'interpolate' in perf_proc.prefs:
+			if perf_proc.prefs["interpolate"] == 1:
+				return no_update, hide_buttons
+		prev_layout = fig['layout']
+		perf_proc.plotter.click_data(clickData)
+		perf_proc.plotter.update_selected(perf_proc.prefs)
+		if 'range' in prev_layout:
+			perf_proc.plotter.fig.update_layout(range = prev_layout['range'])
+		if 'dragmode' in prev_layout:
+			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
+		return perf_proc.plotter.fig, hide_buttons
+	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
 			Input('make-dependent', 'n_clicks'),

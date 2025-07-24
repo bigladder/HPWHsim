@@ -106,6 +106,136 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		return prefs;
 	}
 
+	async function replot_performance(prefs) 
+	{// send perf info
+		model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+		var msg = {
+			'source': 'index',
+			'dest': 'perf-proc',
+			'cmd': 'replot',
+			'label': prefs['model_id'],
+			'model_data_filepath': model_data_filepath};
+		await ws_connection.send(JSON.stringify(msg));
+	}
+
+	async function replot_test(prefs, measured_filepath, simulated_filepath, is_standard_test)
+	{
+			 // send test info
+				var msg = {
+					'source': 'index',
+					'dest': 'test-proc',
+					'cmd': 'replot',
+					'build_dir': prefs['build_dir']};
+				if (prefs["show_measured"])
+				{
+					msg['measured_filepath'] = measured_filepath;
+				}
+				if (prefs["show_simulated"])
+				{
+						msg['simulated_filepath'] = simulated_filepath;
+				}
+				msg['is_standard_test'] = (is_standard_test ? 1 : 0);
+
+				await ws_connection.send(JSON.stringify(msg));
+	}
+
+	async function run_standard_test(prefs)
+	{ //measure
+			//const draw_profile = test_form.draw_profile.value;
+			let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': prefs['draw_profile']}
+			await callPyServer("measure", "data=" + JSON.stringify(data))
+	}
+
+	async function run_general_test(prefs, test_dir)
+	{ // simulate
+			let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+			await callPyServer("simulate", "data=" + JSON.stringify(data))
+	}
+
+
+	async function get_test_info(prefs, test_info)
+	{
+		// get available tests
+		const test_index = await read_json_file("./test_index.json")
+		var show_all_tests = !prefs["test_list"].localeCompare("All tests");
+		var show_tests_with_data = !prefs["test_list"].localeCompare("Tests with data");
+		var show_standard_tests = show_all_tests || !prefs["test_list"].localeCompare("Standard tests");
+		for (let test of test_index["tests"]) {
+			var show_test = false;
+			var test_name = "";
+			if ("id" in test) {
+				const test_id = test["id"];
+				test_name = test_id;
+				show_test = show_all_tests;
+				if ("group" in test) {
+					const test_group = test["group"];
+					show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
+					if (show_all_tests || show_tests_with_data)
+						if ("measured" in test) {	 // get test list from model_index
+							const measureds = test["measured"];
+							for (let measured of measureds)
+								if ("id" in measured)
+									if (!measured["id"].localeCompare(prefs["model_id"])) {
+										show_test = true;
+										break;
+									}
+						}
+				}
+
+				if (show_test) {
+					if ('test_names' in test_info)
+						test_info['test_names'].push(test_name);
+					else
+						test_info['test_names'] = [test_name];
+				}
+			}
+		}
+	
+		// get available tests
+		if (('test_names' in test_info) && !(test_info['test_names'].includes(prefs["test_id"])))
+			prefs["test_id"] = test_info['test_names'][0]; // default
+
+		var test_dir = "";
+		for (let test of test_index["tests"]) {
+			var test_id = "";
+			if ("id" in test)
+				test_id = test["id"];
+			if (test_id == prefs["test_id"])
+			{
+				if ("path" in test)
+					test_info['test_dir'] = test["path"] + "/" + test_id
+				else
+					test_info['test_dir'] = test_id			
+
+				if ("measured" in test)
+					for (let measured of test["measured"])
+						if ("id" in measured)
+							if (measured["id"] == prefs["model_id"]) {
+								if ('filename' in measured)
+								{
+									test_info['measured_filename'] = measured['filename'];
+									break;
+								}
+							}
+				}
+		}
+
+		for (let test of test_index["tests"])
+			if (("id" in test) && !test["id"].localeCompare(prefs["test_id"]))
+			{
+				if (("group" in test) && !test["group"].localeCompare("Standard tests")) {
+					test_info['is_standard_test'] = true;
+					test_info['simulated_filename'] = "test24hrEF_" + prefs["model_id"] + ".csv";
+					break;
+				}
+				else
+				{
+					test_info['simulated_filename'] = prefs["test_id"] + "_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
+					break;
+				}	
+			}
+	}
+
 	async function set_elements(prefs) {
 		const model_index = await read_json_file("./model_index.json")
 
@@ -156,166 +286,69 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 			select_model_spec.appendChild(option);
 		}
 
-		// get available tests
-		var have_test = false;
+		test_info = {}
+		await get_test_info(prefs,test_info)
 
-		const test_index = await read_json_file("./test_index.json")
-		var test_names = []
-		var show_all_tests = !prefs["test_list"].localeCompare("All tests");
-		var show_tests_with_data = !prefs["test_list"].localeCompare("Tests with data");
-		var show_standard_tests = show_all_tests || !prefs["test_list"].localeCompare("Standard tests");
-		for (let test of test_index["tests"]) {
-			var show_test = false;
-			var test_name = "";
-			if ("id" in test) {
-				const test_id = test["id"];
-				test_name = test_id;
-				show_test = show_all_tests;
-				if ("group" in test) {
-					const test_group = test["group"];
-					show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
-					if (show_all_tests || show_tests_with_data)
-						if ("measured" in test) {	 // get test list from model_index
-							const measureds = test["measured"];
-							for (let measured of measureds)
-								if ("id" in measured)
-									if (!measured["id"].localeCompare(prefs["model_id"])) {
-										show_test = true;
-										break;
-									}
-						}
-				}
-
-				if (show_test) {
-					test_names.push(test_name);
-					have_test = true;
-				}
-			}
-		}
-
-		if (have_test && !(test_names.includes(prefs["test_id"])))
-			prefs["test_id"] = test_names[0];
-
-		var have_measured = false;
-		var measured_filename = "";
-		var test_dir = "";
-		for (let test of test_index["tests"]) {
-			var test_id = "";
-			if ("id" in test)
-				test_id = test["id"];
-			if (test_id == prefs["test_id"])
-			{
-				test_dir = test_id
-				if ("path" in test)
-					test_dir = test["path"] + "/" + test_id
-
-				if ("measured" in test)
-					for (let measured of test["measured"])
-						if ("id" in measured)
-							if (measured["id"] == prefs["model_id"]) {
-								have_measured = true;
-								if ('filename' in measured)
-									measured_filename = measured['filename']
-								break;
-							}
-			}
-		}
-
-		var is_standard_test = false;
-		for (let test of test_index["tests"])
-			if (("id" in test) && !test["id"].localeCompare(prefs["test_id"]))
-				if (("group" in test) && !test["group"].localeCompare("Standard tests")) {
-					is_standard_test = true;
-					break;
-				}
-
-		// set select_test control
+		// update select_test control
 		let select_test = document.getElementById('test_name');
 		while (select_test.hasChildNodes())
 			select_test.removeChild(select_test.firstChild);
 
-		prefs["show_simulated"] = have_test;
-		prefs["show_measured"] = have_measured;
-
-		if (!have_test) {
-			prefs["test_id"] = "";
-			select_test.disabled = true;
-			document.getElementById('test_btn').disabled = true;
-		}
-		else {
+		if ('test_names' in test_info) {
 			// set test_name control
-			for (let test_name of test_names) {
+			for (let test_name of test_info['test_names']) {
 				let option = document.createElement("option");
 				option.text = test_name;
 				option.value = test_name;
 				select_test.appendChild(option);
 			}
-
 			select_test.disabled = false;
 			document.getElementById('test_btn').disabled = false;
+		}
+		else
+		{
+			prefs["test_id"] = "";
+			select_test.disabled = true;
+			document.getElementById('test_btn').disabled = true;
 		}
 
 		// set draw_profile dropdown
 		let draw_profile_dropdown = document.getElementById('draw_profile');
 		draw_profile_dropdown.value = prefs["draw_profile"];
-		draw_profile_dropdown.disabled = !is_standard_test;
+		draw_profile_dropdown.disabled = !('is_standard_test' in test_info);
+
+		prefs["show_measured"] = ('measured_filename' in test_info);
+		prefs["show_simulated"] = ('simulated_filename' in test_info);
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
 
-		{// send perf info
-			model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-			var msg = {
-				'source': 'index',
-				'dest': 'perf-proc',
-				'cmd': 'replot',
-				'label': prefs['model_id'],
-				'model_data_filepath': model_data_filepath};
-			await ws_connection.send(JSON.stringify(msg));
-		}
+		await replot_performance(prefs)
 
-		var simulated_filepath = ""
-		var measured_filepath = ""
-		if (have_test)
-		{ //measure or simulate
-			if (is_standard_test) {
-				const draw_profile = test_form.draw_profile.value;
-				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'draw_profile': draw_profile}
-				await callPyServer("measure", "data=" + JSON.stringify(data))
-				simulated_filename = "test24hrEF_"+ prefs["model_id"] + ".csv";
-
-				let res_path = prefs['build_dir'] + "/test/output/results.json"
-			  var results = await read_json_file(res_path)
-				document.getElementById("measure_results").innerHTML = JSON.stringify(results);
+		if ('test_names' in test_info)
+		{
+			if('is_standard_test' in test_info)
+				await run_standard_test(prefs)
+			else
+			{
+				await run_general_test(prefs, test_info['test_dir'])
 			}
-			else {
-				let data = {'model_spec': prefs["model_spec"], 'model_name': prefs["model_id"], 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
-				await callPyServer("simulate", "data=" + JSON.stringify(data))
-				simulated_filename = prefs["test_id"] + "_" + prefs["model_spec"] + "_" + prefs["model_id"] + ".csv";
-			}
-
-		 // send test info
-			var msg = {
-				'source': 'index',
-				'dest': 'test-proc',
-				'cmd': 'replot',
-				'build_dir': prefs['build_dir']};
+			
+			var measured_filepath = ""
 			if (prefs["show_measured"])
 			{
 				measured_filepath = "../../../test"
-				if(test_dir != "")
-					measured_filepath += "/" + test_dir;
-				measured_filepath += "/" + measured_filename;
-				msg['measured_filepath'] = measured_filepath;
+				if ('test_dir' in test_info)
+					measured_filepath += "/" + test_info['test_dir'];
+				measured_filepath += "/" + test_info['measured_filename'];
 			}
-			if (prefs["show_simulated"])
-			{
-				simulated_filepath = prefs['build_dir'] + "/test/output/" + simulated_filename;
-				msg['simulated_filepath'] = simulated_filepath;
-			}
-			msg['is_standard_test'] = (is_standard_test ? 1 : 0);
 
-			await ws_connection.send(JSON.stringify(msg));
+			var simulated_filepath = ""
+			if (prefs["show_simulated"])
+				simulated_filepath += prefs['build_dir'] + "/test/output/" + test_info['simulated_filename'];
+
+			let is_standard = ('is_standard_test' in test_info);
+			await replot_test(prefs, measured_filepath, simulated_filepath, is_standard)
 		}
 	}
 
@@ -342,6 +375,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 		document.getElementById("test-plots").src = "http://localhost:" + dash_port
 		document.getElementById("test_btn").disabled = false;
+
+		var prefs = await read_json_file("./prefs.json")
+		replot_test(prefs)
 	}
 
 	async function launch_perf_proc() {
@@ -352,6 +388,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 		document.getElementById("perf_plot").src = "http://localhost:" + dash_port
 		document.getElementById("perf_btn").disabled = false;
+
+		var prefs = await read_json_file("./prefs.json")
+		replot_performance(prefs)
 	}
 
 	async function launch_fit_proc() {
@@ -360,6 +399,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 		let fit_results = await callPyServerJSON("launch_fit_proc", "data=" + JSON.stringify(data))
 		document.getElementById("fit_btn").disabled = false;
 	}
+
 	async function clear_params() {
 			var fit_list = await read_json_file("./fit_list.json")
 			fit_list['parameters'] = []

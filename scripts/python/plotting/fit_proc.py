@@ -32,12 +32,12 @@ def fit_proc(data):
 	if 'parameters' in fit_list:
 		fit_params = fit_list['parameters']
 	else:
-		fit_params = {}
+		fit_params = []
 		
 	if 'metrics' in fit_list:
 		metrics = fit_list['metrics']
 	else:
-		fit_data = {}		
+		metrics= {}		
 					
 	def set_param(param, value):	
 		if param['type'] == 'perf-point':		

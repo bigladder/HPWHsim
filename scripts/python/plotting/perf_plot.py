@@ -278,8 +278,8 @@ class PerfPlotter():
 			mode="markers", 
 			marker_size=[],
 			marker_symbol='circle',
-			marker_color='green',
-			marker_line_color= 'green',
+			marker_color=[],#'green',
+			marker_line_color=[],#'green',
 			marker_line_width = 0,
 				
 			showlegend = False,
@@ -368,6 +368,8 @@ class PerfPlotter():
 		markers['x'] = []
 		markers['y'] = []
 		markers['size'] = []
+		markers['color'] = []
+		markers['line_color'] = []
 		markers['hover_labels'] = []
 		
 		i = 0
@@ -392,10 +394,15 @@ class PerfPlotter():
 			markers['y'].append(point[1])
 			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
 			markers['size'].append(diam)
-			if prefs['contour_variable'] == 2:
-				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.4f}"])
-			else:
+			if prefs['contour_variable'] == 0:
 				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
+				markers['color'].append('blue')
+			elif prefs['contour_variable'] == 1:
+				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
+				markers['color'].append('red')
+			else:
+				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.4f}"])
+				markers['color'].append('green')
 			i = i + 1	
 			   	
 		points_visible = ('show_points' in prefs) and 	(prefs["show_points"] == 1)
@@ -404,6 +411,8 @@ class PerfPlotter():
 			x = markers['x'],
 			y = markers['y'],
 			marker_size = markers['size'],
+			marker_color = markers['color'],
+			marker_line_color = markers['color'],
 			customdata = markers['hover_labels'],
 			hovertemplate = "%{customdata[0]}: %{x}<br>" +
 					"%{customdata[1]}: %{y}<br>" +
