@@ -57,15 +57,8 @@
 
 	<!-- model -->
 	<form id="model_form">
-		<label for="model_name">model name:</label>
-		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();FillPropertiesTables();">
-		</select><br><br>
-
-		<label for="model_spec">model spec:</label>
-		<select name="model_spec" id="model_spec" style="width: 150px" onchange="change_menu_value();">
-			<option selected="selected" value="JSON">JSON</option>
-			<option value="Preset">Preset</option>
-			<option value="Legacy">Legacy</option>
+		<label for="model_id">model:</label>
+		<select name="model_id" id="model_id" style="width: 400px" onchange="change_menu_value();">
 		</select><br><br>
 	</form>
 
@@ -140,10 +133,10 @@
 				<option value="VerySmall">Very Small</option>
 			</select><br><br>
 
-			<button type="button" id="test_btn" onclick="launch_test_proc();">test</button>
+			<button type="button" id="test_btn" onclick="launch_test_proc();">show</button>
 		</form>
 
-		<iframe title="plots" src="" id="test-plots" width=1200 height=1000 style="display:none;"></iframe>
+		<iframe title="plots" src="" id="test_plot" width=1200 height=1000 style="display:none;"></iframe>
 
 		<p "" id="measure_results" width=800 height=1800 style="display:none;"></object>
 	</div>
@@ -195,10 +188,10 @@
 </body>
 
 <script>
-	init_websocket().then({}, {})
-	init_elements().then({}, {})
-	FillFitTables().then({}, {})
-	FillPropertiesTables().then({}, {})
+	init_all().then({}, {})
+	//init_elements().then({}, {})
+	//FillFitTables().then({}, {})
+	//FillPropertiesTables().then({}, {})
 </script>
 
 </html>

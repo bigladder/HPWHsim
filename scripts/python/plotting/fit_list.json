@@ -1,4 +1,6 @@
 {
   "parameters": [],
-  "metrics": {}
+  "metrics": {
+    "energy_factors": []
+  }
 }

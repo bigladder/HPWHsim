@@ -20,7 +20,7 @@ async def handler(client):
 			break
 		
 		#print(f"\nsent by client: {client}")
-		print(f"received by ws: {msg}")			
+		#print(f"received by ws: {msg}")			
 		new_client = True
 		for c in handler.clients:
 			if c:

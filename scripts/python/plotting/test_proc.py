@@ -213,8 +213,6 @@ def test_proc(data):
 			new_energy_factors.append({'model_id': test_proc.prefs['model_id'], 'draw_profile': test_proc.prefs['draw_profile'], 'value': ef_in})
 			hide_input = False
 
-		print(metrics)
-		print(new_energy_factors)
 		metrics['energy_factors'] = new_energy_factors
 		fit_list['metrics'] = metrics
 		write_file("fit_list.json", fit_list)		

@@ -3,6 +3,7 @@ from dash_extensions import WebSocket
 import multiprocessing as mp
 from pathlib import Path
 import os
+import shutil
 import json
 import time
 from common import read_file, write_file
@@ -12,38 +13,29 @@ from perf_plot import PerfPlotter
 def perf_proc(data):
 
 	perf_proc.ws = None
-
 	perf_proc.i_send = 0
-
+	perf_proc.changed = 0
+	perf_proc.prefs = {}
+	
 	orig_dir = str(Path.cwd())
 	os.chdir("../../../test")
 	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
-	def replot(data):
-		perf_proc.model_data = {}
-		perf_proc.model_data_filepath = ""					
-			
-		if "model_data_filepath" in data:
-			perf_proc.model_data_filepath = data["model_data_filepath"]
-			perf_proc.model_data = read_file(perf_proc.model_data_filepath)
-			data['model_data'] = perf_proc.model_data
-	
-		label = ""
-		if 'label' in data:
-			label = data['label']
-			
-		perf_proc.plotter = PerfPlotter(label)
-		perf_proc.plotter.prepare(data)
+	def replot(model_filepath):
+		perf_proc.prefs = read_file("prefs.json")					
+		perf_proc.plotter = PerfPlotter(perf_proc.prefs['model_id'])
 		
-		perf_proc.prefs = read_file("prefs.json")['performance_plots']
+		model_data = read_file(model_filepath)
+		
+		perf_proc.plotter.prepare(model_data)	
+
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 		
 			perf_proc.plotter.fig.update_layout(clickmode='event+select')
-
 			show_outletTs = perf_proc.plotter.is_central
 			outletTs = []
 			if show_outletTs:
@@ -53,16 +45,16 @@ def perf_proc(data):
 					i = i + 1
 				
 			show_list = []
-			if perf_proc.prefs["show_points"] == 1:
+			if perf_proc.prefs["performance_plots"]["show_points"] == 1:
 				show_list= ['points']
 				
 			interp_list = []
-			if perf_proc.prefs["interpolate"] == 1:
+			if perf_proc.prefs["performance_plots"]["interpolate"] == 1:
 				interp_list= ['interpolate']
 
-			return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(show_outletTs), perf_proc.plotter.iT3, outletTs, show_list, interp_list, perf_proc.prefs['contour_variable'], perf_proc.prefs['contour_coloring'], perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
+			return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(show_outletTs), perf_proc.plotter.iT3, outletTs, show_list, interp_list, perf_proc.prefs["performance_plots"]['contour_variable'], perf_proc.prefs["performance_plots"]['contour_coloring'], perf_proc.prefs["performance_plots"]["Nx"], perf_proc.prefs["performance_plots"]["Ny"]
 
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 	
 	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']		
 	app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -124,19 +116,7 @@ def perf_proc(data):
 				dcc.Input(id='Ny-input', type='number')
 			], id='interp-sizes', hidden=True
 		),				
-			
-		html.Div([
-				html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-				html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
-				html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-				html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-				html.Button("clear", id='clear-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
-				html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
-				html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
-				],
-				id='select-div',
-				hidden = True
-			),
+
 					
 		html.Br(),
 		html.Div(
@@ -148,8 +128,20 @@ def perf_proc(data):
 	        ]
 	    	}),
 				id="graph-div",
-				hidden = True)
-
+				hidden = True),
+				
+		html.Div([
+				html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+				html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
+				html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+				html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+				html.Button("clear", id='clear-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
+				html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+				html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
+				],
+				id='select-div',
+				hidden = True
+			)
 	]
 
 	@app.callback(
@@ -166,20 +158,20 @@ def perf_proc(data):
 		return message
 
 	@app.callback(
-			Output('perf-graph', 'figure', allow_duplicate=True),
-			Output('graph-div', 'hidden'),
-			Output('outletT-p', 'hidden'),
-			Output('outletT-dropdown', 'value'),
-			Output('outletT-dropdown', 'options'),
-			Output('show-check', 'value'),
-			Output('interp-check', 'value'),
-			Output('display-dropdown', 'value'),
-			Output('coloring-dropdown', 'value'),
-			Output('Nx-input', 'value', allow_duplicate=True),
-			Output('Ny-input', 'value', allow_duplicate=True),
-			[Input("ws", "message")],
-			prevent_initial_call=True
-			)
+		Output('perf-graph', 'figure', allow_duplicate=True),
+		Output('graph-div', 'hidden'),
+		Output('outletT-p', 'hidden'),
+		Output('outletT-dropdown', 'value'),
+		Output('outletT-dropdown', 'options'),
+		Output('show-check', 'value'),
+		Output('interp-check', 'value'),
+		Output('display-dropdown', 'value'),
+		Output('coloring-dropdown', 'value'),
+		Output('Nx-input', 'value', allow_duplicate=True),
+		Output('Ny-input', 'value', allow_duplicate=True),
+		[Input("ws", "message")],
+		prevent_initial_call=True
+	)
 	def message(msg):
 		if 'data' in msg:
 			data = json.loads(msg['data'])
@@ -187,8 +179,8 @@ def perf_proc(data):
 				if data['dest'] == 'perf-proc':
 					print(f"received by perf-proc:\n{data}")
 					if 'cmd' in data:
-						if data['cmd'] == 'replot':										
-							return replot(data)
+						if data['cmd'] == 'replot':							
+							return replot(data['model_filepath'])
 								
 		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
@@ -200,15 +192,15 @@ def perf_proc(data):
 		)
 	def change_interp(value):
 		if 'interpolate' in value:
-			perf_proc.prefs["interpolate"] = 1
+			perf_proc.prefs["performance_plots"]["interpolate"] = 1
 		else:
-			perf_proc.prefs["interpolate"] = 0
+			perf_proc.prefs["performance_plots"]["interpolate"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
-		return perf_proc.plotter.fig, (perf_proc.prefs["interpolate"] == 0)
+		return perf_proc.plotter.fig, (perf_proc.prefs["performance_plots"]["interpolate"] == 0)
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -216,16 +208,17 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def change_show(value):
+		#prefs = read_file("prefs.json")
 		if 'points' in value:
-			perf_proc.prefs["show_points"] = 1
+			perf_proc.prefs["performance_plots"]["show_points"] = 1
 		else:
-			perf_proc.prefs["show_points"] = 0
+			perf_proc.prefs["performance_plots"]["show_points"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
-		
+		#write_file("prefs.json", prefs)
 		return perf_proc.plotter.fig
 	
 	@app.callback(
@@ -237,20 +230,22 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def set_Nxy(Nx, Ny):
+		#prefs = read_file("prefs.json")
 		if Nx is not None:
 			Nx = int(Nx)
 			if Nx > 0:
-				perf_proc.prefs["Nx"] = Nx
+				perf_proc.prefs["performance_plots"]["Nx"] = Nx
 		if Ny is not None:
 			Ny = int(Ny)
 			if Ny > 0:
-				perf_proc.prefs["Ny"] = Ny				
+				perf_proc.prefs["performance_plots"]["Ny"] = Ny				
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
-		return perf_proc.plotter.fig, perf_proc.prefs["Nx"], perf_proc.prefs["Ny"]
+		#write_file("prefs.json", prefs)
+		return perf_proc.plotter.fig, perf_proc.prefs["performance_plots"]["Nx"], perf_proc.prefs["performance_plots"]["Ny"]
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -258,13 +253,15 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def select_variable(value):	
-		perf_proc.prefs['contour_variable'] = value
+		#prefs = read_file("prefs.json")
+		perf_proc.prefs["performance_plots"]['contour_variable'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
+			#write_file("prefs.json", perf_proc.prefs)
 			return perf_proc.plotter.fig
 		return no_update
 	
@@ -274,13 +271,15 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def select_coloring(value):
-		perf_proc.prefs['contour_coloring'] = value
+		#prefs = read_file("prefs.json")
+		perf_proc.prefs["performance_plots"]['contour_coloring'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
+			#write_file("prefs.json", prefs)
 			return perf_proc.plotter.fig
 		return no_update
 	
@@ -290,6 +289,7 @@ def perf_proc(data):
 				prevent_initial_call=True
 			)
 	def select_outletT(value):
+		#prefs = read_file("prefs.json")
 		if perf_proc.plotter.have_data:
 			if value == None:
 				return perf_proc.plotter.fig
@@ -302,7 +302,8 @@ def perf_proc(data):
 			perf_proc.plotter.update_markers(perf_proc.prefs)
 			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
-			perf_proc.plotter.update_marked(perf_proc.prefs)	
+			perf_proc.plotter.update_marked(perf_proc.prefs)
+			#write_file("prefs.json", perf_proc.prefs)
 			return perf_proc.plotter.fig
 		return no_update
 
@@ -314,19 +315,21 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def select_data(selectedData, fig):
+		#perf_proc.prefs = read_file("prefs.json")
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not selectedData:
 			return no_update, hide_buttons
 		if 'interpolate' in perf_proc.prefs:
-			if perf_proc.prefs["interpolate"] == 1:
+			if perf_proc.prefs["performance_plots"]["interpolate"] == 1:
 				return no_update, hide_buttons
 		prev_layout = fig['layout']
 		perf_proc.plotter.select_data(selectedData)
-		perf_proc.plotter.update_selected(perf_proc.prefs)
+		perf_proc.plotter.update_selected(prefs)
 		if 'range' in prev_layout:
 			perf_proc.plotter.fig.update_layout(range = prev_layout['range'])
 		if 'dragmode' in prev_layout:
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
+		#write_file("prefs.json", prefs)
 		return perf_proc.plotter.fig, hide_buttons
 	
 	@app.callback(
@@ -346,16 +349,20 @@ def perf_proc(data):
 	@app.callback(
 		Output('perf-graph', 'figure', allow_duplicate=True),
 		Output('select-div', 'hidden', allow_duplicate=True),
+		Output('perf-graph', 'clickData'),
 		Input('perf-graph', 'clickData'),
+		State('perf-graph', 'figure'),
 		prevent_initial_call=True
 	)
-	def click_data(clickData):
+	def click_data(clickData, fig):
+		#prefs = read_file("prefs.json")
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not clickData:
-			return no_update, hide_buttons
-		if 'interpolate' in perf_proc.prefs:
-			if perf_proc.prefs["interpolate"] == 1:
-				return no_update, hide_buttons
+			return no_update, hide_buttons, {}
+		if 'interpolate' in prefs:
+			if perf_proc.prefs["performance_plots"]["interpolate"] == 1:
+				return no_update, hide_buttons, {}
+			
 		prev_layout = fig['layout']
 		perf_proc.plotter.click_data(clickData)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
@@ -363,7 +370,7 @@ def perf_proc(data):
 			perf_proc.plotter.fig.update_layout(range = prev_layout['range'])
 		if 'dragmode' in prev_layout:
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
-		return perf_proc.plotter.fig, hide_buttons
+		return perf_proc.plotter.fig, hide_buttons, {}
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -400,7 +407,8 @@ def perf_proc(data):
 			prevent_initial_call=True
 	)
 	def clear_marked(nclicks, fig):
-		perf_proc.plotter.clear_marked()	
+		perf_proc.plotter.clear_marked()
+		#prefs = read_file("prefs.json")	
 		perf_proc.plotter.update_marked(perf_proc.prefs)	
 		prev_layout = fig['layout']
 		if 'dragmode' in prev_layout:		
@@ -509,14 +517,14 @@ def perf_proc(data):
 		if 'dragmode' in relayoutData:
 			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
 				perf_proc.plotter.clear_selected()		
-				perf_proc.plotter.update_selected(perf_proc.prefs)
+				perf_proc.plotter.update_selected(prefs)
 				perf_proc.plotter.fig.update_layout(dragmode= relayoutData['dragmode'])
 				return 	perf_proc.plotter.fig
 		elif 'range' in fig:
 			perf_proc.plotter.fig.update_layout(range = fig['range'])
 			return 	perf_proc.plotter.fig
 		return fig
-			
+	
 	app.run(debug=True, use_reloader=False, port = perf_proc.port_num)
 
 perf_proc.port_num = 8051	
