@@ -40,16 +40,26 @@ def test_proc(data):
 	test_proc.selected_tank_TV = []
 	test_proc.selected_ambient_TV = []
 	test_proc.variable_type = ""
-	test_proc.prefs = read_file("prefs.json")
 	test_proc.i_send = 0
 	test_proc.prev_show = 0
 	test_proc.ef_val = 0
 	test_proc.plotter = {}
-	
+	test_proc.prefs = {}
+		
+	def sync_prefs():
+		prefs = read_file("prefs.json")
+		if 'tests' in test_proc.prefs:
+			if 'plots' in test_proc.prefs['tests']:
+				prefs['tests']['plots'] = test_proc.prefs['tests']['plots']
+		test_proc.prefs = prefs
+		write_file("prefs.json", prefs)	
+		
 	def replot(data):
-		test_proc.prefs = read_file("prefs.json")
+		print(data)
+		sync_prefs()
 		data['model_id'] = test_proc.prefs['model_id']
-		data['test_id'] = test_proc.prefs['test_id']
+		data['test_id'] = test_proc.prefs['tests']['id']
+
 		test_proc.plotter = plot(data)
 		if test_proc.plotter.have_fig:
 			test_proc.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -77,7 +87,7 @@ def test_proc(data):
 			if 'is_standard_test' in data:
 				if data['is_standard_test'] == 1:
 					hide_ef_fit = False
-					build_dir = data['build_dir']
+					build_dir = test_proc.prefs['build_dir']
 					output_dir = os.path.join(build_dir, 'test', 'output')
 					results_filename = os.path.join(output_dir, "results.json")
 					results = read_file(results_filename)
@@ -205,12 +215,12 @@ def test_proc(data):
 		for index, energy_factor in reversed(list(enumerate(energy_factors))):
 			if 'model_id' not in energy_factor or (energy_factor['model_id'] != test_proc.prefs['model_id']):
 					continue			
-			if 'draw_profile' not in energy_factor or energy_factor['draw_profile'] != test_proc.prefs['draw_profile']:
+			if 'draw_profile' not in energy_factor or energy_factor['draw_profile'] != test_proc.prefs['tests']['draw_profile']:
 					continue			
 			del new_energy_factors[index]	
 		
 		if 'fit' in value:
-			new_energy_factors.append({'model_id': test_proc.prefs['model_id'], 'draw_profile': test_proc.prefs['draw_profile'], 'value': ef_in})
+			new_energy_factors.append({'model_id': test_proc.prefs['model_id'], 'draw_profile': test_proc.prefs['tests']['draw_profile'], 'value': ef_in})
 			hide_input = False
 
 		metrics['energy_factors'] = new_energy_factors
@@ -229,10 +239,10 @@ def test_proc(data):
 	def change_show(value):	
 		data = {'show': 0}
 		if 'measured' in value:
-			test_proc.prefs["show_measured"] = True
+			test_proc.prefs['tests']['plots']['show_measured'] = True
 			data['show'] |= 1
 		if 'simulated' in value:
-			test_proc.prefs["show_simulated"] = True
+			test_proc.prefs['tests']['plots']['show_simulated'] = True
 			data['show'] |= 2
 		
 		if data['show'] == 0:

@@ -44,8 +44,8 @@ CLI::App* add_run(CLI::App& app)
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
 
-    static std::string modelFilename = "";
-    model_group->add_option("-f,--filename", modelFilename, "Model filename");
+    static std::string modelFilepath = "";
+    model_group->add_option("-f,--filepath", modelFilepath, "Model filepath");
 
     model_group->required(1);
 
@@ -53,8 +53,8 @@ CLI::App* add_run(CLI::App& app)
     static std::string testName = "";
     subcommand->add_option("-t,--test", testName, "Test name")->required();
 
-    static std::string sOutputDir = ".";
-    subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
+    static std::string outputDir = ".";
+    subcommand->add_option("-d,--dir", outputDir, "Output directory");
 
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
@@ -72,13 +72,20 @@ CLI::App* add_run(CLI::App& app)
             }
             else if (specType == "JSON")
             {
-                if (!modelFilename.empty())
+                if (!modelName.empty())
+                    modelFilepath = "./models_json/" + modelName + ".json";
+                else if (!modelFilepath.empty())
+                    modelName = getModelNameFromFilepath(modelFilepath);
+
+                std::ifstream inputFile;
+                inputFile.open(modelFilepath.c_str(), std::ifstream::in);
+                if (!inputFile.is_open())
                 {
-                    std::ifstream inputFile(modelFilename + ".json");
-                    nlohmann::json j = nlohmann::json::parse(inputFile);
-                    modelName = getModelNameFromFilename(modelFilename);
-                    hpwh.initFromJSON(j, modelName);
+                    hpwh.get_courier()->send_error(
+                        fmt::format("Could not open input file {}\n", modelFilepath));
                 }
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j, modelName);
             }
             else if (specType == "Legacy")
             {
@@ -87,7 +94,7 @@ CLI::App* add_run(CLI::App& app)
                 else if (modelNumber != -1)
                     hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
-            run(specType, hpwh, testName, sOutputDir, airTemp);
+            run(specType, hpwh, testName, outputDir, airTemp);
         });
 
     return subcommand;
@@ -98,7 +105,7 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 void run(const std::string specType,
          HPWH& hpwh,
          std::string fullTestName,
-         std::string sOutputDir,
+         std::string outputDir,
          double airTemp)
 {
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
@@ -325,7 +332,7 @@ void run(const std::string specType,
 
     if (minutesToRun > 500000.)
     {
-        fileToOpen = sOutputDir + "/DHW_YRLY_" + specType + ".csv";
+        fileToOpen = outputDir + "/DHW_YRLY_" + specType + ".csv";
         yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
         if (!yearOutFile.is_open())
         {
@@ -336,7 +343,7 @@ void run(const std::string specType,
     else
     {
 
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
+        fileToOpen = outputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
 
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())

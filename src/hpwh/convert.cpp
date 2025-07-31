@@ -31,6 +31,9 @@ CLI::App* add_convert(CLI::App& app)
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
 
+    static std::string modelFilepath = "";
+    model_group->add_option("-f,--filepath", modelFilepath, "Model filepath");
+
     model_group->required(1);
 
     //
@@ -54,11 +57,19 @@ CLI::App* add_convert(CLI::App& app)
             else if (specType == "JSON")
             {
                 if (!modelName.empty())
+                    modelFilepath = "./models_json/" + modelName + ".json";
+                else if (!modelFilepath.empty())
+                    modelName = getModelNameFromFilepath(modelFilepath);
+
+                std::ifstream inputFile;
+                inputFile.open(modelFilepath.c_str(), std::ifstream::in);
+                if (!inputFile.is_open())
                 {
-                    std::ifstream inputFile(modelName);
-                    nlohmann::json j = nlohmann::json::parse(inputFile);
-                    hpwh.initFromJSON(j, modelName);
+                    hpwh.get_courier()->send_error(
+                        fmt::format("Could not open input file {}\n", modelFilepath));
                 }
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j, modelName);
             }
             else if (specType == "Legacy")
             {

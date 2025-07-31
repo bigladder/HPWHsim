@@ -115,22 +115,22 @@
 		<form id="test_form">
 
 			<select name="test_list" id="test_list" style="width: 200px" onchange="change_menu_value();">
-				<option selected="All tests" value="All tests">All tests</option>
-				<option value="Tests with data">Tests with data</option>
-				<option value="Standard tests">Standard tests</option>
+				<option selected="all_tests" value="all_tests">All tests</option>
+				<option value="tests_with_data">Tests with data</option>
+				<option value="standard_tests">Standard tests</option>
 			</select><br><br>
 
-			<label for="test_name">test name:</label>
-			<select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
+			<label for="test_id">test:</label>
+			<select name="test_id" id="test_id" style="width: 400px" onchange="change_menu_value();">
 			</select><br><br>
 
 			<label for="draw_profile">draw profile:</label>
 			<select name="draw_profile" id="draw_profile" onchange="change_menu_value();">
 				<option selected="auto" value="auto">auto</option>
-				<option value="High">High</option>
-				<option value="Medium">Medium</option>
-				<option value="Low">Low</option>
-				<option value="VerySmall">Very Small</option>
+				<option value="high">High</option>
+				<option value="medium">Medium</option>
+				<option value="low">Low</option>
+				<option value="very_small">Very Small</option>
 			</select><br><br>
 
 			<button type="button" id="test_btn" onclick="launch_test_proc();">show</button>

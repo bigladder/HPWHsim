@@ -71,9 +71,9 @@
 
 		"Mitsubishi_QAHV_N136TAU_HPB_SP": {"manufacturer": "Mitsubishi", "specs": ["Preset", "JSON"], "type": "Central"},
 
-		"Sanden40": {"manufacturer": "Sanden", "specs": ["Preset", "JSON"], "type": "Central"},
-		"Sanden80": {"manufacturer": "Sanden", "specs": ["Preset", "Legacy", "JSON"], "type": "Central"},
-		"Sanden120": {"manufacturer": "Sanden", "specs": ["Preset", "JSON"], "type": "Central"},
+		"Sanco43": {"manufacturer": "Sanco", "specs": ["Preset", "JSON"], "type": "Central"},
+		"Sanco83": {"manufacturer": "Sanco", "specs": ["Preset", "Legacy", "JSON"], "type": "Central"},
+		"Sanco119": {"manufacturer": "Sanco", "specs": ["Preset", "JSON"], "type": "Central"},
 
 		"RheemHPHD60": {"manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"},
 		"RheemHPHD135": {"manufacturer": "Rheem", "specs": ["Preset", "JSON"], "type": "Central"},

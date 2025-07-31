@@ -10,7 +10,7 @@ from pathlib import Path
 def measure(data):
 
 	model_spec = data['model_spec']
-	model_name = data['model_name']
+	model_id_or_filepath = data['model_id_or_filepath'] # model id (short name) or filepath
 	build_dir = data['build_dir']
 	draw_profile = data['draw_profile']
       
@@ -27,11 +27,10 @@ def measure(data):
 		os.mkdir(output_dir)
          
 	results_filename = "results"
-	filepath = "models_json/" + model_name
 	if model_spec == 'JSON':
-		run_list = [app_cmd, 'measure', '-s', model_spec, '-f', filepath, '-d', output_dir, '-r', results_filename]
+		run_list = [app_cmd, 'measure', '-s', model_spec, '-f', model_id_or_filepath, '-d', output_dir, '-r', results_filename]
 	else:
-		run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_filename]
+		run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_id_or_filepath, '-d', output_dir, '-r', results_filename]
 	if draw_profile != "auto":
 		run_list.append('-p')
 		run_list.append(draw_profile.replace(" ", ""))
@@ -46,7 +45,7 @@ if __name__ == "__main__":
 	data = {}
 	if n_args > 2:
 		data['model_spec'] = sys.argv[1]
-		data['model_name'] = sys.argv[2]
+		data['model_id_or_filepath'] = sys.argv[2]
 		data['build_dir'] = sys.argv[3]
 
 		data['draw_profile'] = "auto"
@@ -58,7 +57,7 @@ if __name__ == "__main__":
 
 	else:
 			print('measure arguments:')
-			print('1. model specification (Preset, JSON, Legacy)')
-			print('2. model name')
+			print('1. model specification (Preset, Legacy, JSON)')
+			print('2. model id or JSON filepath')
 			print('3. build directory')
 			print('4. draw profile')

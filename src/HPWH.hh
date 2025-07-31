@@ -1652,13 +1652,13 @@ inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, con
     return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
 }
 
-inline std::string getModelNameFromFilename(const std::string& modelFilename)
+inline std::string getModelNameFromFilepath(const std::string& modelFilepath)
 {
     std::string modelName = "custom";
-    if (modelFilename.find("/") != std::string::npos)
+    if (modelFilepath.find("/") != std::string::npos)
     {
-        std::size_t iLast = modelFilename.find_last_of("/");
-        modelName = modelFilename.substr(iLast + 1);
+        std::size_t iLast = modelFilepath.find_last_of("/");
+        modelName = modelFilepath.substr(iLast + 1);
     }
     if (modelName.find(".") != std::string::npos)
     {

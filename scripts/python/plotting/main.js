@@ -3,7 +3,6 @@
 	gui.perf_proc_active = false;
 	gui.test_proc_active = false;
 
-
 	const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 	async function read_json_file(filename) {
@@ -71,48 +70,12 @@
 
 	//
 	async function init_elements() {
-		prefs = await read_json_file("./prefs.json")
-
-		// model drop-down
-		const models = await read_json_file("./model_index.json")
-		var model_ids = []
-		for (model_id in models)
-			model_ids.push(model_id);
-
-		if (!prefs['model_id'] in models)
-			model_ids.push(prefs['model_id']);
-
-		let select_model = document.getElementById('model_id');
-		while (select_model.hasChildNodes()) {
-			select_model.removeChild(select_model.firstChild);
-		}
-		for (let model_id of model_ids) {
-			let option = document.createElement("option");
-			option.text = model_id;
-			option.value = model_id;
-			select_model.appendChild(option);
-		}
-		select_model.value = prefs['model_id']
-
 		params_table = document.getElementById('params_table');
 		var rowCount = params_table.rows.length;
 		for (var x=rowCount-1; x>0; x--) {
 		   params_table.deleteRow(x);
 		}
 		await set_elements();
-	}
-
-	async function set_menu_values() {
-		const model_form = document.getElementById('model_form');
-		const build_form = document.getElementById('build_form');
-		const test_form = document.getElementById('test_form');
-
-		prefs = await read_json_file("./prefs.json")
-		model_form.model_id.value = ("model_id" in prefs) ? prefs["model_id"] : "LG_APHWC50"
-		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
-		test_form.test_list.value = ("test_list" in prefs) ? prefs["test_list"] : "All tests";
-		test_form.test_name.value = ("test_id" in prefs) ? prefs["test_id"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
-		test_form.draw_profile.value = ("draw_profile" in prefs) ? prefs["draw_profile"] : "auto";
 	}
 
 	async function get_menu_values() {
@@ -123,9 +86,9 @@
 		prefs = await read_json_file("./prefs.json")
 		prefs["model_id"] = model_form.model_id.value;
 		prefs["build_dir"] = build_form.build_dir.value;
-		prefs["test_list"] = test_form.test_list.value;
-		prefs["test_id"] = test_form.test_name.value;
-		prefs["draw_profile"] = test_form.draw_profile.value;
+		prefs['tests']['list'] = test_form.test_list.value;
+		prefs['tests']['id'] = test_form.test_id.value;
+		prefs['tests']['draw_profile'] = test_form.draw_profile.value;
 		await write_json_file("./prefs.json", prefs);
 	}
 
@@ -140,183 +103,155 @@
 		await ws_connection.send(JSON.stringify(msg));
 	}
 
-	async function replot_test(measured_filepath, simulated_filepath, is_standard_test)
-	{
-			prefs = await read_json_file("./prefs.json")
+	async function set_elements() {
+		var prefs = await read_json_file("./prefs.json");
+
+		const model_form = document.getElementById('model_form');
+		const build_form = document.getElementById('build_form');
+		const test_form = document.getElementById('test_form');
+
+		// update models control
+		test_form.test_list.value = prefs['tests']['list'];
+
+		let select_model = model_form.model_id;
+		while (select_model.hasChildNodes())
+			select_model.removeChild(select_model.firstChild);
+
+		var num_models = 0;
+		const models = await read_json_file("./model_index.json");
+		for (let model_id in models) {
+				let option = document.createElement("option");
+				option.text = ('name' in models[model_id])?  models[model_id]['name']: model_id;
+				option.value = model_id;
+				select_model.appendChild(option);
+				def_model_id = model_id;
+				num_models++;
+		}
+		if (('model_id' in prefs) && (prefs['model_id'] in models))
+			def_model_id = prefs['model_id'];
+		prefs['model_id'] = def_model_id;
+
+		model_form.model_id.value = prefs['model_id'];
+		select_model.disabled = (num_models == 0);
+
+		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
+
+		if (gui.perf_proc_active) 
+		{
+			const model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+			await replot_performance(model_filepath);
+		};
+
+		// update select_test control
+		while (test_form.test_id.hasChildNodes())
+			test_form.test_id.removeChild(test_form.test_id.firstChild);
+
+		// get available tests
+		var measured_filepath = ""
+		var simulated_filepath = ""
+		const tests = await read_json_file("./test_index.json");
+		var show_all_tests = !prefs["tests"]["list"].localeCompare("all_tests");
+		var show_tests_with_data = !prefs["tests"]["list"].localeCompare("tests_with_data");
+		var show_standard_tests = !prefs["tests"]["list"].localeCompare("standard_tests");
+		var def_test_list = "";
+		var def_test_id = "";
+		var have_test = false;
+		var found_measured = false;
+		var num_tests = 0;
+		for (let test_id in tests) {
+			var show_test = show_all_tests;
+			if ('group' in tests[test_id]) {
+				const test_group = tests[test_id]['group'];
+				show_test |= show_standard_tests && !test_group.localeCompare("standard_tests");
+				if (show_all_tests || show_tests_with_data)
+					if ('measured' in tests[test_id])	 // check for measured
+							if (prefs['model_id'] in tests[test_id]['measured'])
+							{
+								show_test = true;
+								found_measured = true;
+							}
+			}
+			if (show_test)
+			{
+				let option = document.createElement("option");
+				option.text = ('name' in tests[test_id])?  tests[test_id]['name']: test_id;
+				option.value = test_id;
+				test_form.test_id.appendChild(option);
+				if (!have_test || (test_id == prefs['tests']['id']))
+					def_test_id = test_id;
+				have_test = true;
+				num_tests++;
+			}
+		}
+		prefs['tests']['id'] = def_test_id;
+
+		const select_draw_profile = document.getElementById('draw_profile');
+			
+		test_form.test_list.value = prefs['tests']['list'];
+		test_form.test_id.value = prefs['tests']['id'];
+		select_draw_profile.value = prefs['tests']["draw_profile"];
+
+		for (let option in test_form.test_list.children)
+		{
+			if (test_form.test_list.children[option].valueOf == "tests_with_data") 
+				test_form.test_list.children[option].disabled = !found_measured;
+		}	
+
+		test_form.test_id.disabled = !have_test;
+
+		let is_standard_test = false;
+		let test_data = {};
+		if (have_test)
+		{
+			test_data = tests[prefs['tests']['id']];
+			is_standard_test = (('group' in test_data) && (test_data['group'] == "standard_tests"));
+		}
+
+		select_draw_profile.disabled = !(have_test && is_standard_test);
+
+		//
+		if (have_test && gui.test_proc_active)
+		{
+			const output_dir = prefs['build_dir'] + "/test/output";
+			if (is_standard_test)
+			{
+					const model_filepath = "./models_json/" + prefs['model_id'] + ".json";
+					let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'draw_profile': prefs['tests']["draw_profile"]};
+					await callPyServer("measure", "data=" + JSON.stringify(data))
+					simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+			}
+			else
+			{
+				const model_filepath = "./models_json/" + prefs['model_id'] + ".json";
+				const test_dir = (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
+				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+				await callPyServer("simulate", "data=" + JSON.stringify(data))
+
+				simulated_filepath = output_dir + "/" + prefs['tests']['id'] + "_JSON_" + prefs["model_id"] + ".csv";
+				if ("measured" in test_data)
+					for (let model_id in test_data["measured"])
+						if (model_id == prefs["model_id"]) {
+							measured_filepath = "../../../test/" + test_dir + "/" + test_data['measured'][model_id];
+							break;
+						}
+			}
+
 			var msg = {
 				'source': 'index',
 				'dest': 'test-proc',
-				'cmd': 'replot'};
-			if (prefs["show_measured"])
-			{
-				msg['measured_filepath'] = measured_filepath;
+				'cmd': 'replot',
+				'measured_filepath': measured_filepath,
+				'simulated_filepath': simulated_filepath,
+				'is_standard_test': (is_standard_test ? 1 : 0)
 			}
-			if (prefs["show_simulated"])
-			{
-					msg['simulated_filepath'] = simulated_filepath;
-			}
-			msg['is_standard_test'] = (is_standard_test ? 1 : 0);
-
 			await ws_connection.send(JSON.stringify(msg));
-	}
-
-	async function run_standard_test()
-	{ //measure
-		prefs = await read_json_file("./prefs.json")
-		await callPyServer("measure", "data=" + JSON.stringify(prefs))
-	}
-
-	async function run_general_test()
-	{ // simulate
-		prefs = await read_json_file("./prefs.json")
-		await callPyServer("simulate", "data=" + JSON.stringify(prefs))
-	}
-
-	async function change_model()
-	{
-		get_menu_values();
-		set_elements();
-	}
-
-	async function set_test_info()
-	{
-		prefs = await read_json_file("./prefs.json")
-
-		// get available tests
-		const test_index = await read_json_file("./test_index.json")
-		var show_all_tests = !prefs["test_list"].localeCompare("All tests");
-		var show_tests_with_data = !prefs["test_list"].localeCompare("Tests with data");
-		var show_standard_tests = show_all_tests || !prefs["test_list"].localeCompare("Standard tests");
-		var test_names = [];
-		var first = true;
-		var test_info = {};
-		for (let [test_id, test_data] in test_index["tests"]) {
-			var show_test = false;
-			show_test = show_all_tests;
-			if ('group' in test_data) {
-				const test_group = test_data['group'];
-				show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
-				if (show_all_tests || show_tests_with_data)
-					if ('measured' in test_data)	 // check for measured
-							if (test_id in test_data['measured'])
-								show_test = true;
-			}
-			const test_name = ('name' in test_info)? test_info['name'] : test_id;
-			if (show_test)
-				test_names.push(test_name);
-
-			if (first || (test_id.localeCompare(prefs['test_id'])))
-			{
-				test_info = test_data;
-				first = false;
-			}
-		}
-	
-		// get available tests
-		if (!test_names.includes(prefs["test_id"]));
-			prefs["test_id"] = test_names[0]; // default
-	
-		test_info['test_dir'] = prefs["test_id"]
-		for (let [test_id, test_info] in test_index["tests"]) {
-			if (!test_id.localeCompare(prefs["test_id"]))
-			{
-				test_info['test_dir'] = (("path" in test_info)? test_info["path" ] + "/": "") + prefs["test_id"];		
-				if ("measured" in test_info)
-					for (let [model_id, filename] of test["measured"])
-						if (model_id == prefs["model_id"]) {
-						{
-							test_info['measured_filename'] = measured['filename'];
-							prefs["show_measured"] = true;
-							break;
-						}
-					}
-			}
-		}
-
-		// set add'l test info
-		for (let [test_id, test_info] in test_index["tests"])  {
-			if (("group" in test_info) && !test_info["group"].localeCompare("Standard tests")) {
-				test_info['is_standard_test'] = true;
-				test_info['simulated_filename'] = "test24hrEF_" + prefs["model_id"] + ".csv";
-				prefs["show_simulated"] = true;
-				break;
-			}
-			else
-			{
-				test_info['simulated_filename'] = prefs["test_id"] + "_JSON_" + prefs["model_id"] + ".csv";
-				prefs["show_simulated"] = true;
-				break;
-			}	
-		}
-
-		// update select_test control
-		let select_test = document.getElementById('test_name');
-		while (select_test.hasChildNodes())
-			select_test.removeChild(select_test.firstChild);
-
-			// set test_name control
-		for (let test_name of test_names) {
-			let option = document.createElement("option");
-			option.text = test_name;
-			option.value = test_name;
-			select_test.appendChild(option);
-		}
-		if (test_names.length > 0)
-		{ 
-			select_test.disabled = false;
-			document.getElementById('test_btn').disabled = false;
+			test_plot.style = "display:block;";
 		}
 		else
 		{
-			prefs["test_id"] = "";
-			select_test.disabled = true;
-			document.getElementById('test_btn').disabled = true;
+			test_plot.style = "display:none;";
 		}
 
-		// set draw_profile dropdown
-		let draw_profile_dropdown = document.getElementById('draw_profile');
-		draw_profile_dropdown.value = prefs["draw_profile"];
-		draw_profile_dropdown.disabled = !('is_standard_test' in test_info);
-
-		await write_json_file("./prefs.json", prefs)
-	}
-
-	async function set_elements() {
-		var prefs = await read_json_file("./prefs.json")
-	
-		test_info = await set_test_info()
-
-		set_menu_values();
-
-		var model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-		if (gui.perf_proc_active)
-			await replot_performance(model_filepath)
-
-		if (gui.test_proc_active)
-		{
-			if('is_standard_test' in test_info)
-				await run_standard_test()
-			else
-			{
-				await run_general_test(test_info['test_dir'])
-			}
-			
-			var measured_filepath = ""
-			if (prefs["show_measured"])
-			{
-				measured_filepath = "../../../test"
-				if ('test_dir' in test_info)
-					measured_filepath += "/" + test_info['test_dir'];
-				measured_filepath += "/" + test_info['measured_filename'];
-			}
-
-			var simulated_filepath = ""
-			if (prefs["show_simulated"])
-				simulated_filepath += prefs['build_dir'] + "/test/output/" + test_info['simulated_filename'];
-
-			let is_standard = ('is_standard_test' in test_info);
-			await replot_test(measured_filepath, simulated_filepath, is_standard)
-		}
 		await write_json_file("./prefs.json", prefs)
 	}
 
@@ -349,8 +284,9 @@
 			plot_results = await callPyServerJSON("launch_test_proc", "data=" + JSON.stringify(data));
 			const dash_port = await plot_results["port_num"];
 			document.getElementById("test_plot").src = "http://localhost:" + dash_port;
-			document.getElementById("test_btn").innerHTML = "hide";
 			document.getElementById("test_plot").style = "display:block;"
+			document.getElementById("test_btn").innerHTML = "hide";
+
 			gui.test_proc_active = true;
 		}
 		await set_elements();

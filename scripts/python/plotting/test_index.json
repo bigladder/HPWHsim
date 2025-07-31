@@ -23,7 +23,7 @@
 		"testDr_TOO2": {"group": "Demand-response tests", "path": "DR_tests"},
 		"testDR_TOTLOR": {"group": "Demand-response tests", "path": "DR_tests"},
 
-		"standard24hr": {"group": "Standard tests", "name": "Standard 24-hr test"},
+		"standard24hr": {"group": "standard_tests", "name": "Standard 24-hr test"},
 
 		"testLockout": {"name": "Lockout test"},
  

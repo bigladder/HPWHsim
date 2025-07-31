@@ -116,6 +116,7 @@ class PerfPlotter():
 			if selectedData['points']:
 				self.clear_selected()
 				nT1s = len(self.T1s)
+				print(selectedData)
 				for point in selectedData['points']:
 					if point['curveNumber'] == 1:
 						idx = point['pointIndex']
@@ -154,10 +155,10 @@ class PerfPlotter():
 	def update_marks(self, value, prefs):
 		for iT1, T1 in enumerate(self.T1s):
 				for iT2, T2 in enumerate(self.T2s):
-					this_mark = self.marked[iT1, iT2, self.iT3] & (1 << prefs["performance_plots"]['contour_variable'])
+					this_mark = self.marked[iT1, iT2, self.iT3] & (1 << prefs["performance"]["plots"]['contour_variable'])
 					other_marks = self.marked[iT1, iT2, self.iT3] & (~this_mark)
-					if self.selected[iT1, iT2] and not self.dependent[iT1, iT2, self.iT3] == prefs["performance_plots"]['contour_variable']:
-						this_mark = value * (1 << prefs["performance_plots"]['contour_variable'])						
+					if self.selected[iT1, iT2] and not self.dependent[iT1, iT2, self.iT3] == prefs["performance"]["plots"]['contour_variable']:
+						this_mark = value * (1 << prefs["performance"]["plots"]['contour_variable'])						
 					self.marked[iT1, iT2, self.iT3] = other_marks | this_mark
 					
 	def mark_selected(self, prefs):
@@ -176,7 +177,7 @@ class PerfPlotter():
 		for iT1, T1 in enumerate(self.T1s):
 			for iT2, T2 in enumerate(self.T2s):
 				if self.selected[iT1, iT2]:
-					self.dependent[iT1, iT2, self.iT3] = prefs["performance_plots"]['contour_variable']
+					self.dependent[iT1, iT2, self.iT3] = prefs["performance"]["plots"]['contour_variable']
 			
 	def interpolate(self, refs, prefs):
 		# define RGI
@@ -187,8 +188,8 @@ class PerfPlotter():
 		rgi = RegularGridInterpolator((xr, yr), zr, method='linear')
 		
 		# generate mesh and interpolate	
-		nX = prefs["performance_plots"]['Nx']
-		nY = prefs["performance_plots"]['Ny']
+		nX = prefs["performance"]["plots"]['Nx']
+		nY = prefs["performance"]["plots"]['Ny']
 		
 		xp = np.linspace(xr[0], xr[-1], nX)
 		yp = np.linspace(yr[0], yr[-1], nY)
@@ -208,12 +209,12 @@ class PerfPlotter():
 			graph_title += " - "
 			
 		value_label = ""
-		if 'contour_variable' in prefs["performance_plots"]:	
-			if prefs["performance_plots"]['contour_variable'] == 0:
+		if 'contour_variable' in prefs["performance"]["plots"]:	
+			if prefs["performance"]["plots"]['contour_variable'] == 0:
 				plotVals = self.Pins
 				value_label = "Pin (W)"
 				graph_title += "Input Power (W)"
-			elif prefs["performance_plots"]['contour_variable'] == 1:
+			elif prefs["performance"]["plots"]['contour_variable'] == 1:
 				plotVals = self.Pouts
 				value_label = "Pout (W)"
 				graph_title += "Heating Capacity (W)"
@@ -234,7 +235,7 @@ class PerfPlotter():
 		self.vals = self.refs	
 					
 		# data as lists of point coordinates	
-		is_interp = ('interpolate' in prefs["performance_plots"]) and (prefs["performance_plots"]['interpolate'] == 1)
+		is_interp = ('interpolate' in prefs["performance"]["plots"]) and (prefs["performance"]["plots"]['interpolate'] == 1)
 		if is_interp:
 			self.vals = self.interpolate(self.refs, prefs)
 		
@@ -247,12 +248,12 @@ class PerfPlotter():
 		coloring = 'none'
 		lineWidth = 0
 		showLabels = False
-		if 'contour_coloring' in prefs["performance_plots"]:
-			if prefs["performance_plots"]['contour_coloring'] == 1:
+		if 'contour_coloring' in prefs["performance"]["plots"]:
+			if prefs["performance"]["plots"]['contour_coloring'] == 1:
 				coloring = 'heatmap'
 				lineWidth = 2
 				showLabels = True
-			if prefs["performance_plots"]['contour_coloring'] == 2:
+			if prefs["performance"]["plots"]['contour_coloring'] == 2:
 				coloring = 'lines'
 				lineWidth = 2
 				showLabels = True
@@ -277,7 +278,7 @@ class PerfPlotter():
 											)
 										)									
 		
-		points_visible = ('show_points' in prefs["performance_plots"]) and	(prefs["performance_plots"]["show_points"] == 1)	
+		points_visible = ('show_points' in prefs["performance"]["plots"]) and	(prefs["performance"]["plots"]["show_points"] == 1)	
 		# create point trace (data or interpolated) (initially empty)
 		trace_all = go.Scatter(
 			name = "all points", 
@@ -394,7 +395,7 @@ class PerfPlotter():
 						
 		x_label = f"Tenv (\u00B0C)"
 		y_label = f"Tinlet (\u00B0C)" if self.is_central else f"Tcond (\u00B0C)"	
-		value_label = self.variables[prefs["performance_plots"]['contour_variable']]
+		value_label = self.variables[prefs["performance"]["plots"]['contour_variable']]
 		
 		# create markers
 		for point in self.points:
@@ -402,10 +403,10 @@ class PerfPlotter():
 			markers['y'].append(point[1])
 			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac)
 			markers['size'].append(diam)
-			if prefs["performance_plots"]['contour_variable'] == 0:
+			if prefs["performance"]["plots"]['contour_variable'] == 0:
 				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
 				markers['color'].append('blue')
-			elif prefs["performance_plots"]['contour_variable'] == 1:
+			elif prefs["performance"]["plots"]['contour_variable'] == 1:
 				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
 				markers['color'].append('red')
 			else:
@@ -413,7 +414,7 @@ class PerfPlotter():
 				markers['color'].append('green')
 			i = i + 1	
 			   	
-		points_visible = ('show_points' in prefs["performance_plots"]) and 	(prefs["performance_plots"]["show_points"] == 1)
+		points_visible = ('show_points' in prefs["performance"]["plots"]) and 	(prefs["performance"]["plots"]["show_points"] == 1)
 							
 		self.fig.update_traces(
 			x = markers['x'],
@@ -477,7 +478,7 @@ class PerfPlotter():
 		for iT2, T2 in enumerate(self.refs[1]):
 			for iT1, T1 in enumerate(self.refs[0]):
 				depends = self.dependent[iT1, iT2, self.iT3]
-				if depends == prefs["performance_plots"]['contour_variable']:			
+				if depends == prefs["performance"]["plots"]['contour_variable']:			
 					point = [T1, T2, self.refs[2][i]]
 					dependent_points.append(point)
 				i = i + 1
@@ -508,7 +509,7 @@ class PerfPlotter():
 					if  marks > 0:
 						markedMarkers['x'].append(T1)
 						markedMarkers['y'].append(T2)
-						if (marks & (1 << prefs["performance_plots"]['contour_variable'])) > 0:
+						if (marks & (1 << prefs["performance"]["plots"]['contour_variable'])) > 0:
 							markedMarkers['color'].append('black')
 						else:
 							markedMarkers['color'].append('white')
@@ -527,7 +528,7 @@ class PerfPlotter():
 				for iT2, T2 in enumerate(self.refs[1]):
 					for iT1, T1 in enumerate(self.refs[0]):
 						for i in range(3):
-							if (self.marked[iT1, iT2, self.iT3] & (1 << i)) & (1 << prefs["performance_plots"]['contour_variable']) > 0:
+							if (self.marked[iT1, iT2, self.iT3] & (1 << i)) & (1 << prefs["performance"]["plots"]['contour_variable']) > 0:
 								entry = {'type': "perf-point"}
 								entry ['model'] = self.label
 								entry['variable'] = self.variables_names[i]
@@ -539,7 +540,7 @@ class PerfPlotter():
 			for iT2, T2 in enumerate(self.refs[1]):
 				for iT1, T1 in enumerate(self.refs[0]):
 					for i in range(3):
-						if self.marked[iT1, iT2, self.iT3] & (1 << i) & (1 << prefs["performance_plots"]['contour_variable']) > 0:
+						if self.marked[iT1, iT2, self.iT3] & (1 << i) & (1 << prefs["performance"]["plots"]['contour_variable']) > 0:
 							entry = {'type': "perf-point"}
 							entry ['model'] = self.label
 							entry['variable'] = self.variables_names[i]

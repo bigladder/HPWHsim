@@ -16,14 +16,22 @@ def perf_proc(data):
 	perf_proc.i_send = 0
 	perf_proc.changed = 0
 	perf_proc.prefs = {}
-	
+			
 	orig_dir = str(Path.cwd())
 	os.chdir("../../../test")
 	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
+	
+	def sync_prefs():
+		prefs = read_file("prefs.json")
+		if 'performance' in perf_proc.prefs:
+			if 'plots' in perf_proc.prefs['performance']:
+				prefs['performance']['plots'] = perf_proc.prefs['performance']['plots']
+		perf_proc.prefs = prefs
+		write_file("prefs.json", prefs)	
 
 	def replot(model_filepath):
-		perf_proc.prefs = read_file("prefs.json")					
+		sync_prefs()					
 		perf_proc.plotter = PerfPlotter(perf_proc.prefs['model_id'])
 		
 		model_data = read_file(model_filepath)
@@ -45,14 +53,14 @@ def perf_proc(data):
 					i = i + 1
 				
 			show_list = []
-			if perf_proc.prefs["performance_plots"]["show_points"] == 1:
+			if perf_proc.prefs["performance"]["plots"]["show_points"] == 1:
 				show_list= ['points']
 				
 			interp_list = []
-			if perf_proc.prefs["performance_plots"]["interpolate"] == 1:
+			if perf_proc.prefs["performance"]["plots"]["interpolate"] == 1:
 				interp_list= ['interpolate']
 
-			return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(show_outletTs), perf_proc.plotter.iT3, outletTs, show_list, interp_list, perf_proc.prefs["performance_plots"]['contour_variable'], perf_proc.prefs["performance_plots"]['contour_coloring'], perf_proc.prefs["performance_plots"]["Nx"], perf_proc.prefs["performance_plots"]["Ny"]
+			return perf_proc.plotter.fig, not(perf_proc.plotter.have_data), not(show_outletTs), perf_proc.plotter.iT3, outletTs, show_list, interp_list, perf_proc.prefs["performance"]["plots"]['contour_variable'], perf_proc.prefs["performance"]["plots"]['contour_coloring'], perf_proc.prefs["performance"]["plots"]["Nx"], perf_proc.prefs["performance"]["plots"]["Ny"]
 
 		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 	
@@ -192,15 +200,15 @@ def perf_proc(data):
 		)
 	def change_interp(value):
 		if 'interpolate' in value:
-			perf_proc.prefs["performance_plots"]["interpolate"] = 1
+			perf_proc.prefs["performance"]["plots"]["interpolate"] = 1
 		else:
-			perf_proc.prefs["performance_plots"]["interpolate"] = 0
+			perf_proc.prefs["performance"]["plots"]["interpolate"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
-		return perf_proc.plotter.fig, (perf_proc.prefs["performance_plots"]["interpolate"] == 0)
+		return perf_proc.plotter.fig, (perf_proc.prefs["performance"]["plots"]["interpolate"] == 0)
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -210,9 +218,9 @@ def perf_proc(data):
 	def change_show(value):
 		#prefs = read_file("prefs.json")
 		if 'points' in value:
-			perf_proc.prefs["performance_plots"]["show_points"] = 1
+			perf_proc.prefs["performance"]["plots"]["show_points"] = 1
 		else:
-			perf_proc.prefs["performance_plots"]["show_points"] = 0
+			perf_proc.prefs["performance"]["plots"]["show_points"] = 0
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
@@ -234,18 +242,18 @@ def perf_proc(data):
 		if Nx is not None:
 			Nx = int(Nx)
 			if Nx > 0:
-				perf_proc.prefs["performance_plots"]["Nx"] = Nx
+				perf_proc.prefs["performance"]["plots"]["Nx"] = Nx
 		if Ny is not None:
 			Ny = int(Ny)
 			if Ny > 0:
-				perf_proc.prefs["performance_plots"]["Ny"] = Ny				
+				perf_proc.prefs["performance"]["plots"]["Ny"] = Ny				
 		perf_proc.plotter.draw(perf_proc.prefs)
 		perf_proc.plotter.update_markers(perf_proc.prefs)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		#write_file("prefs.json", prefs)
-		return perf_proc.plotter.fig, perf_proc.prefs["performance_plots"]["Nx"], perf_proc.prefs["performance_plots"]["Ny"]
+		return perf_proc.plotter.fig, perf_proc.prefs["performance"]["plots"]["Nx"], perf_proc.prefs["performance"]["plots"]["Ny"]
 	
 	@app.callback(
 			Output('perf-graph', 'figure', allow_duplicate=True),
@@ -254,7 +262,7 @@ def perf_proc(data):
 		)
 	def select_variable(value):	
 		#prefs = read_file("prefs.json")
-		perf_proc.prefs["performance_plots"]['contour_variable'] = value
+		perf_proc.prefs["performance"]["plots"]['contour_variable'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
@@ -272,7 +280,7 @@ def perf_proc(data):
 		)
 	def select_coloring(value):
 		#prefs = read_file("prefs.json")
-		perf_proc.prefs["performance_plots"]['contour_coloring'] = value
+		perf_proc.prefs["performance"]["plots"]['contour_coloring'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
 			perf_proc.plotter.update_markers(perf_proc.prefs)
@@ -320,7 +328,7 @@ def perf_proc(data):
 		if not selectedData:
 			return no_update, hide_buttons
 		if 'interpolate' in perf_proc.prefs:
-			if perf_proc.prefs["performance_plots"]["interpolate"] == 1:
+			if perf_proc.prefs["performance"]["plots"]["interpolate"] == 1:
 				return no_update, hide_buttons
 		prev_layout = fig['layout']
 		perf_proc.plotter.select_data(selectedData)
@@ -360,7 +368,7 @@ def perf_proc(data):
 		if not clickData:
 			return no_update, hide_buttons, {}
 		if 'interpolate' in prefs:
-			if perf_proc.prefs["performance_plots"]["interpolate"] == 1:
+			if perf_proc.prefs["performance"]["plots"]["interpolate"] == 1:
 				return no_update, hide_buttons, {}
 			
 		prev_layout = fig['layout']
@@ -517,7 +525,7 @@ def perf_proc(data):
 		if 'dragmode' in relayoutData:
 			if relayoutData['dragmode'] == 'select' or relayoutData['dragmode'] == 'lasso':
 				perf_proc.plotter.clear_selected()		
-				perf_proc.plotter.update_selected(prefs)
+				perf_proc.plotter.update_selected(perf_proc.prefs)
 				perf_proc.plotter.fig.update_layout(dragmode= relayoutData['dragmode'])
 				return 	perf_proc.plotter.fig
 		elif 'range' in fig:

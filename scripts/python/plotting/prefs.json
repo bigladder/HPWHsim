@@ -1,18 +1,24 @@
 {
-  "model_id": "ColmacCxV_5_SP",
+  "model_id": "BradfordWhiteAeroThermRE2H65",
   "build_dir": "../../../build",
-  "test_list": "Standard tests",
-  "test_id": "",
-  "show_simulated": true,
-  "show_measured": false,
-  "draw_profile": "Low",
   "heat_source_id": "resistiveElementTop",
-  "performance_plots": {
-    "contour_variable": 1,
-    "contour_coloring": 2,
-    "interpolate": 0,
-    "Nx": 19,
-    "Ny": 10,
-    "show_points": 1
+  "tests": {
+    "list": "standard_tests",
+    "id": "standard24hr",
+    "draw_profile": "high",
+    "plots": {
+      "show_simulated": true,
+      "show_measured": true
+    }
+  },
+  "performance": {
+    "plots": {
+      "contour_variable": 1,
+      "contour_coloring": 2,
+      "interpolate": 0,
+      "Nx": 19,
+      "Ny": 10,
+      "show_points": 1
+    }
   }
 }
