@@ -31,11 +31,12 @@ def perf_proc(data):
 		write_file("prefs.json", prefs)	
 
 	def replot(model_filepath):
+		perf_proc.plotter = {}
+		
 		sync_prefs()					
 		perf_proc.plotter = PerfPlotter(perf_proc.prefs['model_id'])
 		
-		model_data = read_file(model_filepath)
-		
+		model_data = read_file(model_filepath)		
 		perf_proc.plotter.prepare(model_data)	
 
 		if perf_proc.plotter.have_data:
@@ -161,7 +162,7 @@ def perf_proc(data):
 		message = json.dumps({
 			"source": "perf-proc",
 			"dest": "index",
-			"cmd": "init-perf-proc",
+			"cmd": "init",
 			"index": perf_proc.i_send})
 		return message
 
@@ -216,7 +217,6 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def change_show(value):
-		#prefs = read_file("prefs.json")
 		if 'points' in value:
 			perf_proc.prefs["performance"]["plots"]["show_points"] = 1
 		else:
@@ -226,7 +226,6 @@ def perf_proc(data):
 		perf_proc.plotter.update_selected(perf_proc.prefs)
 		perf_proc.plotter.update_marked(perf_proc.prefs)
 		perf_proc.plotter.update_dependent(perf_proc.prefs)
-		#write_file("prefs.json", prefs)
 		return perf_proc.plotter.fig
 	
 	@app.callback(
@@ -261,7 +260,6 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def select_variable(value):	
-		#prefs = read_file("prefs.json")
 		perf_proc.prefs["performance"]["plots"]['contour_variable'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
@@ -269,7 +267,6 @@ def perf_proc(data):
 			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
-			#write_file("prefs.json", perf_proc.prefs)
 			return perf_proc.plotter.fig
 		return no_update
 	
@@ -279,7 +276,6 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def select_coloring(value):
-		#prefs = read_file("prefs.json")
 		perf_proc.prefs["performance"]["plots"]['contour_coloring'] = value
 		if perf_proc.plotter.have_data:
 			perf_proc.plotter.draw(perf_proc.prefs)
@@ -287,7 +283,6 @@ def perf_proc(data):
 			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
-			#write_file("prefs.json", prefs)
 			return perf_proc.plotter.fig
 		return no_update
 	
@@ -297,7 +292,6 @@ def perf_proc(data):
 				prevent_initial_call=True
 			)
 	def select_outletT(value):
-		#prefs = read_file("prefs.json")
 		if perf_proc.plotter.have_data:
 			if value == None:
 				return perf_proc.plotter.fig
@@ -311,7 +305,6 @@ def perf_proc(data):
 			perf_proc.plotter.update_selected(perf_proc.prefs)
 			perf_proc.plotter.update_dependent(perf_proc.prefs)
 			perf_proc.plotter.update_marked(perf_proc.prefs)
-			#write_file("prefs.json", perf_proc.prefs)
 			return perf_proc.plotter.fig
 		return no_update
 
@@ -323,7 +316,6 @@ def perf_proc(data):
 			prevent_initial_call=True
 		)
 	def select_data(selectedData, fig):
-		#perf_proc.prefs = read_file("prefs.json")
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not selectedData:
 			return no_update, hide_buttons
@@ -332,12 +324,11 @@ def perf_proc(data):
 				return no_update, hide_buttons
 		prev_layout = fig['layout']
 		perf_proc.plotter.select_data(selectedData)
-		perf_proc.plotter.update_selected(prefs)
+		perf_proc.plotter.update_selected(perf_proc.prefs)
 		if 'range' in prev_layout:
 			perf_proc.plotter.fig.update_layout(range = prev_layout['range'])
 		if 'dragmode' in prev_layout:
 			perf_proc.plotter.fig.update_layout(dragmode = prev_layout['dragmode'])
-		#write_file("prefs.json", prefs)
 		return perf_proc.plotter.fig, hide_buttons
 	
 	@app.callback(
@@ -363,7 +354,6 @@ def perf_proc(data):
 		prevent_initial_call=True
 	)
 	def click_data(clickData, fig):
-		#prefs = read_file("prefs.json")
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not clickData:
 			return no_update, hide_buttons, {}

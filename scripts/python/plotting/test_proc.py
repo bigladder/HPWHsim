@@ -163,7 +163,7 @@ def test_proc(data):
 	)
 	def send_message(n_clicks):
 		test_proc.i_send = test_proc.i_send + 1
-		message = json.dumps({"source": "test-proc", "dest": "index", "cmd": "init-test-proc", "index": test_proc.i_send})
+		message = json.dumps({"source": "test-proc", "dest": "index", "cmd": "init", "index": test_proc.i_send})
 		return message
 
 	@app.callback(

@@ -405,13 +405,13 @@ class PerfPlotter():
 			markers['size'].append(diam)
 			if prefs["performance"]["plots"]['contour_variable'] == 0:
 				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
-				markers['color'].append('blue')
+				markers['color'].append('rgb(127, 127, 255)',)
 			elif prefs["performance"]["plots"]['contour_variable'] == 1:
 				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.2f}"])
-				markers['color'].append('red')
+				markers['color'].append('rgb(255, 127, 127)')
 			else:
 				markers['hover_labels'].append([x_label, y_label, value_label, f"{point[2]:8.4f}"])
-				markers['color'].append('green')
+				markers['color'].append('rgb(127, 255, 127)')
 			i = i + 1	
 			   	
 		points_visible = ('show_points' in prefs["performance"]["plots"]) and 	(prefs["performance"]["plots"]["show_points"] == 1)

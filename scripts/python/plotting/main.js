@@ -47,25 +47,36 @@
 				const data = JSON.parse(msg['data']);
 				if ('dest' in data)
 					if(data['dest'] == "index")
-						if ('cmd' in data)
+						if ('source' in data)
 						{
-							if(!data['cmd'].localeCompare("init-test-proc"))									
-							{
-								await get_menu_values();
-								await set_elements();
-							}
+							if (data['source'].localeCompare("test-proc"))
+								if ('cmd' in data)
+								{
+									if(!data['cmd'].localeCompare("init"))									
+									{
+										await get_elements();
+										await set_elements();
+									}
+								}
 
-							if(!data['cmd'].localeCompare("init-perf-proc"))									
-							{
-								await get_menu_values();
-								await set_elements();
-							}
+							if (data['source'].localeCompare("perf-proc"))								
+								if ('cmd' in data)
+								{
+									if(!data['cmd'].localeCompare("init"))									
+									{
+										await get_elements();
+										await set_elements();
+									}
+								}
 
-							if(!data['cmd'].localeCompare("refresh-fit"))
-								FillFitTables()
-						}			
+						if (data['source'].localeCompare("fit-proc"))
+							if ('cmd' in data)
+							{
+									if (!data['cmd'].localeCompare("refresh"))
+										FillFitTables()
+							}			
 				}
-			});
+			}});
 	}
 
 	//
@@ -78,7 +89,7 @@
 		await set_elements();
 	}
 
-	async function get_menu_values() {
+	async function get_elements() {
 		const model_form = document.getElementById('model_form');
 		const build_form = document.getElementById('build_form');
 		const test_form = document.getElementById('test_form');
@@ -256,7 +267,7 @@
 	}
 
 	async function change_menu_value() {
-		await get_menu_values();
+		await get_elements();
 		await set_elements();
 	}
 

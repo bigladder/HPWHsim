@@ -326,7 +326,6 @@ class TestPlotter:
 				self.plot_graphs(data_set, variable, value, row + 1)
 
 	def draw(self, data):
-		print(data)
 		have_traces = False
 		draw_meas = self.measured.have_data
 		draw_sim = self.simulated.have_data
@@ -335,7 +334,6 @@ class TestPlotter:
 			draw_sim = draw_sim and (data["show"] & 2 == 2)
 
 			if draw_meas:
-				print("draw_meas")
 				self.plot = dimes.DimensionalPlot(
 				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]]
 				)
@@ -344,7 +342,6 @@ class TestPlotter:
 				if draw_sim:
 					self.draw_variable_type(self.simulated)
 			elif draw_sim:
-				print("draw_sim")
 				self.plot = dimes.DimensionalPlot(
 				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]]
 				)

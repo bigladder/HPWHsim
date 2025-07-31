@@ -1,14 +1,95 @@
 {
-  "parameters": [],
+  "parameters": [
+    {
+      "type": "perf-point",
+      "model": "BradfordWhiteAeroThermRE2HP50",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "perf-point",
+      "model": "BradfordWhiteAeroThermRE2HP50",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        3,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "perf-point",
+      "model": "BradfordWhiteAeroThermRE2HP50",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        4,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "perf-point",
+      "model": "BradfordWhiteAeroThermRE2HP50",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "perf-point",
+      "model": "BradfordWhiteAeroThermRE2HP50",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        3,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "perf-point",
+      "model": "BradfordWhiteAeroThermRE2HP50",
+      "variable": "Pin",
+      "dependent": "COP",
+      "coords": [
+        4,
+        1,
+        0
+      ]
+    }
+  ],
   "metrics": {
     "energy_factors": [],
     "test_points": [
       {
-        "model_id": "BradfordWhiteAeroThermRE2HP65",
-        "test_id": "RE2HP65_UEF50",
+        "model_id": "BradfordWhiteAeroThermRE2HP50",
+        "test_id": "RE2HP50_UEF50",
         "variable": "Pin(W)",
-        "value": 292.3666666666668,
-        "t_min": 57
+        "value": 278.85,
+        "t_min": 26
+      },
+      {
+        "model_id": "BradfordWhiteAeroThermRE2HP50",
+        "test_id": "RE2HP50_UEF50",
+        "variable": "Pin(W)",
+        "value": 290.54999999999995,
+        "t_min": 45
+      },
+      {
+        "model_id": "BradfordWhiteAeroThermRE2HP50",
+        "test_id": "RE2HP50_UEF50",
+        "variable": "Pin(W)",
+        "value": 283.4833333333333,
+        "t_min": 30
       }
     ]
   }
