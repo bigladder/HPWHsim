@@ -1,6 +1,15 @@
 {
   "parameters": [],
   "metrics": {
-    "energy_factors": []
+    "energy_factors": [],
+    "test_points": [
+      {
+        "model_id": "BradfordWhiteAeroThermRE2HP65",
+        "test_id": "RE2HP65_UEF50",
+        "variable": "Pin(W)",
+        "value": 292.3666666666668,
+        "t_min": 57
+      }
+    ]
   }
 }

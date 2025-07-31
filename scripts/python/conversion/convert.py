@@ -6,13 +6,13 @@ from pathlib import Path
 
 setpointT_C = 51.1
 initialTankT_C = 51.1
-initTime_min = -10
-numRowsPerMin = 1
+initTime_min = 0
+numRowsPerMin = 6
 numTankTs = 6
 tankTsOrder = -1
 
-test_name = 'villara_24hr67'
-format = "LG"
+test_name = 'RE2HP50_UEF67'
+format = "BradfordWhite"
 
 # for plotting
 output_column_headers = ["Time(min)",  "AmbientT(C)", "PowerIn(W)",
@@ -23,7 +23,7 @@ if format == "Villara":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 3), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
 	power_factor = 1000.
 if format == "BradfordWhite":
-	orig_columns = dict([ ("Time", 0), ("AmbientT", 1), ("Power", 4), ("TankT1", 5), ("InletT", 11), ("OutletT", 12), ("Draw", 13) ])
+	orig_columns = dict([ ("Time", 0), ("AmbientT", 1), ("Power", 4), ("TankT1", 10), ("InletT", 11), ("OutletT", 12), ("Draw", 13) ])
 	power_factor = 1.		
 if format == "LG":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 8), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
@@ -31,18 +31,14 @@ if format == "LG":
 
 #
 def convert_draw_schedule(test_dir, data_filename):
-	in_filename = str(data_filename) + '.csv'
-	out_filename = 'drawschedule.csv'
 	
+	in_filename = str(data_filename) + '.csv'
 	in_file_path = os.path.join(test_dir, in_filename)
-	print("Opened in-file.")
-	out_file_path = os.path.join(test_dir, out_filename)
-	print("Opened out-file.")
-	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
-	in_file.close()
-
+	
+	out_filename = 'drawschedule.csv'
+	out_file_path = os.path.join(test_dir, out_filename)
 	out_file = open(out_file_path,"w+")
 
 	out_file.writelines("default 0\n")
@@ -73,16 +69,12 @@ def convert_draw_schedule(test_dir, data_filename):
 #
 def convert_ambientT_schedule(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
-	out_filename = 'ambientTschedule.csv'
-	
 	in_file_path = os.path.join(test_dir, in_filename)
-	out_file_path = os.path.join(test_dir, out_filename)
-
-	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
-	in_file.close()
-
+	
+	out_filename = 'ambientTschedule.csv'
+	out_file_path = os.path.join(test_dir, out_filename)
 	out_file = open(out_file_path,"w+")
 
 	first = True
@@ -123,14 +115,14 @@ def convert_ambientT_schedule(test_dir, data_filename):
 #
 def convert_evaporatorT_schedule(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
-	out_filename = 'evaporatorTschedule.csv'
-	
 	in_file_path = os.path.join(test_dir, in_filename)
+	in_file = open(in_file_path, 'r')
+	Lines = in_file.readlines()
+	
+	out_filename = 'evaporatorTschedule.csv'
 	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
-	in_file = open(in_file_path, 'r')
-	Lines = in_file.readlines()
 	in_file.close()
 
 	out_file = open(out_file_path,"w+")
@@ -177,16 +169,13 @@ def convert_evaporatorT_schedule(test_dir, data_filename):
 # inletT schedule
 def convert_inletT_schedule(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
-	out_filename = 'inletTschedule.csv'
-	
 	in_file_path = os.path.join(test_dir, in_filename)
-	out_file_path = os.path.join(test_dir, out_filename)
-
-	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
-	in_file.close()
-
+	
+	# load data
+	out_filename = 'inletTschedule.csv'
+	out_file_path = os.path.join(test_dir, out_filename)
 	out_file = open(out_file_path,"w+")
 
 	# get default (average)
@@ -235,16 +224,12 @@ def convert_inletT_schedule(test_dir, data_filename):
 # DR schedule
 def create_DR_schedule(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
-	out_filename = 'DRschedule.csv'
-	
 	in_file_path = os.path.join(test_dir, in_filename)
-	out_file_path = os.path.join(test_dir, out_filename)
-
-	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
-	in_file.close()
-
+	
+	out_filename = 'DRschedule.csv'
+	out_file_path = os.path.join(test_dir, out_filename)
 	out_file = open(out_file_path,"w+")
 	out_file.writelines(f"default 0\n")
 	out_file.close()
@@ -253,15 +238,12 @@ def create_DR_schedule(test_dir, data_filename):
 # test info
 def create_test_into(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
-	out_filename = 'testInfo.txt'
-	
 	in_file_path = os.path.join(test_dir, in_filename)
-	out_file_path = os.path.join(test_dir, out_filename)
-
-	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
-	in_file.close()
+	
+	out_filename = 'testInfo.txt'
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# count minutes
 	jLine = numRowsPerMin - 1
@@ -285,24 +267,15 @@ def create_test_into(test_dir, data_filename):
 	out_file.close()
 
 # measured data
-def convert_measured(test_dir, data_filename):	
-	in_filename = str(data_filename) + '.csv'
-	out_filename = 'measured.csv'
-	
-# 
 def convert_measured(test_dir, data_filename):
-	
 	in_filename = str(data_filename) + '.csv'
-	out_filename = 'measured.csv'
-	
 	in_file_path = os.path.join(test_dir, in_filename)
-	out_file_path = os.path.join(test_dir, out_filename)
-	
-	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
-	in_file.close()
-
+	
+	out_filename = 'measured.csv'
+	out_file_path = os.path.join(test_dir, out_filename)
+	
 	powerSum = 0
 	drawSum = 0
 	iSum = 0
@@ -380,19 +353,20 @@ def convert_measured(test_dir, data_filename):
 	
 #  main
 if __name__ == "__main__":
-    n_args = len(sys.argv) - 1
-    if n_args == 2:
-      test_dir = Path(sys.argv[1])
-      data_filename = Path(sys.argv[2])
-      convert_draw_schedule(test_dir,data_filename)
-      convert_ambientT_schedule(test_dir,data_filename)
-      convert_evaporatorT_schedule(test_dir,data_filename)
-      convert_inletT_schedule(test_dir,data_filename)
-      create_DR_schedule(test_dir,data_filename)
-      create_test_into(test_dir,data_filename)
-      convert_measured(test_dir,data_filename)
-    else:
-      sys.exit(
-        "Expected two arguments: test_dir data_filename"
-        )
+	n_args = len(sys.argv) - 1
+	if n_args == 2:
+		test_dir = Path(sys.argv[1])
+		data_filename = Path(sys.argv[2])
+
+		convert_draw_schedule(test_dir,data_filename)
+		convert_ambientT_schedule(test_dir,data_filename)
+		convert_evaporatorT_schedule(test_dir,data_filename)
+		convert_inletT_schedule(test_dir,data_filename)
+		create_DR_schedule(test_dir,data_filename)
+		create_test_into(test_dir,data_filename)
+		convert_measured(test_dir,data_filename)
+	else:
+		sys.exit(
+		  "Expected two arguments: test_dir data_filename"
+		  )
   

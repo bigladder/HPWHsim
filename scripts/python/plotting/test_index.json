@@ -12,6 +12,13 @@
 		"RE2H80_UEF50": {"group": "BradfordWhite AeroThermRE2H80", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H80", "measured": {"BradfordWhiteAeroThermRE2H80": "measured.csv"}},
 		"RE2H80_UEF67": {"group": "BradfordWhite AeroThermRE2H80", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H80", "measured": {"BradfordWhiteAeroThermRE2H80": "measured.csv"}},
 
+    "RE2HP50_UEF50": {"group": "BradfordWhite AeroThermRE2HP50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2HP50", "measured": {"BradfordWhiteAeroThermRE2HP50": "measured.csv"}},
+		"RE2HP50_UEF67": {"group": "BradfordWhite AeroThermRE2HP50", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H5P0", "measured": {"BradfordWhiteAeroThermRE2HP50": "measured.csv"}},
+    "RE2HP65_UEF50": {"group": "BradfordWhite_AeroThermRE2HP65", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2HP65", "measured": {"BradfordWhiteAeroThermRE2HP65": "measured.csv"}},
+    "RE2HP65_UEF67": {"group": "BradfordWhite_AeroThermRE2HP65", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2HP65", "measured": {"BradfordWhiteAeroThermRE2HP65": "measured.csv"}},
+		"RE2HP80_UEF50": {"group": "BradfordWhite AeroThermRE2HP80", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2HP80", "measured": {"BradfordWhiteAeroThermRE2HP80": "measured.csv"}},
+		"RE2HP80_UEF67": {"group": "BradfordWhite AeroThermRE2H8P0", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2HP80", "measured": {"BradfordWhiteAeroThermRE2HP80": "measured.csv"}},
+
 		"villara_24hr67": {"group": "Villara_AquaThermAire", "desc": "24h; 67F", "path": "Villara/AquaThermAire", "measured": {"AquaThermAire": "measured.csv"}},
 
 		"DOE2014_LGC50_24hr50": {"group": "LG", "desc": "24h; 50F", "path": "LG/APHWC50", "measured": {"LG_APHWC50": "measured.csv"}},
