@@ -1,5 +1,5 @@
 # Raw script for converting typical supplied data to HPWHsim schedules and measured data.
-
+# uv run convert.py RE2HP80_UEF67 RE2HP80_UEF67
 import os
 import sys
 from pathlib import Path
