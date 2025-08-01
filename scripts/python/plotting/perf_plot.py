@@ -114,15 +114,15 @@ class PerfPlotter():
 	def select_data(self, selectedData):
 		if 'points' in selectedData:
 			if selectedData['points']:
-				self.clear_selected()
+				#self.clear_selected()
 				nT1s = len(self.T1s)
-				print(selectedData)
 				for point in selectedData['points']:
+					print(point)
 					if point['curveNumber'] == 1:
 						idx = point['pointIndex']
 						iT2 = int(idx / nT1s)
 						iT1 = idx % nT1s
-						self.selected[iT1, iT2] = 1
+						self.selected[iT1, iT2] = 1 - self.selected[iT1, iT2]
 						
 	def click_data(self, clickData):
 		if 'points' in clickData:

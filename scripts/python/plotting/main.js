@@ -73,7 +73,7 @@
 							if ('cmd' in data)
 							{
 									if (!data['cmd'].localeCompare("refresh"))
-										FillFitTables()
+										fill_fit_tables()
 							}			
 				}
 			}});
@@ -345,10 +345,10 @@
 			var fit_list = await read_json_file("./fit_list.json")
 			fit_list['metrics'] = {}
 			await write_json_file("./fit_list.json", fit_list)
-			await FillFitTables()
+			await fill_fit_table()
 		}
 
-	async function FillParamsTable(fit_list) {	
+	async function fill_params_table(fit_list) {	
 		let tableHTML = ''
 
 		have_point = false;
@@ -385,7 +385,7 @@
 		document.getElementById('params_table').innerHTML = tableHTML;
 	}
 
-	async function FillMetricsTable(fit_list) {
+	async function fill_metrics_table(fit_list) {
 		let tableHTML = '<table>';
 		if ('metrics' in fit_list)
 		{		
@@ -449,19 +449,19 @@
 		document.getElementById('metrics_table').innerHTML = tableHTML;
 	}
 
-	async function FillFitTables() {
+	async function fill_fit_table() {
 
 		var fit_list = await read_json_file("./fit_list.json");
 
-		await FillParamsTable(fit_list);
-		await FillMetricsTable(fit_list);
+		await fill_params_table(fit_list);
+		await fill_metrics_table(fit_list);
 	}
 
 	async function fit()	{
 
 	}
 
-	async function FillGeneralTable(model_data) {
+	async function fill_general_table(model_data) {
 		let tableHTML = '<table>'
 		
 		const tableHeaders = ['parameter', 'value'];
@@ -483,7 +483,7 @@
 		document.getElementById('general_table').innerHTML = tableHTML;
 	}
 
-	async function FillTankTable(model_data) {
+	async function fill_tank_table(model_data) {
 		let tableHTML = '<table>'
 		
 		var tableHeaders = ['parameter', 'value'];
@@ -516,7 +516,7 @@
 		document.getElementById('tank_table').innerHTML = tableHTML;
 	}
 
-	async function FillHeatSourceTable(heat_source_config) {
+	async function fill_heatsource_table(heat_source_config) {
 		let tableHTML = '<table>'
 			
 		var tableHeaders = ['parameter', 'value'];
@@ -542,13 +542,13 @@
 		document.getElementById('heat_source_table').innerHTML = tableHTML;
 	}
 
-	async function FillPropertiesTables() {
+	async function fill_properties_table() {
 		prefs = await read_json_file("./prefs.json")
 		const model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 		var model_data = await read_json_file(model_data_filepath)
 
-		await FillGeneralTable(model_data);
-		await FillTankTable(model_data);
+		await fill_general_table(model_data);
+		await fill_tank_table(model_data);
 
 		var performance;
 		if("integrated_system" in model_data)
@@ -561,7 +561,7 @@
 		performance["heat_source_configurations"].forEach(hsc => {	
 			if (hsc["id"] == prefs["heat_source_id"])
 			{
-					FillHeatSourceTable(hsc);
+					fill_heatsource_table(hsc);
 			}
 		}
 		);
@@ -570,6 +570,6 @@
 async function init_all() {
 	await init_websocket();
 	await init_elements();
-	await FillFitTables();
-	await FillPropertiesTables();
+	await fill_fit_table();
+	await fill_properties_table();
 }

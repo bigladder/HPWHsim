@@ -76,7 +76,7 @@ class TestPlotter:
 	
 	def __init__(self, data):
 		self.plot = {}
-		self.label = data['model_id']
+		self.model_id = data['model_id']
 		self.test_id = data['test_id']
 		self.energy_data = {}
 		self.measured = DataSet("Measured")
@@ -250,7 +250,7 @@ class TestPlotter:
 					for t_min, Pin in zip(t_mins, Pins):
 						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
 							test_point = {}
-							test_point['model_id'] = self.label
+							test_point['model_id'] = self.model_id
 							test_point['test_id'] = self.test_id
 							test_point['variable'] = "Pin(W)"
 							test_point['value'] = Pin
@@ -269,7 +269,7 @@ class TestPlotter:
 						for t_min, Pin in zip(t_mins, Pins):
 							if Pin == point["y"] and t_min == point["x"]:
 								test_point = {}
-								test_point['model_id'] = self.label
+								test_point['model_id'] = self.model_id
 								test_point['test_id'] = self.test_id
 								test_point['variable'] = "Pin(W)"
 								test_point['value'] = Pin
@@ -335,16 +335,20 @@ class TestPlotter:
 
 			if draw_meas:
 				self.plot = dimes.DimensionalPlot(
-				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]]
+				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]],
+						f"Model: {self.model_id}, Test: {self.test_id}"					
 				)
+				self.plot.x_axis.name = "Time (min)"
 				self.draw_variable_type(self.measured)
 				have_traces = True
 				if draw_sim:
 					self.draw_variable_type(self.simulated)
 			elif draw_sim:
 				self.plot = dimes.DimensionalPlot(
-				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]]
+				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]],
+						f"Model: {self.model_id}, Test: {self.test_id}"
 				)
+				self.plot.x_axis.name = "Time (min)"
 				have_traces = True
 				self.draw_variable_type(self.simulated)
 			else:

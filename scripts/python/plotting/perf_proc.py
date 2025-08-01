@@ -11,7 +11,6 @@ from perf_plot import PerfPlotter
 
 # Global variable to store the WebSocket
 def perf_proc(data):
-
 	perf_proc.ws = None
 	perf_proc.i_send = 0
 	perf_proc.changed = 0
@@ -319,9 +318,8 @@ def perf_proc(data):
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not selectedData:
 			return no_update, hide_buttons
-		if 'interpolate' in perf_proc.prefs:
-			if perf_proc.prefs["performance"]["plots"]["interpolate"] == 1:
-				return no_update, hide_buttons
+		if perf_proc.prefs["performance"]["plots"]["interpolate"] == 1:
+			return no_update, hide_buttons
 		prev_layout = fig['layout']
 		perf_proc.plotter.select_data(selectedData)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
@@ -357,13 +355,14 @@ def perf_proc(data):
 		hide_buttons = not(perf_proc.plotter.have_selected())
 		if not clickData:
 			return no_update, hide_buttons, {}
-		if 'interpolate' in prefs:
+		if 'interpolate' in perf_proc.prefs["performance"]["plots"]:
 			if perf_proc.prefs["performance"]["plots"]["interpolate"] == 1:
 				return no_update, hide_buttons, {}
 			
 		prev_layout = fig['layout']
 		perf_proc.plotter.click_data(clickData)
 		perf_proc.plotter.update_selected(perf_proc.prefs)
+		hide_buttons = False
 		if 'range' in prev_layout:
 			perf_proc.plotter.fig.update_layout(range = prev_layout['range'])
 		if 'dragmode' in prev_layout:
