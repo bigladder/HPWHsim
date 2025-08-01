@@ -55,17 +55,17 @@
 <body>
 	<script src="main.js"></script>
 
+	<!-- build dir -->
+	<form id="build_form">
+		<label for="build_dir">build directory:</label>
+		<input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
+	</form>
+
 	<!-- model -->
 	<form id="model_form">
 		<label for="model_id">model:</label>
 		<select name="model_id" id="model_id" style="width: 400px" onchange="change_menu_value();">
 		</select><br><br>
-	</form>
-
-	<!-- build dir -->
-	<form id="build_form">
-		<label for="build_dir">build directory:</label>
-		<input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
 	</form>
 
 	<!-- Properties -->
@@ -161,6 +161,7 @@
 		<br>
 	</div>
 
+	<!-- tabs -->
 	<script>
 		var coll = document.getElementsByClassName("collapsible");
 		var i;

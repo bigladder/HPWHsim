@@ -305,6 +305,7 @@
 	}
 
 	async function launch_perf_proc() {
+		document.getElementById("perf_tab").innerHTML = "Performance...";
 		document.getElementById("perf_btn").disabled = true;
 		if (gui.perf_proc_active)
 		{
@@ -338,7 +339,7 @@
 			var fit_list = await read_json_file("./fit_list.json")
 			fit_list['parameters'] = []
 			await write_json_file("./fit_list.json", fit_list)
-			await FillFitTables()
+			await fill_fit_table()
 		}
 
 	async function clear_metrics() {
