@@ -1,45 +1,163 @@
-from dash import Dash, html, dcc, Input, Output, State, no_update
-from dash_extensions import WebSocket
-import multiprocessing as mp
+
 from pathlib import Path
 import os, sys
-import json
-import time
 from common import read_file, write_file, get_perf_map, set_perf_map
-import websockets
-from scipy.optimize import least_squares
 
-async def send_message(uri, message):
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(message)
-        print(f"Sent: {message}")
-        response = await websocket.recv()
-        print(f"Received: {response}")
-
-def fit_proc(data):
-
-	fit_proc.i_send = 0
-
-	orig_dir = str(Path.cwd())
-	os.chdir("../../../test")
-	abs_repo_test_dir = str(Path.cwd())
-	os.chdir(orig_dir)
-
-	prefs = read_file("prefs.json")
-	build_dir = prefs['build_dir']
-	
-	fit_list = read_file("fit_list.json")
-	if 'parameters' in fit_list:
-		fit_params = fit_list['parameters']
-	else:
-		fit_params = []
+class FitProc:
 		
-	if 'metrics' in fit_list:
-		metrics = fit_list['metrics']
-	else:
-		metrics= {}		
+	def __init__(self):
+
+		self.i_send = 0
+
+
+
+		self.prefs = read_file("prefs.json")
+		self.build_dir = self.prefs['build_dir']
+		
+		fit_list = read_file("fit_list.json")
+		self.constraints = [] if ('constraints' not in fit_list) else fit_list['constraints']
+		self.parameters = [] if ('parameters' not in fit_list) else fit_list['parameters']
+		self.metrics = [] if 'metrics' not in fit_list else fit_list['metrics']
+	
+	def apply_constraint(self, constraint):
+		print(constraint)
+		if constraint['type'] == 'bilinear-coeffs':		
+			param_var = constraint['variable']
+			dependent_var = "COP" if ('dependent' not in constraint) else constraint['dependent']
+			if dependent_var == param_var:
+				return	
+			
+			model_cache = read_file("./model_cache.json")	
+			if constraint['model_id'] not in model_cache:
+				ref_model_filepath = "../../../test/models_json/" + constraint['model_id'] + ".json";	
+				model_data = read_file(ref_model_filepath);
+				model_cache[constraint['model_id']] = self.prefs["build_dir"] + "/test/output/gui/" + constraint['model_id'] + ".json";
+				write_file("./model_cache.json", model_cache);
+				write_file(model_cache[constraint['model_id']], model_data);
+
+			model_data = read_file(model_cache[constraint['model_id']])					
+			coefficients = constraint['value']
+			
+			orig_perf_map = get_perf_map(model_data)
+			perf_map = orig_perf_map
 					
-	def set_param(param, value):	
+			is_central = "central_system" in model_data
+			grid_vars = perf_map["grid_variables"]
+			envTs = grid_vars["evaporator_environment_dry_bulb_temperature"]			
+			for envT in envTs:
+				envT -= 273.15
+				
+			hsTs = 	grid_vars["condenser_entering_temperature" if is_central else "heat_source_temperature"]
+			for hsT in hsTs:
+				hsT -= 273.15
+										
+			nT1s = len(envTs)			
+			nT2s = len(hsTs)
+			nT3s = 1 if not is_central else len(grid_vars["condenser_leaving_temperature"])
+		
+			lookup_vars = perf_map["lookup_variables"]
+			Pins = lookup_vars["input_power"]
+			Pouts = lookup_vars["heating_capacity"]
+			COPs = Pouts
+			for (elem, value) in enumerate(COPs):
+				value /= Pins[elem]
+					
+			if param_var == "Pin":
+				param_vars = Pins
+			elif param_var == "Pout":
+				param_vars = Pouts
+			elif param_var == "COP":
+				param_vars = COPs
+				for (elem, value) in enumerate(param_vars):
+					param_vars[elem] /= Pins[elem]
+						
+			for iT1 in range(nT1s):
+				for iT2 in range(nT2s):
+					for iT3 in range(nT3s):
+						elem = nT3s * (nT2s * iT1 + iT2) + iT3
+						param_vars[elem] 	= coefficients[0] + coefficients[1] * envTs[iT1] + coefficients[2] * hsTs[iT2]
+
+			if dependent_var == "Pin":
+				for (elem, value) in enumerate(param_vars):
+					Pins[elem] = Pouts[elem] / COPs[elem]
+			elif dependent_var == "Pout":
+				for (elem, value) in enumerate(param_vars):
+					Pouts[elem] = COPs[elem] * Pins[elem]
+				
+			#set_perf_map(					
+			write_file(model_cache[constraint['model_id']], model_data)
+					
+	def apply_constraints(self):
+		for constraint in self.constraints:
+			self.apply_constraint(self.constraints[constraint])
+
+	def set_param(self, param, new_value):	
+		if param['type'] == 'bilinear-coeff':		
+			term = param['term']
+					
+			constraint = self.constraints[param['constraint']]
+			param_var = constraint['variable']
+			dependent_var = "COP" if ('dependent' not in constraint) else constraint['dependent']
+			if dependent_var == param_var:
+				return	
+			
+			ref_model_filepath = "../../../test/models_json/" + constraint['model_id'] + ".json";	
+			model_cache = read_file("./model_cache.json")	
+			model_filepath = model_cache[constraint['model_id']]	
+			model_data = read_file(model_filepath)
+						
+			self.constraints[param['constraint']]['value'][term] = new_value
+			coefficients = self.constraints[param['constraint']]['value']		
+			
+			orig_perf_map = get_perf_map(model_data)
+			perf_map = orig_perf_map
+					
+			is_central = "central_system" in model_data
+			grid_vars = perf_map["grid_variables"]
+			envTs = grid_vars["evaporator_environment_dry_bulb_temperature"]			
+			for envT in envTs:
+				envT -= 273.15
+				
+			hsTs = 	grid_vars["condenser_entering_temperature" if is_central else "heat_source_temperature"]
+			for hsT in hsTs:
+				hsT -= 273.15
+										
+			nT1s = len(envTs)			
+			nT2s = len(hsTs)
+			nT3s = 1 if not is_central else len(grid_vars["condenser_leaving_temperature"])
+		
+			lookup_vars = perf_map["lookup_variables"]
+			Pins = lookup_vars["input_power"]
+			Pouts = lookup_vars["heating_capacity"]
+			COPs = Pouts
+			for (elem, value) in enumerate(COPs):
+				value /= Pins[elem]
+					
+			if param_var == "Pin":
+				param_vars = Pins
+			elif param_var == "Pout":
+				param_vars = Pouts
+			elif param_var == "COP":
+				param_vars = COPs
+				for (elem, value) in enumerate(param_vars):
+					param_vars[elem] /= Pins[elem]
+						
+			for iT1 in range(nT1s):
+				for iT2 in range(nT2s):
+					for iT3 in range(nT3s):
+						elem = nT3s * (nT2s * iT1 + iT2) + iT3
+						param_vars[elem] 	= coefficients[0] + coefficients[1] * envTs[iT1] + coefficients[2] * hsTs[iT2]
+
+			if dependent_var == "Pin":
+				for (elem, value) in enumerate(param_vars):
+					Pins[elem] = Pouts[elem] / COPs[elem]
+			elif param_var == "Pout":
+				for (elem, value) in enumerate(param_vars):
+					Pouts[elem] = COPs[elem] * Pins[elem]
+				
+			#set_perf_map(					
+			write_file(model_filepath, model_data)
+					
 		if param['type'] == 'perf-point':		
 			param_var =  param['variable']
 			model_spec = 'JSON'
@@ -76,45 +194,18 @@ def fit_proc(data):
 				else:
 					lookup_vars["heating_capacity"][elem] = value * lookup_vars["input_power"][elem]
 			
-			perf_map["lookup_variables"]	 = lookup_vars		
+			perf_map["lookup_variables"] = lookup_vars		
 			set_perf_map(perf_map)
 			write_file(model_data_filepath, model_data)		
 	
-		def diff_val(metrics):
-			for metric in metrics:
-				if 'type' in metric:
-					if metric['type'] == 'UEF':
-						for param in params:
-							if 'type' in param:
-								if param['type'] == 'UEF':
-									if param['model_id'] == datum['model_id']:
-										new_uef = get_UEF(param)
-										targ_uef = datum['UEF']
-										return (new_uef - targ_uef) / 1.
-								
-				return 1.e8
-
-		dataV = []
-		for datum in fit_data:
-			if 'type' in datum:
-				if datum['type'] == 'UEF':
-					dataV.append(datum['target'])
-					
-		result = least_squares(diff_val, data, args=params)
-
-	#uri = "ws://localhost:8600"  # Replace with your WebSocket server URI
-	#fit_proc.i_send = fit_proc.i_send + 1
-	#msg = {"source": "fit-proc", "dest": "index", "cmd": "refresh-fit", "index": fit_proc.i_send}
-	result = {"chi-sq": 1000.}
-	return result
-	#await send_message(uri, msg)
-
 # Runs the fitting process
-def launch_fit_proc(data):
+def launch_fit_proc():
 
 	#launch_fit_proc.proc = mp.Process(target=fit_proc, args=(data, ), name='fit-proc')
 	print("launching fit process...")
-	result = fit_proc(data)
+	
+	fit_proc = FitProc()
+	result = fit_proc.apply_constraints()
 	#await launch_fit_proc.proc.start()
 	return result
 	   
@@ -127,5 +218,5 @@ if __name__ == "__main__":
 	n_args = len(sys.argv) - 1
 	if n_args == 0:
 
-		result = fit_proc({})
+		result = launch_fit_proc()
 

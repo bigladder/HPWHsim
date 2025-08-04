@@ -115,7 +115,7 @@ class TestPlotter:
 		                ],
 		            },
 		            "Labels": [
-		                f"Storage Tank Temperature {number}"
+		                f"Tank Temperature {number}"
 		                for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
 		            ],
 		            "Units": f"{DEGREE_SIGN}F",
@@ -145,13 +145,13 @@ class TestPlotter:
 
 		INPUT_TEMPERATURE_DETAILS = {
 		    "Measured": [
-		        "Storage Tank Average Temperature",
+		        "Tank Average Temperature",
 		        "OutletT(C)",
 		        "InletT(C)",
 		        "AmbientT(C)",
 		    ],
 		    "Simulated": [
-		        "Storage Tank Average Temperature",
+		        "Tank Average Temperature",
 		        "toutlet (C)",
 		        "inletT",
 		        "Ta",
@@ -166,9 +166,9 @@ class TestPlotter:
 		# add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
 		OUTPUT_TEMPERATURE_DETAILS = {
 			"Labels": [
-			    "Storage Tank Average Temperature",
-			    "Storage Tank Outlet Temperature",
-			    "Storage Tank Inlet Temperature",
+			    "Tank Average Temperature",
+			    "Tank Outlet Temperature",
+			    "Tank Inlet Temperature",
 			    "Ambient Temperature",
 			],
 			"Colors": ["black", "orange", "purple", "limegreen"],
@@ -182,7 +182,7 @@ class TestPlotter:
 
 
 	def organize_tank_temperatures(self, data_set):
-		data_set.df["Storage Tank Average Temperature"] = data_set.df[
+		data_set.df["Tank Average Temperature"] = data_set.df[
 		    self.temperature_profile_vars[data_set.variable_type]
 		].mean(axis=1)
 
@@ -338,7 +338,7 @@ class TestPlotter:
 				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]],
 						f"Model: {self.model_id}, Test: {self.test_id}"					
 				)
-				self.plot.x_axis.name = "Time (min)"
+				self.plot.x_axis.name = "Time"
 				self.draw_variable_type(self.measured)
 				have_traces = True
 				if draw_sim:
@@ -348,7 +348,7 @@ class TestPlotter:
 				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]],
 						f"Model: {self.model_id}, Test: {self.test_id}"
 				)
-				self.plot.x_axis.name = "Time (min)"
+				self.plot.x_axis.name = "Time"
 				have_traces = True
 				self.draw_variable_type(self.simulated)
 			else:

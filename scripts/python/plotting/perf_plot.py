@@ -180,6 +180,25 @@ class PerfPlotter():
 					self.dependent[iT1, iT2, self.iT3] = prefs["performance"]["plots"]['contour_variable']
 			
 	def interpolate(self, refs, prefs):
+		
+		# find an enclosing rectangle
+		iT1_min = 1000
+		iT1_max = -1
+		iT2_min = 1000
+		iT2_max = -1
+		for iT1, T1 in enumerate(self.T1s):
+			for iT2, T2 in enumerate(self.T2s):
+				if self.selected[iT1, iT2]:
+					if iT1 < iT1_min:
+						iT1_min = iT1
+					if iT2 < iT2_min:
+						iT2_min = iT2
+					if iT1 < iT1_max:
+						iT1_max = iT1
+					if iT2 < iT2_max:
+						iT2_max = iT2
+
+
 		# define RGI
 		xr = np.array(refs[0])
 		yr = np.array(refs[1])

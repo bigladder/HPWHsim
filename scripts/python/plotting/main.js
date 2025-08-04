@@ -26,6 +26,16 @@
 		);
 	}
 
+	async function delete_file(filename, json_data) {
+		fst = 'filename=' + filename;
+		fst += '&json_data=' + JSON.stringify(json_data);
+		await fetch('http://localhost:8000/delete_file?' + fst,
+			{
+				method: 'GET'
+			}
+		);
+	}
+
 	async function callPyServer(cmd, fst) {
 		await fetch('http://localhost:8000/' + cmd + '?' + fst);
 	}
@@ -114,6 +124,30 @@
 		await ws_connection.send(JSON.stringify(msg));
 	}
 
+	async function update_models() 
+	{
+			var model_cache = await read_json_file("./model_cache.json");
+			for (model_id in model_cache)
+			{
+				let data_model = await read_json_file([model_cache[model_id]])
+				const ref_model_filepath = "../../../test/models_json/" + model_id + ".json";
+				await write_json_file("./model_cache.json", data_model);
+				delete model_cache[model_id];
+			}
+			await write_json_file("./model_cache.json", model_cache);
+	}
+
+	async function restore_models() 
+	{
+			var model_cache = await read_json_file("./model_cache.json");
+			for (model_id in model_cache)
+			{
+				await delete_file[model_cache[model_id]]
+				delete model_cache[model_id];
+			}
+			await write_json_file("./model_cache.json", model_cache);
+	}
+
 	async function set_elements() {
 		var prefs = await read_json_file("./prefs.json");
 
@@ -149,8 +183,15 @@
 
 		if (gui.perf_proc_active) 
 		{
-			const model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-			await replot_performance(model_filepath);
+			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+			var model_cache = await read_json_file("./model_cache.json");
+			if (!ref_model_filepath in model_cache)
+			{
+				model_data = await read_json_file(ref_model_filepath);
+				model_cache[ref_model_filepath] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				await write_json_file(model_filepath, model_data);
+			}
+			await replot_performance(model_cache[ref_model_filepath]);
 		};
 
 		// update select_test control
@@ -224,16 +265,26 @@
 		if (have_test && gui.test_proc_active)
 		{
 			const output_dir = prefs['build_dir'] + "/test/output";
+
+			var model_cache = await read_json_file("./model_cache.json");
+			if (!prefs['model_id'] in model_cache)
+			{
+				const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+				model_data = await read_json_file(ref_model_filepath);
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json";
+				await write_json_file("./model_cache.json", model_cache);
+				await write_json_file(model_filepath, model_data);
+			}
+			let model_filepath = 	model_cache[ref_model_filepath];
+
 			if (is_standard_test)
 			{
-					const model_filepath = "./models_json/" + prefs['model_id'] + ".json";
-					let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'draw_profile': prefs['tests']["draw_profile"]};
-					await callPyServer("measure", "data=" + JSON.stringify(data))
-					simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'draw_profile': prefs['tests']["draw_profile"]};
+				await callPyServer("measure", "data=" + JSON.stringify(data))
+				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
 			}
 			else
 			{
-				const model_filepath = "./models_json/" + prefs['model_id'] + ".json";
 				const test_dir = (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
 				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
@@ -545,8 +596,16 @@
 
 	async function fill_properties_table() {
 		prefs = await read_json_file("./prefs.json")
-		const model_data_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
-		var model_data = await read_json_file(model_data_filepath)
+
+		const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+		var model_cache = await read_json_file("./model_cache.json");
+		if (!ref_model_filepath in model_cache)
+		{
+			model_data = await read_json_file(ref_model_filepath);
+			model_cache[ref_model_filepath] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+			await write_json_file(model_filepath, model_data);
+		}
+		model_data = await read_json_file(model_cache[ref_model_filepath]);
 
 		await fill_general_table(model_data);
 		await fill_tank_table(model_data);

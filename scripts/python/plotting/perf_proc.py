@@ -19,6 +19,7 @@ class PerfProc:
 		self.plotter = {}
 		self.port_num = 8051
 		self.running = False
+		self.process = {}
 		
 		orig_dir = str(Path.cwd())
 		os.chdir("../../../test")
@@ -31,42 +32,45 @@ class PerfProc:
 			if 'plots' in self.prefs['performance']:
 				prefs['performance']['plots'] = self.prefs['performance']['plots']
 		self.prefs = prefs
-		write_file("prefs.json", prefs)	
-					
-		def replot(self, model_filepath):
-			self.plotter = {}
-			
-			self.sync_prefs()					
-			self.plotter = PerfPlotter(self.prefs['model_id'])
-			
-			model_data = read_file(model_filepath)		
-			self.plotter.prepare(model_data)	
+		write_file("prefs.json", prefs)
 
-			if self.plotter.have_data:
-				self.plotter.draw(self.prefs)
-				self.plotter.update_markers(self.prefs)
-				self.plotter.update_dependent(self.prefs)
-			
-				self.plotter.fig.update_layout(clickmode='event+select')
-				show_outletTs = self.plotter.is_central
-				outletTs = []
-				if show_outletTs:
-					i = 0
-					for outletT in self.plotter.T3s:
-						outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
-						i = i + 1
 					
-				show_list = []
-				if self.prefs["performance"]["plots"]["show_points"] == 1:
-					show_list= ['points']
-					
-				interp_list = []
-				if self.prefs["performance"]["plots"]["interpolate"] == 1:
-					interp_list= ['interpolate']
+	def replot(self, model_filepath):
+		self.plotter = {}
+		
+		self.sync_prefs()					
+		self.plotter = PerfPlotter(self.prefs['model_id'])
+		
+		model_data = read_file(model_filepath)
+		
+				
+		self.plotter.prepare(model_data)	
 
-				return self.plotter.fig, not(self.plotter.have_data), not(show_outletTs), self.plotter.iT3, outletTs, show_list, interp_list, self.prefs["performance"]["plots"]['contour_variable'], self.prefs["performance"]["plots"]['contour_coloring'], self.prefs["performance"]["plots"]["Nx"], self.prefs["performance"]["plots"]["Ny"]
+		if self.plotter.have_data:
+			self.plotter.draw(self.prefs)
+			self.plotter.update_markers(self.prefs)
+			self.plotter.update_dependent(self.prefs)
+		
+			self.plotter.fig.update_layout(clickmode='event+select')
+			show_outletTs = self.plotter.is_central
+			outletTs = []
+			if show_outletTs:
+				i = 0
+				for outletT in self.plotter.T3s:
+					outletTs.append({'label': f"{outletT:.2f} \u00B0C", 'value': i})
+					i = i + 1
+				
+			show_list = []
+			if self.prefs["performance"]["plots"]["show_points"] == 1:
+				show_list= ['points']
+				
+			interp_list = []
+			if self.prefs["performance"]["plots"]["interpolate"] == 1:
+				interp_list= ['interpolate']
 
-			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+			return self.plotter.fig, not(self.plotter.have_data), not(show_outletTs), self.plotter.iT3, outletTs, show_list, interp_list, self.prefs["performance"]["plots"]['contour_variable'], self.prefs["performance"]["plots"]['contour_coloring'], self.prefs["performance"]["plots"]["Nx"], self.prefs["performance"]["plots"]["Ny"]
+
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 		
 # dash procedure
 	def proc(self, data):	
@@ -102,10 +106,7 @@ class PerfProc:
 						id='outletT-dropdown',
 						style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 						clearable=False)
-				], 
-				id="outletT-p", 
-				hidden = True, 
-			),
+				], id="outletT-p", hidden = True ),
 						
 			html.Div([
 				html.P("coloring", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
@@ -113,25 +114,14 @@ class PerfProc:
 					id='coloring-dropdown',
 					style= {'width': '50%', 'display': 'inline-block', 'verticalAlign': 'middle'},
 					clearable=False)
-					]),
+				]),
 				
 			html.P("show"),
 			dcc.Checklist(
 				    options = [{'label': 'points', 'value': 'points'}],
 						id="show-check"
 				),
-				
-			dcc.Checklist(
-				    options = [{'label': 'interpolate', 'value': 'interpolate'}],
-						id="interp-check"
-				),
-			html.Div(	[		
-					dcc.Input(id='Nx-input', type='number'),
-					dcc.Input(id='Ny-input', type='number')
-				], id='interp-sizes', hidden=True
-			),				
-
-						
+							
 			html.Br(),
 			html.Div(
 				dcc.Graph(id='perf-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
@@ -151,11 +141,16 @@ class PerfProc:
 					html.Button("-", id='remove-selected-from-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
 					html.Button("clear", id='clear-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
 					html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
-					html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
-					],
-					id='select-div',
-					hidden = True
-				)
+					html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
+					html.Div([
+						dcc.Checklist('interpolate', id='interp-check', options = [{'label': 'interpolate', 'value': 'interpolate'}]),
+						html.Div([	
+							dcc.Input(id='Nx-input', type='number'),
+							dcc.Input(id='Ny-input', type='number'),
+							html.Button("Apply", id='apply-interp', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
+						], id='interp-calc', hidden=False)
+					], id='interp', hidden=False)
+				], id='select-div', hidden = True),
 		]
 
 		@app.callback(
@@ -186,7 +181,7 @@ class PerfProc:
 			[Input("ws", "message")],
 			prevent_initial_call=True
 		)
-		def message(self, msg):
+		def message(msg):
 			if 'data' in msg:
 				data = json.loads(msg['data'])
 				if 'dest' in data:
@@ -200,7 +195,7 @@ class PerfProc:
 
 		@app.callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
-				Output('interp-sizes', 'hidden'),
+				Output('interp-calc', 'hidden'),
 				Input('interp-check', 'value'),
 				prevent_initial_call=True
 			)
@@ -536,21 +531,18 @@ perf_proc = PerfProc()
 # Runs a simulation and generates plot
 def launch_perf_proc(data):
 
-	if launch_perf_proc.proc != -1:
+	if perf_proc.running:
 		print("killing current dash for plotting performance...")
-		launch_perf_proc.proc.kill()
+		perf_proc.process.kill()
 		time.sleep(1)
 
-	launch_perf_proc.proc = mp.Process(target=perf_proc.proc, args=(data, ), name='perf-proc')
+	perf_proc.process = mp.Process(target=perf_proc.proc, args=(data, ), name='perf-proc')
 	print("launching dash for plotting performance...")
 	time.sleep(1)
 	
-	launch_perf_proc.proc.start()
+	perf_proc.process.start()
 	time.sleep(2)
 	
 	results = {}
 	results["port_num"] = perf_proc.port_num
 	return results
-	   
-
-launch_perf_proc.proc = -1

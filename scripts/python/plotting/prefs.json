@@ -1,11 +1,11 @@
 {
-  "model_id": "LG_APHWC50",
+  "model_id": "BradfordWhiteAeroThermRE2HP50",
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
     "list": "all_tests",
-    "id": "RE2HP80_UEF50",
-    "draw_profile": "high",
+    "id": "test50",
+    "draw_profile": "auto",
     "plots": {
       "show_simulated": true,
       "show_measured": true
@@ -13,7 +13,7 @@
   },
   "performance": {
     "plots": {
-      "contour_variable": 1,
+      "contour_variable": 2,
       "contour_coloring": 2,
       "interpolate": 0,
       "Nx": 19,

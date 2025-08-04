@@ -16,7 +16,7 @@ from ws import launch_ws
 import json
 from json import dumps
 import websockets
-import asyncio
+import os
 
 PORT = 8000
 		
@@ -27,7 +27,23 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 	
 	def do_GET(self):
 			
-			if self.path.startswith('/read_json'):
+			if self.path.startswith('/delete_file'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				filename = query_components.get('filename', [None])[0]
+				content = {}
+				if os.path.exists(filename):
+					os.remove(filename)
+
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(content))))
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				
+				self.wfile.write(dumps(content).encode('utf-8'))
+				return
+
+			elif self.path.startswith('/read_json'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
 				content = {}
@@ -37,11 +53,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
-				self.send_header("Content-Length", str(len(dumps(content))))
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
-				
-				self.wfile.write(dumps(content).encode('utf-8'))
 				return
 
 			elif self.path.startswith('/write_json'):
