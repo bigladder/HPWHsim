@@ -66,6 +66,10 @@
 		<label for="model_id">model:</label>
 		<select name="model_id" id="model_id" style="width: 400px" onchange="change_menu_value();">
 		</select><br><br>
+
+		<button type="button" id="update_btn" onclick="update_models();">update</button>
+		<button type="button" id="restore_btn" onclick="restore_models();">restore</button>
+		<button type="button" id="refresh_btn" onclick="set_elements();">refresh</button>
 	</form>
 
 	<!-- Properties -->
@@ -101,7 +105,7 @@
 	<button id="perf_tab" class="collapsible">Performance</button>
 	<div class="content">
 		<form id="perf_form">
-			<button type="button" id="perf_btn" onclick="launch_perf_proc();">show</button>
+			<button type="button" id="perf_btn" onclick="click_perf_proc();">start</button>
 		</form>
 
 		<div id="perf_plot_div">
@@ -133,7 +137,7 @@
 				<option value="very_small">Very Small</option>
 			</select><br><br>
 
-			<button type="button" id="test_btn" onclick="launch_test_proc();">show</button>
+			<button type="button" id="test_btn" onclick="click_test_proc();">show</button>
 		</form>
 
 		<iframe title="plots" src="" id="test_plot" width=1200 height=1000 style="display:none;"></iframe>
@@ -144,7 +148,7 @@
 	<!-- Fitting -->
 	<button id="fit_tab" class="collapsible">Fitting</button>
 	<div class="content">
-		<button type="button" id="fit_btn" onclick="launch_fit_proc();">fit</button>
+		<button type="button" id="fit_btn" onclick="click_fit_proc();">fit</button>
 		<button type="button" id="clear_params_btn" onclick="clear_params();">clear params</button>
 		<button type="button" id="clear_metrics_btn" onclick="clear_metrics();">clear metrics</button>
 		<table>

@@ -50,8 +50,8 @@ CLI::App* add_run(CLI::App& app)
     model_group->required(1);
 
     //
-    static std::string testName = "";
-    subcommand->add_option("-t,--test", testName, "Test name")->required();
+    static std::string fullTestName = "";
+    subcommand->add_option("-t,--test", fullTestName, "Test name")->required();
 
     static std::string outputDir = ".";
     subcommand->add_option("-d,--dir", outputDir, "Output directory");
@@ -94,7 +94,7 @@ CLI::App* add_run(CLI::App& app)
                 else if (modelNumber != -1)
                     hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
-            run(specType, hpwh, testName, outputDir, airTemp);
+            run(specType, hpwh, fullTestName, outputDir, airTemp);
         });
 
     return subcommand;

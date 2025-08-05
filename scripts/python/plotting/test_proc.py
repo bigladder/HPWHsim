@@ -40,7 +40,25 @@ class TestProc:
 		self.ef_val = 0
 		self.plotter = {}
 		self.process = {}
-			
+	
+	#
+	def start(self, data):
+		if not self.running:
+			self.process = mp.Process(target=self.proc, args=(data, ), name='test-proc')
+			time.sleep(1)
+			print("launching dash for plotting tests...")
+			self.process.start()
+			time.sleep(2)	   
+		return {'port_num': self.port_num}
+
+	#
+	def stop(self):
+		if self.running:
+			print("killing current dash for plotting tests...")
+			self.process.kill()
+			time.sleep(1)
+		return {}
+				
 	def sync_prefs(self):
 		prefs = read_file("prefs.json")
 		if 'tests' in self.prefs:
@@ -50,10 +68,12 @@ class TestProc:
 		write_file("prefs.json", prefs)	
 		
 	def replot(self, data):
+
 		self.sync_prefs()
 		data['model_id'] = self.prefs['model_id']
 		data['test_id'] = self.prefs['tests']['id']
-
+		print(data)
+		
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -66,15 +86,18 @@ class TestProc:
 												
 			option_list = []
 			value_list = []
+			hide_show_div= True
 			if self.plotter.measured.have_data:
 				option_list.append({'label': 'measured', 'value': 'measured'})
 				value_list.append('measured')
 				self.prev_show |= 1
+				hide_show_div = False
 			if self.plotter.simulated.have_data:
 				option_list.append({'label': 'simulated', 'value': 'simulated'})
 				value_list.append('simulated')
 				self.prev_show |= 2
-			
+				hide_show_div = False
+				
 			hide_ef_fit = True
 			hide_ef_input_val = True
 			ef_out_text = "" 
@@ -99,16 +122,13 @@ class TestProc:
 								continue
 							hide_ef_input_val = False
 
-			return self.plotter.plot.figure, option_list, value_list, measured_msg, simulated_msg, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False, False
+			return self.plotter.plot.figure, hide_show_div, option_list, value_list, measured_msg, simulated_msg, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False, False
 		
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 		
-	def proc(self, data):
-		
+	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
 		app = Dash(__name__, external_stylesheets=external_stylesheets)
-
 		styles = {
 			'pre': {
 				'border': 'thin lightgrey solid',
@@ -126,7 +146,7 @@ class TestProc:
 	   		WebSocket(url="ws://localhost:8600", id="ws"),
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 				
-				dcc.Checklist(id="show-check", inline=True),
+				html.Div(dcc.Checklist(id="show-check", inline=True), id='show-div', hidden=True),
 
 				html.Div(html.Button('Get UA', id='get-ua-btn', n_clicks=0), hidden=True),
 			
@@ -178,7 +198,9 @@ class TestProc:
 			return message
 
 		@app.callback(
+					Output('ws', 'send', allow_duplicate=True),
 					Output('test-graph', 'figure', allow_duplicate=True),
+					Output('show-div', 'hidden', allow_duplicate=True),
 					Output('show-check', 'options'),
 					Output('show-check', 'value'),
 					Output('energy_measured_p', 'children'),
@@ -197,10 +219,12 @@ class TestProc:
 				data = json.loads(msg['data'])
 				if 'dest' in data and data['dest'] == 'test-proc':
 					if 'cmd' in data:
-						if data['cmd'] == 'replot':						
-							return self.replot(data)
+						if data['cmd'] == 'replot':
+							self.i_send = self.i_send + 1
+							msg = {"source": "test-proc", "dest": "index", "cmd": "refresh", "index": self.i_send}
+							return json.dumps(msg), self.replot(data)
 							
-			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 		@app.callback( 
 			Output('ws', 'send', allow_duplicate=True),
@@ -215,26 +239,26 @@ class TestProc:
 				metrics = fit_list['metrics']
 			else:
 				metrics = {}
-			
-			if 'energy_factors' in metrics:
-				energy_factors = metrics['energy_factors']
-			else:
-				energy_factors = []
-				
+							
+			new_metric = {'type': "EF", 'model_id': self.prefs['model_id'], 'draw_profile': self.prefs['tests']['draw_profile'], 'configuration': "UEF"}
 			hide_input = True
-			new_energy_factors = energy_factors
-			for index, energy_factor in reversed(list(enumerate(energy_factors))):
-				if 'model_id' not in energy_factor or (energy_factor['model_id'] != self.prefs['model_id']):
-						continue			
-				if 'draw_profile' not in energy_factor or energy_factor['draw_profile'] != self.prefs['tests']['draw_profile']:
-						continue			
-				del new_energy_factors[index]	
+			for index, metric in reversed(list(enumerate(metrics))):
+				if metric['type'] != 'EF':
+					continue
+				if metric['model_id'] != self.prefs['model_id']:
+					continue			
+				if metric['draw_profile'] != self.prefs['tests']['draw_profile']:
+					continue
+				if metric['configuration'] != "UEF":
+					continue
+				new_metric = metric
+				break
 			
+			new_metric['value'] = ef_in
 			if 'fit' in value:
-				new_energy_factors.append({'model_id': self.prefs['model_id'], 'draw_profile': self.prefs['tests']['draw_profile'], 'value': ef_in})
+				metrics.append(new_metric)
 				hide_input = False
 
-			metrics['energy_factors'] = new_energy_factors
 			fit_list['metrics'] = metrics
 			write_file("fit_list.json", fit_list)		
 			self.i_send = self.i_send + 1
@@ -392,24 +416,5 @@ class TestProc:
 		
 		app.run(debug=True, use_reloader=False, port = self.port_num)
 
+
 test_proc = TestProc()
-
-# Runs a simulation and generates plot
-def launch_test_proc(data):
-
-	print("creating plot...")
-	
-	if test_proc.running:
-		print("killing current dash for plotting tests...")
-		test_proc.process.kill()
-		time.sleep(1)
-	
-	test_proc.process= mp.Process(target=test_proc.proc, args=(data, ), name='test-proc')
-	time.sleep(1)
-	print("launching dash for plotting tests...")
-	test_proc.process.start()
-	time.sleep(2)
-	   
-	test_results = {}
-	test_results["port_num"] = test_proc.port_num
-	return test_results

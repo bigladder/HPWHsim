@@ -20,12 +20,23 @@ class PerfProc:
 		self.port_num = 8051
 		self.running = False
 		self.process = {}
-		
-		orig_dir = str(Path.cwd())
-		os.chdir("../../../test")
-		self.abs_repo_test_dir = str(Path.cwd())
-		os.chdir(orig_dir)	
-		
+
+	def start(self, data):
+		if not self.running:
+			self.process = mp.Process(target=self.proc, args=(data, ), name='perf-proc')
+			print("launching dash for plotting performance...")
+			time.sleep(1)
+			self.process.start()
+			time.sleep(2)
+		results = {'port_num': self.port_num}
+		return results
+			
+	def stop(self):
+		if self.running:
+			print("killing current dash for plotting performance...")
+			self.process.kill()
+			time.sleep(1)
+					
 	def sync_prefs(self):
 		prefs = read_file("prefs.json")
 		if 'performance' in self.prefs:
@@ -33,17 +44,33 @@ class PerfProc:
 				prefs['performance']['plots'] = self.prefs['performance']['plots']
 		self.prefs = prefs
 		write_file("prefs.json", prefs)
-
-					
-	def replot(self, model_filepath):
+			
+	def update_interp_div(self, interp_div):
+		do_interp = self.prefs["performance"]["plots"]['interpolate'] == 1
+		for child in interp_div:
+			props = child['props']
+			print(props)
+			if props['id'] == "interp-check":
+				props['options']= [{'label': 'interpolate', 'value': 'interpolate'}] if do_interp else []
+			if props['id'] == "interp-calc":
+				props['hidden'] = not do_interp
+				if do_interp:
+					 for child1 in props['children']:
+							props1 = child1['props']
+							if props1['id'] == "interp-Nx":
+								props1['value'] = self.prefs["performance"]["plots"]['Nx']	
+							if props1['id'] == "interp-Ny":
+								props1['value'] = self.prefs["performance"]["plots"]['Ny']	
+								
+			print('updated')
+							
+	def replot(self, data):
 		self.plotter = {}
 		
 		self.sync_prefs()					
 		self.plotter = PerfPlotter(self.prefs['model_id'])
 		
-		model_data = read_file(model_filepath)
-		
-				
+		model_data = read_file(data['model_filepath'])		
 		self.plotter.prepare(model_data)	
 
 		if self.plotter.have_data:
@@ -63,14 +90,12 @@ class PerfProc:
 			show_list = []
 			if self.prefs["performance"]["plots"]["show_points"] == 1:
 				show_list= ['points']
-				
-			interp_list = []
-			if self.prefs["performance"]["plots"]["interpolate"] == 1:
-				interp_list= ['interpolate']
 
-			return self.plotter.fig, not(self.plotter.have_data), not(show_outletTs), self.plotter.iT3, outletTs, show_list, interp_list, self.prefs["performance"]["plots"]['contour_variable'], self.prefs["performance"]["plots"]['contour_coloring'], self.prefs["performance"]["plots"]["Nx"], self.prefs["performance"]["plots"]["Ny"]
+			self.update_interp_div(data['interp_div'])
+						
+			return self.plotter.fig, not(self.plotter.have_data), not(show_outletTs), self.plotter.iT3, outletTs, show_list, self.prefs["performance"]["plots"]['contour_variable'], self.prefs["performance"]["plots"]['contour_coloring'], data['interp_div']
 
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 		
 # dash procedure
 	def proc(self, data):	
@@ -87,7 +112,7 @@ class PerfProc:
 		app.layout = [
 	   	WebSocket(url="ws://localhost:8600", id="ws"),
 	 		html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
-			 
+			
 			html.Div([
 				html.P("display variable:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 				dcc.Dropdown(
@@ -143,14 +168,15 @@ class PerfProc:
 					html.Button("vary", id='vary-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
 					html.Button("hold", id='hold-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),	
 					html.Div([
-						dcc.Checklist('interpolate', id='interp-check', options = [{'label': 'interpolate', 'value': 'interpolate'}]),
-						html.Div([	
-							dcc.Input(id='Nx-input', type='number'),
-							dcc.Input(id='Ny-input', type='number'),
-							html.Button("Apply", id='apply-interp', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
-						], id='interp-calc', hidden=False)
-					], id='interp', hidden=False)
+						dcc.Checklist(options = [{'label': 'interpolate', 'value': 'interpolate'}], id='interp-check'),
+						html.Div([
+							dcc.Input(id='interp-Nx', type='number'),
+							dcc.Input(id='interp-Ny', type='number'),
+							html.Button("apply", id='apply-interp', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'})
+						], id='interp-calc', hidden=False),
+					], id='interp-div', hidden=False)
 				], id='select-div', hidden = True),
+
 		]
 
 		@app.callback(
@@ -173,37 +199,34 @@ class PerfProc:
 			Output('outletT-dropdown', 'value'),
 			Output('outletT-dropdown', 'options'),
 			Output('show-check', 'value'),
-			Output('interp-check', 'value'),
 			Output('display-dropdown', 'value'),
 			Output('coloring-dropdown', 'value'),
-			Output('Nx-input', 'value', allow_duplicate=True),
-			Output('Ny-input', 'value', allow_duplicate=True),
+			Output('interp-div', 'children', allow_duplicate=True),
+			State('interp-div', 'children'),
 			[Input("ws", "message")],
 			prevent_initial_call=True
 		)
-		def message(msg):
+		def message(interp_div, msg):
 			if 'data' in msg:
-				data = json.loads(msg['data'])
-				if 'dest' in data:
-					if data['dest'] == 'perf-proc':
+				msg_data = json.loads(msg['data'])
+				if 'dest' in msg_data:
+					if msg_data['dest'] == 'perf-proc':
 						print(f"received by perf-proc:\n{data}")
-						if 'cmd' in data:
-							if data['cmd'] == 'replot':							
-								return self.replot(data['model_filepath'])
+						if 'cmd' in msg_data:
+							if msg_data['cmd'] == 'replot':							
+								return self.replot({'model_filepath': msg_data['model_filepath'], 'interp_div': interp_div})
 									
-			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 		@app.callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
-				Output('interp-calc', 'hidden'),
+				Output('interp-div', 'hidden', allow_duplicate=True),
 				Input('interp-check', 'value'),
 				prevent_initial_call=True
 			)
 		def change_interp(value):
-			if 'interpolate' in value:
-				self.prefs["performance"]["plots"]["interpolate"] = 1
-			else:
-				self.prefs["performance"]["plots"]["interpolate"] = 0
+			print(value)
+			self.prefs["performance"]["plots"]["interpolate"] = 1 - self.prefs["performance"]["plots"]["interpolate"]
 			self.plotter.draw(self.prefs)
 			self.plotter.update_markers(self.prefs)
 			self.plotter.update_selected(self.prefs)
@@ -230,13 +253,13 @@ class PerfProc:
 		
 		@app.callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
-				Output('Nx-input', 'value', allow_duplicate=True),
-				Output('Ny-input', 'value', allow_duplicate=True),
-				Input('Nx-input', 'value'),
-				Input('Ny-input', 'value'),
+				Output('interp-div', 'children', allow_duplicate=True),
+				State('interp-div', 'children'),
+				Input('interp-Nx', 'value'),
+				Input('interp-Ny', 'value'),
 				prevent_initial_call=True
 			)
-		def set_Nxy(Nx, Ny):
+		def set_Nxy(interp_div, Nx, Ny):
 			#prefs = read_file("prefs.json")
 			if Nx is not None:
 				Nx = int(Nx)
@@ -245,14 +268,15 @@ class PerfProc:
 			if Ny is not None:
 				Ny = int(Ny)
 				if Ny > 0:
-					self.prefs["performance"]["plots"]["Ny"] = Ny				
+					self.prefs["performance"]["plots"]["Ny"] = Ny	
+			self.update_interp_div(interp_div)			
 			self.plotter.draw(self.prefs)
 			self.plotter.update_markers(self.prefs)
 			self.plotter.update_selected(self.prefs)
 			self.plotter.update_dependent(self.prefs)
 			self.plotter.update_marked(self.prefs)
 			#write_file("prefs.json", prefs)
-			return self.plotter.fig, self.prefs["performance"]["plots"]["Nx"], self.prefs["performance"]["plots"]["Ny"]
+			return self.plotter.fig, interp_div
 		
 		@app.callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
@@ -524,25 +548,8 @@ class PerfProc:
 			return fig
 		
 		app.run(debug=True, use_reloader=False, port = self.port_num)
+		self.replot(data)
 		self.running = True
+		return {}
 
 perf_proc = PerfProc()
-
-# Runs a simulation and generates plot
-def launch_perf_proc(data):
-
-	if perf_proc.running:
-		print("killing current dash for plotting performance...")
-		perf_proc.process.kill()
-		time.sleep(1)
-
-	perf_proc.process = mp.Process(target=perf_proc.proc, args=(data, ), name='perf-proc')
-	print("launching dash for plotting performance...")
-	time.sleep(1)
-	
-	perf_proc.process.start()
-	time.sleep(2)
-	
-	results = {}
-	results["port_num"] = perf_proc.port_num
-	return results

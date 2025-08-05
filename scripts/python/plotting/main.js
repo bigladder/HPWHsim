@@ -2,6 +2,7 @@
 	const gui = {};
 	gui.perf_proc_active = false;
 	gui.test_proc_active = false;
+	gui.fit_proc_active = false;
 
 	const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -26,9 +27,8 @@
 		);
 	}
 
-	async function delete_file(filename, json_data) {
+	async function delete_file(filename) {
 		fst = 'filename=' + filename;
-		fst += '&json_data=' + JSON.stringify(json_data);
 		await fetch('http://localhost:8000/delete_file?' + fst,
 			{
 				method: 'GET'
@@ -142,7 +142,7 @@
 			var model_cache = await read_json_file("./model_cache.json");
 			for (model_id in model_cache)
 			{
-				await delete_file[model_cache[model_id]]
+				await delete_file(model_cache[model_id]);
 				delete model_cache[model_id];
 			}
 			await write_json_file("./model_cache.json", model_cache);
@@ -185,13 +185,13 @@
 		{
 			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 			var model_cache = await read_json_file("./model_cache.json");
-			if (!ref_model_filepath in model_cache)
+			if (!prefs['model_id'] in model_cache)
 			{
 				model_data = await read_json_file(ref_model_filepath);
-				model_cache[ref_model_filepath] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
 				await write_json_file(model_filepath, model_data);
 			}
-			await replot_performance(model_cache[ref_model_filepath]);
+			await replot_performance(model_cache[prefs['model_id']]);
 		};
 
 		// update select_test control
@@ -266,16 +266,16 @@
 		{
 			const output_dir = prefs['build_dir'] + "/test/output";
 
+			let model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 			var model_cache = await read_json_file("./model_cache.json");
 			if (!prefs['model_id'] in model_cache)
 			{
-				const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 				model_data = await read_json_file(ref_model_filepath);
-				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json";
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
 				await write_json_file("./model_cache.json", model_cache);
 				await write_json_file(model_filepath, model_data);
 			}
-			let model_filepath = 	model_cache[ref_model_filepath];
+			model_filepath = 	model_cache[prefs['model_id']];
 
 			if (is_standard_test)
 			{
@@ -285,7 +285,7 @@
 			}
 			else
 			{
-				const test_dir = (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
+				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
 				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
 
@@ -331,35 +331,41 @@
 			await ws_connection.send(JSON.stringify(msg));
 	}
 
-	async function launch_test_proc() {
+	async function click_test_proc() {
+		var prefs = await read_json_file("./prefs.json")
 		document.getElementById("test_btn").disabled = true;
 		if (gui.test_proc_active)
 		{
+			var data = {'cmd': 'stop'};
+			await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
 			document.getElementById("test_plot").src = "";
-			document.getElementById("test_btn").innerHTML = "show";
+			document.getElementById("test_btn").innerHTML = "start";
 			document.getElementById("test_plot").style="display:none;"
 			gui.test_proc_active = false;
 		}
 		else
 		{
-			var data = {};
-			plot_results = await callPyServerJSON("launch_test_proc", "data=" + JSON.stringify(data));
+			//const model_cache = await read_json_file("./model_cache.json");
+			//const model_filepath = model_cache[prefs['model_id']];
+			var data = {'cmd': 'start'};
+			plot_results = await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
 			const dash_port = await plot_results["port_num"];
 			document.getElementById("test_plot").src = "http://localhost:" + dash_port;
 			document.getElementById("test_plot").style = "display:block;"
-			document.getElementById("test_btn").innerHTML = "hide";
-
+			document.getElementById("test_btn").innerHTML = "stop";
 			gui.test_proc_active = true;
 		}
 		await set_elements();
 		document.getElementById("test_btn").disabled = false;
 	}
 
-	async function launch_perf_proc() {
+	async function click_perf_proc() {
 		document.getElementById("perf_tab").innerHTML = "Performance...";
 		document.getElementById("perf_btn").disabled = true;
 		if (gui.perf_proc_active)
 		{
+			var data = {'cmd': 'stop'};
+			await callPyServerJSON("perf_proc", JSON.stringify(data));
 			document.getElementById("perf_plot").src = "";
 			document.getElementById("perf_btn").innerHTML = "show";
 			document.getElementById("perf_plot").style="display:none;"
@@ -367,8 +373,8 @@
 		}
 		else
 		{
-			var data = {}
-			let perf_results = await callPyServerJSON("launch_perf_proc", "data=" + JSON.stringify(data))
+			var data = {'cmd': 'start'};
+			let perf_results = await callPyServerJSON("perf_proc", "data=" + JSON.stringify(data))
 			const dash_port = perf_results["port_num"];
 			document.getElementById("perf_plot").src = "http://localhost:" + dash_port
 			document.getElementById("perf_btn").innerHTML = "hide";
@@ -376,13 +382,14 @@
 			gui.perf_proc_active = true;
 		}
 		await set_elements();
+		document.getElementById("perf_tab").innerHTML = "Performance";
 		document.getElementById("perf_btn").disabled = false;
 	}
 
-	async function launch_fit_proc() {
+	async function click_fit_proc() {
 		document.getElementById("fit_btn").disabled = true;
-		var data = {}
-		let fit_results = await callPyServerJSON("launch_fit_proc", "data=" + JSON.stringify(data))
+		var data = {'cmd': 'start'}
+		let fit_results = await callPyServerJSON("fit_proc", "data=" + JSON.stringify(data))
 		document.getElementById("fit_btn").disabled = false;
 	}
 
@@ -597,15 +604,17 @@
 	async function fill_properties_table() {
 		prefs = await read_json_file("./prefs.json")
 
-		const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+		let model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 		var model_cache = await read_json_file("./model_cache.json");
-		if (!ref_model_filepath in model_cache)
+		if (!(prefs['model_id'] in model_cache))
 		{
-			model_data = await read_json_file(ref_model_filepath);
-			model_cache[ref_model_filepath] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
-			await write_json_file(model_filepath, model_data);
+			model_data = await read_json_file(model_filepath);
+			model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+			await write_json_file("./model_cache.json", model_cache);
+			await write_json_file(model_cache[prefs['model_id']], model_data);
 		}
-		model_data = await read_json_file(model_cache[ref_model_filepath]);
+		model_filepath = 	model_cache[prefs['model_id']];
+		model_data = await read_json_file(model_filepath);
 
 		await fill_general_table(model_data);
 		await fill_tank_table(model_data);

@@ -9,18 +9,16 @@ import socketserver
 import urllib.parse as urlparse
 from simulate import simulate
 from measure import measure
-from test_proc import launch_test_proc
-from perf_proc import launch_perf_proc
-from fit_proc import launch_fit_proc
+from test_proc import test_proc
+from perf_proc import perf_proc
+from fit_proc import fit_proc
 from ws import launch_ws
 import json
 from json import dumps
-import websockets
 import os
 
 PORT = 8000
 		
-launch_test_proc.proc = -1
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def log_message(self, format, *args):
 		pass
@@ -30,17 +28,16 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			if self.path.startswith('/delete_file'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
-				content = {}
+				print(filename)
 				if os.path.exists(filename):
 					os.remove(filename)
+				else:
+					print("no file")
 
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
-				self.send_header("Content-Length", str(len(dumps(content))))
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
-				
-				self.wfile.write(dumps(content).encode('utf-8'))
 				return
 
 			elif self.path.startswith('/read_json'):
@@ -50,11 +47,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				with open(filename, "r") as json_file:
 					content = json.load(json_file)
 					json_file.close()
-
+					
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(content))))
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
+				
+				self.wfile.write(dumps(content).encode('utf-8'))
 				return
 
 			elif self.path.startswith('/write_json'):
@@ -77,9 +77,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]
 				data = json.loads(data_str)
-
+				print(data)
 				response = simulate(data)
-
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))
@@ -94,53 +93,23 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]
 				data = json.loads(data_str)
-
 				measure(data)
-
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
 				self.send_header("Content-Length", "")
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				return
-							
-			elif self.path.startswith('/launch_test_proc'):
-					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-					data_str = query_components.get('data', [None])[0]	
-					data = json.loads(data_str)
-					response = launch_test_proc(data)
-
-					self.send_response(200)
-					self.send_header("Content-type", "application/json")
-					self.send_header("Content-Length", str(len(dumps(response))))
-					#self.send_header("Content-type", "text/html")
-					self.send_header("Access-Control-Allow-Origin", "*")
-					self.end_headers()
-
-					self.wfile.write(dumps(response).encode('utf-8'))
-					return
-
-			elif self.path.startswith('/launch_fit_proc'):
-					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-					data_str = query_components.get('data', [None])[0]	
-					data = json.loads(data_str)
-					response = launch_fit_proc(data)
-
-					self.send_response(200)
-					self.send_header("Content-type", "application/json")
-					self.send_header("Content-Length", str(len(dumps(response))))
-					#self.send_header("Content-type", "text/html")
-					self.send_header("Access-Control-Allow-Origin", "*")
-					self.end_headers()
-
-					self.wfile.write(dumps(response).encode('utf-8'))
-					return
-			
-			elif self.path.startswith('/launch_perf_proc'):
+					
+			elif self.path.startswith('/perf_proc'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]	
 				data = json.loads(data_str)
-				response = launch_perf_proc(data)
+				print(data)
+				if data['cmd'] == 'start':
+					response = perf_proc.start(data)
+				elif data['cmd'] == 'stop':
+					response = perf_proc.stop()
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
 				self.send_header("Content-Length", str(len(dumps(response))))
@@ -148,11 +117,45 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.end_headers()
 				self.wfile.write(dumps(response).encode('utf-8'))
 				return
+										
+			elif self.path.startswith('/test_proc'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				data_str = query_components.get('data', [None])[0]	
+				data = json.loads(data_str)
+				print(data)
+				if data['cmd'] == 'start':
+					response = test_proc.start(data)
+				elif data['cmd'] == 'stop':
+					response = test_proc.stop()
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(response))))
+				#self.send_header("Content-type", "text/html")
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				self.wfile.write(dumps(response).encode('utf-8'))
+				return
 			
+			elif self.path.startswith('/fit_proc'):
+					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+					data_str = query_components.get('data', [None])[0]	
+					data = json.loads(data_str)
+					if data['cmd'] == 'start':
+						response = fit_proc.start(data)
+					elif data['cmd'] == 'stop':
+						response = fit_proc.stop()
+					self.send_response(200)
+					self.send_header("Content-type", "application/json")
+					self.send_header("Content-Length", str(len(dumps(response))))
+					#self.send_header("Content-type", "text/html")
+					self.send_header("Access-Control-Allow-Origin", "*")
+					self.end_headers()
+					self.wfile.write(dumps(response).encode('utf-8'))
+					return
+						
 			elif self.path.startswith('/launch_ws'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				launch_ws()
-				
+				launch_ws()				
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
 				self.send_header("Access-Control-Allow-Origin", "*")

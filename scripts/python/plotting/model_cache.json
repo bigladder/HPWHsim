@@ -1,3 +1,5 @@
 {
-  "BradfordWhiteAeroThermRE2HP50": "BradfordWhiteAeroThermRE2HP50"
+  "BradfordWhiteAeroThermRE2HP65": "../../../build/gui/BradfordWhiteAeroThermRE2HP65.json",
+  "BradfordWhiteAeroThermRE2HP80": "../../../build/gui/BradfordWhiteAeroThermRE2HP80.json",
+  "BradfordWhiteAeroThermRE2HP50": "../../../build/gui/BradfordWhiteAeroThermRE2HP50.json"
 }

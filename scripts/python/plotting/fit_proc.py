@@ -1,6 +1,8 @@
 
 from pathlib import Path
 import os, sys
+import time
+import multiprocessing as mp
 from common import read_file, write_file, get_perf_map, set_perf_map
 
 class FitProc:
@@ -8,9 +10,6 @@ class FitProc:
 	def __init__(self):
 
 		self.i_send = 0
-
-
-
 		self.prefs = read_file("prefs.json")
 		self.build_dir = self.prefs['build_dir']
 		
@@ -31,7 +30,7 @@ class FitProc:
 			if constraint['model_id'] not in model_cache:
 				ref_model_filepath = "../../../test/models_json/" + constraint['model_id'] + ".json";	
 				model_data = read_file(ref_model_filepath);
-				model_cache[constraint['model_id']] = self.prefs["build_dir"] + "/test/output/gui/" + constraint['model_id'] + ".json";
+				model_cache[constraint['model_id']] = self.prefs["build_dir"] + "/gui/" + constraint['model_id'] + ".json";
 				write_file("./model_cache.json", model_cache);
 				write_file(model_cache[constraint['model_id']], model_data);
 
@@ -42,6 +41,7 @@ class FitProc:
 			perf_map = orig_perf_map
 					
 			is_central = "central_system" in model_data
+			iT3 = 0 if not is_central else constraint['layer']
 			grid_vars = perf_map["grid_variables"]
 			envTs = grid_vars["evaporator_environment_dry_bulb_temperature"]			
 			for envT in envTs:
@@ -73,9 +73,8 @@ class FitProc:
 						
 			for iT1 in range(nT1s):
 				for iT2 in range(nT2s):
-					for iT3 in range(nT3s):
-						elem = nT3s * (nT2s * iT1 + iT2) + iT3
-						param_vars[elem] 	= coefficients[0] + coefficients[1] * envTs[iT1] + coefficients[2] * hsTs[iT2]
+					elem = nT3s * (nT2s * iT1 + iT2) + iT3
+					param_vars[elem] 	= coefficients[0] + coefficients[1] * envTs[iT1] + coefficients[2] * hsTs[iT2]
 
 			if dependent_var == "Pin":
 				for (elem, value) in enumerate(param_vars):
@@ -83,8 +82,7 @@ class FitProc:
 			elif dependent_var == "Pout":
 				for (elem, value) in enumerate(param_vars):
 					Pouts[elem] = COPs[elem] * Pins[elem]
-				
-			#set_perf_map(					
+						
 			write_file(model_cache[constraint['model_id']], model_data)
 					
 	def apply_constraints(self):
@@ -198,19 +196,29 @@ class FitProc:
 			set_perf_map(perf_map)
 			write_file(model_data_filepath, model_data)		
 	
-# Runs the fitting process
-def launch_fit_proc():
-
-	#launch_fit_proc.proc = mp.Process(target=fit_proc, args=(data, ), name='fit-proc')
-	print("launching fit process...")
+	def fit(self):
+		print("fit")
+	# Runs the fitting process
 	
-	fit_proc = FitProc()
-	result = fit_proc.apply_constraints()
-	#await launch_fit_proc.proc.start()
-	return result
-	   
+	#
+	def start(self, data):
+		if not self.running:
+			self.process = mp.Process(target=self.proc, args=(data, ), name='test-proc')
+			time.sleep(1)
+			print("launching dash for plotting tests...")
+			self.process.start()
+			time.sleep(2)	   
+		return {}
 
-launch_fit_proc.proc = -1
+	#
+	def stop(self):
+		if self.running:
+			print("killing current dash for plotting tests...")
+			self.process.kill()
+			time.sleep(1)
+		return {}
+
+fit_proc = FitProc()
 
 
 # main
@@ -218,5 +226,5 @@ if __name__ == "__main__":
 	n_args = len(sys.argv) - 1
 	if n_args == 0:
 
-		result = launch_fit_proc()
+		result = fit_proc.start({})
 
