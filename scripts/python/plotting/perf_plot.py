@@ -117,7 +117,6 @@ class PerfPlotter():
 				#self.clear_selected()
 				nT1s = len(self.T1s)
 				for point in selectedData['points']:
-					print(point)
 					if point['curveNumber'] == 1:
 						idx = point['pointIndex']
 						iT2 = int(idx / nT1s)
@@ -180,7 +179,7 @@ class PerfPlotter():
 					self.dependent[iT1, iT2, self.iT3] = prefs["performance"]["plots"]['contour_variable']
 			
 	def interpolate(self, refs, prefs):
-		
+		return refs
 		# find an enclosing rectangle
 		iT1_min = 1000
 		iT1_max = -1

@@ -13,10 +13,10 @@
   },
   "performance": {
     "plots": {
-      "contour_variable": 2,
+      "contour_variable": 0,
       "contour_coloring": 2,
-      "interpolate": 1,
-      "Nx": 19,
+      "interpolate": 0,
+      "Nx": 5,
       "Ny": 10,
       "show_points": 1
     }

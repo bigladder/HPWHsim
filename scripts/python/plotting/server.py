@@ -15,7 +15,7 @@ from fit_proc import fit_proc
 from ws import launch_ws
 import json
 from json import dumps
-import os
+import os, shutil
 
 PORT = 8000
 		
@@ -25,59 +25,53 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 	
 	def do_GET(self):
 			
-			if self.path.startswith('/delete_file'):
+			if self.path.startswith('/file'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
-				print(filename)
-				if os.path.exists(filename):
-					os.remove(filename)
-				else:
-					print("no file")
+				cmd = query_components.get('cmd', [None])[0]
+				if cmd == 'read':
+					with open(filename, "r") as json_file:
+						json_data = json.load(json_file)
+						json_file.close()
+						self.send_response(200)
+						self.send_header("Content-type", "application/json")
+						self.send_header("Content-Length", str(len(dumps(json_data))))
+						self.send_header("Access-Control-Allow-Origin", "*")
+						self.end_headers()
+						self.wfile.write(dumps(json_data).encode('utf-8'))
+				elif cmd == 'write':
+					json_str = query_components.get('json_data', [None])[0]
+					json_data = json.loads(json_str)
+					print(filename)
+					with open(filename, "w") as json_file:
+						json.dump(json_data, json_file, indent=2)
+						json_file.close()
+						self.send_response(200)
+						self.send_header("Content-type", "text/html")
+						self.send_header("Access-Control-Allow-Origin", "*")
+						self.end_headers()
+				elif cmd == 'delete':
+					if os.path.exists(filename):
+						os.remove(filename)
+					self.send_response(200)
+					self.send_header("Content-type", "text/html")
+					self.send_header("Access-Control-Allow-Origin", "*")
+					self.end_headers()
+				elif cmd == 'copy':
 
-				self.send_response(200)
-				self.send_header("Content-type", "application/json")
-				self.send_header("Access-Control-Allow-Origin", "*")
-				self.end_headers()
+					if os.path.exists(filename):
+						new_filename = query_components.get('new_filename', [None])[0]
+						shutil.copy(filename, new_filename)
+					self.send_response(200)
+					self.send_header("Content-type", "text/html")
+					self.send_header("Access-Control-Allow-Origin", "*")
+					self.end_headers()
 				return
 
-			elif self.path.startswith('/read_json'):
-				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				filename = query_components.get('filename', [None])[0]
-				content = {}
-				with open(filename, "r") as json_file:
-					content = json.load(json_file)
-					json_file.close()
-					
-				self.send_response(200)
-				self.send_header("Content-type", "application/json")
-				self.send_header("Content-Length", str(len(dumps(content))))
-				self.send_header("Access-Control-Allow-Origin", "*")
-				self.end_headers()
-				
-				self.wfile.write(dumps(content).encode('utf-8'))
-				return
-
-			elif self.path.startswith('/write_json'):
-				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-				filename = query_components.get('filename', [None])[0]
-				json_str = query_components.get('json_data', [None])[0]
-				json_data = json.loads(json_str)
-				with open(filename, "w") as json_file:
-					#json_file.write(json_data)
-					json.dump(json_data, json_file, indent=2)
-					json_file.close()
-
-				self.send_response(200)
-				self.send_header("Content-type", "text/html")
-				self.send_header("Access-Control-Allow-Origin", "*")
-				self.end_headers()
-				return
-			
 			elif self.path.startswith('/simulate'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]
 				data = json.loads(data_str)
-				print(data)
 				response = simulate(data)
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
@@ -105,7 +99,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]	
 				data = json.loads(data_str)
-				print(data)
 				if data['cmd'] == 'start':
 					response = perf_proc.start(data)
 				elif data['cmd'] == 'stop':
@@ -122,7 +115,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				data_str = query_components.get('data', [None])[0]	
 				data = json.loads(data_str)
-				print(data)
 				if data['cmd'] == 'start':
 					response = test_proc.start(data)
 				elif data['cmd'] == 'stop':

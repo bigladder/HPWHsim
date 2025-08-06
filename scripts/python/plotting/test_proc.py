@@ -72,8 +72,7 @@ class TestProc:
 		self.sync_prefs()
 		data['model_id'] = self.prefs['model_id']
 		data['test_id'] = self.prefs['tests']['id']
-		print(data)
-		
+
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -324,7 +323,6 @@ class TestProc:
 			if not clickData:
 				return no_update, fig
 			
-			#print(clickData)
 			if not "points" in clickData:
 				return no_update, fig
 					

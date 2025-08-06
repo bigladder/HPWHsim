@@ -8,7 +8,8 @@
 
 	async function read_json_file(filename) {
 		fst = 'filename=' + filename;
-		const response = await fetch('http://localhost:8000/read_json?' + fst,
+		fst += '&cmd=read';
+		const response = await fetch('http://localhost:8000/file?' + fst,
 			{
 				method: 'GET'
 			}
@@ -19,8 +20,20 @@
 
 	async function write_json_file(filename, json_data) {
 		fst = 'filename=' + filename;
+		fst += '&cmd=write';
 		fst += '&json_data=' + JSON.stringify(json_data);
-		await fetch('http://localhost:8000/write_json?' + fst,
+		await fetch('http://localhost:8000/file?' + fst,
+			{
+				method: 'GET'
+			}
+		);
+	}
+
+	async function copy_json_file(filename, new_filename) {
+		fst = 'cmd=copy';
+		fst += '&filename=' + filename;
+		fst += '&new_filename=' + new_filename;
+		await fetch('http://localhost:8000/file?' + fst,
 			{
 				method: 'GET'
 			}
@@ -29,7 +42,8 @@
 
 	async function delete_file(filename) {
 		fst = 'filename=' + filename;
-		await fetch('http://localhost:8000/delete_file?' + fst,
+		fst += '&cmd=delete';
+		await fetch('http://localhost:8000/file?' + fst,
 			{
 				method: 'GET'
 			}
@@ -113,26 +127,21 @@
 		await write_json_file("./prefs.json", prefs);
 	}
 
-	async function replot_performance(model_filepath) 
-	{// send perf info
-		var msg = {
-			'source': 'index',
-			'dest': 'perf-proc',
-			'cmd': 'replot',
-			'model_filepath': model_filepath
-		};
-		await ws_connection.send(JSON.stringify(msg));
-	}
-
 	async function update_models() 
 	{
 			var model_cache = await read_json_file("./model_cache.json");
 			for (model_id in model_cache)
 			{
-				let data_model = await read_json_file([model_cache[model_id]])
-				const ref_model_filepath = "../../../test/models_json/" + model_id + ".json";
-				await write_json_file("./model_cache.json", data_model);
-				delete model_cache[model_id];
+				try
+				{
+					const ref_model_filepath = "../../../test/models_json/" + model_id + ".json";
+					await copy_json_file(model_cache[model_id], ref_model_filepath);
+					delete model_cache[model_id];
+
+				}
+				catch(err)
+				{}
+
 			}
 			await write_json_file("./model_cache.json", model_cache);
 	}
@@ -142,8 +151,13 @@
 			var model_cache = await read_json_file("./model_cache.json");
 			for (model_id in model_cache)
 			{
-				await delete_file(model_cache[model_id]);
-				delete model_cache[model_id];
+				try
+				{
+					await delete_file(model_cache[model_id]);
+					delete model_cache[model_id];
+				}
+				catch(err)
+				{}
 			}
 			await write_json_file("./model_cache.json", model_cache);
 	}
@@ -185,13 +199,20 @@
 		{
 			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 			var model_cache = await read_json_file("./model_cache.json");
-			if (!prefs['model_id'] in model_cache)
+			if (!(prefs['model_id'] in model_cache))
 			{
-				model_data = await read_json_file(ref_model_filepath);
 				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
-				await write_json_file(model_filepath, model_data);
+				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				await write_json_file("./model_cache.json", model_cache);
 			}
-			await replot_performance(model_cache[prefs['model_id']]);
+			// send perf info
+			var msg = {
+				'source': 'index',
+				'dest': 'perf-proc',
+				'cmd': 'replot',
+				'model_filepath': model_cache[prefs['model_id']]
+			};
+			await ws_connection.send(JSON.stringify(msg));
 		};
 
 		// update select_test control
@@ -266,14 +287,13 @@
 		{
 			const output_dir = prefs['build_dir'] + "/test/output";
 
-			let model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 			var model_cache = await read_json_file("./model_cache.json");
-			if (!prefs['model_id'] in model_cache)
+			if (!(prefs['model_id'] in model_cache))
 			{
-				model_data = await read_json_file(ref_model_filepath);
 				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
 				await write_json_file("./model_cache.json", model_cache);
-				await write_json_file(model_filepath, model_data);
 			}
 			model_filepath = 	model_cache[prefs['model_id']];
 
@@ -345,8 +365,6 @@
 		}
 		else
 		{
-			//const model_cache = await read_json_file("./model_cache.json");
-			//const model_filepath = model_cache[prefs['model_id']];
 			var data = {'cmd': 'start'};
 			plot_results = await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
 			const dash_port = await plot_results["port_num"];
@@ -365,7 +383,7 @@
 		if (gui.perf_proc_active)
 		{
 			var data = {'cmd': 'stop'};
-			await callPyServerJSON("perf_proc", JSON.stringify(data));
+			await callPyServerJSON("perf_proc",  "data=" + JSON.stringify(data));
 			document.getElementById("perf_plot").src = "";
 			document.getElementById("perf_btn").innerHTML = "show";
 			document.getElementById("perf_plot").style="display:none;"
@@ -604,14 +622,13 @@
 	async function fill_properties_table() {
 		prefs = await read_json_file("./prefs.json")
 
-		let model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+		const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
 		var model_cache = await read_json_file("./model_cache.json");
 		if (!(prefs['model_id'] in model_cache))
 		{
-			model_data = await read_json_file(model_filepath);
-			model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
-			await write_json_file("./model_cache.json", model_cache);
-			await write_json_file(model_cache[prefs['model_id']], model_data);
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				await write_json_file("./model_cache.json", model_cache);
 		}
 		model_filepath = 	model_cache[prefs['model_id']];
 		model_data = await read_json_file(model_filepath);

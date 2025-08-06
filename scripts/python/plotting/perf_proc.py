@@ -47,22 +47,10 @@ class PerfProc:
 			
 	def update_interp_div(self, interp_div):
 		do_interp = self.prefs["performance"]["plots"]['interpolate'] == 1
-		for child in interp_div:
-			props = child['props']
-			print(props)
-			if props['id'] == "interp-check":
-				props['options']= [{'label': 'interpolate', 'value': 'interpolate'}] if do_interp else []
-			if props['id'] == "interp-calc":
-				props['hidden'] = not do_interp
-				if do_interp:
-					 for child1 in props['children']:
-							props1 = child1['props']
-							if props1['id'] == "interp-Nx":
-								props1['value'] = self.prefs["performance"]["plots"]['Nx']	
-							if props1['id'] == "interp-Ny":
-								props1['value'] = self.prefs["performance"]["plots"]['Ny']	
-								
-			print('updated')
+		interp_div[0]['props']['options'] = [{'label': 'interpolate', 'value': 'interpolate'}] if do_interp else []
+		interp_div[1]['hidden'] = self.prefs["performance"]["plots"]['interpolate'] == 1
+		interp_div[1]['props']['children'][0]['value'] = self.prefs["performance"]["plots"]['Nx']
+		interp_div[1]['props']['children'][1]['value'] = self.prefs["performance"]["plots"]['Ny']
 							
 	def replot(self, data):
 		self.plotter = {}
@@ -220,7 +208,7 @@ class PerfProc:
 
 		@app.callback(
 				Output('perf-graph', 'figure', allow_duplicate=True),
-				Output('interp-div', 'hidden', allow_duplicate=True),
+				Output('interp-calc', 'hidden', allow_duplicate=True),
 				Input('interp-check', 'value'),
 				prevent_initial_call=True
 			)
@@ -548,7 +536,6 @@ class PerfProc:
 			return fig
 		
 		app.run(debug=True, use_reloader=False, port = self.port_num)
-		self.replot(data)
 		self.running = True
 		return {}
 
