@@ -28,6 +28,7 @@ class PerfProc:
 			time.sleep(1)
 			self.process.start()
 			time.sleep(2)
+			self.running = True
 		results = {'port_num': self.port_num}
 		return results
 			
@@ -36,6 +37,8 @@ class PerfProc:
 			print("killing current dash for plotting performance...")
 			self.process.kill()
 			time.sleep(1)
+			self.running = False
+		return {}
 					
 	def sync_prefs(self):
 		prefs = read_file("prefs.json")

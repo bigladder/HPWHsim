@@ -42,7 +42,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				elif cmd == 'write':
 					json_str = query_components.get('json_data', [None])[0]
 					json_data = json.loads(json_str)
-					print(filename)
 					with open(filename, "w") as json_file:
 						json.dump(json_data, json_file, indent=2)
 						json_file.close()
@@ -58,7 +57,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.send_header("Access-Control-Allow-Origin", "*")
 					self.end_headers()
 				elif cmd == 'copy':
-
 					if os.path.exists(filename):
 						new_filename = query_components.get('new_filename', [None])[0]
 						shutil.copy(filename, new_filename)
@@ -79,7 +77,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				#self.send_header("Content-type", "text/html")
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
-
 				self.wfile.write(dumps(response).encode('utf-8'))
 				return
 

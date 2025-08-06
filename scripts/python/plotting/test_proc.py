@@ -48,15 +48,18 @@ class TestProc:
 			time.sleep(1)
 			print("launching dash for plotting tests...")
 			self.process.start()
-			time.sleep(2)	   
+			time.sleep(2)	
+			self.running = True   
 		return {'port_num': self.port_num}
 
 	#
 	def stop(self):
+		print("stop?")
 		if self.running:
 			print("killing current dash for plotting tests...")
 			self.process.kill()
 			time.sleep(1)
+			self.running = False
 		return {}
 				
 	def sync_prefs(self):
@@ -72,7 +75,21 @@ class TestProc:
 		self.sync_prefs()
 		data['model_id'] = self.prefs['model_id']
 		data['test_id'] = self.prefs['tests']['id']
-
+		
+		fit_list = read_file("fit_list.json")
+		if 'metrics' in fit_list:
+			metrics = fit_list['metrics']
+		else:
+			metrics = []
+		data['test_points'] = []
+		
+		for metric in metrics:
+			if metric['type'] == 'test_point':
+				res = metric['model_id'] == self.prefs['model_id']
+				res = res and metric['test_id'] == self.prefs['tests']['id']						
+				if res:
+					data['test_points'].append(metric)
+		
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -193,7 +210,7 @@ class TestProc:
 		)
 		def send_message(n_clicks):
 			self.i_send = self.i_send + 1
-			message = json.dumps({"source": "test-proc", "dest": "index", "cmd": "init", "index": self.i_send})
+			message = json.dumps({"source": "test-proc", "dest": "index", "cmd": "init", 'port_num': self.port_num, "index": self.i_send})
 			return message
 
 		@app.callback(
@@ -217,13 +234,14 @@ class TestProc:
 			if 'data' in msg:
 				data = json.loads(msg['data'])
 				if 'dest' in data and data['dest'] == 'test-proc':
+					print(f"received by test-proc:\n{data}")
 					if 'cmd' in data:
 						if data['cmd'] == 'replot':
 							self.i_send = self.i_send + 1
-							msg = {"source": "test-proc", "dest": "index", "cmd": "refresh", "index": self.i_send}
-							return json.dumps(msg), self.replot(data)
+							msg = {"source": "test-proc", "dest": "index", "cmd": "refresh", 'port_num': self.port_num, "index": self.i_send}
+							return tuple([json.dumps(msg)] + list(self.replot(data)))
 							
-			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 		@app.callback( 
 			Output('ws', 'send', allow_duplicate=True),
@@ -327,23 +345,29 @@ class TestProc:
 				return no_update, fig
 					
 			self.plotter.click_data(clickData)	
-			
+			self.plotter.update_selected()
 			fit_list = read_file("fit_list.json")
 			if 'metrics' in fit_list:
 				metrics = fit_list['metrics']
 			else:
-				metrics = {}		
+				metrics = []		
 
-			if 'test_points' in metrics:
-				test_points = metrics['test_points']
-			else:
-				test_points = []	
-			
 			for test_point in self.plotter.test_points:
-				test_points.append(test_point)
-			
-			if test_points:
-				metrics['test_points'] = test_points
+				exists = False
+				for metric in metrics:
+					if metric['type'] == 'test_point':						
+						res = metric['variable'] == test_point['variable']
+						res = res and metric['model_id'] == test_point['model_id']
+						res = res and metric['test_id'] == test_point['test_id']
+						res = res and metric['variable'] == test_point['variable']
+						res = res and metric['t_min'] == test_point['t_min']
+						exists = exists or res
+						if exists:
+								break
+				if not(exists):
+					metric = test_point
+					metric['type'] = 'test_point' 
+					metrics.append(metric)
 			
 			fit_list['metrics'] = metrics			
 			write_file("fit_list.json", fit_list)

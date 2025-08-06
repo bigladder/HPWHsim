@@ -73,7 +73,7 @@
 					if(data['dest'] == "index")
 						if ('source' in data)
 						{
-							if (data['source'].localeCompare("test-proc"))
+							if (!data['source'].localeCompare("test-proc"))
 								if ('cmd' in data)
 								{
 									if(!data['cmd'].localeCompare("init"))									
@@ -81,23 +81,28 @@
 										await get_elements();
 										await set_elements();
 									}
+									if(!data['cmd'].localeCompare("refresh"))									
+									{
+										//await get_elements();
+										//await set_elements();
+									}
 								}
 
-							if (data['source'].localeCompare("perf-proc"))								
+							if (!data['source'].localeCompare("perf-proc"))								
 								if ('cmd' in data)
 								{
-									if(!data['cmd'].localeCompare("init"))									
+									if(!data['cmd'].localeCompare("refresh"))									
 									{
 										await get_elements();
 										await set_elements();
 									}
 								}
 
-						if (data['source'].localeCompare("fit-proc"))
+						if (!data['source'].localeCompare("fit-proc"))
 							if ('cmd' in data)
 							{
 									if (!data['cmd'].localeCompare("refresh"))
-										fill_fit_tables()
+										fill_fit_table()
 							}			
 				}
 			}});
@@ -313,7 +318,7 @@
 				if ("measured" in test_data)
 					for (let model_id in test_data["measured"])
 						if (model_id == prefs["model_id"]) {
-							measured_filepath = "../../../test/" + test_dir + "/" + test_data['measured'][model_id];
+							measured_filepath = test_dir + "/" + test_data['measured'][model_id];
 							break;
 						}
 			}
@@ -352,6 +357,7 @@
 	}
 
 	async function click_test_proc() {
+		document.getElementById("test_tab").innerHTML = "Test...";
 		var prefs = await read_json_file("./prefs.json")
 		document.getElementById("test_btn").disabled = true;
 		if (gui.test_proc_active)
@@ -362,19 +368,20 @@
 			document.getElementById("test_btn").innerHTML = "start";
 			document.getElementById("test_plot").style="display:none;"
 			gui.test_proc_active = false;
+			document.getElementById("test_btn").disabled = false;
 		}
 		else
 		{
 			var data = {'cmd': 'start'};
-			plot_results = await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
-			const dash_port = await plot_results["port_num"];
-			document.getElementById("test_plot").src = "http://localhost:" + dash_port;
+			response = await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
+			document.getElementById("test_plot").src = "http://localhost:" + response["port_num"];
 			document.getElementById("test_plot").style = "display:block;"
-			document.getElementById("test_btn").innerHTML = "stop";
+			document.getElementById("test_btn").innerHTML = "stop";	
 			gui.test_proc_active = true;
 		}
 		await set_elements();
 		document.getElementById("test_btn").disabled = false;
+		document.getElementById("test_tab").innerHTML = "Test";
 	}
 
 	async function click_perf_proc() {
@@ -394,8 +401,9 @@
 			var data = {'cmd': 'start'};
 			let perf_results = await callPyServerJSON("perf_proc", "data=" + JSON.stringify(data))
 			const dash_port = perf_results["port_num"];
-			document.getElementById("perf_plot").src = "http://localhost:" + dash_port
+
 			document.getElementById("perf_btn").innerHTML = "hide";
+			document.getElementById("perf_plot").src = "http://localhost:" + dash_port
 			document.getElementById("perf_plot").style = "display:block;"
 			gui.perf_proc_active = true;
 		}

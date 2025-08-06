@@ -7,8 +7,8 @@
       "dependent": "COP",
       "value": [
         1000,
-        0.0,
-        -0.0
+        0,
+        0
       ]
     },
     "BradfordWhiteAeroThermRE2HP50-Pin": {
@@ -18,8 +18,8 @@
       "dependent": "COP",
       "value": [
         400,
-        0.0,
-        -0.0
+        0,
+        0
       ]
     }
   },
@@ -37,12 +37,60 @@
   ],
   "metrics": [
     {
-      "type": "EF",
       "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "configuration": "UEF",
-      "draw_profile": "High",
-      "value": 3.4,
-      "tolerance": 0.0001
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 316.5,
+      "t_min": 73,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 1.616666666666667,
+      "t_min": 248,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 359.7833333333333,
+      "t_min": 189,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 1.6,
+      "t_min": 246,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 277.5833333333333,
+      "t_min": 25,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 327.79999999999995,
+      "t_min": 735,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF50",
+      "variable": "Pin(W)",
+      "value": 374.7000000000001,
+      "t_min": 799,
+      "type": "test_point"
     }
   ]
 }

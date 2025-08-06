@@ -18,6 +18,7 @@ import dimes  # type: ignore
 from dimes import LineProperties
 import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
+import plotly.graph_objects as go
 
 styles = {
     'pre': {
@@ -258,25 +259,21 @@ class TestPlotter:
 							self.test_points.append(test_point)
 
 	def click_data(self, clickData):
-		self.test_points = []
 		if self.measured.have_data:
 			if "points" in clickData:
 				for point in clickData["points"]:
-
 					if "x" in point: # power
 						t_mins = self.measured.df["Time(min)"]
-						Pins = self.measured.df["PowerIn(W)"]
-						for t_min, Pin in zip(t_mins, Pins):
-							if Pin == point["y"] and t_min == point["x"]:
+						for i_min, t_min in enumerate(t_mins):
+							if t_min == point["x"]:
 								test_point = {}
 								test_point['model_id'] = self.model_id
 								test_point['test_id'] = self.test_id
-								test_point['variable'] = "Pin(W)"
-								test_point['value'] = Pin
+								test_point['variable']= "Pin(W)"
+								test_point['value'] =  float(self.measured.df["PowerIn(W)"][i_min])
 								test_point['t_min'] = t_min
 								self.test_points.append(test_point)
-								print(test_point)
-								break
+								return
 								            
 	def plot_graphs(self, data_set, variable, value, row):
 
@@ -325,6 +322,29 @@ class TestPlotter:
 			):
 				self.plot_graphs(data_set, variable, value, row + 1)
 
+#
+	def update_selected(self):
+		selected_points = []								
+		for test_point in self.test_points:
+				selected_points.append([test_point['t_min'], test_point['value']])
+
+		selectedMarkers = {}
+		selectedMarkers['x'] = []
+		selectedMarkers['y'] = []
+		selectedMarkers['size'] = []
+		for point in selected_points:
+			selectedMarkers['x'].append(point[0])
+			selectedMarkers['y'].append(point[1])					
+			diam = 15
+			selectedMarkers['size'].append(diam)	
+			
+		self.plot.figure.update_traces(
+			x = selectedMarkers['x'],
+			y = selectedMarkers['y'],
+			marker_size = selectedMarkers['size'],
+			selector = dict(name="selected points")
+			)
+		
 	def draw(self, data):
 		have_traces = False
 		draw_meas = self.measured.have_data
@@ -353,21 +373,41 @@ class TestPlotter:
 				self.draw_variable_type(self.simulated)
 			else:
 				return
+			
+			# create selected trace (empty)
+			trace_selected = go.Scatter(
+					name = "selected points", 
+					x = [], 
+					y = [],
+					mode="markers", 
+					marker_size= [],
+					marker_symbol='circle-open',
+					marker_color = 'black',
+					marker_line_color= 'black',
+					marker_line_width = 2,
+						
+					showlegend = False,
+					hoverinfo="skip",
+					visible = True
+				)	
+			self.plot.figure.add_trace(trace_selected)
+			self.update_selected()
 			if have_traces:
 				self.plot.finalize_plot()
 				self.have_fig = True
 		return self
 
 def plot(data):
-    plotter = TestPlotter(data)
-    if "model_id" in data:
-        plotter.model_id = data["model_id"]
-    if "measured_filepath" in data:
-        plotter.read_measured(data["measured_filepath"])
-    if "simulated_filepath" in data:
-        plotter.read_simulated(data["simulated_filepath"])
-    plotter.draw({'show': 3})
-    return plotter
+	plotter = TestPlotter(data)
+	if "model_id" in data:
+		plotter.model_id = data["model_id"]
+	if "measured_filepath" in data:
+			plotter.read_measured(data["measured_filepath"])
+			plotter.test_points = data['test_points']
+	if "simulated_filepath" in data:
+		plotter.read_simulated(data["simulated_filepath"])
+	plotter.draw({'show': 3})
+	return plotter
 
 def write_plot(data):
     plotter = plot(data)
