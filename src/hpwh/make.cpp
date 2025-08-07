@@ -150,7 +150,8 @@ void make(HPWH& hpwh,
                 c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             }
             // remove spaces
-            remove(drawProfileName.begin(), drawProfileName.end(), ' ');
+            drawProfileName.erase(remove(drawProfileName.begin(), drawProfileName.end(), ' '),
+                                  drawProfileName.end());
         }
         for (auto [key, value] : HPWH::FirstHourRating::DesignationMap)
         {
@@ -160,7 +161,7 @@ void make(HPWH& hpwh,
                 c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             }
             // remove spaces
-            remove(value.begin(), value.end(), ' ');
+            value.erase(remove(value.begin(), value.end(), ' '), value.end());
             if (value == drawProfileName)
             {
                 designation = key;
