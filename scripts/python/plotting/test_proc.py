@@ -54,7 +54,6 @@ class TestProc:
 
 	#
 	def stop(self):
-		print("stop?")
 		if self.running:
 			print("killing current dash for plotting tests...")
 			self.process.kill()

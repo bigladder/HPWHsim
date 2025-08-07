@@ -91,7 +91,7 @@
 							if (!data['source'].localeCompare("perf-proc"))								
 								if ('cmd' in data)
 								{
-									if(!data['cmd'].localeCompare("refresh"))									
+									if(!data['cmd'].localeCompare("init"))									
 									{
 										await get_elements();
 										await set_elements();
@@ -217,7 +217,13 @@
 				'cmd': 'replot',
 				'model_filepath': model_cache[prefs['model_id']]
 			};
-			await ws_connection.send(JSON.stringify(msg));
+			try {
+				await ws_connection.send(JSON.stringify(msg));
+			}
+			catch(err)
+			{
+				await init_websocket();
+			}
 		};
 
 		// update select_test control
@@ -392,7 +398,7 @@
 			var data = {'cmd': 'stop'};
 			await callPyServerJSON("perf_proc",  "data=" + JSON.stringify(data));
 			document.getElementById("perf_plot").src = "";
-			document.getElementById("perf_btn").innerHTML = "show";
+			document.getElementById("perf_btn").innerHTML = "start";
 			document.getElementById("perf_plot").style="display:none;"
 			gui.perf_proc_active = false;
 		}
@@ -402,7 +408,7 @@
 			let perf_results = await callPyServerJSON("perf_proc", "data=" + JSON.stringify(data))
 			const dash_port = perf_results["port_num"];
 
-			document.getElementById("perf_btn").innerHTML = "hide";
+			document.getElementById("perf_btn").innerHTML = "stop";
 			document.getElementById("perf_plot").src = "http://localhost:" + dash_port
 			document.getElementById("perf_plot").style = "display:block;"
 			gui.perf_proc_active = true;
@@ -416,7 +422,12 @@
 		document.getElementById("fit_btn").disabled = true;
 		var data = {'cmd': 'start'}
 		let fit_results = await callPyServerJSON("fit_proc", "data=" + JSON.stringify(data))
+
+		data = {'cmd': 'stop'}
+		await callPyServerJSON("fit_proc", "data=" + JSON.stringify(data))
 		document.getElementById("fit_btn").disabled = false;
+
+		await set_elements();
 	}
 
 	async function clear_params() {
@@ -428,7 +439,7 @@
 
 	async function clear_metrics() {
 			var fit_list = await read_json_file("./fit_list.json")
-			fit_list['metrics'] = {}
+			fit_list['metrics'] = []
 			await write_json_file("./fit_list.json", fit_list)
 			await fill_fit_table()
 		}

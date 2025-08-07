@@ -128,6 +128,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			elif self.path.startswith('/fit_proc'):
 					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 					data_str = query_components.get('data', [None])[0]	
+					print(data_str)
 					data = json.loads(data_str)
 					if data['cmd'] == 'start':
 						response = fit_proc.start(data)
