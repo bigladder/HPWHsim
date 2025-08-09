@@ -253,7 +253,7 @@ class TestPlotter:
 							test_point = {}
 							test_point['model_id'] = self.model_id
 							test_point['test_id'] = self.test_id
-							test_point['variable'] = "Pin(W)"
+							test_point['variable'] = "Pin"
 							test_point['value'] = Pin
 							test_point['t_min'] = t_min
 							self.test_points.append(test_point)
@@ -269,7 +269,7 @@ class TestPlotter:
 								test_point = {}
 								test_point['model_id'] = self.model_id
 								test_point['test_id'] = self.test_id
-								test_point['variable']= "Pin(W)"
+								test_point['variable']= "Pin"
 								test_point['value'] =  float(self.measured.df["PowerIn(W)"][i_min])
 								test_point['t_min'] = t_min
 								self.test_points.append(test_point)

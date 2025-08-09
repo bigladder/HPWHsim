@@ -447,22 +447,22 @@ class PerfProc:
 			for point in add_points:
 				found_point = False
 				for param in params:
-					if 'type' not in param or param['type'] != 'perf-point':
+					if 'type' not in param or param['type'] != 'performance-point':
 						continue
 					if 'variable' not in param or param['variable'] != point['variable']:
 						continue
 					if 'model_id' not in param or param['model_id'] != point['model']:
 						continue
 						
-					if 'coords' not in param:
+					if 'coordinates' not in param:
 						continue
 
-					coords = param['coords']
-					if coords[0] != point['coords'][0]:
+					coords = param['coordinates']
+					if coords[0] != point['coordinates'][0]:
 							continue
-					if coords[1] != point['coords'][1]:
+					if coords[1] != point['coordinates'][1]:
 							continue
-					if coords[2] != point['coords'][2]:
+					if coords[2] != point['coordinates'][2]:
 							continue
 			
 					found_point = True

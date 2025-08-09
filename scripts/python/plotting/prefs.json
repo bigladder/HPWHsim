@@ -4,7 +4,7 @@
   "heat_source_id": "resistiveElementTop",
   "tests": {
     "list": "all_tests",
-    "id": "RE2HP65_UEF67",
+    "id": "RE2HP65_UEF50",
     "draw_profile": "auto",
     "plots": {
       "show_simulated": true,

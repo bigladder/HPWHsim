@@ -9,7 +9,7 @@ initialTankT_C = 51.1
 initTime_min = 0
 numRowsPerMin = 6
 numTankTs = 6
-tankTsOrder = -1
+tankTsOrder = 1
 
 test_name = 'RE2HP50_UEF67'
 format = "BradfordWhite"
@@ -23,7 +23,7 @@ if format == "Villara":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 3), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
 	power_factor = 1000.
 if format == "BradfordWhite":
-	orig_columns = dict([ ("Time", 0), ("AmbientT", 1), ("Power", 4), ("TankT1", 10), ("InletT", 11), ("OutletT", 12), ("Draw", 13) ])
+	orig_columns = dict([ ("Time", 0), ("AmbientT", 1), ("Power", 4), ("TankT1", 5), ("InletT", 11), ("OutletT", 12), ("Draw", 13) ])
 	power_factor = 1.		
 if format == "LG":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 8), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])

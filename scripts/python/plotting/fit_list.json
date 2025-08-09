@@ -9,17 +9,17 @@
         {
           "Te": 2.778,
           "Ts": 0,
-          "value": 1600
+          "value": 1700
         },
         {
           "Te": 2.778,
           "Ts": 71.111,
-          "value": 1300
+          "value": 2200
         },
         {
           "Te": 48.889,
           "Ts": 0,
-          "value": 2100
+          "value": 2200
         }
       ]
     },
@@ -47,74 +47,6 @@
       ]
     }
   },
-  "parameters": [
-    {
-      "type": "bilinear-coeff",
-      "constraint": "BradfordWhiteAeroThermRE2HP65-Pin",
-      "term": 0
-    },
-    {
-      "type": "bilinear-coeff",
-      "constraint": "BradfordWhiteAeroThermRE2HP65-Pout",
-      "term": 0
-    }
-  ],
-  "metrics": [
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin(W)",
-      "value": 316.5,
-      "t_min": 73,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin(W)",
-      "value": 373.06666666666666,
-      "t_min": 209,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin(W)",
-      "value": 1.6499999999999997,
-      "t_min": 262,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP65",
-      "test_id": "RE2HP65_UEF67",
-      "variable": "Pin(W)",
-      "value": 1.6666666666666667,
-      "t_min": 791,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP65",
-      "test_id": "RE2HP65_UEF67",
-      "variable": "Pin(W)",
-      "value": 342.7333333333333,
-      "t_min": 137,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP65",
-      "test_id": "RE2HP65_UEF50",
-      "variable": "Pin(W)",
-      "value": 343.1,
-      "t_min": 707,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP65",
-      "test_id": "RE2HP65_UEF67",
-      "variable": "Pin(W)",
-      "value": 380.98333333333335,
-      "t_min": 201,
-      "type": "test_point"
-    }
-  ]
+  "parameters": [],
+  "metrics": []
 }

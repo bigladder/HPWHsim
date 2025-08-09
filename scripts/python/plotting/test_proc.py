@@ -318,6 +318,7 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def select_data(selectedData, fig):
+			print("selecting")
 			prev_layout = fig['layout']
 			if not selectedData:
 				return no_update, True
