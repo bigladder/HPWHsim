@@ -127,12 +127,13 @@ class FitProc:
 				x.append(point['value'])
 				A.append([1.0, point['Te'], point['Ts']])
 		xp = np.array(x)
-		Ap = np.array(A)
-		
-		if np.linalg.det(Ap) == 0:
+		Ap = np.array(A)		
+		ApT = Ap.transpose()
+		ApT_Ap = np.matmul(ApT, Ap)	
+		if np.linalg.det(ApT_Ap) == 0:
 			return
-		iAp = np.linalg.inv(Ap)			
-		coefficients = iAp.dot(xp)
+		iApL = np.matmul(np.linalg.inv(ApT_Ap), ApT)			
+		coefficients = iApL.dot(xp)
 		print(f"coefficients=\n{coefficients}")	
 		self.apply_bilinear_coefficients(model_data, coefficients, variable, dependent, slice)	
 
@@ -272,7 +273,8 @@ class FitProc:
 		parameterV = []
 		for parameter in self.parameters:
 			parameterV.append(self.get_parameter(parameter))
-					
+		return parameterV
+				
 	def apply_parameters(self):
 		for parameter in self.parameters:
 			self.apply_parameter(parameter)

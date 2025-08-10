@@ -1,28 +1,5 @@
 {
   "constraints": {
-    "BradfordWhiteAeroThermRE2HP65-Pout": {
-      "type": "bilinear-points",
-      "model_id": "BradfordWhiteAeroThermRE2HP65",
-      "variable": "Pout",
-      "dependent": "COP",
-      "value": [
-        {
-          "Te": 2.778,
-          "Ts": 0,
-          "value": 1700
-        },
-        {
-          "Te": 2.778,
-          "Ts": 71.111,
-          "value": 2200
-        },
-        {
-          "Te": 48.889,
-          "Ts": 0,
-          "value": 2200
-        }
-      ]
-    },
     "BradfordWhiteAeroThermRE2HP65-Pin": {
       "type": "bilinear-points",
       "model_id": "BradfordWhiteAeroThermRE2HP65",
@@ -30,19 +7,52 @@
       "dependent": "COP",
       "value": [
         {
-          "Te": 2.778,
-          "Ts": 0,
-          "value": 180
+          "Te": 10,
+          "Ts": 10,
+          "value": 280
         },
         {
-          "Te": 2.778,
-          "Ts": 71.111,
-          "value": 450
+          "Te": 10,
+          "Ts": 51.7,
+          "value": 400
         },
         {
-          "Te": 48.889,
-          "Ts": 0,
-          "value": 300
+          "Te": 19.7,
+          "Ts": 20,
+          "value": 280
+        },
+        {
+          "Te": 19.7,
+          "Ts": 51.7,
+          "value": 400
+        }
+      ]
+    },
+    "BradfordWhiteAeroThermRE2HP65-Pout": {
+      "type": "bilinear-points",
+      "model_id": "BradfordWhiteAeroThermRE2HP65",
+      "variable": "Pout",
+      "dependent": "COP",
+      "value": [
+        {
+          "Te": 10,
+          "Ts": 10,
+          "value": 950
+        },
+        {
+          "Te": 10,
+          "Ts": 51.7,
+          "value": 2600
+        },
+        {
+          "Te": 19.7,
+          "Ts": 20,
+          "value": 1900
+        },
+        {
+          "Te": 19.7,
+          "Ts": 51.7,
+          "value": 2800
         }
       ]
     }

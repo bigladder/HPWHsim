@@ -139,18 +139,22 @@ class PerfProc:
 				),
 							
 			html.Br(),
-			html.Div(
-				dcc.Graph(id='perf-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'},
-					config={
-		        'modeBarButtonsToAdd': [
-		        "drawrect",
-		        "eraseshape"
-		        ]
-		    	}),
-					id="graph-div",
-					hidden = True),
+			
+    	html.Div(
+			dcc.Graph(
+				id='perf-graph',
+				figure={},
+				style ={'width': '1200px', 'height': '800px', 'display': 'block'},
+				config={
+	        'modeBarButtonsToAdd': [
+	        "drawrect",
+	        "eraseshape" ]
+	    	}
+			),
+			id="graph-div",
+			hidden = True),
 					
-			html.Div([
+			html.Div([			
 					html.Button("x", id='make-dependent', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
 					html.P("marked:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 					html.Button("+", id='add-selected-to-marked', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),
@@ -169,7 +173,7 @@ class PerfProc:
 				], id='select-div', hidden = True),
 
 		]
-
+		
 		@app.callback(
 			Output("ws", "send"),
 			Input("send-btn", "n_clicks")
@@ -216,7 +220,6 @@ class PerfProc:
 				prevent_initial_call=True
 			)
 		def change_interp(value):
-			print(value)
 			self.prefs["performance"]["plots"]["interpolate"] = 1 - self.prefs["performance"]["plots"]["interpolate"]
 			self.plotter.draw(self.prefs)
 			self.plotter.update_markers(self.prefs)
@@ -373,8 +376,8 @@ class PerfProc:
 				return no_update, hide_buttons, {}
 			if 'interpolate' in self.prefs["performance"]["plots"]:
 				if self.prefs["performance"]["plots"]["interpolate"] == 1:
-					return no_update, hide_buttons, {}
-				
+					return no_update, hide_buttons, {}		
+
 			prev_layout = fig['layout']
 			self.plotter.click_data(clickData)
 			self.plotter.update_selected(self.prefs)

@@ -54,6 +54,8 @@ class PerfPlotter():
 		self.variable = 0
 		self.dependent = []
 		
+		self.selected_data = {}
+		
 	def get_slice(self):				
 		nT1s = len(self.T1s)
 		nT2s = len(self.T2s)
@@ -108,23 +110,26 @@ class PerfPlotter():
 			self.iT3 = 0 if not self.is_central else math.floor(len(self.T3s) / 2)
 			self.get_slice()
 			
+			self.selected_data = {}
 		except:
 			self.have_data = False
 	
 	def select_data(self, selectedData):
 		if 'points' in selectedData:
 			if selectedData['points']:
-				#self.clear_selected()
+				self.clear_selected()
 				nT1s = len(self.T1s)
 				for point in selectedData['points']:
 					if point['curveNumber'] == 1:
 						idx = point['pointIndex']
 						iT2 = int(idx / nT1s)
 						iT1 = idx % nT1s
-						self.selected[iT1, iT2] = 1 - self.selected[iT1, iT2]
+						self.selected[iT1, iT2] = 1 # - self.selected[iT1, iT2]
+		self.selected_data = selectedData
 						
 	def click_data(self, clickData):
 		if 'points' in clickData:
+			self.clear_selected()
 			nT1s = len(self.T1s)
 			for point in clickData["points"]:
 				if point['curveNumber'] == 1:
@@ -176,7 +181,13 @@ class PerfPlotter():
 		for iT1, T1 in enumerate(self.T1s):
 			for iT2, T2 in enumerate(self.T2s):
 				if self.selected[iT1, iT2]:
-					self.dependent[iT1, iT2, self.iT3] = prefs["performance"]["plots"]['contour_variable']
+					value = self.dependent[iT1, iT2, self.iT3]
+					new = prefs["performance"]["plots"]['contour_variable']
+					if new != value:
+						value = new
+					else:
+						value = (value + 1) % 3
+					self.dependent[iT1, iT2, self.iT3] = value
 			
 	def interpolate(self, refs, prefs):
 		return refs
@@ -455,13 +466,14 @@ class PerfPlotter():
 		selectedMarkers['size'] = []
 		
 		i = 0
-		selected_points = []								
+		selected_points = []
+		nT1s = len(self.refs[0])						
 		for iT2, T2 in enumerate(self.refs[1]):
 			for iT1, T1 in enumerate(self.refs[0]):					
 				if self.selected[iT1, iT2]:
 					point = [T1, T2, self.vals[2][i]]
 					selected_points.append(point)
-				i = i + 1
+					i = i + 1
 			
 		fac = 0.5
 		zMin = min(self.refs[2])
@@ -472,7 +484,7 @@ class PerfPlotter():
 			selectedMarkers['y'].append(point[1])					
 			diam = self.maxSize * ((1 - fac) * (point[2] - zMin) / (zMax - zMin) + fac) + 5
 			selectedMarkers['size'].append(diam)	
-					
+		
 		self.fig.update_traces(
 			x = selectedMarkers['x'],
 			y = selectedMarkers['y'],
