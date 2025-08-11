@@ -47,7 +47,7 @@ def convert_draw_schedule(test_dir, data_filename):
 	flowRate_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = initTime_min
+	iMin = 0
 	first = True
 	for line in Lines:
 		if not first:
@@ -56,8 +56,8 @@ def convert_draw_schedule(test_dir, data_filename):
 			nLines = nLines + 1
 			if nLines >= numRowsPerMin:
 				if flowRate_sum > 0:
-					if iMin >= 0:
-						out_file.writelines("{min}, {flowRate_avg:.3f}\n".format(min=iMin, flowRate_avg=flowRate_sum / nLines))
+					if iMin >= initTime_min:
+						out_file.writelines("{min}, {flowRate_avg:.3f}\n".format(min=iMin - initTime_min, flowRate_avg=flowRate_sum / nLines))
 				nLines = 0
 				flowRate_sum = 0
 				iMin = iMin + 1
@@ -74,7 +74,7 @@ def convert_ambientT_schedule(test_dir, data_filename):
 	out_filename = 'ambientTschedule.csv'
 	out_file_path = os.path.join(test_dir, out_filename)
 	out_file = open(out_file_path,"w+")
-
+	iMin = 0
 	first = True
 	nLines = 0
 	ambientT_sum = 0
@@ -91,7 +91,7 @@ def convert_ambientT_schedule(test_dir, data_filename):
 	ambientT_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = initTime_min
+	iMin = 0
 	first = True
 	for line in Lines:
 		if not first:
@@ -99,8 +99,8 @@ def convert_ambientT_schedule(test_dir, data_filename):
 			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
 			if nLines >= numRowsPerMin:
-				if iMin >= 0:
-					out_file.writelines("{min}, {ambientT_avg:.3f}\n".format(min=iMin, ambientT_avg=ambientT_sum / nLines))	
+				if iMin >= initTime_min:
+					out_file.writelines("{min}, {ambientT_avg:.3f}\n".format(min=iMin - initTime_min, ambientT_avg=ambientT_sum / nLines))	
 				ambientT_sum = 0
 				nLines = 0
 				iMin = iMin + 1
@@ -142,7 +142,7 @@ def convert_evaporatorT_schedule(test_dir, data_filename):
 	ambientT_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = initTime_min
+	iMin = 0
 	first = True
 	for line in Lines:
 		if not first:
@@ -150,8 +150,8 @@ def convert_evaporatorT_schedule(test_dir, data_filename):
 			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
 			if nLines >= numRowsPerMin:				
-				if iMin >= 0:
-					out_file.writelines("{min}, {ambientT_avg:.3f}\n".format(min=iMin, ambientT_avg=ambientT_sum / nLines))
+				if iMin >= initTime_min:
+					out_file.writelines("{min}, {ambientT_avg:.3f}\n".format(min=iMin - initTime_min, ambientT_avg=ambientT_sum / nLines))
 				ambientT_sum = 0
 				nLines = 0
 				iMin = iMin + 1
@@ -192,8 +192,7 @@ def convert_inletT_schedule(test_dir, data_filename):
 	inletT_sum = 0
 	flowRate_sum = 0
 	nLines = 0
-	jLine = numRowsPerMin - 1
-	iMin = initTime_min
+	iMin = 0
 	first = True
 	for line in Lines:
 		if not first:
@@ -205,8 +204,8 @@ def convert_inletT_schedule(test_dir, data_filename):
 			nLines = nLines + 1
 			if nLines >= numRowsPerMin:
 				if flowRate_sum != 0:
-					if iMin >= 0:
-						out_file.writelines("{min}, {inletT_avg:.3f}\n".format(min=iMin, inletT_avg=inletT_sum / nLines))
+					if iMin >= initTime_min:
+						out_file.writelines("{min}, {inletT_avg:.3f}\n".format(min=iMin - initTime_min, inletT_avg=inletT_sum / nLines))
 				flowRate_sum = 0
 				inletT_sum = 0
 				nLines = 0
@@ -239,7 +238,7 @@ def create_test_into(test_dir, data_filename):
 
 	# count minutes
 	jLine = numRowsPerMin - 1
-	iMin = initTime_min
+	iMin = 0
 	testTime_min = 0
 	first = True
 	for line in Lines:
@@ -248,13 +247,13 @@ def create_test_into(test_dir, data_filename):
 			if jLine >= numRowsPerMin:
 				jLine = 0
 				iMin = iMin + 1
-				if iMin >= 0:
+				if iMin >= initTime_min:
 					testTime_min = testTime_min + 1
 		first = False
 		
 	out_file = open(out_file_path,"w+")
 	out_file.writelines(f"setpoint {setpointT_C}\n")
-	out_file.writelines(f"length_of_test {iMin}\n")
+	out_file.writelines(f"length_of_test {iMin - initTime_min}\n")
 	out_file.writelines(f"initialTankT_C {initialTankT_C}\n")
 	out_file.close()
 

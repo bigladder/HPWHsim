@@ -86,6 +86,10 @@ class TestPlotter:
 		self.test_points = []
 		self.model_id = ""
 
+		visibleT = []
+		for i in range(NUMBER_OF_THERMOCOUPLES):
+			visibleT.append(True if i == 0 or i == NUMBER_OF_THERMOCOUPLES - 1 else False)
+			
 		self.variables = {
 		    "Y-Variables": {
 		        "Power Input": {
@@ -120,9 +124,9 @@ class TestPlotter:
 		                for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
 		            ],
 		            "Units": f"{DEGREE_SIGN}F",
-		            "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
+		            "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)), 
 		            "Line Mode": ["lines"] * NUMBER_OF_THERMOCOUPLES,
-		            "Line Visibility": [False] * NUMBER_OF_THERMOCOUPLES,
+		            "Line Visibility": visibleT#[False] * NUMBER_OF_THERMOCOUPLES,
 		        },
 		    },
 		    "X-Variables": {
@@ -174,7 +178,7 @@ class TestPlotter:
 			],
 			"Colors": ["black", "orange", "purple", "limegreen"],
 			"Line Mode": ["lines", "lines+markers", "lines", "lines"],
-			"Line Visibility": [True, True, False, False],
+			"Line Visibility": [False, False, False, False],
 		}
 
 		for key in OUTPUT_TEMPERATURE_DETAILS.keys():
@@ -358,7 +362,7 @@ class TestPlotter:
 				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]],
 						f"Model: {self.model_id}, Test: {self.test_id}"					
 				)
-				self.plot.x_axis.name = "Time (min)"
+				self.plot.x_axis.name = "Time [min]"
 				self.draw_variable_type(self.measured)
 				have_traces = True
 				if draw_sim:
@@ -368,7 +372,7 @@ class TestPlotter:
 				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]],
 						f"Model: {self.model_id}, Test: {self.test_id}"
 				)
-				self.plot.x_axis.name = "Time (min)"
+				self.plot.x_axis.name = "Time [min]"
 				have_traces = True
 				self.draw_variable_type(self.simulated)
 			else:
@@ -394,6 +398,10 @@ class TestPlotter:
 			self.update_selected()
 			if have_traces:
 				self.plot.finalize_plot()
+				self.plot.figure['layout']['yaxis']['title'] = "Power Input (W)"
+				self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
+				self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
+				self.plot.figure['layout']['title']['x'] = 0.25
 				self.have_fig = True
 		return self
 

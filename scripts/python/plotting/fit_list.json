@@ -28,7 +28,7 @@
         {
           "Te": 19.7,
           "Ts": 51.7,
-          "value": 410
+          "value": 430
         }
       ]
     },
@@ -55,177 +55,16 @@
         {
           "Te": 19.7,
           "Ts": 20,
-          "value": 1900
+          "value": 2050
         },
         {
           "Te": 19.7,
           "Ts": 51.7,
-          "value": 2400
+          "value": 2550
         }
       ]
     }
   },
   "parameters": [],
-  "metrics": [
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 344.18333333333334,
-      "t_min": 448,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 1.6833333333333336,
-      "t_min": 313,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 330.0833333333333,
-      "t_min": 388,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 298.6333333333334,
-      "t_min": 42,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 1.633333333333333,
-      "t_min": 619,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 1.65,
-      "t_min": 898,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 1.6333333333333335,
-      "t_min": 1,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 1.65,
-      "t_min": 410,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 1.633333333333333,
-      "t_min": 554,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP80",
-      "test_id": "RE2HP80_UEF67",
-      "variable": "Pin",
-      "value": 402.8,
-      "t_min": 252,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2H80",
-      "test_id": "RE2H80_UEF67",
-      "variable": "Pin",
-      "value": 316.9166666666667,
-      "t_min": 45,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2H80",
-      "test_id": "RE2H80_UEF67",
-      "variable": "Pin",
-      "value": 365.1499999999999,
-      "t_min": 709,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.6166666666666665,
-      "t_min": 372,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.6166666666666665,
-      "t_min": 410,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.6166666666666665,
-      "t_min": 678,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 374.9,
-      "t_min": 214,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.666666666666667,
-      "t_min": 343,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.6499999999999997,
-      "t_min": 302,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.6499999999999997,
-      "t_min": 246,
-      "type": "test_point"
-    },
-    {
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Pin",
-      "value": 1.6166666666666665,
-      "t_min": 1143,
-      "type": "test_point"
-    }
-  ]
+  "metrics": []
 }
