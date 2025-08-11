@@ -358,7 +358,7 @@ class TestPlotter:
 				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]],
 						f"Model: {self.model_id}, Test: {self.test_id}"					
 				)
-				self.plot.x_axis.name = "Time"
+				self.plot.x_axis.name = "Time (min)"
 				self.draw_variable_type(self.measured)
 				have_traces = True
 				if draw_sim:
@@ -368,7 +368,7 @@ class TestPlotter:
 				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]],
 						f"Model: {self.model_id}, Test: {self.test_id}"
 				)
-				self.plot.x_axis.name = "Time"
+				self.plot.x_axis.name = "Time (min)"
 				have_traces = True
 				self.draw_variable_type(self.simulated)
 			else:

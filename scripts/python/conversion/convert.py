@@ -1,12 +1,12 @@
 # Raw script for converting typical supplied data to HPWHsim schedules and measured data.
-# uv run convert.py RE2HP80_UEF67 RE2HP80_UEF67
+# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP80/RE2HP80_UEF67 RE2HP80_UEF67
 import os
 import sys
 from pathlib import Path
 
 setpointT_C = 51.1
 initialTankT_C = 51.1
-initTime_min = 0
+initTime_min = 305
 numRowsPerMin = 6
 numTankTs = 6
 tankTsOrder = 1
@@ -54,12 +54,10 @@ def convert_draw_schedule(test_dir, data_filename):
 			columns = line.split(',')
 			flowRate_sum = flowRate_sum + float(columns[orig_columns["Draw"]].strip('\n'))
 			nLines = nLines + 1
-			jLine = jLine + 1
-			if jLine >= numRowsPerMin:
+			if nLines >= numRowsPerMin:
 				if flowRate_sum > 0:
 					if iMin >= 0:
 						out_file.writelines("{min}, {flowRate_avg:.3f}\n".format(min=iMin, flowRate_avg=flowRate_sum / nLines))
-				jLine = 0
 				nLines = 0
 				flowRate_sum = 0
 				iMin = iMin + 1
@@ -100,13 +98,11 @@ def convert_ambientT_schedule(test_dir, data_filename):
 			columns = line.split(',')
 			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
-			jLine = jLine + 1
-			if jLine >= numRowsPerMin:
+			if nLines >= numRowsPerMin:
 				if iMin >= 0:
 					out_file.writelines("{min}, {ambientT_avg:.3f}\n".format(min=iMin, ambientT_avg=ambientT_sum / nLines))	
 				ambientT_sum = 0
 				nLines = 0
-				jLine = 0
 				iMin = iMin + 1
 		first = False
 
@@ -153,13 +149,11 @@ def convert_evaporatorT_schedule(test_dir, data_filename):
 			columns = line.split(',')
 			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
-			jLine = jLine + 1
-			if jLine >= numRowsPerMin:				
+			if nLines >= numRowsPerMin:				
 				if iMin >= 0:
 					out_file.writelines("{min}, {ambientT_avg:.3f}\n".format(min=iMin, ambientT_avg=ambientT_sum / nLines))
 				ambientT_sum = 0
 				nLines = 0
-				jLine = 0
 				iMin = iMin + 1
 		first = False
 
@@ -209,15 +203,13 @@ def convert_inletT_schedule(test_dir, data_filename):
 				inletT_sum = inletT_sum + float(columns[orig_columns["InletT"]].strip('\n'))
 				flowRate_sum = flowRate_sum + flowRate		
 			nLines = nLines + 1
-			jLine = jLine + 1
-			if jLine >= numRowsPerMin:
+			if nLines >= numRowsPerMin:
 				if flowRate_sum != 0:
 					if iMin >= 0:
 						out_file.writelines("{min}, {inletT_avg:.3f}\n".format(min=iMin, inletT_avg=inletT_sum / nLines))
 				flowRate_sum = 0
 				inletT_sum = 0
 				nLines = 0
-				jLine = 0
 				iMin = iMin + 1
 		first = False
 		
@@ -278,19 +270,20 @@ def convert_measured(test_dir, data_filename):
 	
 	powerSum = 0
 	drawSum = 0
-	iSum = 0
+	ambientT_sum = 0
+	outletT_sum = 0
+	inletT_sum = 0
 
 	out_file = open(out_file_path,"w+")
-	iMin = initTime_min 
-	jRow = numRowsPerMin
-	iLine = 0
+	iMin = 0
+	first = True
+	nLines = 0
 	for line in Lines:
 		line = line.strip('\n')
 		line_out = ""
-
 		columns = line.split(',')
 
-		if iLine == 0:
+		if first:
 			new_columns = output_column_headers
 			firstCol = True
 			for new_column in new_columns:
@@ -300,31 +293,27 @@ def convert_measured(test_dir, data_filename):
 				else:
 					line_out = line_out + "," + new_column
 			out_file.writelines(line_out + "\n")
+			first = False
 			
-		else:			
+		else:		
 			powerSum = powerSum + power_factor* float(columns[orig_columns["Power"]].strip('\n'))
 			drawSum = drawSum + float(columns[orig_columns["Draw"]].strip('\n'))
-			iSum = iSum + 1
-			
-			jRow = jRow + 1
-			if jRow >= numRowsPerMin:
+			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]])
+			inletT_sum = inletT_sum + float(columns[orig_columns["InletT"]])
+			outletT_sum = outletT_sum + float(columns[orig_columns["OutletT"]])
+			if nLines  >= numRowsPerMin:
 				new_columns = []		
+				new_columns.append(str(iMin - initTime_min))
+				new_columns.append(str(ambientT_sum / nLines))
+				new_columns.append(str(powerSum / nLines))
 				
-				new_columns.append(str(iMin))
-				new_columns.append(columns[orig_columns["AmbientT"]])
-				new_columns.append(str(powerSum / iSum))
-				
-				tankT_sum = 0
 				for iCol in range(numTankTs):
 					new_columns.append(columns[orig_columns["TankT1"] + tankTsOrder * iCol])
-					tankT_sum = tankT_sum + float(columns[orig_columns["TankT1"] + tankTsOrder * iCol].strip('\n'))
-
-				#new_columns.append(str(tankT_sum / numTankTs))
 							
 				if drawSum > 0:
-					new_columns.append(columns[orig_columns["InletT"]])
-					new_columns.append(columns[orig_columns["OutletT"]])
-					new_columns.append(str(drawSum / iSum))
+					new_columns.append(str(inletT_sum / nLines))
+					new_columns.append(str(outletT_sum / nLines))
+					new_columns.append(str(drawSum / nLines))
 				else:
 					new_columns.append("")		
 					new_columns.append("")	
@@ -337,18 +326,20 @@ def convert_measured(test_dir, data_filename):
 						firstCol = False
 					else:
 						line_out = line_out + "," + new_column
+					
+				nLines = 0
 						
-				if iMin >= 0:
+				if iMin >= initTime_min:
 					out_file.writelines(line_out + "\n")
 				iMin = iMin + 1
-				jRow = 0
 				
 				powerSum = 0
 				drawSum = 0
-				iSum = 0
-											
-		iLine = iLine + 1
-			
+				ambientT_sum = 0
+				inletT_sum = 0
+				outletT_sum = 0										
+			nLines = nLines + 1
+				
 	out_file.close()
 	
 #  main

@@ -189,19 +189,21 @@ class FitProc:
 			if dependent == variable:
 				return
 			slice = 0 if not 'slice' in constraint else constraint['slice']
-			model_data = self.read_cache_model(constraint['model_id'])							
-			self.apply_bilinear_points(model_data, variable, dependent, slice, constraint['value'])							
-			self.write_cache_model(constraint['model_id'], model_data)
-			
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)							
+				self.apply_bilinear_points(model_data, variable, dependent, slice, constraint['value'])							
+				self.write_cache_model(model_id, model_data)
+				
 		if constraint['type'] == 'bilinear-coeffs':		
 			variable = constraint['variable']
 			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
 			if dependent == variable:
 				return
 			slice = 0 if not 'slice' in constraint['slice'] else constraint['slice']
-			model_data = self.read_cache_model(constraint['model_id'])
-			self.apply_bilinear_coefficients(constraint['value'], model_data, variable, dependent, slice)				
-			self.write_cache_model(constraint['model_id'], model_data)
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				self.apply_bilinear_coefficients(constraint['value'], model_data, variable, dependent, slice)				
+				self.write_cache_model(model_id, model_data)
 					
 	def apply_constraints(self):
 		for constraint in self.constraints:
@@ -210,34 +212,19 @@ class FitProc:
 	def apply_parameter(self, parameter, new_value):
 		if parameter['type'] == 'bilinear-point':					
 			constraint = self.constraints[parameter['constraint']]
-			variable = constraint['variable']
-			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
-			if dependent == variable:
-				return
 			constraint['value'][parameter['point']] = new_value
-						
-			model_data = self.read_cache_model(constraint['model_id'])
-			slice = 0 if 'slice' not in constraint else constraint['slice']		
-			self.apply_bilinear_points(model_data, variable, dependent, slice, constraint['value'])
-			self.write_cache_model(constraint['model_id'], model_data)
+			self.apply_constraint(constraint)
 		
 		if parameter['type'] == 'bilinear-coeff':		
 			constraint = self.constraints[parameter['constraint']]
-			variable = constraint['variable']
-			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
-			if dependent == variable:
-				return
-			model_data = self.read_cache_model(constraint['model_id'])
-			constraint['value'][parameter['term']] = new_value				
-			self.apply_bilinear_points(model_data, constraint['value'], variable, dependent)
-			self.write_cache_model(constraint['model_id'], model_data)					
-					
+			constraint['value'][parameter['term']] = new_value	
+			self.apply_constraint(constraint)			
+									
 		if parameter['type'] == 'performance-point':		
-			variable=  parameter['variable']
+			variable = parameter['variable']
 			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
 			if dependent == variable:
 				return
-
 			model_data = self.read_cache_model(parameter['model_id'])		
 			self.set_performance_point(model_data, parameter['coordinates'], variable, dependent, new_value)
 			self.write_cache_model(parameter['model_id'], model_data)
