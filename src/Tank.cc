@@ -546,7 +546,6 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
     // Heat transfer between nodes
     if (doConduction)
     {
-
         // Get the "constant" tau for the stability condition and the conduction calculation
         const double tau = 2. * KWATER_WpermC /
                            ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) *

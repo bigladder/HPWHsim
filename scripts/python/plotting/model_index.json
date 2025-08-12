@@ -24,6 +24,9 @@
 
 		"AquaThermAire": {"manufacturer": "Villara", "specs": ["Preset", "Legacy", "JSON"]},
 
+		"Generic65": {"manufacturer": "None", "specs": ["JSON"]},
+		"Generic50": {"manufacturer": "None", "specs": ["JSON"]},
+
  		"LG_APHWC50": {"manufacturer": "LG", "specs": ["Preset", "Legacy", "JSON"]},
 		"LG_APHWC80": {"manufacturer": "LG", "specs": ["Preset", "Legacy", "JSON"]},
 

@@ -34,6 +34,8 @@
 
 		"testLockout": {"name": "Lockout test"},
  
+		"draw_test": {"name": "draw test"},
+
 		"testLargeComp45": {"group": "Central-system tests", "path": "large_compressor_tests"},
 		"testLargeComp60": {"group": "Central-system tests", "path": "large_compressor_tests"},
 		"testLargeCompHot": {"group": "Central-system tests", "path": "large_compressor_tests"}

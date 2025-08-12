@@ -186,21 +186,47 @@ void make(HPWH& hpwh,
 
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     j_results["24_hr_test"] = testSummary.report();
+    if ((outputDir != "") && (resultsFilename != ""))
+    {
+        std::ofstream resultsFile;
+        std::string sFilepath = outputDir + "/" + resultsFilename + ".json";
+        resultsFile.open(sFilepath.c_str(), std::ifstream::out | std::ofstream::trunc);
+        if (!resultsFile.is_open())
+        {
+            std::cout << "Could not open output file " << resultsFilename << "\n";
+            exit(1);
+        }
+        resultsFile << j_results.dump(2);
+        resultsFile.close();
+    }
 
     if (saveTestData)
     {
-        if ((outputDir != "") && (resultsFilename != ""))
+        if (outputDir != "")
         {
-            std::ofstream resultsFile;
-            std::string sFilepath = outputDir + "/" + resultsFilename + ".json";
-            resultsFile.open(sFilepath.c_str(), std::ifstream::out | std::ofstream::trunc);
-            if (!resultsFile.is_open())
+            hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
+            hpwh.to(hsi);
+
+            nlohmann::json j;
+            hpwh_data_model::hpwh_sim_input::to_json(j, hsi);
+
+            std::string outputFilename = "generic.json";
+            if (outputFilename.substr(outputFilename.length() - 5) != ".json")
+                outputFilename += ".json";
+
+            if (outputDir != "")
+               outputFilename = outputDir + "/" + outputFilename;
+
+            std::ofstream outputFile;
+            outputFile.open(outputFilename.c_str(), std::ifstream::out);
+            if (!outputFile.is_open())
             {
-                std::cout << "Could not open output file " << resultsFilename << "\n";
-                exit(1);
+                hpwh.get_courier()->send_error(
+                    fmt::format("Could not open output file {}\n", outputFilename));
             }
-            resultsFile << j_results.dump(2);
-            resultsFile.close();
+            outputFile << j.dump(2) << "\n";
+            outputFile.close();
+
         }
     }
 }

@@ -132,6 +132,41 @@
 		await write_json_file("./prefs.json", prefs);
 	}
 
+	async function update_model() 
+	{
+			var prefs = await read_json_file("./prefs.json");
+			var model_cache = await read_json_file("./model_cache.json");
+			if (prefs['model_id'] in model_cache)
+			{
+				try
+				{
+					const ref_model_filepath = "../../../test/models_json/" + model_cache[model_id] + ".json";
+					await copy_json_file(model_cache[model_id], ref_model_filepath);
+					delete model_cache[model_id];
+				}
+				catch(err)
+				{}
+			}
+			await write_json_file("./model_cache.json", model_cache);
+	}
+
+	async function restore_model() 
+	{
+			var prefs = await read_json_file("./prefs.json");
+			var model_cache = await read_json_file("./model_cache.json");
+			if (prefs['model_id'] in model_cache)
+			{
+				try
+				{
+					await delete_file(model_cache[prefs['model_id']]);
+					delete model_cache[prefs['model_id']];
+				}
+				catch(err)
+				{}
+			}
+			await write_json_file("./model_cache.json", model_cache);
+	}
+
 	async function update_models() 
 	{
 			var model_cache = await read_json_file("./model_cache.json");
