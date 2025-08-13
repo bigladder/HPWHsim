@@ -140,9 +140,10 @@ class TestProc:
 	
 		return tuple([no_update] * 12)
 	
-	def update_plot(self):
+	def update_plot(self, fig_layout):
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
+		self.plotter.plot.figure.update_layout(fig_layout)
 		return tuple([self.plotter.plot.figure] + [no_update] * 11)
 	
 	def proc(self, data):	
@@ -231,9 +232,10 @@ class TestProc:
 					Output('main-div', 'hidden'),
 					Output('select-div', 'hidden'),
 					[Input("ws", "message")],
+					State('test-graph', 'relayoutData'),
 					prevent_initial_call=True
 				)
-		def message(msg):
+		def message(msg, fig_layout):
 			if 'data' in msg:
 				data = json.loads(msg['data'])
 				if 'dest' in data and data['dest'] == 'test-proc':
@@ -244,7 +246,7 @@ class TestProc:
 						if data['cmd'] == 'plot':
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
 						if data['cmd'] == 'update':
-							return tuple([json.dumps(msg)] + list(self.update_plot()))							
+							return tuple([json.dumps(msg)] + list(self.update_plot(fig_layout)))							
 			return tuple([no_update] * 13)
 		
 		@app.callback( 
@@ -323,7 +325,6 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def select_data(selectedData, fig):
-			print("selecting")
 			prev_layout = fig['layout']
 			if not selectedData:
 				return no_update, True
@@ -342,12 +343,11 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def click_data(clickData, fig):
-			prev_layout = fig['layout']
 			if not clickData:
-				return no_update, fig
+				return no_update, no_update
 			
 			if not "points" in clickData:
-				return no_update, fig
+				return no_update, no_update
 					
 			self.plotter.click_data(clickData)	
 			self.plotter.update_selected()
