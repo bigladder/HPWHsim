@@ -55,7 +55,7 @@ class PerfProc:
 		interp_div[1]['props']['children'][0]['value'] = self.prefs["performance"]["plots"]['Nx']
 		interp_div[1]['props']['children'][1]['value'] = self.prefs["performance"]["plots"]['Ny']
 							
-	def replot(self, data):
+	def plot(self, data):
 		self.plotter = {}
 		
 		self.sync_prefs()					
@@ -208,8 +208,8 @@ class PerfProc:
 					if msg_data['dest'] == 'perf-proc':
 						print(f"received by perf-proc:\n{data}")
 						if 'cmd' in msg_data:
-							if msg_data['cmd'] == 'replot':							
-								return self.replot({'model_filepath': msg_data['model_filepath'], 'interp_div': interp_div})
+							if msg_data['cmd'] == 'plot':							
+								return self.plot({'model_filepath': msg_data['model_filepath'], 'interp_div': interp_div})
 									
 			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 

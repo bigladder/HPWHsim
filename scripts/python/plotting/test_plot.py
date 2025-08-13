@@ -212,15 +212,8 @@ class TestPlotter:
 		self.measured = self.organize_tank_temperatures(self.measured)
 		self.measured.have_data = True
 
-	def read_simulated(self, filepath):
-		try:
-			self.simulated.df = call_csv(filepath, 0)
-			self.simulated.filepath = filepath
-		except:
-			self.simulated.df = {}
-			return
-
-		# remove rows from dataframes outside of inclusive range [1,1440]
+	def prepare_simulated(self):
+	# remove rows from dataframes outside of inclusive range [1,1440]
 		self.simulated.df = self.filter_dataframe_range(self.simulated)
 
 		# sum sim power if multiple heat sources
@@ -243,6 +236,22 @@ class TestPlotter:
 		self.simulated = self.organize_tank_temperatures(self.simulated)
 
 		self.simulated.have_data = True
+		
+	def read_simulated(self, filepath):
+		try:
+			self.simulated.df = call_csv(filepath, 0)
+			self.simulated.filepath = filepath
+		except:
+			self.simulated.df = {}
+			return
+		self.prepare_simulated()
+	
+	def reread_simulated(self):
+		try:
+			self.simulated.df = call_csv(self.simulated.filepath, 0)
+		except:
+			self.simulated.df = {}
+		self.prepare_simulated()
 
 	def select_data(self, selectedData):
 		self.test_points = []
@@ -280,7 +289,6 @@ class TestPlotter:
 								return
 								            
 	def plot_graphs(self, data_set, variable, value, row):
-
 		if (value in [1, 2]) and (data_set.variable_type == "Measured"):
 			marker_symbol = "circle"
 			marker_size = 7
@@ -318,7 +326,15 @@ class TestPlotter:
 		    subplot_number=row,
 		    #axis_name=variable,
 	    )
-
+		
+	def update_graphs(self, data_set, variable, value, row):
+		self.plot.figure.update_traces(
+			y = [x for x in data_set.df[
+		            self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]
+		        ]],
+			selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}")
+			)
+	
 	def draw_variable_type(self, data_set):
 		for row, variable in enumerate(self.variables["Y-Variables"].keys()):
 			for value in range(
@@ -326,6 +342,27 @@ class TestPlotter:
 			):
 				self.plot_graphs(data_set, variable, value, row + 1)
 
+	def update_variable_type(self, data_set):
+			for row, variable in enumerate(self.variables["Y-Variables"].keys()):
+				for value in range(
+					len(self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type])
+				):
+					self.update_graphs(data_set, variable, value, row + 1)
+
+#
+	def update_simulated(self):
+		for row, variable in enumerate(self.variables["Y-Variables"].keys()):
+			for value in range(
+				len(self.variables["Y-Variables"][variable]["Column Names"][self.simulated.variable_type])
+				):
+			
+				self.plot.figure.update_traces(
+					y = [x for x in self.simulated.df[
+				            self.variables["Y-Variables"][variable]["Column Names"][self.simulated.variable_type][value]
+				        ]],
+					selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {self.simulated.variable_type}")
+					)
+		
 #
 	def update_selected(self):
 		selected_points = []								

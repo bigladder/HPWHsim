@@ -202,6 +202,49 @@
 			await write_json_file("./model_cache.json", model_cache);
 	}
 
+	async function update_test() {
+		//
+		if (gui.test_proc_active)
+		{
+			var prefs = await read_json_file("./prefs.json");
+			const output_dir = prefs['build_dir'] + "/test/output";
+
+			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+			var model_cache = await read_json_file("./model_cache.json");
+			if (!(prefs['model_id'] in model_cache))
+			{
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				await write_json_file("./model_cache.json", model_cache);
+			}
+			model_filepath = 	model_cache[prefs['model_id']];
+
+			const tests = await read_json_file("./test_index.json");
+			let test_data = tests[prefs['tests']['id']];
+			is_standard_test = (('group' in test_data) && (test_data['group'] == "standard_tests"));
+			if (is_standard_test)
+			{
+				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'draw_profile': prefs['tests']["draw_profile"]};
+				await callPyServer("measure", "data=" + JSON.stringify(data))
+			}
+			else
+			{
+
+				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
+				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+				await callPyServer("simulate", "data=" + JSON.stringify(data))
+			}
+
+			var msg = {
+				'source': 'index',
+				'dest': 'test-proc',
+				'cmd': 'update'
+				}
+			await ws_connection.send(JSON.stringify(msg));
+			test_plot.style = "display:block;";
+		}
+	}
+
 	async function set_elements() {
 		var prefs = await read_json_file("./prefs.json");
 
@@ -249,7 +292,7 @@
 			var msg = {
 				'source': 'index',
 				'dest': 'perf-proc',
-				'cmd': 'replot',
+				'cmd': 'plot',
 				'model_filepath': model_cache[prefs['model_id']]
 			};
 			try {
@@ -367,7 +410,7 @@
 			var msg = {
 				'source': 'index',
 				'dest': 'test-proc',
-				'cmd': 'replot',
+				'cmd': 'plot',
 				'measured_filepath': measured_filepath,
 				'simulated_filepath': simulated_filepath,
 				'is_standard_test': (is_standard_test ? 1 : 0)
@@ -462,7 +505,7 @@
 		await callPyServerJSON("fit_proc", "data=" + JSON.stringify(data))
 		document.getElementById("fit_btn").disabled = false;
 
-		await set_elements();
+		await update_test();
 	}
 
 	async function clear_params() {

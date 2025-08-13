@@ -69,8 +69,7 @@ class TestProc:
 		self.prefs = prefs
 		write_file("prefs.json", prefs)	
 		
-	def replot(self, data):
-
+	def init_plot(self, data):
 		self.sync_prefs()
 		data['model_id'] = self.prefs['model_id']
 		data['test_id'] = self.prefs['tests']['id']
@@ -138,9 +137,14 @@ class TestProc:
 							hide_ef_input_val = False
 
 			return self.plotter.plot.figure, hide_show_div, option_list, value_list, measured_msg, simulated_msg, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False, False
-		
-		return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
-		
+	
+		return tuple([no_update] * 12)
+	
+	def update_plot(self):
+		self.plotter.reread_simulated()		
+		self.plotter.update_simulated()
+		return tuple([self.plotter.plot.figure] + [no_update] * 11)
+	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 		app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -235,13 +239,14 @@ class TestProc:
 				if 'dest' in data and data['dest'] == 'test-proc':
 					print(f"received by test-proc:\n{data}")
 					if 'cmd' in data:
-						if data['cmd'] == 'replot':
-							self.i_send = self.i_send + 1
-							msg = {"source": "test-proc", "dest": "index", "cmd": "refresh", 'port_num': self.port_num, "index": self.i_send}
-							return tuple([json.dumps(msg)] + list(self.replot(data)))
-							
-			return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
-
+						msg = {"source": "test-proc", "dest": "index", "cmd": "refresh", 'port_num': self.port_num, "index": self.i_send}
+						self.i_send = self.i_send + 1
+						if data['cmd'] == 'plot':
+							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
+						if data['cmd'] == 'update':
+							return tuple([json.dumps(msg)] + list(self.update_plot()))							
+			return tuple([no_update] * 13)
+		
 		@app.callback( 
 			Output('ws', 'send', allow_duplicate=True),
 			Output('EF-input-div', 'hidden', allow_duplicate=True),
