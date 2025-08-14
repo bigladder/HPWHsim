@@ -71,7 +71,7 @@ class FitProc:
 			write_file(model_cache[model_id], model_data)
 			
 	def apply_bilinear_coefficients(self, model_data, coefficients, variable, dependent, slice):
-			if len(coefficients) != 3:
+			if len(coefficients) < 3:
 				return
 					
 			is_central = "central_system" in model_data
@@ -88,7 +88,6 @@ class FitProc:
 			nT1s = len(envTs)			
 			nT2s = len(hsTs)
 			nT3s = 1 if not is_central else len(grid_vars["condenser_leaving_temperature"])
-			
 
 			lookup_vars = perf_map["lookup_variables"]
 			Pins = lookup_vars["input_power"]
@@ -96,7 +95,7 @@ class FitProc:
 			COPs = Pouts
 			for (elem, value) in enumerate(COPs):
 				value /= Pins[elem]
-					
+		
 			if variable == "Pin":
 				param_vars = Pins
 			elif variable == "Pout":

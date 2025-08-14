@@ -202,6 +202,36 @@
 			await write_json_file("./model_cache.json", model_cache);
 	}
 
+	async function update_perf() {
+		//
+		if (gui.perf_proc_active) 
+		{
+			var prefs = await read_json_file("./prefs.json");
+			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+			var model_cache = await read_json_file("./model_cache.json");
+			if (!(prefs['model_id'] in model_cache))
+			{
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				await write_json_file("./model_cache.json", model_cache);
+			}
+			// send perf info
+			var msg = {
+				'source': 'index',
+				'dest': 'perf-proc',
+				'cmd': 'plot',
+				'model_filepath': model_cache[prefs['model_id']]
+			};
+			try {
+				await ws_connection.send(JSON.stringify(msg));
+			}
+			catch(err)
+			{
+				await init_websocket();
+			}
+		};
+	}
+
 	async function update_test() {
 		//
 		if (gui.test_proc_active)
@@ -244,6 +274,11 @@
 			test_plot.style = "display:block;";
 		}
 	}
+
+		async function reload() {
+				await update_perf();
+				await update_test();
+		}
 
 	async function set_elements() {
 		var prefs = await read_json_file("./prefs.json");
@@ -505,7 +540,7 @@
 		await callPyServerJSON("fit_proc", "data=" + JSON.stringify(data))
 		document.getElementById("fit_btn").disabled = false;
 
-		await update_test();
+		await reload();
 	}
 
 	async function clear_params() {

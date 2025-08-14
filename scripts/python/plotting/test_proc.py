@@ -93,11 +93,11 @@ class TestProc:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
 			measured_msg = ""
 			simulated_msg = ""
-			if 'measuredE_Wh' in self.plotter.energy_data:
-				measured_msg = "Measured energy consumption (Wh): " + f"{self.plotter.energy_data['measuredE_Wh']:.2f}"
-			if 'simulatedE_Wh' in self.plotter.energy_data:
-				simulated_msg = "Simulated energy consumption (Wh): " + f"{self.plotter.energy_data['simulatedE_Wh']:.2f}"
-												
+			if self.plotter.measured.have_data:
+				measured_msg = "Measured energy consumption (Wh): " + f"{self.plotter.measured.energy_use_Wh:.2f}"
+			if self.plotter.simulated.have_data:
+				simulated_msg = "Simulated energy consumption (Wh): " + f"{self.plotter.simulated.energy_use_Wh:.2f}"
+									
 			option_list = []
 			value_list = []
 			hide_show_div= True
@@ -144,7 +144,15 @@ class TestProc:
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
 		self.plotter.plot.figure.update_layout(fig_layout)
-		return tuple([self.plotter.plot.figure] + [no_update] * 11)
+		
+		measured_msg = ""
+		simulated_msg = ""
+		if self.plotter.measured.have_data:
+			measured_msg = "Measured energy consumption (Wh): " + f"{self.plotter.measured.energy_use_Wh:.2f}"
+		if self.plotter.simulated.have_data:
+			simulated_msg = "Simulated energy consumption (Wh): " + f"{self.plotter.simulated.energy_use_Wh:.2f}"
+			
+		return tuple([self.plotter.plot.figure] + [no_update] * 3 + [measured_msg, simulated_msg] + [no_update] * 6)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']

@@ -352,22 +352,21 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
     // calcHeatDist takes care of the swooping for wrapped configurations
     calcHeatDist(heatDistribution);
 
-    // set the leftover capacity to 0
-    // auto distPoint = heatDist.rbegin();
-    // double totalWeight = heatDist.totalWeight();
     int numNodes = hpwh->getNumNodes();
     double leftoverCap_kJ = 0.;
+    double unusedCap_kJ = 0.;
     for (int i = numNodes - 1; i >= 0; i--)
     {
         double nodeCap_kJ = cap_kJ * heatDistribution[i];
-        if (nodeCap_kJ != 0.)
+        double carriedCap_kJ = heatDistribution[i] * leftoverCap_kJ;
+        if (nodeCap_kJ + carriedCap_kJ > 0.)
         {
-            double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
-            // add leftoverCap to the next run, and keep passing it on
+            unusedCap_kJ += leftoverCap_kJ - carriedCap_kJ;
+            double heatToAdd_kJ = nodeCap_kJ + carriedCap_kJ;
             leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpointT_C);
         }
     }
-    return leftoverCap_kJ;
+    return leftoverCap_kJ + unusedCap_kJ;
 }
 
 double HPWH::HeatSource::getTankTemp() const { return hpwh->getAverageTankTemp_C(heatDist); }

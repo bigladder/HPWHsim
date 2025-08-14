@@ -206,7 +206,7 @@ class PerfProc:
 				msg_data = json.loads(msg['data'])
 				if 'dest' in msg_data:
 					if msg_data['dest'] == 'perf-proc':
-						print(f"received by perf-proc:\n{data}")
+						print(f"received by perf-proc:\n{msg_data}")
 						if 'cmd' in msg_data:
 							if msg_data['cmd'] == 'plot':							
 								return self.plot({'model_filepath': msg_data['model_filepath'], 'interp_div': interp_div})

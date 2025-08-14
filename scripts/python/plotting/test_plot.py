@@ -223,18 +223,17 @@ class TestPlotter:
 			col_label = f"h_src{i}In (Wh)"
 			src_exists = self.simulated.df.columns.isin([col_label]).any()
 			if src_exists:
+				energy = self.simulated.df[col_label]
 				if i == 1:
-					self.simulated.df[power_col_label_sim] = self.simulated.df[col_label]
+					self.simulated.df[power_col_label_sim] = energy
 				else:
-					self.simulated.df[power_col_label_sim] = self.simulated.df[power_col_label_sim] + self.simulated.df[col_label]
+					self.simulated.df[power_col_label_sim] += energy
 			i = i + 1
-
-		self.energy_use_Wh = self.simulated.df[power_col_label_sim].sum()
-
+		self.simulated.energy_use_Wh = self.simulated.df[power_col_label_sim].sum()
+		
 		# convert simulated energy consumption (Wh) for every minute to power (W)
 		self.simulated.df[power_col_label_sim] = convert_values(self.simulated.df[power_col_label_sim], "Wh/min", "W")
 		self.simulated = self.organize_tank_temperatures(self.simulated)
-
 		self.simulated.have_data = True
 		
 	def read_simulated(self, filepath):
@@ -435,7 +434,7 @@ class TestPlotter:
 			self.update_selected()
 			if have_traces:
 				self.plot.finalize_plot()
-				self.plot.figure['layout']['yaxis']['title'] = "Power Input (W)"
+				self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
 				self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
 				self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
 				self.plot.figure['layout']['title']['x'] = 0.25
