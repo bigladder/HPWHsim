@@ -354,19 +354,21 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
 
     int numNodes = hpwh->getNumNodes();
     double leftoverCap_kJ = 0.;
-    double unusedCap_kJ = 0.;
+    //double unusedCap_kJ = 0.;
     for (int i = numNodes - 1; i >= 0; i--)
     {
         double nodeCap_kJ = cap_kJ * heatDistribution[i];
-        double carriedCap_kJ = heatDistribution[i] * leftoverCap_kJ;
-        if (nodeCap_kJ + carriedCap_kJ > 0.)
+        //double carriedCap_kJ = heatDistribution[i] * leftoverCap_kJ;
+        if (nodeCap_kJ != 0.)
         {
-            unusedCap_kJ += leftoverCap_kJ - carriedCap_kJ;
-            double heatToAdd_kJ = nodeCap_kJ + carriedCap_kJ;
+            if (nodeCap_kJ < 0.)
+                send_warning("Negative capacity!");
+            //unusedCap_kJ += leftoverCap_kJ - carriedCap_kJ;
+            double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;//carriedCap_kJ;
             leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpointT_C);
         }
     }
-    return leftoverCap_kJ + unusedCap_kJ;
+    return leftoverCap_kJ;// + unusedCap_kJ;
 }
 
 double HPWH::HeatSource::getTankTemp() const { return hpwh->getAverageTankTemp_C(heatDist); }

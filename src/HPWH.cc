@@ -497,7 +497,7 @@ void HPWH::runOneStep(double drawVolume_L,
                             // turn it on
                             backupHeatSource->engageHeatSource(DRstatus);
                             // add heat if it hasn't heated up this whole minute already
-                            if (backupHeatSource->runtime_min >= 0.)
+                            if ((minutesToRun - backupHeatSource->runtime_min) >= 0.)
                             {
                                 addHeatParent(backupHeatSource,
                                               heatSourceAmbientT_C,
