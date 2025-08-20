@@ -19,6 +19,7 @@ from dimes import LineProperties
 import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
 import plotly.graph_objects as go
+from common import read_file, write_file, get_tank_volume
 
 styles = {
     'pre': {
@@ -42,9 +43,6 @@ RED_BLUE_DIVERGING_PALLETTE = [
 
 NUMBER_OF_THERMOCOUPLES = 6
 
-power_col_label_meas = "Power_W"
-power_col_label_sim = "Power_W"
-
 def call_csv(path, skip_rows):
     data = pd.read_csv(path, skiprows=skip_rows)
     df = pd.DataFrame(data)
@@ -60,15 +58,23 @@ def retrieve_line_type(variable_type):
 	elif variable_type == "Simulated":
 		return "dot"
 
-class DataSet:
-    def __init__(self, variable_type):
-        self.df = {}
-        self.have_data = False
-        self.show_plot = False
-        self.energy_use_Wh = 0
-        self.variable_type = variable_type
-        self.filepath = ""
+class EnergySummary:
+	def __init__(self, tank_volume_L):
+		self.energy_used_kWh = 0
+		self.delivered_energy_kWh = 0
+		self.volume_drawn_L = 0
+		self.tank_volume_L = tank_volume_L
+		self.ef = 0
 
+class DataSet:
+	def __init__(self, variable_type, tank_volume_L):
+		self.df = {}
+		self.have_data = False
+		self.show_plot = False
+		self.energy_summary = EnergySummary(tank_volume_L)
+		self.variable_type = variable_type
+		self.filepath = ""
+				
 class TestPlotter:
 	
 	def filter_dataframe_range(self, data_set):
@@ -79,13 +85,19 @@ class TestPlotter:
 		self.plot = {}
 		self.model_id = data['model_id']
 		self.test_id = data['test_id']
-		self.energy_data = {}
-		self.measured = DataSet("Measured")
-		self.simulated = DataSet("Simulated")
+		
+		tank_volume_L = 173
+		if 'model_filepath' in data:
+			model_data = read_file(data['model_filepath'])		
+			tank_volume_L = get_tank_volume(model_data)
+		
+		self.measured = DataSet("Measured", tank_volume_L)
+		self.simulated = DataSet("Simulated", tank_volume_L)
 		self.have_fig = False
 		self.test_points = []
 		self.model_id = ""
 
+		
 		visibleT = []
 		for i in range(NUMBER_OF_THERMOCOUPLES):
 			visibleT.append(True if i == 0 or i == NUMBER_OF_THERMOCOUPLES - 1 else False)
@@ -93,7 +105,7 @@ class TestPlotter:
 		self.variables = {
 		    "Y-Variables": {
 		        "Power Input": {
-		            "Column Names": {"Measured": [power_col_label_meas], "Simulated": [power_col_label_sim]},
+		            "Column Names": {"Measured": ["PowerIn(W)"], "Simulated": ["Power_W"]},
 		            "Labels": ["Power Input"],
 		            "Units": "W",
 		            "Colors": ["red"],
@@ -107,6 +119,7 @@ class TestPlotter:
 		            "Colors": ["green"],
 		            "Line Mode": ["lines"],
 		            "Line Visibility": [True],
+	
 		        },
 		        "Temperature": {
 		            "Column Names": {
@@ -119,6 +132,9 @@ class TestPlotter:
 		                    for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
 		                ],
 		            },
+								"Inlet": { "Measured": "InletT(C)", "Simulated": "inletT"},
+								"Outlet": { "Measured": "OutletT(C)", "Simulated": "toutlet (C)"},			
+								"Ambient": { "Measured": "AmbientT(C)", "Simulated": "Ta"},						
 		            "Labels": [
 		                f"Tank Temperature {number}"
 		                for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
@@ -191,9 +207,135 @@ class TestPlotter:
 		    self.temperature_profile_vars[data_set.variable_type]
 		].mean(axis=1)
 
-		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type]:
-			for index in range(len(data_set.df)):
-				data_set.df.loc[index, temperature_column] = 1.8 * data_set.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
+		initialTankAvgT_C = data_set.df["Tank Average Temperature"][0]
+		finalTankAvgT_C = data_set.df["Tank Average Temperature"].iloc[-1]
+		data_set.volume_drawn_L = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]].sum() * 3.78541
+		data_set.energy_summary.energy_used_kJ = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]].sum() * 60 / 1000
+		"""		
+		water_specific_heat_kJperkgC = 4.180
+		water_density_kgperL = 0.995
+		tank_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * data_set.energy_summary.tank_volume_L
+		
+		sumDrawOutletT = 0
+		sumDrawInletT = 0
+		sumDrawDiffT = 0
+		sumDraw_L = 0
+		sumDrawHeatCap_kJperC = 0
+		sumInputEnergy_kJ = 0
+		sumNoDrawTime_min = 0
+		noDrawSumAmbientTTime = 0
+		
+		standbySumTime_min = 0
+		standbySumTimeTankT_minC = 0
+		standbySumTimeAmbientT_minC = 0
+		hasStandbyPeriodStarted = False
+		hasStandbyPeriodEnded = False	
+		
+		deliveredEnergy_kJ = 0
+		recoveryUsedEnergy_kJ = 0
+		recoveryStoredEnergy_kJ = 0
+		recoveryDeliveredEnergy_kJ = 0
+		isFirstRecoveryPeriod = True
+		has_heated = False
+		has_drawn = False
+
+
+		for index in range(len(data_set.df)):
+			ambientT_C = data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Ambient"][data_set.variable_type]]
+			tankAvgT_C = data_set.df.loc[index, "Tank Average Temperature"]
+			draw_volume_L = data_set.df.loc[index, self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]] * 3.78541	
+			input_energy_kJ = data_set.df.loc[index, self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]] * 60 / 1000
+			inletT_C = 0 if draw_volume_L == 0 else data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Inlet"][data_set.variable_type]]
+			outletT_C = 0 if draw_volume_L == 0 else data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Outlet"][data_set.variable_type]]
+
+			draw_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * draw_volume_L
+			sumDrawInletT += draw_volume_L * inletT_C		
+			sumDrawOutletT += draw_volume_L * outletT_C		
+			sumDrawDiffT += draw_volume_L * (outletT_C - inletT_C)
+			sumDraw_L += draw_volume_L
+			sumInputEnergy_kJ += input_energy_kJ
+			sumDrawHeatCap_kJperC += draw_heat_capacity_kJperC
+
+			deliveredEnergy_kJ += draw_heat_capacity_kJperC * (outletT_C - inletT_C)
+			is_heating = input_energy_kJ > 0
+			has_heated = has_heated or is_heating
+			is_drawing = draw_volume_L > 0
+			has_drawn = has_drawn or is_drawing
+			
+			if not(is_drawing):
+				noDrawSumAmbientTTime += ambientT_C
+				sumNoDrawTime_min += 1
+			
+			if isFirstRecoveryPeriod:
+				recoveryUsedEnergy_kJ += input_energy_kJ
+				if has_drawn and not(is_drawing):
+					if not(is_drawing) and not(is_heating):	
+						isFirstRecoveryPeriod = False					
+						draw_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * sumDraw_L
+									
+						avgInletT_C = sumDrawInletT / sumDraw_L	
+						avgOutletT_C =	sumDrawOutletT / sumDraw_L
+						recoveryStoredEnergy_kJ = tank_heat_capacity_kJperC * (tankAvgT_C - initialTankAvgT_C)
+						recoveryDeliveredEnergy_kJ = draw_heat_capacity_kJperC * (avgOutletT_C - avgInletT_C)
+						print(f"sumDraw_L : {sumDraw_L}")
+						print(f"draw_heat_capacity_kJperC : {draw_heat_capacity_kJperC}")
+						print(f"avgInletT_C : {avgInletT_C}")
+						print(f"avgOutletT_C : {avgOutletT_C}")
+						print(f"recoveryStoredEnergy_kJ : {recoveryStoredEnergy_kJ}")
+						print(f"recoveryDeliveredEnergy_kJ : {recoveryDeliveredEnergy_kJ}")
+						print(f"recoveryUsedEnergy_kJ : {recoveryUsedEnergy_kJ}")
+								
+			if not(hasStandbyPeriodEnded):
+				if hasStandbyPeriodStarted:		
+					if not(is_drawing) and not(is_heating):				
+							standbySumTimeTankT_minC += (1.) * tankAvgT_C 
+							standbySumTimeAmbientT_minC += (1.) * ambientT_C
+							standbySumTime_min += 1.
+					else:
+						hasStandbyPeriodEnded = True
+						standbyEndT_C = tankAvgT_C
+				else:
+					if not(is_drawing) and not(is_heating):	
+						hasStandbyPeriodStarted = True	
+						standbyStartT_C = tankAvgT_C
+		
+		standardSetpointT_C = 51.7
+		standardInletT_C = 14.4
+		standardAmbientT_C = 19.7
+
+		if sumNoDrawTime_min > 0:
+			noDrawAvgAmbientT_C = noDrawSumAmbientTTime / sumNoDrawTime_min
+		recoveryEfficiency = 0
+		if recoveryUsedEnergy_kJ > 0:
+			recoveryEfficiency = (recoveryStoredEnergy_kJ + recoveryDeliveredEnergy_kJ) / recoveryUsedEnergy_kJ
+			waterHeatingEnergy_kJ = deliveredEnergy_kJ / recoveryEfficiency
+			standardRemovedEnergy_kJ = sumDrawHeatCap_kJperC * (standardSetpointT_C - standardInletT_C)
+			standardWaterHeatingEnergy_kJ = standardRemovedEnergy_kJ / recoveryEfficiency
+			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
+			removedHeatCapacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * sumDraw_L		
+			standardDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C)
+			
+			standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
+			standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
+			
+			standbyHourlyLossEnergy_kJperh = tank_heat_capacity_kJperC * (standbyStartT_C - standbyEndT_C) / recoveryEfficiency / (standbySumTime_min / 60)
+			standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)
+			consumedHeatingEnergy_kJ = sumInputEnergy_kJ + tank_heat_capacity_kJperC * (finalTankAvgT_C - initialTankAvgT_C) / recoveryEfficiency;
+			adjustedConsumedWaterHeatingEnergy_kJ = consumedHeatingEnergy_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * sumNoDrawTime_min
+			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
+			modifiedConsumedWaterHeatingEnergy_kJ = adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ
+			data_set.energy_summary.ef = standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
+			data_set.energy_summary.energy_used_kWh = sumInputEnergy_kJ / 3600
+			print(f"recovery efficiency : {recoveryEfficiency}")
+			print(f"standbyLossCoefficient_kJperhC : {standbyLossCoefficient_kJperhC}")
+			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ }")
+			print(f"modifiedConsumedWaterHeatingEnergy_kJ : {modifiedConsumedWaterHeatingEnergy_kJ}")
+			print(f"ef: {data_set.energy_summary.ef}")
+"""
+
+		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][self.simulated.variable_type]:
+			for index in range(len(self.simulated.df)):
+				self.simulated.df.loc[index, temperature_column] = 1.8 * self.simulated.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
 
 		return data_set
 
@@ -207,9 +349,11 @@ class TestPlotter:
 
 		# remove rows from dataframes outside of inclusive range [1,1440]
 		self.measured.df = self.filter_dataframe_range(self.measured)
-		self.measured.df[power_col_label_meas] = self.measured.df["PowerIn(W)"]
-		self.measured.energy_use_Wh = self.measured.df[power_col_label_meas].sum()/60
+		#self.measured.energy_use_Wh = self.measured.df[power_col_label_meas].sum()/60
+		self.measured.energy_summary.energy_used_kJ = self.measured.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Measured"][0]].sum() * 60 / 1000
+
 		self.measured = self.organize_tank_temperatures(self.measured)
+		
 		self.measured.have_data = True
 
 	def prepare_simulated(self):
@@ -225,14 +369,14 @@ class TestPlotter:
 			if src_exists:
 				energy = self.simulated.df[col_label]
 				if i == 1:
-					self.simulated.df[power_col_label_sim] = energy
+					self.simulated.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"][0]] = energy
 				else:
-					self.simulated.df[power_col_label_sim] += energy
+					self.simulated.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"][0]] += energy
 			i = i + 1
-		self.simulated.energy_use_Wh = self.simulated.df[power_col_label_sim].sum()
 		
 		# convert simulated energy consumption (Wh) for every minute to power (W)
-		self.simulated.df[power_col_label_sim] = convert_values(self.simulated.df[power_col_label_sim], "Wh/min", "W")
+		self.simulated.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"][0]] = convert_values(self.simulated.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"][0]], "Wh/min", "W")
+
 		self.simulated = self.organize_tank_temperatures(self.simulated)
 		self.simulated.have_data = True
 		
@@ -447,7 +591,8 @@ def plot(data):
 		plotter.model_id = data["model_id"]
 	if "measured_filepath" in data:
 			plotter.read_measured(data["measured_filepath"])
-			plotter.test_points = data['test_points']
+	if "test_points" in data:
+		plotter.test_points = data['test_points']
 	if "simulated_filepath" in data:
 		plotter.read_simulated(data["simulated_filepath"])
 	plotter.draw({'show': 3})
@@ -460,12 +605,14 @@ def write_plot(data):
 
 # main
 if __name__ == "__main__":
-    n_args = len(sys.argv) - 1
-    if n_args > 4:
-        data = {}
-        data['model_id'] = sys.argv[1]
-        data['test_id'] = sys.argv[2]
-        data['measured_filepath'] = sys.argv[3]
-        data['simulated_filepath'] = sys.argv[4]
-        data['plot_filepath'] = sys.argv[5]
-        write_plot(data)
+		n_args = len(sys.argv) - 1
+		if n_args > 4:
+			data = {}
+			data['model_id'] = sys.argv[1]
+			data['test_id'] = sys.argv[2]
+			data['measured_filepath'] = sys.argv[3]
+			data['simulated_filepath'] = sys.argv[4]
+			data['plot_filepath'] = sys.argv[5]
+			if n_args > 5:
+				data['model_filepath'] = sys.argv[6]
+			write_plot(data)

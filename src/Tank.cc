@@ -671,7 +671,6 @@ double HPWH::Tank::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double ma
 
         // heat needed to bring all equal-temp nodes up to heatToT_C
         double qIncrement_kJ = numNodesToHeat * nodeCp_kJperC * (heatToT_C - nodeTs_C[nodeNum]);
-
         if (qIncrement_kJ > qAdd_kJ)
         {
             // insufficient heat to reach heatToT_C; use all available heat

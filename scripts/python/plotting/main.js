@@ -448,7 +448,8 @@
 				'cmd': 'plot',
 				'measured_filepath': measured_filepath,
 				'simulated_filepath': simulated_filepath,
-				'is_standard_test': (is_standard_test ? 1 : 0)
+				'is_standard_test': (is_standard_test ? 1 : 0),
+				'model_filepath': model_filepath
 			}
 			await ws_connection.send(JSON.stringify(msg));
 			test_plot.style = "display:block;";

@@ -46,3 +46,11 @@ def set_perf_map(model_data, perf_map):
 				else:
 					model_data["integrated_system"]["performance"] = perf
 				return
+			
+def get_tank_volume(model_data):
+	if "integrated_system" in model_data:
+		tank = model_data["integrated_system"]["performance"]["tank"]
+	else:
+		tank = model_data["central_system"]["tank"]
+	return tank["performance"]["volume"] * 1000	 
+

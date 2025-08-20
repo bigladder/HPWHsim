@@ -1124,6 +1124,8 @@ class HPWH : public Courier::Sender
         std::vector<double> h_srcOut_kWh;
         std::vector<double> thermocoupleT_C;
         double outletT_C;
+
+        void writeCSV_row(HPWH& hpwh, std::ofstream& outFILE);
     };
 
     void writeCSVHeading(std::ostream* out, int options = CSVOPT_NONE) const;

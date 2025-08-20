@@ -17,7 +17,7 @@ import multiprocessing as mp
 from pathlib import Path
 from dash_extensions import WebSocket
 
-from common import read_file, write_file
+from common import read_file, write_file, get_tank_volume
 
 
 class TestProc:
@@ -73,7 +73,7 @@ class TestProc:
 		self.sync_prefs()
 		data['model_id'] = self.prefs['model_id']
 		data['test_id'] = self.prefs['tests']['id']
-		
+				
 		fit_list = read_file("fit_list.json")
 		if 'metrics' in fit_list:
 			metrics = fit_list['metrics']
@@ -94,9 +94,9 @@ class TestProc:
 			measured_msg = ""
 			simulated_msg = ""
 			if self.plotter.measured.have_data:
-				measured_msg = "Measured energy consumption (Wh): " + f"{self.plotter.measured.energy_use_Wh:.2f}"
+				measured_msg = "Measured energy consumption (kWh): " + f"{self.plotter.measured.energy_summary.energy_used_kWh:.2f}"
 			if self.plotter.simulated.have_data:
-				simulated_msg = "Simulated energy consumption (Wh): " + f"{self.plotter.simulated.energy_use_Wh:.2f}"
+				simulated_msg = "Simulated energy consumption (kWh): " + f"{self.plotter.simulated.energy_summary.energy_used_kWh:.2f}"
 									
 			option_list = []
 			value_list = []
