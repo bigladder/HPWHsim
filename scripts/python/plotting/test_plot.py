@@ -60,8 +60,8 @@ def retrieve_line_type(variable_type):
 
 class EnergySummary:
 	def __init__(self, tank_volume_L):
-		self.energy_used_kWh = 0
-		self.delivered_energy_kWh = 0
+		self.energy_used_kJ = 0
+		self.delivered_energy_kJ = 0
 		self.volume_drawn_L = 0
 		self.tank_volume_L = tank_volume_L
 		self.ef = 0
@@ -325,7 +325,7 @@ class TestPlotter:
 			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
 			modifiedConsumedWaterHeatingEnergy_kJ = adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ
 			data_set.energy_summary.ef = standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
-			data_set.energy_summary.energy_used_kWh = sumInputEnergy_kJ / 3600
+			data_set.energy_summary.energy_used_kJ = sumInputEnergy_kJ
 			print(f"recovery efficiency : {recoveryEfficiency}")
 			print(f"standbyLossCoefficient_kJperhC : {standbyLossCoefficient_kJperhC}")
 			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ }")
@@ -333,9 +333,9 @@ class TestPlotter:
 			print(f"ef: {data_set.energy_summary.ef}")
 """
 
-		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][self.simulated.variable_type]:
-			for index in range(len(self.simulated.df)):
-				self.simulated.df.loc[index, temperature_column] = 1.8 * self.simulated.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
+		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type]:
+			for index in range(len(data_set.df)):
+				data_set.df.loc[index, temperature_column] = 1.8 * data_set.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
 
 		return data_set
 

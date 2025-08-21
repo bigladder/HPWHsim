@@ -94,9 +94,9 @@ class TestProc:
 			measured_msg = ""
 			simulated_msg = ""
 			if self.plotter.measured.have_data:
-				measured_msg = "Measured energy consumption (kWh): " + f"{self.plotter.measured.energy_summary.energy_used_kWh:.2f}"
+				measured_msg = "Measured energy consumption (kJ): " + f"{self.plotter.measured.energy_summary.energy_used_kJ:.2f}"
 			if self.plotter.simulated.have_data:
-				simulated_msg = "Simulated energy consumption (kWh): " + f"{self.plotter.simulated.energy_summary.energy_used_kWh:.2f}"
+				simulated_msg = "Simulated energy consumption (kJ): " + f"{self.plotter.simulated.energy_summary.energy_used_kJ:.2f}"
 									
 			option_list = []
 			value_list = []
@@ -148,9 +148,9 @@ class TestProc:
 		measured_msg = ""
 		simulated_msg = ""
 		if self.plotter.measured.have_data:
-			measured_msg = "Measured energy consumption (Wh): " + f"{self.plotter.measured.energy_use_Wh:.2f}"
+			measured_msg = "Measured energy consumption (kJ): " + f"{self.plotter.measured.energy_summary.energy_used_kJ:.2f}"
 		if self.plotter.simulated.have_data:
-			simulated_msg = "Simulated energy consumption (Wh): " + f"{self.plotter.simulated.energy_use_Wh:.2f}"
+			simulated_msg = "Simulated energy consumption (kJ): " + f"{self.plotter.simulated.energy_summary.energy_used_kJ:.2f}"
 			
 		return tuple([self.plotter.plot.figure] + [no_update] * 3 + [measured_msg, simulated_msg] + [no_update] * 6)
 	
