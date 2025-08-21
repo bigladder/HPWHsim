@@ -25,6 +25,9 @@ CLI::App* add_make(CLI::App& app)
 {
     const auto subcommand = app.add_subcommand("make", "Make a model with a specified EF");
 
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
+
     //
     auto model_group = subcommand->add_option_group("model");
 
@@ -65,7 +68,6 @@ CLI::App* add_make(CLI::App& app)
         [&]()
         {
             HPWH hpwh;
-            std::string specType = "Preset";
             if (!modelName.empty())
                 hpwh.initPreset(modelName);
             else if (modelNumber != -1)
