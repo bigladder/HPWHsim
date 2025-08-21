@@ -48,7 +48,6 @@ def incorporate_presets(presets_list_files, build_dir, spec_type):
     )
 		
 	preset_model_h = env.get_template("preset_model.h.j2")											 
-
 	models_out = []
 	first = True
 	for preset_list_file in presets_list_files:
@@ -86,25 +85,29 @@ def incorporate_presets(presets_list_files, build_dir, spec_type):
 						preset_model_header_file.close()
 				except:
 					print("Failed to create file")
-			
-				if not first:
-					presets_vector_text += ",\n"
-					presets_models_text += ",\n"
 					
 				models_out.append({'name': name, 'number': str(models_dict[name]), 'size': str(nbytes)})
-				#presets_headers_text += "#include \"" + name + ".h\"\n"
-				presets_models_text += "\t" + name + " = " + str(models_dict[name])
-				presets_vector_text += "\t{ MODELS::" + name + ", \"" + name +"\", cbor_" + name + ".data(), sizeof(cbor_" + name + ")}"
+				
 				first = False
 
 		# create library header
 		presets_h = env.get_template("presets.h.j2")											 
 		presets_header =  presets_h.render(models = models_out)
+		
+		presets_cpp = env.get_template("presets.cpp.j2")		
+		presets_implementation =  presets_cpp.render(models = models_out)
 
 		try:	
 			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
 				presets_header_file.write(presets_header)
 				presets_header_file.close()
+		except:
+			print("Failed to create presets.h")
+			
+		try:	
+			with open(os.path.join(presets_dir, "presets.cpp"), "w") as presets_implementation_file:
+				presets_implementation_file.write(presets_implementation)
+				presets_implementation_file.close()
 		except:
 			print("Failed to create presets.h")
 

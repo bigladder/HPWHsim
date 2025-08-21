@@ -41,6 +41,7 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
+        "${abs_presets_path}/presets.cpp"
         )
 
 set(library_sources

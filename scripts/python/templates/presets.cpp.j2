@@ -1,0 +1,40 @@
+
+#include <iostream>
+#include <vector>
+
+#include "presets.h"
+
+{% for model in models %}
+#include "{{ model.name }}.h"
+{% endfor %}
+
+namespace hpwh_presets {
+
+std::vector<Model> models({
+{% for model in models %}
+	{ MODELS::{{ model.name }}, "{{ model.name }}", cbor_{{ model.name }}.data(), sizeof(cbor_{{ model.name }})},
+{% endfor %}	
+});
+
+Model find_by_name(const std::string& name)
+{
+    auto it = find_if(models.begin(),
+                      models.end(),
+                      [&name](Model& model){ return model.name == name; });
+    if (it != models.end())
+        return *it;
+    return {MODELS::unknown, "unknown", nullptr, 0};
+}
+
+Model find_by_id(const MODELS id)
+{
+    auto it =
+        find_if(models.begin(),
+                models.end(),
+                [&id](Model& model) { return model.id == id; });
+    if (it != models.end())
+        return *it;
+    return {MODELS::unknown, "unknown", nullptr, 0};
+}
+
+}
