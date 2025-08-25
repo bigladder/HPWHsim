@@ -13,7 +13,6 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 
 get_filename_component(abs_presets_path "${PROJECT_BINARY_DIR}/presets" ABSOLUTE)
 file(GLOB preset_headers "${abs_presets_path}/presets.h" "${abs_presets_path}/include/*.h")
-file(GLOB preset_sources "${abs_presets_path}/presets.cpp")
 
 set(headers
         HPWHversion.in.hh
@@ -42,7 +41,7 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
-        "${preset_sources}"
+        "${abs_presets_path}/presets.cpp"
         )
 
 set(library_sources
@@ -50,6 +49,11 @@ set(library_sources
         ${headers}
         )
 
+set_source_files_properties(
+        "${abs_presets_path}/presets.cpp"
+        "${abs_presets_path}/presets.h"
+        PROPERTIES GENERATED TRUE
+)
 option(${PROJECT_NAME}_STATIC_LIB "Make ${PROJECT_NAME} a static library" ON)
 
 if (${PROJECT_NAME}_STATIC_LIB)
@@ -73,7 +77,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header generate_hpwhsim_presets)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
