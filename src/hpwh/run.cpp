@@ -457,7 +457,7 @@ void run(const std::string specType,
             testData.ambientT_C = airTemp2;
             testData.setpointT_C = hpwh.getSetpoint();
             testData.inletT_C = allSchedules[0][i];
-            testData.drawVolume_L = allSchedules[1][i];
+            testData.drawVolume_L = GAL_TO_L(allSchedules[1][i]);
             testData.outletT_C = hpwh.getOutletTemp();
 
             testData.h_srcIn_kWh = {};

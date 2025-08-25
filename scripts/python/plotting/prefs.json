@@ -3,9 +3,9 @@
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
-    "list": "tests_with_data",
-    "id": "RE2HP50_UEF67",
-    "draw_profile": "auto",
+    "list": "standard_tests",
+    "id": "standard24hr",
+    "draw_profile": "medium",
     "plots": {
       "show_simulated": true,
       "show_measured": true
