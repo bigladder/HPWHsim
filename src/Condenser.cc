@@ -433,6 +433,7 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
         return to(*hsp);
     }
 }
+
 void HPWH::Condenser::to(
     hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
@@ -467,6 +468,10 @@ void HPWH::Condenser::to(
         break;
     }
     }
+
+    checkTo(1000. * standbyPower_kW, perf.standby_power_is_set,
+            perf.standby_power,
+            standbyPower_kW > 0.);
 
     checkTo(hysteresis_dC,
             perf.compressor_lockout_temperature_hysteresis_is_set,
@@ -669,6 +674,10 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     checkTo(C_TO_K(maxSetpoint_C),
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
+
+    checkTo(1000. * standbyPower_kW, perf.standby_power_is_set,
+            perf.standby_power,
+            standbyPower_kW > 0.);
 
     auto& map = perf.performance_map;
     auto& grid_vars = map.grid_variables;

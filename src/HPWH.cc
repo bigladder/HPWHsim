@@ -552,6 +552,12 @@ void HPWH::runOneStep(double drawVolume_L,
     }
 
     // settle outputs
+    for (auto heatSource: heatSources)
+        if (heatSource->typeOfHeatSource() == TYPE_compressor)
+        {
+            auto condenser = reinterpret_cast<Condenser*>(heatSource.get());
+            condenser->energyInput_kWh += condenser->standbyPower_kW * ((minutesPerStep - condenser->runtime_min) / min_per_hr);
+        }
 
     // outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
     standbyLosses_kWh = KJ_TO_KWH(tank->standbyLosses_kJ);
@@ -720,7 +726,7 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        *out << fmt::format(",{:0.2f},{:0.2f}",
+        *out << fmt::format(",{:g},{:g}",
                             testData.h_srcIn_kWh[iHS] * 1000.,
                             testData.h_srcOut_kWh[iHS] * 1000.);
     }

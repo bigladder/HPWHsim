@@ -18,12 +18,12 @@
         {
           "Te": 10,
           "Ts": 51.7,
-          "value": 390
+          "value": 420
         },
         {
           "Te": 19.72222,
           "Ts": 10,
-          "value": 270
+          "value": 230
         },
         {
           "Te": 19.72222,
@@ -45,24 +45,46 @@
         {
           "Te": 10,
           "Ts": 10,
-          "value": 1300
+          "value": 1250
         },
         {
           "Te": 10,
           "Ts": 51.7,
-          "value": 2040
+          "value": 2020
         },
         {
           "Te": 19.72222,
           "Ts": 10,
-          "value": 1400
+          "value": 1200
         },
         {
           "Te": 19.72222,
           "Ts": 51.7,
-          "value": 2450
+          "value": 2150
         }
       ]
+    },
+    "BradfordWhiteAeroThermRE2HPXX-heatdist": {
+      "type": "condenser-distribution",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50",
+        "BradfordWhiteAeroThermRE2HP65",
+        "BradfordWhiteAeroThermRE2HP80"
+      ],
+      "value": {
+        "normalized_height": [
+          0.08333333,
+          0.3333333,
+          0.6666667,
+          1.0
+        ],
+        "weight": [
+          0.25,
+          1.0,
+          0.25,
+          0.0
+        ]
+      }
     }
   },
   "parameters": [],
@@ -89,6 +111,30 @@
       "variable": "Pin",
       "value": 333.5,
       "t_min": 649,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Pin",
+      "value": 390.8666666666666,
+      "t_min": 726,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Pin",
+      "value": 316.5333333333333,
+      "t_min": 1043,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Pin",
+      "value": 356.2333333333333,
+      "t_min": 1071,
       "type": "test_point"
     }
   ]

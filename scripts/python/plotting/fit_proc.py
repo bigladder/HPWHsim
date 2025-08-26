@@ -3,7 +3,7 @@ from pathlib import Path
 import os, sys
 import time
 import multiprocessing as mp
-from common import read_file, write_file, get_perf_map, set_perf_map
+from common import read_file, write_file, get_perf_map, set_perf_map, get_heat_source_configuration, set_heat_source_configuration
 import numpy as np
 
 class FitProc:
@@ -136,6 +136,14 @@ class FitProc:
 		print(f"coefficients=\n{coefficients}")	
 		self.apply_bilinear_coefficients(model_data, coefficients, variable, dependent, slice)	
 
+	def apply_condenser_distribution(self, new_dist, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, "compressor")
+			heat_source_config['heat_distribution'] = new_dist
+			
+			turn_on_logic = heat_source_config['turn_on_logic'][0]
+			turn_on_logic["heating_logic"]["temperature_weight_distribution"] = new_dist
+			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+
 	def get_performance_point(self, model_data, coordinates, variable):
 		is_central = "central_system" in model_data		
 		perf_map = get_perf_map(model_data)
@@ -204,6 +212,12 @@ class FitProc:
 				self.apply_bilinear_coefficients(constraint['value'], model_data, variable, dependent, slice)				
 				self.write_cache_model(model_id, model_data)
 					
+		if constraint['type'] == 'condenser-distribution':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				self.apply_condenser_distribution(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+				
 	def apply_constraints(self):
 		for constraint in self.constraints:
 			self.apply_constraint(self.constraints[constraint])
