@@ -13,7 +13,8 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 
 get_filename_component(abs_presets_path "${PROJECT_BINARY_DIR}/presets" ABSOLUTE)
 file(GLOB preset_headers "${abs_presets_path}/presets.h" "${abs_presets_path}/include/*.h")
-file(GLOB preset_sources "${abs_presets_path}/presets.cpp")
+file(GLOB preset_source "${abs_presets_path}/presets.cpp")
+file(RELATIVE_PATH rel_preset_source "${CMAKE_CURRENT_BINARY_DIR}" "${preset_source}")
 
 set(headers
         HPWHversion.in.hh
@@ -42,7 +43,7 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
-        "${preset_sources}"
+        "${rel_preset_source}"
         )
 
 set(library_sources
