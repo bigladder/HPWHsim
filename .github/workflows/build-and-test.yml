@@ -79,6 +79,9 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE="${{ matrix.config }}" -D${{ env.REPOSITORY_NAME }}_BUILD_TESTING="ON" -D${{ env.REPOSITORY_NAME }}_STATIC_LIB="${{ steps.cov.outputs.STATIC_LIB }}" -D${{ env.REPOSITORY_NAME }}_COVERAGE="${{ steps.cov.outputs.COVERAGE }}"
       - name: Build
         run: cmake --build build --config ${{ matrix.config }}
+      - name: Test
+        run: ctest -C ${{ matrix.config }} --output-on-failure
+        working-directory: build
       - name: Code Coverage Analysis
         if: "matrix.coverage"
         run: make gcov
@@ -90,6 +93,3 @@ jobs:
           flags: integration
           functionalities: "gcov"
           move_coverage_to_trash: true
-      - name: Test
-        run: ctest -C ${{ matrix.config }} --output-on-failure
-        working-directory: build
