@@ -273,7 +273,6 @@ class TestPlotter:
 				sumNoDrawTime_min += 1
 
 			if isFirstRecoveryPeriod:
-				recoveryUsedEnergy_kJ += input_energy_kJ
 				if has_drawn and not(is_drawing):
 					if not(is_heating):	
 						print(f"End first recovery: {index}")
@@ -282,11 +281,13 @@ class TestPlotter:
 						recoveryTotalDraw_L = sumDraw_L		
 						recoveryAvgInletT_C =	sumDrawInletT / sumDraw_L
 						recoveryAvgOutletT_C =	sumDrawOutletT / sumDraw_L
-							
+						recoveryUsedEnergy_kJ = sumInputEnergy_kJ	
 						hasStandbyPeriodStarted = True
 						standbyStartT_C = tankAvgT_C
 						standbyStartTime_min = index
 						continue
+				else:
+					recoveryUsedEnergy_kJ += input_energy_kJ
 													
 			if hasStandbyPeriodStarted:	
 				if not(hasStandbyPeriodEnded):
@@ -307,11 +308,13 @@ class TestPlotter:
 
 		print(f"initial tank T_C: {initialTankAvgT_C}")
 		print(f"max tank T after first recovery_C: {maxTankAfterFirstRecoveryT_C}")
+		print(f"recoveryTotalDraw_L: {recoveryTotalDraw_L}")
 		print(f"recovery avg inlet T_C: {recoveryAvgInletT_C}")
 		print(f"recovery avg outlet T_C: {recoveryAvgOutletT_C}")
 		print(f"recoveryStoredEnergy_kJ : {recoveryStoredEnergy_kJ}")
 		print(f"recoveryDeliveredEnergy_kJ : {recoveryDeliveredEnergy_kJ}")
 		print(f"recoveryUsedEnergy_kJ : {recoveryUsedEnergy_kJ}")
+		print("\n")
 						
 		avgInletT_C = sumDrawInletT / sumDraw_L	
 		avgOutletT_C =	sumDrawOutletT / sumDraw_L
@@ -344,7 +347,7 @@ class TestPlotter:
 			standbyHourlyLossEnergy_kJperh = tank_heat_capacity_kJperC * (standbyStartT_C - standbyEndT_C) / recoveryEfficiency / (standbySumTime_min / 60)
 			standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)
 			consumedHeatingEnergy_kJ = sumInputEnergy_kJ + tank_heat_capacity_kJperC * (finalTankAvgT_C - initialTankAvgT_C) / recoveryEfficiency
-			adjustedConsumedWaterHeatingEnergy_kJ = consumedHeatingEnergy_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * sumNoDrawTime_min
+			adjustedConsumedWaterHeatingEnergy_kJ = consumedHeatingEnergy_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
 			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
 			modifiedConsumedWaterHeatingEnergy_kJ = adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ
 			data_set.energy_summary.ef = standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
@@ -352,6 +355,8 @@ class TestPlotter:
 			print(f"recovery efficiency : {recoveryEfficiency}")
 			print(f"standbyLossCoefficient_kJperhC : {standbyLossCoefficient_kJperhC}")
 			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ }")
+			print(f"waterHeatingDifferenceEnergy_kJ  : {waterHeatingDifferenceEnergy_kJ}")
+			print(f"adjustedConsumedWaterHeatingEnergy_kJ : {adjustedConsumedWaterHeatingEnergy_kJ}")
 			print(f"modifiedConsumedWaterHeatingEnergy_kJ : {modifiedConsumedWaterHeatingEnergy_kJ}")
 			print(f"ef: {data_set.energy_summary.ef}")
 
