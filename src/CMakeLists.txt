@@ -11,8 +11,9 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
-get_filename_component(abs_presets_path "${PROJECT_BINARY_DIR}/presets" ABSOLUTE)
-file(GLOB preset_headers "${abs_presets_path}/presets.h" "${abs_presets_path}/include/*.h")
+set(presets_directory "${PROJECT_BINARY_DIR}/presets")
+
+file(GLOB presets_headers "${presets_directory}/include/*.h")
 
 set(headers
         HPWHversion.in.hh
@@ -25,7 +26,8 @@ set(headers
         Resistance.hh
         hpwh-data-model.hh
         HPWHFitter.hh
-        "${preset_headers}"
+        "${presets_directory}/presets.h"
+        "${presets_headers}"
         )
 
 set(sources
@@ -41,7 +43,7 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
-        "${abs_presets_path}/presets.cpp"
+        "${presets_directory}/presets.cpp"
         )
 
 set(library_sources
@@ -50,8 +52,8 @@ set(library_sources
         )
 
 set_source_files_properties(
-        "${abs_presets_path}/presets.cpp"
-        "${abs_presets_path}/presets.h"
+        "${presets_directory}/presets.cpp"
+        "${presets_directory}/presets.h"
         PROPERTIES GENERATED TRUE
 )
 option(${PROJECT_NAME}_STATIC_LIB "Make ${PROJECT_NAME} a static library" ON)
@@ -67,8 +69,8 @@ endif ()
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_BINARY_DIR}/src
         PUBLIC ${PROJECT_SOURCE_DIR}/src
-        PUBLIC "${abs_presets_path}"
-        PUBLIC "${abs_presets_path}/include"
+        PUBLIC "${presets_directory}"
+        PUBLIC "${presets_directory}/include"
         )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model)
