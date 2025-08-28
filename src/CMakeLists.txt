@@ -57,7 +57,7 @@ set_source_files_properties(
 option(${PROJECT_NAME}_STATIC_LIB "Make ${PROJECT_NAME} a static library" ON)
 
 if (${PROJECT_NAME}_STATIC_LIB)
-    add_library(${PROJECT_NAME} STATIC ${library_sources}) # TODO: Change name to ${PROJECT_NAME}
+    add_library(${PROJECT_NAME} STATIC ${library_sources})
     set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-D${PROJECT_NAME}_STATIC_DEFINE")
 else ()
     set(CMAKE_MACOSX_RPATH 1)
