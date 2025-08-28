@@ -359,8 +359,8 @@ double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
     {
         constexpr double withhold_pow = 2.;
         double nodeCap_kJ = heatDistribution[i] * cap_kJ;
-        double frac = heatDistribution[i] / maxWeight; // heatDistribution[i] > 0. ? 1. : 0.; //
-        double withheldCap_kJ = std::pow(1. - frac, withhold_pow) /*(1. - frac)*/ * leftoverCap_kJ;
+        double frac = heatDistribution[i] / maxWeight;
+        double withheldCap_kJ = std::pow(1. - frac, withhold_pow) * leftoverCap_kJ;
         double carriedCap_kJ = leftoverCap_kJ - withheldCap_kJ;
         double availableCap_kJ = nodeCap_kJ + carriedCap_kJ;
         if (availableCap_kJ > 0.)

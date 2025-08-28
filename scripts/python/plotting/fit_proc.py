@@ -133,7 +133,6 @@ class FitProc:
 			return
 		iApL = np.matmul(np.linalg.inv(ApT_Ap), ApT)			
 		coefficients = iApL.dot(xp)
-		print(f"coefficients=\n{coefficients}")	
 		self.apply_bilinear_coefficients(model_data, coefficients, variable, dependent, slice)	
 
 	def apply_condenser_distribution(self, new_dist, model_data):
@@ -144,6 +143,25 @@ class FitProc:
 			turn_on_logic["heating_logic"]["temperature_weight_distribution"] = new_dist
 			set_heat_source_configuration(model_data, "compressor", heat_source_config)
 
+	def apply_coil_configuration(self, new_config, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, "compressor")		
+			heat_source_config['heat_source']['performance']['coil_configuration'] = new_config
+			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+	
+	def apply_condenser_turn_on_logic_temperature(self, new_T, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, "compressor")
+			turn_on_logic = heat_source_config['turn_on_logic'][0]
+			turn_on_logic["heating_logic"]["differential_temperature"] = new_T
+			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+
+	def apply_number_of_nodes(self, new_nodes, model_data):
+			model_data["number_of_nodes"] = new_nodes
+			
+	def apply_standby_power(self, new_power, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, "compressor")		
+			heat_source_config['heat_source']['performance']["standby_power"] = new_power
+			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+										
 	def get_performance_point(self, model_data, coordinates, variable):
 		is_central = "central_system" in model_data		
 		perf_map = get_perf_map(model_data)
@@ -218,6 +236,33 @@ class FitProc:
 				self.apply_condenser_distribution(constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
+		if constraint['type'] == 'coil-configuration':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+
+				self.apply_coil_configuration(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+				
+		if constraint['type'] == 'condenser-turn-on-logic-temperature':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				self.apply_condenser_turn_on_logic_temperature(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+
+		if constraint['type'] == 'number-of-tank-nodes':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				print(f"nodes: {constraint['value']}")
+				self.apply_number_of_nodes(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+				
+		if constraint['type'] == 'condenser-standby-power':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				print(f"standby_power: {constraint['value']}")
+				self.apply_standby_power(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+											
 	def apply_constraints(self):
 		for constraint in self.constraints:
 			self.apply_constraint(self.constraints[constraint])

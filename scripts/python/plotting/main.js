@@ -64,7 +64,7 @@
 	let ws_connection = null;
 	async function init_websocket() {
 		await callPyServer("launch_ws", "")
-		ws_connection = await new WebSocket("ws://localhost:8600");
+		ws_connection = new WebSocket("ws://localhost:8600");
 		ws_connection.addEventListener("message", async (msg) => {
 			if ('data' in msg)
 			{

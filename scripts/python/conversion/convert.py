@@ -295,7 +295,7 @@ def convert_measured(test_dir, data_filename):
 			first = False
 			
 		else:		
-			powerSum = powerSum + power_factor* float(columns[orig_columns["Power"]].strip('\n'))
+			powerSum = powerSum + power_factor * float(columns[orig_columns["Power"]].strip('\n'))
 			drawSum = drawSum + float(columns[orig_columns["Draw"]].strip('\n'))
 			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]])
 			inletT_sum = inletT_sum + float(columns[orig_columns["InletT"]])

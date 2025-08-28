@@ -60,7 +60,7 @@ def launch_ws():
 		print("killing current websocket...")
 		launch_ws.proc.kill()
 		
-		time.sleep(1)
+	time.sleep(2)
 	handler.clients = []
 	launch_ws.proc = mp.Process(target=run_main, args=(), name='ws')
 	time.sleep(2)

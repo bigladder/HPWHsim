@@ -4206,18 +4206,20 @@ nlohmann::json HPWH::TestSummary::report()
 
     j_results["total_volume_drawn_L"] = removedVolume_L;
 
-    j_results["daily_water_heating_energy_consumption_kWh"] = KJ_TO_KWH(waterHeatingEnergy_kJ);
 
-    j_results["adjusted_daily_water_heating_energy_consumption_kWh"] =
-        KJ_TO_KWH(adjustedConsumedWaterHeatingEnergy_kJ);
+    j_results["usedEnergy_kJ"] = usedEnergy_kJ;
+    j_results["daily_water_heating_energy_consumption_kJ"] = waterHeatingEnergy_kJ;
 
-    j_results["modified_daily_water_heating_energy_consumption_kWh"] =
-        KJ_TO_KWH(modifiedConsumedWaterHeatingEnergy_kJ);
+    j_results["adjusted_daily_water_heating_energy_consumption_kJ"] =
+        adjustedConsumedWaterHeatingEnergy_kJ;
 
-    j_results["annual_electrical_energy_consumption_kWh"] =
-        KJ_TO_KWH(annualConsumedElectricalEnergy_kJ);
+    j_results["modified_daily_water_heating_energy_consumption_kJ"] =
+        modifiedConsumedWaterHeatingEnergy_kJ;
 
-    j_results["annual_energy_consumption_kWh"] = KJ_TO_KWH(annualConsumedEnergy_kJ);
+    j_results["annual_electrical_energy_consumption_kJ"] =
+        annualConsumedElectricalEnergy_kJ;
+
+    j_results["annual_energy_consumption_kJ"] = annualConsumedEnergy_kJ;
 
     return j_results;
 }
