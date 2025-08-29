@@ -333,13 +333,14 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def select_data(selectedData, fig):
+			print("select")
 			prev_layout = fig['layout']
 			if not selectedData:
 				return no_update, True
 			
 			if not "range" in selectedData:
 				return no_update, True
-					
+			print("have range")		
 			self.plotter.select_data(selectedData)	
 			return fig, False
 				

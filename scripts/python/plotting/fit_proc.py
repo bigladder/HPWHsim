@@ -135,13 +135,17 @@ class FitProc:
 		coefficients = iApL.dot(xp)
 		self.apply_bilinear_coefficients(model_data, coefficients, variable, dependent, slice)	
 
-	def apply_condenser_distribution(self, new_dist, model_data):
+	def apply_condenser_heat_distribution(self, new_dist, model_data):
 			heat_source_config = get_heat_source_configuration(model_data, "compressor")
-			heat_source_config['heat_distribution'] = new_dist
-			
+			heat_source_config['heat_distribution'] = new_dist	
+			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+
+	def apply_condenser_on_logic_distribution(self, new_dist, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, "compressor")
 			turn_on_logic = heat_source_config['turn_on_logic'][0]
 			turn_on_logic["heating_logic"]["temperature_weight_distribution"] = new_dist
 			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+
 
 	def apply_coil_configuration(self, new_config, model_data):
 			heat_source_config = get_heat_source_configuration(model_data, "compressor")		
@@ -230,10 +234,16 @@ class FitProc:
 				self.apply_bilinear_coefficients(constraint['value'], model_data, variable, dependent, slice)				
 				self.write_cache_model(model_id, model_data)
 					
-		if constraint['type'] == 'condenser-distribution':
+		if constraint['type'] == 'condenser-heat-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
 				self.apply_condenser_distribution(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+				
+		if constraint['type'] == 'condenser-on-logic-distribution':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				self.apply_condenser_on_logic_distribution(constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
 		if constraint['type'] == 'coil-configuration':

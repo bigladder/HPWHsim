@@ -80,7 +80,7 @@ class TestPlotter:
 	
 	def filter_dataframe_range(self, data_set):
 		column_time_name = self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]
-		return data_set.df[(data_set.df[column_time_name] > 0) & (data_set.df[column_time_name] <= 1440)].reset_index()
+		return data_set.df[(data_set.df[column_time_name] > -120) & (data_set.df[column_time_name] <= 2880)].reset_index()
 	
 	def __init__(self, data):
 		self.plot = {}
@@ -285,9 +285,7 @@ class TestPlotter:
 						hasStandbyPeriodStarted = True
 						standbyStartT_C = tankAvgT_C
 						standbyStartTime_min = index
-						continue
-				else:
-					recoveryUsedEnergy_kJ += input_energy_kJ
+						continue				
 													
 			if hasStandbyPeriodStarted:	
 				if not(hasStandbyPeriodEnded):
@@ -431,7 +429,10 @@ class TestPlotter:
 				if "x" in range: # power
 					t_mins = self.measured.df["Time(min)"]
 					Pins = self.measured.df["PowerIn(W)"]
-					for t_min, Pin in zip(t_mins, Pins):
+					flow_rates = self.measured.df["FlowRate(gal/min)"]
+					flowV_gal = 0
+					Ein_kJ = 0
+					for t_min, Pin, flow_rate in zip(t_mins, Pins, flow_rates):
 						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
 							test_point = {}
 							test_point['model_id'] = self.model_id
@@ -440,7 +441,12 @@ class TestPlotter:
 							test_point['value'] = Pin
 							test_point['t_min'] = t_min
 							self.test_points.append(test_point)
-
+							
+							if not(math.isnan(flow_rate)):
+								flowV_gal += flow_rate
+							Ein_kJ += Pin * 60 / 1000
+						
+					print(f"flow volume (gal): {flowV_gal}, energy in (kJ): {Ein_kJ}")
 	def click_data(self, clickData):
 		if self.measured.have_data:
 			if "points" in clickData:

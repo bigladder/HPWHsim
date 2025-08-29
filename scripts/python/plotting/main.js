@@ -63,49 +63,60 @@
 	//
 	let ws_connection = null;
 	async function init_websocket() {
-		await callPyServer("launch_ws", "")
-		ws_connection = new WebSocket("ws://localhost:8600");
-		ws_connection.addEventListener("message", async (msg) => {
-			if ('data' in msg)
+		var connected = false;
+		while(!connected)
+			try
 			{
-				const data = JSON.parse(msg['data']);
-				if ('dest' in data)
-					if(data['dest'] == "index")
-						if ('source' in data)
-						{
-							if (!data['source'].localeCompare("test-proc"))
-								if ('cmd' in data)
+				await callPyServer("launch_ws", "")
+				ws_connection = new WebSocket("ws://localhost:8600");
+				ws_connection.addEventListener("message", async (msg) => {
+					if ('data' in msg)
+					{
+						const data = JSON.parse(msg['data']);
+						if ('dest' in data)
+							if(data['dest'] == "index")
+								if ('source' in data)
 								{
-									if(!data['cmd'].localeCompare("init"))									
-									{
-										await get_elements();
-										await set_elements();
-									}
-									if(!data['cmd'].localeCompare("refresh"))									
-									{
-										//await get_elements();
-										//await set_elements();
-									}
-								}
+									if (!data['source'].localeCompare("test-proc"))
+										if ('cmd' in data)
+										{
+											if(!data['cmd'].localeCompare("init"))									
+											{
+												await get_elements();
+												await set_elements();
+											}
+											if(!data['cmd'].localeCompare("refresh"))									
+											{
+												//await get_elements();
+												//await set_elements();
+											}
+										}
 
-							if (!data['source'].localeCompare("perf-proc"))								
-								if ('cmd' in data)
-								{
-									if(!data['cmd'].localeCompare("init"))									
-									{
-										await get_elements();
-										await set_elements();
-									}
-								}
+									if (!data['source'].localeCompare("perf-proc"))								
+										if ('cmd' in data)
+										{
+											if(!data['cmd'].localeCompare("init"))									
+											{
+												await get_elements();
+												await set_elements();
+											}
+										}
 
-						if (!data['source'].localeCompare("fit-proc"))
-							if ('cmd' in data)
-							{
-									if (!data['cmd'].localeCompare("refresh"))
-										fill_fit_table()
-							}			
-				}
-			}});
+								if (!data['source'].localeCompare("fit-proc"))
+									if ('cmd' in data)
+									{
+											if (!data['cmd'].localeCompare("refresh"))
+												fill_fit_table()
+									}			
+						}
+					}});
+				connected = true;
+			}
+			catch(err)
+			{
+				await sleep(1000.);
+			}
+
 	}
 
 	//
