@@ -12,8 +12,10 @@ add_custom_target(${PROJECT_NAME}_version_header
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
 set(presets_directory "${PROJECT_BINARY_DIR}/presets")
-
 file(GLOB presets_headers "${presets_directory}/include/*.h")
+
+# Not sure why this is needed, but otherwise the CMake coverage checker can't find the target file
+file(RELATIVE_PATH presets_source_file "${CMAKE_CURRENT_BINARY_DIR}" "${presets_directory}/presets.cpp")
 
 set(headers
         HPWHversion.in.hh
@@ -43,7 +45,7 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
-        "${presets_directory}/presets.cpp"
+        "${presets_source_file}"
         )
 
 set(library_sources
