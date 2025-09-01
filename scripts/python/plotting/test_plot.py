@@ -423,15 +423,51 @@ class TestPlotter:
 
 	def select_data(self, selectedData):
 		self.test_points = []
+		result = []
 		if self.measured.have_data:
-			if "range" in selectedData:
-				range = selectedData["range"]
+			if "points" in selectedData:
+					curveNumbers = []
+					for point in selectedData["points"]:
+						if not point["curveNumber"] in curveNumbers:
+							curveNumbers.append(point["curveNumber"])
+							
+					curves = []
+					for curveNumber in curveNumbers:
+							curves.append(self.plot.figure["data"][curveNumber])
+					
+					curveSums = []
+					for curve in curves:
+						if "name" in curve:
+							if "Measured" in curve["name"]:
+								if "Power" in curve["name"]:
+									curveSums.append([self.measured.df["PowerIn(W)"], 0, "Measured total input energy (kJ)", 60 / 1000])
+								if "Flow Rate" in curve["name"]:
+									curveSums.append([self.measured.df["FlowRate(gal/min)"], 0, "Measured total volume drawn (gal)", 1])
+							if "Simulated" in curve["name"]:
+								if "Power" in curve["name"]:
+									curveSums.append([self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000])
+								if "Flow Rate" in curve["name"]:
+									curveSums.append([self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1])
+					
+																	
+					for point in selectedData["points"]:
+						for curveSum in curveSums:
+							val = curveSum[0][point["pointNumber"]] * curveSum[3]
+							if not math.isnan(val):	
+								curveSum[1] += val
+					
+					for curveSum in curveSums:
+						result.append([curveSum[2], curveSum[1]])													
+					
+			elif "range" in selectedData:
+				range = selectedData["range"]					
 				if "x" in range: # power
 					t_mins = self.measured.df["Time(min)"]
 					Pins = self.measured.df["PowerIn(W)"]
 					flow_rates = self.measured.df["FlowRate(gal/min)"]
 					flowV_gal = 0
 					Ein_kJ = 0
+					
 					for t_min, Pin, flow_rate in zip(t_mins, Pins, flow_rates):
 						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
 							test_point = {}
@@ -446,7 +482,9 @@ class TestPlotter:
 								flowV_gal += flow_rate
 							Ein_kJ += Pin * 60 / 1000
 						
-					print(f"flow volume (gal): {flowV_gal}, energy in (kJ): {Ein_kJ}")
+					result = f"flow volume (gal): {flowV_gal}, energy in (kJ): {Ein_kJ}"
+		return result
+				
 	def click_data(self, clickData):
 		if self.measured.have_data:
 			if "points" in clickData:

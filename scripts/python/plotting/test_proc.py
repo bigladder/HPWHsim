@@ -3,7 +3,7 @@ import sys
 
 import pandas as pd  # type: ignore
 import json
-from dash import Dash, dcc, html, Input, Output, State, callback, no_update
+from dash import Dash, dcc, html, Input, Output, State, callback, no_update, dash_table
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -184,6 +184,12 @@ class TestProc:
 				html.P("", id='energy_simulated_p'),
 		
 				html.Div([
+						dash_table.DataTable(
+							columns=({"id": "Quantity", 'name': "Quantity"}, {'id': "Value", 'name': "Value"}),
+							data=[],
+							id='selected-table'),
+
+						html.P("selected:", id='selected-text', style={'fontSize': '12px', 'margin': '4px', 'display': 'block'}),
 						html.P("match:", style={'fontSize': '12px', 'margin': '4px', 'display': 'inline-block'}),
 						html.Button("+", id='match-selected', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
 						html.Button("-", id='ignore-selected', n_clicks=0, style={'fontSize': '12px', 'margin': '1px', 'display': 'inline-block'}),				
@@ -328,21 +334,25 @@ class TestProc:
 		@callback(
 			Output('test-graph', 'figure', allow_duplicate=True),
 			Output('select-div', 'hidden', allow_duplicate=True),
+			Output('selected-table', 'data'),
+			Output('selected-text', 'children', allow_duplicate=True),
 			Input('test-graph', 'selectedData'),
 			State('test-graph', 'figure'),
 			prevent_initial_call=True
 		)
 		def select_data(selectedData, fig):
-			print("select")
 			prev_layout = fig['layout']
 			if not selectedData:
-				return no_update, True
-			
-			if not "range" in selectedData:
-				return no_update, True
-			print("have range")		
-			self.plotter.select_data(selectedData)	
-			return fig, False
+				return no_update, True, [], ""
+								
+			#selectDiv['hidden'] = False
+			table_df = pd.DataFrame(
+				columns = ['Quantity', 'Value'],
+				data = self.plotter.select_data(selectedData)
+				)
+			table_data = table_df.to_dict('records')
+			print(table_data)
+			return fig, False, table_data, ""
 				
 		@callback(
 			Output('ws', 'send', allow_duplicate=True),
