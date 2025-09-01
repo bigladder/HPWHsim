@@ -351,7 +351,6 @@ class TestProc:
 				data = self.plotter.select_data(selectedData)
 				)
 			table_data = table_df.to_dict('records')
-			print(table_data)
 			return fig, False, table_data, ""
 				
 		@callback(

@@ -352,7 +352,7 @@ class TestPlotter:
 			data_set.energy_summary.energy_used_kJ = sumInputEnergy_kJ
 			print(f"recovery efficiency : {recoveryEfficiency}")
 			print(f"standbyLossCoefficient_kJperhC : {standbyLossCoefficient_kJperhC}")
-			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ }")
+			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ}")
 			print(f"waterHeatingDifferenceEnergy_kJ  : {waterHeatingDifferenceEnergy_kJ}")
 			print(f"adjustedConsumedWaterHeatingEnergy_kJ : {adjustedConsumedWaterHeatingEnergy_kJ}")
 			print(f"modifiedConsumedWaterHeatingEnergy_kJ : {modifiedConsumedWaterHeatingEnergy_kJ}")
@@ -426,38 +426,36 @@ class TestPlotter:
 		result = []
 		if self.measured.have_data:
 			if "points" in selectedData:
-					curveNumbers = []
+					curves = {}
 					for point in selectedData["points"]:
-						if not point["curveNumber"] in curveNumbers:
-							curveNumbers.append(point["curveNumber"])
-							
-					curves = []
-					for curveNumber in curveNumbers:
-							curves.append(self.plot.figure["data"][curveNumber])
+						if not point["curveNumber"] in curves:
+							curves[point["curveNumber"]] = self.plot.figure["data"][point["curveNumber"]]
 					
-					curveSums = []
-					for curve in curves:
+					curveSums = {}
+					for curveNumber in curves:
+						curve = curves[curveNumber]
 						if "name" in curve:
 							if "Measured" in curve["name"]:
 								if "Power" in curve["name"]:
-									curveSums.append([self.measured.df["PowerIn(W)"], 0, "Measured total input energy (kJ)", 60 / 1000])
+									curveSums[curveNumber] = [self.measured.df["PowerIn(W)"], 0, "Measured total input energy (kJ)", 60 / 1000]
 								if "Flow Rate" in curve["name"]:
-									curveSums.append([self.measured.df["FlowRate(gal/min)"], 0, "Measured total volume drawn (gal)", 1])
+									curveSums[curveNumber] = [self.measured.df["FlowRate(gal/min)"], 0, "Measured total volume drawn (gal)", 1]
 							if "Simulated" in curve["name"]:
 								if "Power" in curve["name"]:
-									curveSums.append([self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000])
+									curveSums[curveNumber] = [self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000]
 								if "Flow Rate" in curve["name"]:
-									curveSums.append([self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1])
-					
-																	
+									curveSums[curveNumber] = [self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1]
+																				
 					for point in selectedData["points"]:
-						for curveSum in curveSums:
-							val = curveSum[0][point["pointNumber"]] * curveSum[3]
-							if not math.isnan(val):	
-								curveSum[1] += val
+						if "curveNumber" in point and "pointNumber" in point:
+							if point["curveNumber"] in curveSums:
+								val = curveSums[point["curveNumber"]][0][point["pointNumber"]]
+								if not math.isnan(val):	
+									curveSums[point["curveNumber"]][1] += val
 					
-					for curveSum in curveSums:
-						result.append([curveSum[2], curveSum[1]])													
+					for curveNumber in curveSums:
+						curveSum = curveSums[curveNumber]
+						result.append([curveSum[2], curveSum[3] * curveSum[1]])													
 					
 			elif "range" in selectedData:
 				range = selectedData["range"]					
@@ -482,7 +480,7 @@ class TestPlotter:
 								flowV_gal += flow_rate
 							Ein_kJ += Pin * 60 / 1000
 						
-					result = f"flow volume (gal): {flowV_gal}, energy in (kJ): {Ein_kJ}"
+					result = []
 		return result
 				
 	def click_data(self, clickData):
