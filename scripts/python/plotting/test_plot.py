@@ -59,7 +59,7 @@ def retrieve_line_type(variable_type):
 	elif variable_type == "Simulated":
 		return "dot"
 
-class EnergySummary:
+class EF_Summary:
 	def __init__(self, tank_volume_L):
 		self.energy_used_kJ = 0
 		self.delivered_energy_kJ = 0
@@ -72,7 +72,7 @@ class DataSet:
 		self.df = {}
 		self.have_data = False
 		self.show_plot = False
-		self.energy_summary = EnergySummary(tank_volume_L)
+		self.ef_summary = EF_Summary(tank_volume_L)
 		self.variable_type = variable_type
 		self.filepath = ""
 				
@@ -208,13 +208,20 @@ class TestPlotter:
 		    self.temperature_profile_vars[data_set.variable_type]
 		].mean(axis=1)
 
+		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type]:
+			for index in range(len(data_set.df)):
+				data_set.df.loc[index, temperature_column] = 1.8 * data_set.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
+
+		return data_set
+
+	def calculate_EF(self, data_set):
 		initialTankAvgT_C = data_set.df["Tank Average Temperature"][0]
 		finalTankAvgT_C = data_set.df["Tank Average Temperature"].iloc[-1]
-		data_set.volume_drawn_L = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]].sum() * 3.78541
-		data_set.energy_summary.energy_used_kJ = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]].sum() * 60 / 1000
+		data_set.ef_summary.volume_drawn_L = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]].sum() * 3.78541
+		data_set.ef_summary.energy_used_kJ = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]].sum() * 60 / 1000
 		water_specific_heat_kJperkgC = 4.180
 		water_density_kgperL = 0.995
-		tank_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * data_set.energy_summary.tank_volume_L
+		tank_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * data_set.ef_summary.tank_volume_L
 		
 		sumDrawOutletT = 0
 		sumDrawInletT = 0
@@ -348,22 +355,16 @@ class TestPlotter:
 			adjustedConsumedWaterHeatingEnergy_kJ = consumedHeatingEnergy_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
 			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
 			modifiedConsumedWaterHeatingEnergy_kJ = adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ
-			data_set.energy_summary.ef = standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
-			data_set.energy_summary.energy_used_kJ = sumInputEnergy_kJ
+			data_set.ef_summary.ef = standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
+			data_set.ef_summary.energy_used_kJ = sumInputEnergy_kJ
 			print(f"recovery efficiency : {recoveryEfficiency}")
 			print(f"standbyLossCoefficient_kJperhC : {standbyLossCoefficient_kJperhC}")
 			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ}")
 			print(f"waterHeatingDifferenceEnergy_kJ  : {waterHeatingDifferenceEnergy_kJ}")
 			print(f"adjustedConsumedWaterHeatingEnergy_kJ : {adjustedConsumedWaterHeatingEnergy_kJ}")
 			print(f"modifiedConsumedWaterHeatingEnergy_kJ : {modifiedConsumedWaterHeatingEnergy_kJ}")
-			print(f"ef: {data_set.energy_summary.ef}")
-
-		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type]:
-			for index in range(len(data_set.df)):
-				data_set.df.loc[index, temperature_column] = 1.8 * data_set.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
-
-		return data_set
-
+			print(f"ef: {data_set.ef_summary.ef}")
+			
 	def read_measured(self, filepath):
 		try:
 			self.measured.df = call_csv(filepath, 0)
@@ -375,8 +376,6 @@ class TestPlotter:
 		# remove rows from dataframes outside of inclusive range [1,1440]
 		self.measured.df = self.filter_dataframe_range(self.measured)
 		#self.measured.energy_use_Wh = self.measured.df[power_col_label_meas].sum()/60
-		self.measured.energy_summary.energy_used_kJ = self.measured.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Measured"][0]].sum() * 60 / 1000
-
 		self.measured = self.organize_tank_temperatures(self.measured)
 		
 		self.measured.have_data = True
@@ -671,7 +670,7 @@ def plot(data):
 def write_plot(data):
     plotter = plot(data)
     if "plot_filepath" in data:
-        plotter.plot.write_html_plot(data['plot_filepath'])
+     	plotter.plot.write_html_plot(data['plot_filepath'])
 
 # main
 if __name__ == "__main__":

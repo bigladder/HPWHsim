@@ -286,7 +286,7 @@ endfunction()
 #Plot test
 function(add_plot_test)
     set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 

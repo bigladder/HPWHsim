@@ -132,7 +132,7 @@ void measure(HPWH& hpwh,
             {
                 designation = key;
                 foundProfile = true;
-                break;git
+                break;
             }
         }
         if (!foundProfile)
