@@ -430,6 +430,7 @@ class TestPlotter:
 					if not point["curveNumber"] in curves:
 						curves[point["curveNumber"]] = self.plot.figure["data"][point["curveNumber"]]
 				
+				print("\n")
 				curveSums = {}
 				for curveNumber in curves:
 					curve = curves[curveNumber]
@@ -444,17 +445,18 @@ class TestPlotter:
 								curveSums[curveNumber] = [self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000]
 							if "Flow Rate" in curve["name"]:
 								curveSums[curveNumber] = [self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1]
-																			
-					for point in selectedData["points"]:
-						if "curveNumber" in point and "pointNumber" in point:
-							if point["curveNumber"] in curveSums:
-								val = curveSums[point["curveNumber"]][0][point["pointNumber"]]
-								if not math.isnan(val):	
-									curveSums[point["curveNumber"]][1] += val
-				
-					for curveNumber in curveSums:
-						curveSum = curveSums[curveNumber]
-						result.append([curveSum[2], curveSum[3] * curveSum[1]])													
+					
+												
+				for point in selectedData["points"]:
+					if "curveNumber" in point and "pointNumber" in point:
+						if point["curveNumber"] in curveSums:
+							val = curveSums[point["curveNumber"]][0][point["pointNumber"]]
+							if not math.isnan(val):	
+								curveSums[point["curveNumber"]][1] += val
+								
+				for curveNumber in curveSums:
+					curveSum = curveSums[curveNumber]
+					result.append([curveSum[2], curveSum[3] * curveSum[1]])													
 					
 		elif "range" in selectedData:
 			range = selectedData["range"]					

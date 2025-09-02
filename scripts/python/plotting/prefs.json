@@ -5,7 +5,7 @@
   "tests": {
     "list": "standard_tests",
     "id": "standard24hr",
-    "draw_profile": "medium",
+    "draw_profile": "auto",
     "plots": {
       "show_simulated": true,
       "show_measured": true

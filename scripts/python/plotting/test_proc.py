@@ -130,16 +130,15 @@ class TestProc:
 							if 'model' not in metric or (metric['model'] != self.prefs['model_id']):
 								continue
 							hide_ef_input_val = False
-
-			return self.plotter.plot.figure, hide_show_div, option_list, value_list, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False, False
+			return self.plotter.plot.figure, hide_show_div, option_list, value_list, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False
 	
-		return tuple([no_update] * 10)
+		return tuple([no_update] * 9)
 	
 	def update_plot(self, fig_layout):
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
 		self.plotter.plot.figure.update_layout(fig_layout)
-		return tuple([self.plotter.plot.figure] + [no_update] * 9)
+		return tuple([self.plotter.plot.figure] + [no_update] * 8)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -241,7 +240,6 @@ class TestProc:
 					Output('target-EF-input', 'value'),
 					Output('EF-output', 'children'),
 					Output('main-div', 'hidden'),
-					Output('select-div', 'hidden'),
 					[Input("ws", "message")],
 					State('test-graph', 'relayoutData'),
 					prevent_initial_call=True
@@ -258,7 +256,7 @@ class TestProc:
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
 						if data['cmd'] == 'update':
 							return tuple([json.dumps(msg)] + list(self.update_plot(fig_layout)))							
-			return tuple([no_update] * 11)
+			return tuple([no_update] * 10)
 		
 		@app.callback( 
 			Output('ws', 'send', allow_duplicate=True),
@@ -347,7 +345,8 @@ class TestProc:
 				data = self.plotter.select_data(selectedData)
 				)
 			table_data = table_df.to_dict('records')
-			return fig, False, table_data, ""
+			hidden = len(table_df.index) == 0
+			return fig,hidden, table_data, ""
 				
 		@callback(
 			Output('ws', 'send', allow_duplicate=True),
