@@ -11354,6 +11354,22 @@
       "value": 392.76666666666665,
       "t_min": 1102,
       "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Pin",
+      "value": 1.7000000000000002,
+      "t_min": 1164,
+      "type": "test_point"
+    },
+    {
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Pin",
+      "value": 1.6499999999999997,
+      "t_min": 1293,
+      "type": "test_point"
     }
   ]
 }

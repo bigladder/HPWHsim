@@ -19,6 +19,7 @@ from dash_extensions import WebSocket
 
 from common import read_file, write_file, get_tank_volume
 
+energy_kJ_format = {'specifier': ".2f"}
 
 class TestProc:
 	
@@ -91,12 +92,6 @@ class TestProc:
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
-			measured_msg = ""
-			simulated_msg = ""
-			if self.plotter.measured.have_data:
-				measured_msg = "Measured energy consumption (kJ): " + f"{self.plotter.measured.energy_summary.energy_used_kJ:.2f}"
-			if self.plotter.simulated.have_data:
-				simulated_msg = "Simulated energy consumption (kJ): " + f"{self.plotter.simulated.energy_summary.energy_used_kJ:.2f}"
 									
 			option_list = []
 			value_list = []
@@ -136,23 +131,15 @@ class TestProc:
 								continue
 							hide_ef_input_val = False
 
-			return self.plotter.plot.figure, hide_show_div, option_list, value_list, measured_msg, simulated_msg, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False, False
+			return self.plotter.plot.figure, hide_show_div, option_list, value_list, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False, False
 	
-		return tuple([no_update] * 12)
+		return tuple([no_update] * 10)
 	
 	def update_plot(self, fig_layout):
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
 		self.plotter.plot.figure.update_layout(fig_layout)
-		
-		measured_msg = ""
-		simulated_msg = ""
-		if self.plotter.measured.have_data:
-			measured_msg = "Measured energy consumption (kJ): " + f"{self.plotter.measured.energy_summary.energy_used_kJ:.2f}"
-		if self.plotter.simulated.have_data:
-			simulated_msg = "Simulated energy consumption (kJ): " + f"{self.plotter.simulated.energy_summary.energy_used_kJ:.2f}"
-			
-		return tuple([self.plotter.plot.figure] + [no_update] * 3 + [measured_msg, simulated_msg] + [no_update] * 6)
+		return tuple([self.plotter.plot.figure] + [no_update] * 9)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -179,14 +166,26 @@ class TestProc:
 				html.Div(html.Button('Get UA', id='get-ua-btn', n_clicks=0), hidden=True),
 			
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
-				
-				html.P("", id='energy_measured_p'),
-				html.P("", id='energy_simulated_p'),
 		
 				html.Div([
 						dash_table.DataTable(
-							columns=({"id": "Quantity", 'name': "Quantity"}, {'id': "Value", 'name': "Value"}),
+							columns=(
+								{'id': "Quantity", 'name': "Quantity" }, 
+								{'id': "Value", 'name': "Value", 'type': "numeric", 'format': energy_kJ_format}),
 							data=[],
+							style_table = {'width': '400px'},
+					    style_cell_conditional=[
+			        {
+			            'if': {'column_id': 'Quantity'},
+			            'width': '200px',
+									'textAlign': 'left'
+			        },
+							{
+			            'if': {'column_id': 'Value'},
+			            'width': '150px',
+									'textAlign': 'right'
+			        }
+					    ],
 							id='selected-table'),
 
 						html.P("selected:", id='selected-text', style={'fontSize': '12px', 'margin': '4px', 'display': 'block'}),
@@ -237,8 +236,6 @@ class TestProc:
 					Output('show-div', 'hidden', allow_duplicate=True),
 					Output('show-check', 'options'),
 					Output('show-check', 'value'),
-					Output('energy_measured_p', 'children'),
-					Output('energy_simulated_p', 'children'),
 					Output('fit-EF-div', 'hidden'),
 					Output('EF-input-div', 'hidden', allow_duplicate=True),
 					Output('target-EF-input', 'value'),
@@ -261,7 +258,7 @@ class TestProc:
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
 						if data['cmd'] == 'update':
 							return tuple([json.dumps(msg)] + list(self.update_plot(fig_layout)))							
-			return tuple([no_update] * 13)
+			return tuple([no_update] * 11)
 		
 		@app.callback( 
 			Output('ws', 'send', allow_duplicate=True),
@@ -341,7 +338,6 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def select_data(selectedData, fig):
-			prev_layout = fig['layout']
 			if not selectedData:
 				return no_update, True, [], ""
 								

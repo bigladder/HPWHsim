@@ -47,6 +47,7 @@ CLI::App* add_convert(CLI::App& app)
         [&]()
         {
             HPWH hpwh;
+            modelName = std::filesystem::path(modelName).stem().string();
             if (specType == "Preset")
             {
                 if (!modelName.empty())

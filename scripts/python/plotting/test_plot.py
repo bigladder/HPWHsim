@@ -77,11 +77,7 @@ class DataSet:
 		self.filepath = ""
 				
 class TestPlotter:
-	
-	def filter_dataframe_range(self, data_set):
-		column_time_name = self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]
-		return data_set.df[(data_set.df[column_time_name] > -120) & (data_set.df[column_time_name] <= 2880)].reset_index()
-	
+
 	def __init__(self, data):
 		self.plot = {}
 		self.model_id = data['model_id']
@@ -202,7 +198,11 @@ class TestPlotter:
 			for index in range(len(OUTPUT_TEMPERATURE_DETAILS[key])):
 					self.variables["Y-Variables"]["Temperature"][key].insert(index, OUTPUT_TEMPERATURE_DETAILS[key][index])
 
-
+	
+	def filter_dataframe_range(self, data_set):
+		column_time_name = self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]
+		return data_set.df[(data_set.df[column_time_name] > -120) & (data_set.df[column_time_name] <= 2880)].reset_index()
+	
 	def organize_tank_temperatures(self, data_set):
 		data_set.df["Tank Average Temperature"] = data_set.df[
 		    self.temperature_profile_vars[data_set.variable_type]
@@ -424,63 +424,62 @@ class TestPlotter:
 	def select_data(self, selectedData):
 		self.test_points = []
 		result = []
-		if self.measured.have_data:
-			if "points" in selectedData:
-					curves = {}
-					for point in selectedData["points"]:
-						if not point["curveNumber"] in curves:
-							curves[point["curveNumber"]] = self.plot.figure["data"][point["curveNumber"]]
-					
-					curveSums = {}
-					for curveNumber in curves:
-						curve = curves[curveNumber]
-						if "name" in curve:
-							if "Measured" in curve["name"]:
-								if "Power" in curve["name"]:
-									curveSums[curveNumber] = [self.measured.df["PowerIn(W)"], 0, "Measured total input energy (kJ)", 60 / 1000]
-								if "Flow Rate" in curve["name"]:
-									curveSums[curveNumber] = [self.measured.df["FlowRate(gal/min)"], 0, "Measured total volume drawn (gal)", 1]
-							if "Simulated" in curve["name"]:
-								if "Power" in curve["name"]:
-									curveSums[curveNumber] = [self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000]
-								if "Flow Rate" in curve["name"]:
-									curveSums[curveNumber] = [self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1]
-																				
+		if "points" in selectedData:
+				curves = {}
+				for point in selectedData["points"]:
+					if not point["curveNumber"] in curves:
+						curves[point["curveNumber"]] = self.plot.figure["data"][point["curveNumber"]]
+				
+				curveSums = {}
+				for curveNumber in curves:
+					curve = curves[curveNumber]
+					if "name" in curve:
+						if "Measured" in curve["name"]:
+							if "Power" in curve["name"]:
+								curveSums[curveNumber] = [self.measured.df["PowerIn(W)"], 0, "Measured total input energy (kJ)", 60 / 1000]
+							if "Flow Rate" in curve["name"]:
+								curveSums[curveNumber] = [self.measured.df["FlowRate(gal/min)"], 0, "Measured total volume drawn (gal)", 1]
+						if "Simulated" in curve["name"]:
+							if "Power" in curve["name"]:
+								curveSums[curveNumber] = [self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000]
+							if "Flow Rate" in curve["name"]:
+								curveSums[curveNumber] = [self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1]
+																			
 					for point in selectedData["points"]:
 						if "curveNumber" in point and "pointNumber" in point:
 							if point["curveNumber"] in curveSums:
 								val = curveSums[point["curveNumber"]][0][point["pointNumber"]]
 								if not math.isnan(val):	
 									curveSums[point["curveNumber"]][1] += val
-					
+				
 					for curveNumber in curveSums:
 						curveSum = curveSums[curveNumber]
 						result.append([curveSum[2], curveSum[3] * curveSum[1]])													
 					
-			elif "range" in selectedData:
-				range = selectedData["range"]					
-				if "x" in range: # power
-					t_mins = self.measured.df["Time(min)"]
-					Pins = self.measured.df["PowerIn(W)"]
-					flow_rates = self.measured.df["FlowRate(gal/min)"]
-					flowV_gal = 0
-					Ein_kJ = 0
-					
-					for t_min, Pin, flow_rate in zip(t_mins, Pins, flow_rates):
-						if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
-							test_point = {}
-							test_point['model_id'] = self.model_id
-							test_point['test_id'] = self.test_id
-							test_point['variable'] = "Pin"
-							test_point['value'] = Pin
-							test_point['t_min'] = t_min
-							self.test_points.append(test_point)
-							
-							if not(math.isnan(flow_rate)):
-								flowV_gal += flow_rate
-							Ein_kJ += Pin * 60 / 1000
+		elif "range" in selectedData:
+			range = selectedData["range"]					
+			if "x" in range: # power
+				t_mins = self.measured.df["Time(min)"]
+				Pins = self.measured.df["PowerIn(W)"]
+				flow_rates = self.measured.df["FlowRate(gal/min)"]
+				flowV_gal = 0
+				Ein_kJ = 0
+				
+				for t_min, Pin, flow_rate in zip(t_mins, Pins, flow_rates):
+					if Pin > range["y"][0] and Pin < range["y"][1] and t_min > range["x"][0]  and t_min < range["x"][1]:
+						test_point = {}
+						test_point['model_id'] = self.model_id
+						test_point['test_id'] = self.test_id
+						test_point['variable'] = "Pin"
+						test_point['value'] = Pin
+						test_point['t_min'] = t_min
+						self.test_points.append(test_point)
 						
-					result = []
+						if not(math.isnan(flow_rate)):
+							flowV_gal += flow_rate
+						Ein_kJ += Pin * 60 / 1000
+					
+				result = []
 		return result
 				
 	def click_data(self, clickData):

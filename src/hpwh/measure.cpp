@@ -161,13 +161,12 @@ void measure(HPWH& hpwh,
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
 
     j_results["24_hr_test"] = testSummary.report();
-    if ((resultsFilename != ""))
+    if ((outputDir != "") && (resultsFilename != ""))
     {
+        resultsFilename = std::filesystem::path(resultsFilename).stem().string();
+        std::string resultsFilepath = outputDir + "/" + resultsFilename + ".json";
         std::ofstream resultsFile;
-        std::string filepath = resultsFilename + ".json";
-        if (outputDir != "")
-            filepath = outputDir + "/" + filepath;
-        resultsFile.open(filepath.c_str(), std::ifstream::out | std::ofstream::trunc);
+        resultsFile.open(resultsFilepath.c_str(), std::ifstream::out | std::ofstream::trunc);
         if (!resultsFile.is_open())
         {
             std::cout << "Could not open output file " << resultsFilename << "\n";

@@ -63,6 +63,7 @@ CLI::App* add_run(CLI::App& app)
         [&]()
         {
             HPWH hpwh;
+            modelName = std::filesystem::path(modelName).stem().string();
             if (specType == "Preset")
             {
                 if (!modelName.empty())
