@@ -265,12 +265,16 @@
 			is_standard_test = (('group' in test_data) && (test_data['group'] == "standard_tests"));
 			if (is_standard_test)
 			{
-				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'draw_profile': prefs['tests']["draw_profile"]};
+				let data = {
+					'model_spec': 'JSON',
+					'model_id_or_filepath': model_filepath,
+					'build_dir': prefs['build_dir'],
+					'draw_profile': prefs['tests']["draw_profile"],
+					'configuration': test_data["configuration"]};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
 			}
 			else
 			{
-
 				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
 				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
@@ -434,7 +438,12 @@
 
 			if (is_standard_test)
 			{
-				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'draw_profile': prefs['tests']["draw_profile"]};
+				let data = {
+					'model_spec': 'JSON',
+					'model_id_or_filepath': model_filepath,
+					'build_dir': prefs['build_dir'],
+					'draw_profile': prefs['tests']["draw_profile"],
+					'configuration': test_data['configuration']};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
 				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
 			}

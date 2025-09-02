@@ -4,7 +4,7 @@
   "heat_source_id": "resistiveElementTop",
   "tests": {
     "list": "standard_tests",
-    "id": "standard24hr",
+    "id": "UEF",
     "draw_profile": "auto",
     "plots": {
       "show_simulated": true,

@@ -34,7 +34,9 @@
 		"testDr_TOO2": {"group": "Demand-response tests", "path": "DR_tests"},
 		"testDR_TOTLOR": {"group": "Demand-response tests", "path": "DR_tests"},
 
-		"standard24hr": {"group": "standard_tests", "name": "Standard 24-hr test"},
+		"UEF": {"group": "standard_tests", "name": "24-hr UEF (67.5 ºF) test", "configuration": "UEF"},
+		"E50": {"group": "standard_tests", "name": "24-hr E50 (50 ºF) test", "configuration": "E50"},
+		"E95": {"group": "standard_tests", "name": "24-hr E95 (95 ºF) test", "configuration": "E95"},
 
 		"testLockout": {"name": "Lockout test"},
  

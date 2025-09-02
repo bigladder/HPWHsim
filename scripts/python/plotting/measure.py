@@ -8,11 +8,12 @@ from pathlib import Path
 
 #
 def measure(data):
-
 	model_spec = data['model_spec']
 	model_id_or_filepath = data['model_id_or_filepath'] # model id (short name) or filepath
 	build_dir = data['build_dir']
 	draw_profile = data['draw_profile']
+	if not "configuration" in data:
+			data["configuration"] = "UEF"
       
 	orig_dir = str(Path.cwd())
 	os.chdir(build_dir)
@@ -28,9 +29,9 @@ def measure(data):
          
 	results_filename = "results"
 	if model_spec == 'JSON':
-		run_list = [app_cmd, 'measure', '-s', model_spec, '-f', model_id_or_filepath, '-d', output_dir, '-r', results_filename]
+		run_list = [app_cmd, 'measure', '-s', model_spec, '-f', model_id_or_filepath, '-d', output_dir, '-r', results_filename, '-c', data["configuration"]]
 	else:
-		run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_id_or_filepath, '-d', output_dir, '-r', results_filename]
+		run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_id_or_filepath, '-d', output_dir, '-r', results_filename, '-c',	data["configuration"]]
 	if draw_profile != "auto":
 		run_list.append('-p')
 		run_list.append(draw_profile.replace(" ", ""))
