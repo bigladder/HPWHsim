@@ -59,8 +59,17 @@ def retrieve_line_type(variable_type):
 	elif variable_type == "Simulated":
 		return "dot"
 
+class EF_Bounds:
+	def __init__(self):
+		self.test_start_time = 0
+		self.test_end_time = -1
+		self.first_recovery_period_start_time = 0
+		self.first_recovery_period_end_time = -1
+		self.standby_period_start_time = 0
+		self.standby_period_end_time = -1
+		
 class EF_Summary:
-	def __init__(self, tank_volume_L):
+	def __init__(self, tank_volume_L):		
 		self.energy_used_kJ = 0
 		self.delivered_energy_kJ = 0
 		self.volume_drawn_L = 0
@@ -75,7 +84,10 @@ class DataSet:
 		self.ef_summary = EF_Summary(tank_volume_L)
 		self.variable_type = variable_type
 		self.filepath = ""
-				
+	
+def C_to_F(T_C):
+	return 1.8 * T_C + 32
+		
 class TestPlotter:
 
 	def __init__(self, data):
@@ -94,6 +106,7 @@ class TestPlotter:
 		self.test_points = []
 		self.model_id = ""
 
+		self.ef_bounds = EF_Bounds()
 		
 		visibleT = []
 		for i in range(NUMBER_OF_THERMOCOUPLES):
@@ -121,20 +134,17 @@ class TestPlotter:
 		        "Temperature": {
 		            "Column Names": {
 		                "Measured": [
-		                    f"TankT{number}(C)"
-		                    for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+		                    f"TankT{number}(C)" for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
 		                ],
 		                "Simulated": [
-		                    f"tcouple{number} (C)"
-		                    for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
+		                    f"tcouple{number} (C)" for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
 		                ],
 		            },
 								"Inlet": { "Measured": "InletT(C)", "Simulated": "inletT"},
 								"Outlet": { "Measured": "OutletT(C)", "Simulated": "toutlet (C)"},			
 								"Ambient": { "Measured": "AmbientT(C)", "Simulated": "Ta"},						
 		            "Labels": [
-		                f"Tank Temperature {number}"
-		                for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
+		                f"Tank Temperature {number}" for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
 		            ],
 		            "Units": f"{DEGREE_SIGN}F",
 		            "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)), 
@@ -204,21 +214,85 @@ class TestPlotter:
 		return data_set.df[(data_set.df[column_time_name] > -120) & (data_set.df[column_time_name] <= 2880)].reset_index()
 	
 	def organize_tank_temperatures(self, data_set):
-		data_set.df["Tank Average Temperature"] = data_set.df[
+		print(self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type])
+
+		data_set.df["Tank Average Temperature_C"] = data_set.df[
 		    self.temperature_profile_vars[data_set.variable_type]
 		].mean(axis=1)
-
+		
+		data_set.df["Tank Average Temperature"] = data_set.df["Tank Average Temperature_C"]
+		
 		for temperature_column in self.variables["Y-Variables"]["Temperature"]["Column Names"][data_set.variable_type]:
-			for index in range(len(data_set.df)):
-				data_set.df.loc[index, temperature_column] = 1.8 * data_set.df.loc[index, temperature_column] + 32 #convert(df.loc[index, temperature_column], "degC", "degF")
+			data_set.df[temperature_column] = data_set.df[temperature_column].apply(C_to_F) #convert(df.loc[index, temperature_column], "degC", "degF")
 
 		return data_set
 
-	def calculate_EF(self, data_set):
-		initialTankAvgT_C = data_set.df["Tank Average Temperature"][0]
-		finalTankAvgT_C = data_set.df["Tank Average Temperature"].iloc[-1]
-		data_set.ef_summary.volume_drawn_L = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]].sum() * 3.78541
-		data_set.ef_summary.energy_used_kJ = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]].sum() * 60 / 1000
+	def find_EF_bounds(self, data_set):	
+		print(data_set.variable_type)	
+		
+		column_time = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
+		self.ef_bounds.test_start_time = column_time.iloc[0]
+		self.ef_bounds.test_end_time = column_time.iloc[-1]
+		
+		hasFirstRecoveryPeriodStarted = True
+		hasFirstRecoveryPeriodEnded = False
+		self.ef_bounds.first_recovery_period_start_time = self.ef_bounds.test_start_time
+		self.ef_bounds.first_recovery_period_end_time = self.ef_bounds.test_end_time
+		
+		hasStandbyPeriodStarted = False
+		hasStandbyPeriodEnded = False
+		self.ef_bounds.standby_period_start_time = self.ef_bounds.test_start_time
+		self.ef_bounds.standby_period_end_time = self.ef_bounds.test_end_time
+		has_heated = False
+		has_drawn = False
+		
+		for index in range(len(data_set.df)):
+			t_min = column_time.iloc[index]
+			draw_volume_L = data_set.df.loc[index, self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]] * 3.78541	
+			input_energy_kJ = data_set.df.loc[index, self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]] * 60 / 1000
+
+			if math.isnan(draw_volume_L):
+				draw_volume_L = 0
+				
+			is_heating = input_energy_kJ > 0.5
+			has_heated = has_heated or is_heating
+			
+			is_drawing = draw_volume_L > 0
+			has_drawn = has_drawn or is_drawing
+			
+			self.ef_bounds.test_end_time = t_min
+			if hasFirstRecoveryPeriodStarted:
+				if hasFirstRecoveryPeriodEnded:
+					if hasStandbyPeriodStarted:	
+						if hasStandbyPeriodEnded:
+							continue
+						elif is_drawing or is_heating:	
+							hasStandbyPeriodEnded = True		
+							self.ef_bounds.standby_period_end_time = t_min
+							print(f"End standby period: {t_min}")
+							continue
+					elif t_min > self.ef_bounds.first_recovery_period_end_time + 5:
+						if not(is_drawing) and not(is_heating):
+							hasStandbyPeriodStarted = True
+							self.ef_bounds.standby_period_start_time = t_min
+							print(f"Start standby period: {t_min}")			
+				else:
+					if has_drawn and not(is_drawing) and has_heated and not(is_heating):	
+						hasFirstRecoveryPeriodEnded = True
+						self.ef_bounds.first_recovery_period_end_time = t_min		
+						print(f"End first-recovery period: {t_min}")
+				
+	def calculate_EF(self, data_set):		
+		self.find_EF_bounds(data_set)
+				
+		initialTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[self.ef_bounds.test_start_time]
+		finalTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[self.ef_bounds.test_end_time]
+		
+		draw_col = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]]
+		power_col = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]]
+		
+		data_set.ef_summary.volume_drawn_L = draw_col.iloc[self.ef_bounds.test_start_time:self.ef_bounds.test_end_time].sum() * 3.78541
+		data_set.ef_summary.energy_used_kJ = power_col.iloc[self.ef_bounds.test_start_time:self.ef_bounds.test_end_time].sum() * 60 / 1000
 		water_specific_heat_kJperkgC = 4.180
 		water_density_kgperL = 0.995
 		tank_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * data_set.ef_summary.tank_volume_L
@@ -232,82 +306,65 @@ class TestPlotter:
 		sumNoDrawTime_min = 0
 		noDrawSumAmbientTTime = 0
 		
-		standbySumTime_min = 0
+		standbySumTime_min = self.ef_bounds.standby_period_end_time - self.ef_bounds.standby_period_start_time
 		standbySumTimeTankT_minC = 0
 		standbySumTimeAmbientT_minC = 0
-		hasStandbyPeriodStarted = False
-		hasStandbyPeriodEnded = False	
 		
 		deliveredEnergy_kJ = 0
 		recoveryUsedEnergy_kJ = 0
 		recoveryStoredEnergy_kJ = 0
 		recoveryDeliveredEnergy_kJ = 0
-		isFirstRecoveryPeriod = True
-		has_heated = False
-		has_drawn = False
+		
+		column_time = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
 		
 		maxTankAfterFirstRecoveryT_C = -10
-
-		print("\n")
-		print(data_set.variable_type)
+		recovery_total_volume_drawn_L = 0
 		for index in range(len(data_set.df)):
-			ambientT_C = data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Ambient"][data_set.variable_type]]
-			tankAvgT_C = data_set.df.loc[index, "Tank Average Temperature"]
-			draw_volume_L = data_set.df.loc[index, self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]] * 3.78541	
-			input_energy_kJ = data_set.df.loc[index, self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]] * 60 / 1000
-			inletT_C = 0 if draw_volume_L == 0 else data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Inlet"][data_set.variable_type]]
-			outletT_C = 0 if draw_volume_L == 0 else data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Outlet"][data_set.variable_type]]
-
+			t_min = column_time.iloc[index]
+			if t_min < self.ef_bounds.test_start_time or t_min > self.ef_bounds.test_end_time:
+				continue
+			
+			ambientT_C = (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Ambient"][data_set.variable_type]] - 32) / 1.8
+			tankAvgT_C = data_set.df.loc[index, "Tank Average Temperature_C"]
+			draw_volume_L = draw_col[index] * 3.78541	
+			input_energy_kJ = power_col[index] * 60 / 1000
+			inletT_C = 0 if draw_volume_L == 0 else (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Inlet"][data_set.variable_type]] - 32) / 1.8
+			outletT_C = 0 if draw_volume_L == 0 else (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Outlet"][data_set.variable_type]] - 32) / 1.8
+			
 			sumInputEnergy_kJ += input_energy_kJ
 			draw_heat_capacity_kJperC = 0
 			if math.isnan(draw_volume_L):
 				draw_volume_L = 0
-			else:
-				draw_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * draw_volume_L
-				sumDrawInletT += draw_volume_L * inletT_C		
-				sumDrawOutletT += draw_volume_L * outletT_C		
-				sumDrawDiffT += draw_volume_L * (outletT_C - inletT_C)
-				sumDraw_L += draw_volume_L
-				sumDrawHeatCap_kJperC += draw_heat_capacity_kJperC
-				deliveredEnergy_kJ += draw_heat_capacity_kJperC * (outletT_C - inletT_C)
-				
-			is_heating = input_energy_kJ > 0.5
-			has_heated = has_heated or is_heating
+
+			draw_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * draw_volume_L
+			sumDrawInletT += draw_volume_L * inletT_C		
+			sumDrawOutletT += draw_volume_L * outletT_C		
+			sumDrawDiffT += draw_volume_L * (outletT_C - inletT_C)
+			sumDraw_L += draw_volume_L
+			sumDrawHeatCap_kJperC += draw_heat_capacity_kJperC
+			deliveredEnergy_kJ += draw_heat_capacity_kJperC * (outletT_C - inletT_C)
+							
 			is_drawing = draw_volume_L > 0
-			has_drawn = has_drawn or is_drawing
 			if not(is_drawing):
 				noDrawSumAmbientTTime += ambientT_C
 				sumNoDrawTime_min += 1
+	
+			if t_min == self.ef_bounds.first_recovery_period_end_time:
+				recoveryTotalDraw_L = sumDraw_L		
+				recoveryAvgInletT_C =	sumDrawInletT / sumDraw_L
+				recoveryAvgOutletT_C =	sumDrawOutletT / sumDraw_L
+				recoveryUsedEnergy_kJ = sumInputEnergy_kJ	
 
-			if isFirstRecoveryPeriod:
-				if has_drawn and not(is_drawing):
-					if not(is_heating):	
-						print(f"End first recovery: {index}")
-						isFirstRecoveryPeriod = False					
-							
-						recoveryTotalDraw_L = sumDraw_L		
-						recoveryAvgInletT_C =	sumDrawInletT / sumDraw_L
-						recoveryAvgOutletT_C =	sumDrawOutletT / sumDraw_L
-						recoveryUsedEnergy_kJ = sumInputEnergy_kJ	
-						hasStandbyPeriodStarted = True
-						standbyStartT_C = tankAvgT_C
-						standbyStartTime_min = index
-						continue				
-													
-			if hasStandbyPeriodStarted:	
-				if not(hasStandbyPeriodEnded):
-					if not(is_drawing) and not(is_heating):				
-							standbySumTimeTankT_minC += (1.) * tankAvgT_C 
-							standbySumTimeAmbientT_minC += (1.) * ambientT_C
-							standbySumTime_min += 1.
-							if tankAvgT_C > maxTankAfterFirstRecoveryT_C:
-								maxTankAfterFirstRecoveryT_C = tankAvgT_C
-					else:
-						hasStandbyPeriodEnded = True
-						standbyEndT_C = tankAvgT_C
-						tauStandby_min = index - standbyStartTime_min
-						print(f"End standby period: {index}")
-		
+			if t_min >= self.ef_bounds.first_recovery_period_end_time and t_min < self.ef_bounds.standby_period_end_time:
+				maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C
+			if t_min == self.ef_bounds.standby_period_start_time:
+				standbyStartT_C = tankAvgT_C
+			if t_min == self.ef_bounds.standby_period_end_time:
+				standbyEndT_C = tankAvgT_C
+			if t_min >= self.ef_bounds.standby_period_start_time and t_min < self.ef_bounds.standby_period_end_time:	
+				standbySumTimeTankT_minC += (1.) * tankAvgT_C 
+				standbySumTimeAmbientT_minC += (1.) * ambientT_C
+
 		recoveryStoredEnergy_kJ = tank_heat_capacity_kJperC * (maxTankAfterFirstRecoveryT_C - initialTankAvgT_C)
 		recoveryDeliveredEnergy_kJ = water_specific_heat_kJperkgC * water_density_kgperL * recoveryTotalDraw_L * (recoveryAvgOutletT_C - recoveryAvgInletT_C)
 
@@ -377,7 +434,8 @@ class TestPlotter:
 		self.measured.df = self.filter_dataframe_range(self.measured)
 		#self.measured.energy_use_Wh = self.measured.df[power_col_label_meas].sum()/60
 		self.measured = self.organize_tank_temperatures(self.measured)
-		
+		self.find_EF_bounds(self.measured)
+		self.calculate_EF(self.measured)
 		self.measured.have_data = True
 
 	def prepare_simulated(self):
@@ -402,6 +460,8 @@ class TestPlotter:
 		self.simulated.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"][0]] = convert_values(self.simulated.df[self.variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"][0]], "Wh/min", "W")
 
 		self.simulated = self.organize_tank_temperatures(self.simulated)
+		self.find_EF_bounds(self.simulated)
+		self.calculate_EF(self.simulated)
 		self.simulated.have_data = True
 		
 	def read_simulated(self, filepath):

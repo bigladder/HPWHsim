@@ -107,38 +107,16 @@ class TestProc:
 				self.prev_show |= 2
 				hide_show_div = False
 				
-			hide_ef_fit = True
-			hide_ef_input_val = True
-			ef_out_text = "" 
-			if 'is_standard_test' in data:
-				if data['is_standard_test'] == 1:
-					hide_ef_fit = False
-					build_dir = self.prefs['build_dir']
-					output_dir = os.path.join(build_dir, 'test', 'output')
-					results_filename = os.path.join(output_dir, "results.json")
-					results = read_file(results_filename)
-					summary = results["24_hr_test"]
-					self.ef_val = summary['EF']
-					ef_out_text = "simulated EF: {:.4f}".format(self.ef_val)
-					
-					fit_list = read_file("fit_list.json")
-					if 'metrics' in fit_list:
-						metrics = fit_list['metrics']
-						for index, metric in reversed(list(enumerate(metrics))):
-							if 'type' not in metric or metric['type'] != 'EF':
-								continue
-							if 'model' not in metric or (metric['model'] != self.prefs['model_id']):
-								continue
-							hide_ef_input_val = False
-			return self.plotter.plot.figure, hide_show_div, option_list, value_list, hide_ef_fit, hide_ef_fit, self.ef_val, ef_out_text, False
+			hide_ef = True
+			return self.plotter.plot.figure, hide_show_div, option_list, value_list, hide_ef, False
 	
-		return tuple([no_update] * 9)
+		return tuple([no_update] * 6)
 	
 	def update_plot(self, fig_layout):
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
 		self.plotter.plot.figure.update_layout(fig_layout)
-		return tuple([self.plotter.plot.figure] + [no_update] * 8)
+		return tuple([self.plotter.plot.figure] + [no_update] * 6)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -174,16 +152,16 @@ class TestProc:
 							data=[],
 							style_table = {'width': '400px'},
 					    style_cell_conditional=[
-			        {
-			            'if': {'column_id': 'Quantity'},
-			            'width': '200px',
-									'textAlign': 'left'
-			        },
-							{
-			            'if': {'column_id': 'Value'},
-			            'width': '150px',
-									'textAlign': 'right'
-			        }
+				        {
+				            'if': {'column_id': 'Quantity'},
+				            'width': '200px',
+										'textAlign': 'left'
+				        },
+								{
+				            'if': {'column_id': 'Value'},
+				            'width': '150px',
+										'textAlign': 'right'
+				        }
 					    ],
 							id='selected-table'),
 
@@ -197,27 +175,30 @@ class TestProc:
 					),
 			
 				html.Div([
-					html.Div([
-						html.P(
-							id='EF-output',
-							children="simulated EF: 0",
-							style = {'fontSize': 16, 'display': 'inline-block'}),
-						dcc.Checklist(
-					    options = [{'label': 'fit', 'value': 'fit'}],
-							value = [],
-							id="fit-EF-check",
-							style = {'fontSize': 16, 'display': 'inline-block', 'marginLeft': 8})]),
-					html.Div(
-						[html.Label("target:", htmlFor="target-EF-input", style = {'fontSize': 16, 'display': 'inline-block'}),
-						dcc.Input(id='target-EF-input', type='number', value = 0)],
-						id='EF-input-div', 
-						hidden=True)
-					],
-					id='fit-EF-div',
-					hidden = True)
-			],
-			id='main-div', hidden=True)
-			
+					dash_table.DataTable(
+							columns=(
+								{'id': "Quantity", 'name': "Quantity" }, 
+								{'id': "Value", 'name': "Value", 'type': "numeric", 'format': energy_kJ_format}),
+							data=[],
+							style_table = {'width': '400px'},
+					    style_cell_conditional=[
+				        {
+				            'if': {'column_id': 'Quantity'},
+				            'width': '200px',
+										'textAlign': 'left'
+				        },
+								{
+				            'if': {'column_id': 'Value'},
+				            'width': '150px',
+										'textAlign': 'right'
+				        }
+					    ],
+							id='ef-table'),
+						],
+						id='EF-div',
+						hidden = True)
+				],
+			id='main-div', hidden=True)			
 		]
 		
 		@app.callback(
@@ -235,10 +216,7 @@ class TestProc:
 					Output('show-div', 'hidden', allow_duplicate=True),
 					Output('show-check', 'options'),
 					Output('show-check', 'value'),
-					Output('fit-EF-div', 'hidden'),
-					Output('EF-input-div', 'hidden', allow_duplicate=True),
-					Output('target-EF-input', 'value'),
-					Output('EF-output', 'children'),
+					Output('EF-div', 'hidden'),
 					Output('main-div', 'hidden'),
 					[Input("ws", "message")],
 					State('test-graph', 'relayoutData'),
@@ -256,47 +234,8 @@ class TestProc:
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
 						if data['cmd'] == 'update':
 							return tuple([json.dumps(msg)] + list(self.update_plot(fig_layout)))							
-			return tuple([no_update] * 10)
+			return tuple([no_update] * 7)
 		
-		@app.callback( 
-			Output('ws', 'send', allow_duplicate=True),
-			Output('EF-input-div', 'hidden', allow_duplicate=True),
-			Input('fit-EF-check', 'value'),
-			Input('target-EF-input', 'value'),
-			prevent_initial_call=True
-		)
-		def change_fit_EF(value, ef_in):	
-			fit_list = read_file("fit_list.json")
-			if 'metrics' in fit_list:
-				metrics = fit_list['metrics']
-			else:
-				metrics = {}
-							
-			new_metric = {'type': "EF", 'model_id': self.prefs['model_id'], 'draw_profile': self.prefs['tests']['draw_profile'], 'configuration': "UEF"}
-			hide_input = True
-			for index, metric in reversed(list(enumerate(metrics))):
-				if metric['type'] != 'EF':
-					continue
-				if metric['model_id'] != self.prefs['model_id']:
-					continue			
-				if metric['draw_profile'] != self.prefs['tests']['draw_profile']:
-					continue
-				if metric['configuration'] != "UEF":
-					continue
-				new_metric = metric
-				break
-			
-			new_metric['value'] = ef_in
-			if 'fit' in value:
-				metrics.append(new_metric)
-				hide_input = False
-
-			fit_list['metrics'] = metrics
-			write_file("fit_list.json", fit_list)		
-			self.i_send = self.i_send + 1
-			msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": self.i_send}
-			return json.dumps(msg), hide_input
-
 		@callback(
 			Output('test-graph', 'figure', allow_duplicate=True),
 			Output('show-check', 'value', allow_duplicate=True),
