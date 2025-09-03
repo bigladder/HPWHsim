@@ -260,9 +260,10 @@
 			}
 			model_filepath = 	model_cache[prefs['model_id']];
 
-			const tests = await read_json_file("./test_index.json");
+			const test_index = await read_json_file("./test_index.json");
+			const tests = test_index["tests"], groups = test_index['groups'];
 			let test_data = tests[prefs['tests']['id']];
-			is_standard_test = (('group' in test_data) && (test_data['group'] == "standard_tests"));
+			is_standard_test = (prefs['tests']['id'] in groups["Standard_24-hr energy-factor tests"]);
 			if (is_standard_test)
 			{
 				let data = {
@@ -361,7 +362,8 @@
 		// get available tests
 		var measured_filepath = ""
 		var simulated_filepath = ""
-		const tests = await read_json_file("./test_index.json");
+		const test_index = await read_json_file("./test_index.json");
+		const tests = test_index['tests'], groups = test_index['groups']
 		var show_all_tests = !prefs["tests"]["list"].localeCompare("all_tests");
 		var show_tests_with_data = !prefs["tests"]["list"].localeCompare("tests_with_data");
 		var show_standard_tests = !prefs["tests"]["list"].localeCompare("standard_tests");
@@ -370,21 +372,18 @@
 		var have_test = false;
 		var found_measured = false;
 		var num_tests = 0;
+		const standard_tests = groups["standard_tests"]["tests"];
 		for (let test_id in tests) {
-			var show_test = show_all_tests;
-			if ('group' in tests[test_id]) {
-				const test_group = tests[test_id]['group'];
-				show_test |= show_standard_tests && !test_group.localeCompare("standard_tests");
-				if (show_all_tests || show_tests_with_data)
-					if ('measured' in tests[test_id])	 // check for measured
-							if (prefs['model_id'] in tests[test_id]['measured'])
-							{
-								show_test = true;
-								found_measured = true;
-							}
-			}
-			if (show_test)
-			{
+			var show_test = (show_all_tests || (show_standard_tests && (standard_tests.includes(test_id))));
+			if (show_all_tests || show_tests_with_data)
+				if ('measured' in tests[test_id])	 // check for measured
+						if (prefs['model_id'] in tests[test_id]['measured'])
+						{
+							show_test = true;
+							found_measured = true;
+						}
+
+			if (show_test) {
 				let option = document.createElement("option");
 				option.text = ('name' in tests[test_id])?  tests[test_id]['name']: test_id;
 				option.value = test_id;
@@ -416,7 +415,7 @@
 		if (have_test)
 		{
 			test_data = tests[prefs['tests']['id']];
-			is_standard_test = (('group' in test_data) && (test_data['group'] == "standard_tests"));
+			is_standard_test = (groups["standard_tests"]["tests"].includes(prefs['tests']['id']));
 		}
 
 		select_draw_profile.disabled = !(have_test && is_standard_test);
