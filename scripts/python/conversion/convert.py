@@ -1,5 +1,5 @@
 # Raw script for converting typical supplied data to HPWHsim schedules and measured data.
-# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP65/RE2HP65_UEF67 RE2HP65_UEF67
+# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP80/RE2HP80_UEF50 RE2HP80_UEF50
 import os
 import sys
 from pathlib import Path
@@ -22,7 +22,7 @@ if format == "Villara":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 3), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
 	power_factor = 1000.
 if format == "BradfordWhite":
-	orig_columns = dict([ ("Time", 0), ("AmbientT", 1), ("Power", 4), ("TankT1", 5), ("InletT", 11), ("OutletT", 12), ("Draw", 13) ])
+	orig_columns = dict([ ("Time", 1), ("AmbientT", 2), ("Power", 5), ("TankT1", 6), ("InletT", 12), ("OutletT", 13), ("Draw", 14) ])
 	power_factor = 1.		
 if format == "LG":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 8), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
@@ -292,6 +292,7 @@ def convert_measured(test_dir, data_filename):
 					line_out = line_out + "," + new_column
 			out_file.writelines(line_out + "\n")
 			first = False
+			continue
 			
 		else:		
 			powerSum = powerSum + power_factor * float(columns[orig_columns["Power"]].strip('\n'))
@@ -299,44 +300,45 @@ def convert_measured(test_dir, data_filename):
 			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]])
 			inletT_sum = inletT_sum + float(columns[orig_columns["InletT"]])
 			outletT_sum = outletT_sum + float(columns[orig_columns["OutletT"]])
-			if nLines  >= numRowsPerMin:
-				new_columns = []		
-				new_columns.append(str(iMin - initTime_min))
-				new_columns.append(str(ambientT_sum / nLines))
-				new_columns.append(str(powerSum / nLines))
-				
-				for iCol in range(numTankTs):
-					new_columns.append(columns[orig_columns["TankT1"] + tankTsOrder * iCol])
-							
-				if drawSum > 0:
-					new_columns.append(str(inletT_sum / nLines))
-					new_columns.append(str(outletT_sum / nLines))
-					new_columns.append(str(drawSum / nLines))
-				else:
-					new_columns.append("")		
-					new_columns.append("")	
-					new_columns.append("")	
-
-				firstCol = True
-				for new_column in new_columns:
-					if firstCol:			
-						line_out = new_column
-						firstCol = False
-					else:
-						line_out = line_out + "," + new_column
-					
-				nLines = 0
-						
-				if iMin >= initTime_min:
-					out_file.writelines(line_out + "\n")
-				iMin = iMin + 1
-				
-				powerSum = 0
-				drawSum = 0
-				ambientT_sum = 0
-				inletT_sum = 0
-				outletT_sum = 0										
 			nLines = nLines + 1
+			if nLines < numRowsPerMin:
+				continue
+			
+			new_columns = []		
+			new_columns.append(str(iMin - initTime_min))
+			new_columns.append(str(ambientT_sum / nLines))
+			new_columns.append(str(powerSum / nLines))
+			
+			for iCol in range(numTankTs):
+				new_columns.append(columns[orig_columns["TankT1"] + tankTsOrder * iCol])
+						
+			if drawSum > 0:
+				new_columns.append(str(inletT_sum / nLines))
+				new_columns.append(str(outletT_sum / nLines))
+				new_columns.append(str(drawSum / nLines))
+			else:
+				new_columns.append("")		
+				new_columns.append("")	
+				new_columns.append("")	
+
+			firstCol = True
+			for new_column in new_columns:
+				if firstCol:			
+					line_out = new_column
+					firstCol = False
+				else:
+					line_out = line_out + "," + new_column			
+			nLines = 0
+					
+			if iMin >= initTime_min:
+				out_file.writelines(line_out + "\n")
+			iMin = iMin + 1
+			
+			powerSum = 0
+			drawSum = 0
+			ambientT_sum = 0
+			inletT_sum = 0
+			outletT_sum = 0										
 				
 	out_file.close()
 	

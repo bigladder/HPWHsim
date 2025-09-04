@@ -317,6 +317,11 @@ class TestPlotter:
 		
 		column_time = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
 		
+		standardSetpointT_C = 51.7
+		standardInletT_C = 14.4
+		standardAmbientT_C = 19.7
+		
+		noDrawAvgAmbientT_C = standardAmbientT_C
 		maxTankAfterFirstRecoveryT_C = -10
 		recovery_total_volume_drawn_L = 0
 		for index in range(len(data_set.df)):
@@ -385,10 +390,6 @@ class TestPlotter:
 		print(f"avgOutletT_C : {avgOutletT_C}")
 						
 		print(f"inputEnergy_kJ : {sumInputEnergy_kJ}")
-
-		standardSetpointT_C = 51.7
-		standardInletT_C = 14.4
-		standardAmbientT_C = 19.7
 
 		if sumNoDrawTime_min > 0:
 			noDrawAvgAmbientT_C = noDrawSumAmbientTTime / sumNoDrawTime_min
