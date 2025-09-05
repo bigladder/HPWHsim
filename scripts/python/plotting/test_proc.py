@@ -112,11 +112,18 @@ class TestProc:
 	
 		return tuple([no_update] * 6)
 	
-	def update_plot(self, fig_layout):
+	def update_plot(self, fig):
+		#self.plotter.plot.figure.update_layout(autosize = False)
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
-		self.plotter.plot.figure.update_layout(fig_layout)
-		return tuple([self.plotter.plot.figure] + [no_update] * 6)
+		#self.plotter.plot.figure.update_layout(autosize = True)
+			#self.plotter.plot.figure.update_layout(fig['relayoutData'])
+		for item in fig['layout']:
+			if "axis" in item:		
+				self.plotter.plot.figure['layout'][item] = fig['layout'][item]
+		#if 'range' in fig:
+			#self.plotter.plot.figure.update_layout(range = fig['range'])
+		return tuple([self.plotter.plot.figure] + [no_update] * 5)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -219,10 +226,10 @@ class TestProc:
 					Output('EF-div', 'hidden'),
 					Output('main-div', 'hidden'),
 					[Input("ws", "message")],
-					State('test-graph', 'relayoutData'),
+					State('test-graph', 'figure'),
 					prevent_initial_call=True
 				)
-		def message(msg, fig_layout):
+		def message(msg, fig):
 			if 'data' in msg:
 				data = json.loads(msg['data'])
 				if 'dest' in data and data['dest'] == 'test-proc':
@@ -233,7 +240,7 @@ class TestProc:
 						if data['cmd'] == 'plot':
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
 						if data['cmd'] == 'update':
-							return tuple([json.dumps(msg)] + list(self.update_plot(fig_layout)))							
+							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))							
 			return tuple([no_update] * 7)
 		
 		@callback(

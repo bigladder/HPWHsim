@@ -381,7 +381,8 @@ class TestPlotter:
 			recoveryEfficiency = (recoveryStoredEnergy_kJ + recoveryDeliveredEnergy_kJ) / recoveryUsedEnergy_kJ
 		
 		
-			print("\n")
+			print(f"\n{data_set.variable_type}:")
+			
 			print(f"initial tank T_C: {initialTankAvgT_C}")
 			print(f"max tank T after first recovery_C: {maxTankAfterFirstRecoveryT_C}")
 			print(f"recoveryTotalDraw_L: {recoveryTotalDraw_L}")

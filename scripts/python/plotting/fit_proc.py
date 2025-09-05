@@ -237,13 +237,20 @@ class FitProc:
 		if constraint['type'] == 'condenser-heat-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				self.apply_condenser_distribution(constraint['value'], model_data)				
+				self.apply_condenser_heat_distribution(constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
 		if constraint['type'] == 'condenser-on-logic-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
 				self.apply_condenser_on_logic_distribution(constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+				
+		if constraint['type'] == 'condenser-heat-and-on-logic-distribution':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				self.apply_condenser_heat_distribution(constraint['value'], model_data)
+				self.apply_condenser_on_logic_distribution(constraint['value'], model_data)					
 				self.write_cache_model(model_id, model_data)
 				
 		if constraint['type'] == 'coil-configuration':

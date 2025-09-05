@@ -151,9 +151,9 @@
 			{
 				try
 				{
-					const ref_model_filepath = "../../../test/models_json/" + model_cache[model_id] + ".json";
-					await copy_json_file(model_cache[model_id], ref_model_filepath);
-					delete model_cache[model_id];
+					const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+					await copy_json_file(model_cache[prefs['model_id']], ref_model_filepath);
+					delete model_cache[prefs['model_id']];
 				}
 				catch(err)
 				{}
@@ -263,7 +263,7 @@
 			const test_index = await read_json_file("./test_index.json");
 			const tests = test_index["tests"], groups = test_index['groups'];
 			let test_data = tests[prefs['tests']['id']];
-			is_standard_test = (prefs['tests']['id'] in groups["Standard_24-hr energy-factor tests"]);
+			is_standard_test = prefs['tests']['id'] in groups["standard_tests"];
 			if (is_standard_test)
 			{
 				let data = {
