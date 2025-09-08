@@ -51,24 +51,20 @@ endif ()
 add_subdirectory(vendor)
 
 #generate presets
-if (NOT ${PROJECT_NAME}_PRESETS_ARE_SETUP)
-	set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
+find_program(UV_EXECUTABLE NAMES uv REQUIRED)
 
-	include(pkgmgr-install)
-	uv_install(${pythonScriptDir})
-	execute_process(
-	        COMMAND uv run incorporate_presets.py JSON "${PROJECT_BINARY_DIR}" ../../../test/models_json/models.json
-	        WORKING_DIRECTORY "${pythonScriptDir}"
-	        RESULT_VARIABLE build_presets_result)
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
 
-	if (build_presets_result EQUAL 0)
-	     message(STATUS "Preset generation succeeded")
-	     set(${PROJECT_NAME}_PRESETS_ARE_SETUP TRUE CACHE BOOL "Presets are setup" FORCE)
-	else()
-	    message(STATUS "Preset generation failed")
-	endif()
-endif()
+add_custom_command(
+        OUTPUT "${PROJECT_BINARY_DIR}/presets/presets.cpp" "${PROJECT_BINARY_DIR}/presets/presets.h"
+        COMMAND ${UV_EXECUTABLE} run incorporate_presets.py JSON "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
+        MAIN_DEPENDENCY "${pythonScriptDir}/incorporate_presets.py"
+        DEPENDS "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
+        WORKING_DIRECTORY "${pythonScriptDir}")
 
+add_custom_target(generate_hpwhsim_presets DEPENDS
+        "${PROJECT_BINARY_DIR}/presets/presets.cpp"
+)
 #
 add_subdirectory(src)
 

@@ -219,14 +219,6 @@ set(LG_Tests
         DP_LGC50_HVT
         )
 
-cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
-if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
-    include(pkgmgr-install)
-    uv_install(${pythonScriptDir})
-    set(${PROJECT_NAME}_PYTHON_PLOTS_SETUP TRUE CACHE BOOL "Python plotting environment is already setup" FORCE)
-endif ()
-
 #Tests for successful runs
 function(add_model_test)
     set(options)
