@@ -1351,13 +1351,15 @@ void HPWH::Condenser::makePerformanceBtwxt(const std::vector<std::vector<double>
         };
     }
 
-    std::function<Performance(std::vector<double> result)> getPerformanceFromBtwxtResult =
-        hpwh->useCOP_inBtwxt ? [](std::vector<double> result)
-    { return Performance({result[0], result[0] * result[1], result[1]}); }
-                             : [](std::vector<double> result)
-    {
-        return Performance({result[0], result[1], result[1] / result[0]});
-    };
+    std::function<Performance(std::vector<double> result)> getPerformanceFromBtwxtResult;
+    if (hpwh->useCOP_inBtwxt)
+        getPerformanceFromBtwxtResult = [](std::vector<double> result) {
+            return Performance({result[0], result[0] * result[1], result[1]});
+        };
+    else
+        getPerformanceFromBtwxtResult = [](std::vector<double> result) {
+            return Performance({result[0], result[1], result[1] / result[0]});
+        };
 
     evaluatePerformance = [&perfRGI = perfRGI, getPerformanceTarget, getPerformanceFromBtwxtResult](
                               double externalT_C, double heatSourceT_C)
