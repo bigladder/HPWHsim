@@ -92,25 +92,55 @@ class TestProc:
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
-									
-			option_list = []
-			value_list = []
+				
+			#show checks					
+			show_option_list = []
+			show_value_list = []
 			hide_show_div= True
 			if self.plotter.measured.have_data:
-				option_list.append({'label': 'measured', 'value': 'measured'})
-				value_list.append('measured')
+				show_option_list.append({'label': 'measured', 'value': 'measured'})
+				show_value_list.append('measured')
 				self.prev_show |= 1
 				hide_show_div = False
 			if self.plotter.simulated.have_data:
-				option_list.append({'label': 'simulated', 'value': 'simulated'})
-				value_list.append('simulated')
+				show_option_list.append({'label': 'simulated', 'value': 'simulated'})
+				show_value_list.append('simulated')
 				self.prev_show |= 2
 				hide_show_div = False
-				
-			hide_ef = True
-			return self.plotter.plot.figure, hide_show_div, option_list, value_list, hide_ef, False
+			
+			#summary table	
+			summary_data_list = []
+			for data_set in [self.plotter.measured, self.plotter.simulated]:
+				if data_set.have_data:
+					self.plotter.analyze(data_set)
+
+				for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
+					for item in data_set.test_summary[summary]:
+						summary_data_list.append([item])
+						
+			for summary_data in summary_data_list:
+				for summary_data[0] in ['first-recovery_period', 'standby_period', '24-hr-test']:
+					for data_set in [self.plotter.measured, self.plotter.simulated]:
+						if data_set.have_data:
+							if item in data_set.test_summary[summary]:
+								summary_data.append(data_set.test_summary[summary][item])
+							else:
+								summary_data.append("")
+						else:
+							summary_data.append("")
+			
+			summary_table_df = pd.DataFrame(
+				columns = ['Quantity', 'Measured', 'Simulated'],	
+				data = summary_data_list
+			)
+			summary_table_data = summary_table_df.to_dict('records')			
+			if self.plotter.simulated.have_data:
+				self.prev_show |= 2
+				hide_show_div = False
+
+			return self.plotter.plot.figure, summary_table_data, hide_show_div, no_update, no_update
 	
-		return tuple([no_update] * 6)
+		return tuple([no_update] * 5)
 	
 	def update_plot(self, fig):
 		#self.plotter.plot.figure.update_layout(autosize = False)
@@ -123,7 +153,7 @@ class TestProc:
 				self.plotter.plot.figure['layout'][item] = fig['layout'][item]
 		#if 'range' in fig:
 			#self.plotter.plot.figure.update_layout(range = fig['range'])
-		return tuple([self.plotter.plot.figure] + [no_update] * 5)
+		return tuple([self.plotter.plot.figure] + [no_update] * 4)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -140,15 +170,12 @@ class TestProc:
 		)
 		
 		app.layout = [
-			html.Div(
-				[
+			html.Div([
 	   		WebSocket(url="ws://localhost:8600", id="ws"),
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 				
 				html.Div(dcc.Checklist(id="show-check", inline=True), id='show-div', hidden=True),
 
-				html.Div(html.Button('Get UA', id='get-ua-btn', n_clicks=0), hidden=True),
-			
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
 		
 				html.Div([
@@ -181,29 +208,36 @@ class TestProc:
 						hidden = True
 					),
 			
-				html.Div([
-					dash_table.DataTable(
-							columns=(
-								{'id': "Quantity", 'name': "Quantity" }, 
-								{'id': "Value", 'name': "Value", 'type': "numeric", 'format': energy_kJ_format}),
-							data=[],
-							style_table = {'width': '400px'},
-					    style_cell_conditional=[
-				        {
-				            'if': {'column_id': 'Quantity'},
-				            'width': '200px',
-										'textAlign': 'left'
-				        },
-								{
-				            'if': {'column_id': 'Value'},
-				            'width': '150px',
-										'textAlign': 'right'
-				        }
-					    ],
-							id='ef-table'),
-						],
-						id='EF-div',
-						hidden = True)
+					html.Div([
+							dash_table.DataTable(
+								columns=(
+									{'id': "Quantity", 'name': "Quantity" },
+									{'id': "Measured", 'name': "Measured", 'type': "numeric", 'format': energy_kJ_format}, 
+									{'id': "Simulated", 'name': "Simulated", 'type': "numeric", 'format': energy_kJ_format}),
+								data=[],
+								style_table = {'width': '400px'},
+						    style_cell_conditional=[
+					        {
+					            'if': {'column_id': 'Quantity'},
+					            'width': '200px',
+											'textAlign': 'left'
+					        },
+									{
+					            'if': {'column_id': 'Measured'},
+					            'width': '150px',
+											'textAlign': 'right'
+					        },
+									{
+					            'if': {'column_id': 'Simulated'},
+					            'width': '150px',
+											'textAlign': 'right'
+					        }
+						    ],
+								id='summary-table')
+							],
+						id='summary-table-div',
+						hidden = True
+					),
 				],
 			id='main-div', hidden=True)			
 		]
@@ -220,11 +254,11 @@ class TestProc:
 		@app.callback(
 					Output('ws', 'send', allow_duplicate=True),
 					Output('test-graph', 'figure', allow_duplicate=True),
+					Output('summary-table', 'data'),
 					Output('show-div', 'hidden', allow_duplicate=True),
 					Output('show-check', 'options'),
 					Output('show-check', 'value'),
-					Output('EF-div', 'hidden'),
-					Output('main-div', 'hidden'),
+
 					[Input("ws", "message")],
 					State('test-graph', 'figure'),
 					prevent_initial_call=True

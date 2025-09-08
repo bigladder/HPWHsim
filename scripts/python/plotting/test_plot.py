@@ -67,21 +67,13 @@ class EF_Bounds:
 		self.first_recovery_period_end_time = -1
 		self.standby_period_start_time = 0
 		self.standby_period_end_time = -1
-		
-class EF_Summary:
-	def __init__(self, tank_volume_L):		
-		self.energy_used_kJ = 0
-		self.delivered_energy_kJ = 0
-		self.volume_drawn_L = 0
-		self.tank_volume_L = tank_volume_L
-		self.ef = 0
 
 class DataSet:
 	def __init__(self, variable_type, tank_volume_L):
 		self.df = {}
 		self.have_data = False
 		self.show_plot = False
-		self.ef_summary = EF_Summary(tank_volume_L)
+		self.test_summary = {"tank_volume_L": tank_volume_L}		
 		self.variable_type = variable_type
 		self.filepath = ""
 	
@@ -275,7 +267,7 @@ class TestPlotter:
 						hasFirstRecoveryPeriodEnded = True
 						self.ef_bounds.first_recovery_period_end_time = t_min	- 1	
 				
-	def calculate_EF(self, data_set):		
+	def analyze(self, data_set):		
 		self.find_EF_bounds(data_set)
 				
 		initialTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[self.ef_bounds.test_start_time]
@@ -284,11 +276,9 @@ class TestPlotter:
 		draw_col = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]]
 		power_col = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]]
 		
-		data_set.ef_summary.volume_drawn_L = draw_col.iloc[self.ef_bounds.test_start_time:self.ef_bounds.test_end_time].sum() * 3.78541
-		data_set.ef_summary.energy_used_kJ = power_col.iloc[self.ef_bounds.test_start_time:self.ef_bounds.test_end_time].sum() * 60 / 1000
 		water_specific_heat_kJperkgC = 4.180
 		water_density_kgperL = 0.995
-		tank_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * data_set.ef_summary.tank_volume_L
+		tank_heat_capacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * data_set.test_summary['tank_volume_L']
 		
 		sumDrawOutletT = 0
 		sumDrawInletT = 0
@@ -309,8 +299,6 @@ class TestPlotter:
 		standbySumTimeAmbientT_minC = 0
 		
 		deliveredEnergy_kJ = 0
-
-		
 		column_time = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
 		
 		standardSetpointT_C = 51.7
@@ -319,7 +307,6 @@ class TestPlotter:
 		
 		noDrawAvgAmbientT_C = standardAmbientT_C
 		maxTankAfterFirstRecoveryT_C = -10
-		recovery_total_volume_drawn_L = 0
 		for index in range(len(data_set.df)):
 			t_min = column_time.iloc[index]
 			if t_min < self.ef_bounds.test_start_time or t_min > self.ef_bounds.test_end_time:
@@ -379,86 +366,75 @@ class TestPlotter:
 		recoveryEfficiency = 0
 		if recoveryUsedEnergy_kJ > 0:
 			recoveryEfficiency = (recoveryStoredEnergy_kJ + recoveryDeliveredEnergy_kJ) / recoveryUsedEnergy_kJ
+		recovery_summary = {
+			'recoveryEfficiency': recoveryEfficiency.astype(float),
+			'initialTankAvgT_C': initialTankAvgT_C.astype(float),
+			'maxTankAfterFirstRecoveryT_C': maxTankAfterFirstRecoveryT_C.astype(float),
+			'recoveryTotalDraw_L': recoveryTotalDraw_L.astype(float),
+			'recoveryAvgInletT_C': recoveryAvgInletT_C.astype(float),
+			'recoveryAvgOutletT_C': recoveryAvgOutletT_C.astype(float),
+			'recoveryStoredEnergy_kJ': recoveryStoredEnergy_kJ.astype(float),
+			'recoveryDeliveredEnergy_kJ': recoveryDeliveredEnergy_kJ.astype(float),
+			'recoveryUsedEnergy_kJ': recoveryUsedEnergy_kJ.astype(float),
+			'recovery efficiency': recoveryEfficiency.astype(float)
+		}
+		data_set.test_summary['first-recovery_period'] = recovery_summary
+		print(recovery_summary)
 		
+		standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
+		standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
+		standbyTankLoss_kJ = tank_heat_capacity_kJperC * (standbyEndT_C - standbyStartT_C)
+		standbyHourlyLossEnergy_kJperh = (standbyUsedEnergy_kJ - standbyTankLoss_kJ) / recoveryEfficiency / (standbySumTime_min / 60)
+		standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)			
+		standby_summary = {
+			'standbyPeriodStartTime_min': self.ef_bounds.standby_period_start_time,
+			'standbyPeriodEndTime': self.ef_bounds.standby_period_end_time,
+			'standbyTestDuration h': standbySumTime_min / 60,
+			'standbyStartT_C': standbyStartT_C,
+			'standbyEndT_C': standbyEndT_C,
+			'standbyAvgTankT_C': standbyAvgTankT_C,
+			'standbyAvgAmbientT_C': standbyAvgAmbientT_C,
+			'standbyUsedEnergy_kJ': standbyUsedEnergy_kJ,
+			'standbyTankLoss_kJ': standbyTankLoss_kJ,
+			'standbyHourlyLossEnergy_kJperh': standbyHourlyLossEnergy_kJperh,
+			'standbyLossCoefficient_kJperhC': standbyLossCoefficient_kJperhC
+		}
+		data_set.test_summary['standby_period'] = standby_summary
 		
-			print(f"\n{data_set.variable_type}:")
-			
-			print(f"initial tank T_C: {initialTankAvgT_C}")
-			print(f"max tank T after first recovery_C: {maxTankAfterFirstRecoveryT_C}")
-			print(f"recoveryTotalDraw_L: {recoveryTotalDraw_L}")
-			print(f"recovery avg inlet T_C: {recoveryAvgInletT_C}")
-			print(f"recovery avg outlet T_C: {recoveryAvgOutletT_C}")
-			print(f"recoveryStoredEnergy_kJ : {recoveryStoredEnergy_kJ}")
-			print(f"recoveryDeliveredEnergy_kJ : {recoveryDeliveredEnergy_kJ}")
-			print(f"recoveryUsedEnergy_kJ : {recoveryUsedEnergy_kJ}")
-			print(f"recovery efficiency : {recoveryEfficiency}")
-
-						
-			standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
-			standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
-			standbyTankLoss_kJ = tank_heat_capacity_kJperC * (standbyEndT_C - standbyStartT_C)
-			standbyHourlyLossEnergy_kJperh = (standbyUsedEnergy_kJ - standbyTankLoss_kJ) / recoveryEfficiency / (standbySumTime_min / 60)
-			standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)
-					
-			print("\n")	
-			print(f"standby start time (min): {self.ef_bounds.standby_period_start_time}")
-			print(f"standby end time (min): {self.ef_bounds.standby_period_end_time}")
-			print(f"standby test duration (h): {standbySumTime_min / 60}")
-			print(f"standbyStartT_C: {standbyStartT_C}")
-			print(f"standbyEndT_C: {standbyEndT_C}")
-			print(f"standbyAvgTankT_C: {standbyAvgTankT_C}")
-			print(f"standbyAvgAmbientT_C: {standbyAvgAmbientT_C}")
-			print(f"standbyUsedEnergy_kJ: {standbyUsedEnergy_kJ}")
-			print(f"standbyTankLoss_kJ: {standbyTankLoss_kJ}")
-			print(f"standbyHourlyLossEnergy_kJperh: {standbyHourlyLossEnergy_kJperh}")
-			print(f"standbyLossCoefficient_kJperhC: {standbyLossCoefficient_kJperhC}")
-			
-
-			avgInletT_C = sumDrawInletT / sumDraw_L	
-			avgOutletT_C =	sumDrawOutletT / sumDraw_L
-			print(f"sumDraw_L : {sumDraw_L}")
-			print(f"avgInletT_C : {avgInletT_C}")
-			print(f"avgOutletT_C : {avgOutletT_C}")
-		
-			waterHeatingEnergy_kJ = deliveredEnergy_kJ / recoveryEfficiency
-			standardRemovedEnergy_kJ = sumDrawHeatCap_kJperC * (standardSetpointT_C - standardInletT_C)
-			standardWaterHeatingEnergy_kJ = standardRemovedEnergy_kJ / recoveryEfficiency
-			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
-			removedHeatCapacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * sumDraw_L	
-			
-			standardDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C)
-			standardEnergyUsedToHeatWater_kJ = standardDeliveredEnergy_kJ/ recoveryEfficiency		
-						
-			actualDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (avgOutletT_C - avgInletT_C)
-			energyUsedToHeatWater_kJ = actualDeliveredEnergy_kJ / recoveryEfficiency
-
-			waterHeatingDifferenceEnergy_kJ = standardEnergyUsedToHeatWater_kJ - energyUsedToHeatWater_kJ
-				
-			waterHeatingEnergy_kJ = tank_heat_capacity_kJperC * (tankAvgT_C - initialTankAvgT_C) / recoveryEfficiency
-			dailyWaterHeaterEnergyConsumption_kJ = sumInputEnergy_kJ - waterHeatingEnergy_kJ	
-			consumedHeatingEnergy_kJ = sumInputEnergy_kJ + tank_heat_capacity_kJperC * (finalTankAvgT_C - initialTankAvgT_C) / recoveryEfficiency
-			#adjustedConsumedWaterHeatingEnergy_kJ = consumedHeatingEnergy_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
-
-			adjustedDailyWaterHeaterEnergyConsumption_kJ = dailyWaterHeaterEnergyConsumption_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
-			modifiedConsumedWaterHeatingEnergy_kJ = adjustedDailyWaterHeaterEnergyConsumption_kJ + waterHeatingDifferenceEnergy_kJ
-			
-			data_set.ef_summary.ef = standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
-			data_set.ef_summary.energy_used_kJ = sumInputEnergy_kJ
-			
-			print("\n")	
-			print(f"total time without flow: {(sumNoDrawTime_min / 60)}")
-			print(f"standardDeliveredEnergy_kJ : {standardDeliveredEnergy_kJ}")
-			print(f"waterHeatingEnergy_kJ : {waterHeatingEnergy_kJ}")
-			print(f"dailyWaterHeaterEnergyConsumption_kJ : {dailyWaterHeaterEnergyConsumption_kJ}")
-			print(f"standardWaterHeatingEnergy_kJ : {standardWaterHeatingEnergy_kJ}")
-			print(f"energyUsedToHeatWater_kJ : {energyUsedToHeatWater_kJ}")
-			print(f"actualDeliveredEnergy_kJ : {actualDeliveredEnergy_kJ}")
-			print(f"waterHeatingEnergy_kJ : {waterHeatingEnergy_kJ}")
-
-			print(f"waterHeatingDifferenceEnergy_kJ  : {waterHeatingDifferenceEnergy_kJ}")
-			print(f"adjustedDailyWaterHeaterEnergyConsumption_kJ : {adjustedDailyWaterHeaterEnergyConsumption_kJ}")
-			print(f"modifiedConsumedWaterHeatingEnergy_kJ : {modifiedConsumedWaterHeatingEnergy_kJ}")
-			print(f"ef: {data_set.ef_summary.ef}")
+		avgInletT_C = sumDrawInletT / sumDraw_L	
+		avgOutletT_C =	sumDrawOutletT / sumDraw_L	
+		waterHeatingEnergy_kJ = deliveredEnergy_kJ / recoveryEfficiency
+		standardRemovedEnergy_kJ = sumDrawHeatCap_kJperC * (standardSetpointT_C - standardInletT_C)
+		standardWaterHeatingEnergy_kJ = standardRemovedEnergy_kJ / recoveryEfficiency
+		waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
+		removedHeatCapacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * sumDraw_L	
+		standardDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C)
+		standardEnergyUsedToHeatWater_kJ = standardDeliveredEnergy_kJ/ recoveryEfficiency							
+		actualDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (avgOutletT_C - avgInletT_C)
+		energyUsedToHeatWater_kJ = actualDeliveredEnergy_kJ / recoveryEfficiency
+		waterHeatingDifferenceEnergy_kJ = standardEnergyUsedToHeatWater_kJ - energyUsedToHeatWater_kJ			
+		waterHeatingEnergy_kJ = tank_heat_capacity_kJperC * (tankAvgT_C - initialTankAvgT_C) / recoveryEfficiency
+		dailyWaterHeaterEnergyConsumption_kJ = sumInputEnergy_kJ - waterHeatingEnergy_kJ	
+		adjustedDailyWaterHeaterEnergyConsumption_kJ = dailyWaterHeaterEnergyConsumption_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
+		modifiedConsumedWaterHeatingEnergy_kJ = adjustedDailyWaterHeaterEnergyConsumption_kJ + waterHeatingDifferenceEnergy_kJ
+		_24_hr_test_summary = {
+			'avgInletT_C': avgInletT_C,
+			'avgOutletT_C': avgOutletT_C,
+			'sumDraw_L': sumDraw_L,
+			'energyUsed_kJ': sumInputEnergy_kJ,
+			'standardDeliveredEnergy_kJ': standardDeliveredEnergy_kJ,
+			'waterHeatingEnergy_kJ': waterHeatingEnergy_kJ,
+			'dailyWaterHeaterEnergyConsumption_kJ': dailyWaterHeaterEnergyConsumption_kJ,
+			'standardWaterHeatingEnergy_kJ': standardWaterHeatingEnergy_kJ,
+			'energyUsedToHeatWater_kJ': energyUsedToHeatWater_kJ,
+			'actualDeliveredEnergy_kJ': actualDeliveredEnergy_kJ,
+			'waterHeatingEnergy_kJ': waterHeatingEnergy_kJ,
+			'waterHeatingDifferenceEnergy_kJ': waterHeatingDifferenceEnergy_kJ,
+			'adjustedDailyWaterHeaterEnergyConsumption_kJ': adjustedDailyWaterHeaterEnergyConsumption_kJ,
+			'modifiedConsumedWaterHeatingEnergy_kJ': modifiedConsumedWaterHeatingEnergy_kJ,
+			'EF': standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
+		}
+		data_set.test_summary['24-hr-test'] = _24_hr_test_summary
 			
 	def read_measured(self, filepath):
 		try:
@@ -473,7 +449,7 @@ class TestPlotter:
 		#self.measured.energy_use_Wh = self.measured.df[power_col_label_meas].sum()/60
 		self.measured = self.organize_tank_temperatures(self.measured)
 		self.find_EF_bounds(self.measured)
-		self.calculate_EF(self.measured)
+		self.analyze(self.measured)
 		self.measured.have_data = True
 
 	def prepare_simulated(self):
@@ -499,7 +475,7 @@ class TestPlotter:
 
 		self.simulated = self.organize_tank_temperatures(self.simulated)
 		self.find_EF_bounds(self.simulated)
-		self.calculate_EF(self.simulated)
+		self.analyze(self.simulated)
 		self.simulated.have_data = True
 		
 	def read_simulated(self, filepath):
