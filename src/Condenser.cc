@@ -298,7 +298,7 @@ void HPWH::Condenser::from(
         {
             inputPowers_W[i] = lookup_variables.input_power[i];
             heatingCapacities_W_or_cops[i] = lookup_variables.heating_capacity[i];
-            if (hpwh->useCOP)
+            if (hpwh->useCOP_inBtwxt)
                 heatingCapacities_W_or_cops[i] /= lookup_variables.input_power[i];
         }
         perfGridValues.push_back(inputPowers_W);
@@ -384,7 +384,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         {
             inputPowers_W[i] = lookup_variables.input_power[i];
             heatingCapacities_W_or_cops[i] = lookup_variables.heating_capacity[i];
-            if (hpwh->useCOP)
+            if (hpwh->useCOP_inBtwxt)
                 heatingCapacities_W_or_cops[i] /= lookup_variables.input_power[i];
         }
         perfGridValues.push_back(inputPowers_W);
@@ -616,7 +616,7 @@ void HPWH::Condenser::to(
                 rangeFac * COP_CoefRatioMax * (refCOP_vals - minVals) + minVals);
 
             std::size_t nVals = nPowerInVals;
-            if (hpwh->useCOP)
+            if (hpwh->useCOP_inBtwxt)
                 nVals = std::max(nVals, nCOP_vals);
             else
                 nVals = std::max(nVals, nPowerOutVals);
@@ -1352,11 +1352,12 @@ void HPWH::Condenser::makePerformanceBtwxt(const std::vector<std::vector<double>
     }
 
     std::function<Performance(std::vector<double> result)> getPerformanceFromBtwxtResult =
-        hpwh->useCOP ? [](std::vector<double> result)
+        hpwh->useCOP_inBtwxt ? [](std::vector<double> result)
     { return Performance({result[0], result[0] * result[1], result[1]}); }
-                     : [](std::vector<double> result) {
-                           return Performance({result[0], result[1], result[1] / result[0]});
-                       };
+                             : [](std::vector<double> result)
+    {
+        return Performance({result[0], result[1], result[1] / result[0]});
+    };
 
     evaluatePerformance = [&perfRGI = perfRGI, getPerformanceTarget, getPerformanceFromBtwxtResult](
                               double externalT_C, double heatSourceT_C)
