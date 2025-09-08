@@ -40,7 +40,7 @@ def generate(repo_dir, build_dir):
 	result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 	print(result.stdout)
  
-	cmd = ["git", "checkout", "add-checks-standby"]
+	cmd = ["git", "checkout", "allow-cop-or-heating_cap"]
 	result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 	print(result.stdout)
   

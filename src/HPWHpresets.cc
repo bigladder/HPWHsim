@@ -4350,6 +4350,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         send_error("You have tried to select a preset model which does not exist.");
     }
 
+    useCOP = true;
     if (hasInitialTankTemp)
         setTankToTemperature(initialTankT_C);
     else // start tank off at setpoint
