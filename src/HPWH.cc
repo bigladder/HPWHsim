@@ -3018,7 +3018,7 @@ void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     checkFrom(
         setpoint_C, hsi.standard_setpoint_is_set, K_TO_C(hsi.standard_setpoint), F_TO_C(135.));
 
-    checkFrom(useCOP,
+    checkFrom(useCOP_inBtwxt,
               hsi.use_cop_for_condenser_performance_is_set,
               hsi.use_cop_for_condenser_performance,
               false);
@@ -3272,7 +3272,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
     checkTo(C_TO_K(setpoint_C), hsi.standard_setpoint_is_set, hsi.standard_setpoint);
 
     if (hasACompressor())
-        checkTo(useCOP,
+        checkTo(useCOP_inBtwxt,
                 hsi.use_cop_for_condenser_performance_is_set,
                 hsi.use_cop_for_condenser_performance);
 

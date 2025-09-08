@@ -1415,7 +1415,7 @@ class HPWH : public Courier::Sender
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
-    bool useCOP = false;
+    bool useCOP_inBtwxt = false;
 
   private:
     void setAllDefaults(); /**< sets all the defaults */
