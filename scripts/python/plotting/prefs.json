@@ -1,14 +1,14 @@
 {
-  "model_id": "BradfordWhiteAeroThermRE2HP50",
+  "model_id": "AquaThermAire",
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
-    "list": "standard_tests",
-    "id": "UEF",
+    "list": "tests_with_data",
+    "id": "villara_24hr67",
     "draw_profile": "auto",
     "plots": {
       "show_simulated": true,
-      "show_measured": true
+      "show_measured": false
     }
   },
   "performance": {

@@ -460,7 +460,6 @@ class TestPlotter:
 	def prepare_simulated(self):
 	# remove rows from dataframes outside of inclusive range [1,1440]
 		self.simulated.df = self.filter_dataframe_range(self.simulated)
-
 		# sum sim power if multiple heat sources
 		i = 1
 		src_exists = True
@@ -595,12 +594,12 @@ class TestPlotter:
 			marker_fill_color = None
 			marker_line_color = None
 
-		self.plot.add_display_data(
-		    dimes.DisplayData(
+		y_arr = [x for x in data_set.df[self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]]]
 
-		        [x for x in data_set.df[
-		            self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]
-		        ]],
+		self.plot.add_display_data(
+				
+		    dimes.DisplayData(
+		        y_arr,
 		        name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}",
 		        native_units=self.variables["Y-Variables"][variable]["Units"],
 		        line_properties=LineProperties(
@@ -645,7 +644,7 @@ class TestPlotter:
 			for value in range(
 				len(self.variables["Y-Variables"][variable]["Column Names"][self.simulated.variable_type])
 				):
-			
+
 				self.plot.figure.update_traces(
 					y = [x for x in self.simulated.df[
 				            self.variables["Y-Variables"][variable]["Column Names"][self.simulated.variable_type][value]
@@ -740,8 +739,8 @@ def plot(data):
 			plotter.read_measured(data["measured_filepath"])
 	if "test_points" in data:
 		plotter.test_points = data['test_points']
-	if "simulated_filepath" in data:
-		plotter.read_simulated(data["simulated_filepath"])
+	#if "simulated_filepath" in data:
+		#plotter.read_simulated(data["simulated_filepath"])
 	plotter.draw({'show': 3})
 	return plotter
 

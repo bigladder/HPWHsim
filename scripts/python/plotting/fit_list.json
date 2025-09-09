@@ -263,6 +263,14 @@
       "value": 1.6499999999999997,
       "t_min": 178,
       "type": "test_point"
+    },
+    {
+      "model_id": "AquaThermAire",
+      "test_id": "villara_24hr67",
+      "variable": "Pin",
+      "value": 3.0,
+      "t_min": 911,
+      "type": "test_point"
     }
   ]
 }

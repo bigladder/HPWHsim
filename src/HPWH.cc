@@ -708,8 +708,10 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
     *out << testData.time_min;
     *out << fmt::format(", {:0.6f}", testData.ambientT_C);
     *out << fmt::format(", {:0.6f}", testData.setpointT_C);
-    *out << fmt::format(", {:0.6f}", testData.inletT_C);
-    *out << fmt::format(", {:0.6f}", L_TO_GAL(testData.drawVolume_L));
+    *out << ((testData.drawVolume_L > 0.) ? fmt::format(", {:0.6f}", testData.inletT_C) : ",");
+    *out << (fmt::format(", {:0.6f}", L_TO_GAL(testData.drawVolume_L)));//(testData.drawVolume_L > 0.)
+                 //? fmt::format(", {:0.6f}", L_TO_GAL(testData.drawVolume_L))
+                 //: ",");
 
     if (isCompressorExternalMultipass() == 1)
     {
@@ -717,6 +719,7 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
         *out << fmt::format(", {:0.6f}", getCondenserWaterOutletTemp());
         *out << fmt::format(", {:0.6f}", getExternalVolumeHeated(HPWH::UNITS_GAL));
     }
+
     if (usesSoCLogic)
     {
         *out << fmt::format(", {:0.6f}", _targetSoC);
@@ -739,14 +742,9 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
                                  : testData.thermocoupleT_C[iTC]);
     }
 
-    if (testData.drawVolume_L > 0.)
-    {
-        *out << fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.outletT_C) : testData.outletT_C);
-    }
-    else
-    {
-        *out << ",";
-    }
+    *out << ((testData.drawVolume_L > 0.)
+                 ? fmt::format(",{:0.2f}", doIP ? C_TO_F(testData.outletT_C) : testData.outletT_C)
+                 : ",");
 
     *out << std::endl;
 }

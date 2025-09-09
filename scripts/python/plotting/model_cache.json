@@ -3,5 +3,6 @@
   "BradfordWhiteAeroThermRE2H65": "../../../build/gui/BradfordWhiteAeroThermRE2H65.json",
   "BradfordWhiteAeroThermRE2H50": "../../../build/gui/BradfordWhiteAeroThermRE2H50.json",
   "BradfordWhiteAeroThermRE2HP80": "../../../build/gui/BradfordWhiteAeroThermRE2HP80.json",
-  "BradfordWhiteAeroThermRE2HP50": "../../../build/gui/BradfordWhiteAeroThermRE2HP50.json"
+  "BradfordWhiteAeroThermRE2HP50": "../../../build/gui/BradfordWhiteAeroThermRE2HP50.json",
+  "AquaThermAire": "../../../build/gui/AquaThermAire.json"
 }
