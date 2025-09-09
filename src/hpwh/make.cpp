@@ -216,7 +216,7 @@ void make(HPWH& hpwh,
                 outputFilename += ".json";
 
             if (outputDir != "")
-               outputFilename = outputDir + "/" + outputFilename;
+                outputFilename = outputDir + "/" + outputFilename;
 
             std::ofstream outputFile;
             outputFile.open(outputFilename.c_str(), std::ifstream::out);
@@ -227,7 +227,6 @@ void make(HPWH& hpwh,
             }
             outputFile << j.dump(2) << "\n";
             outputFile.close();
-
         }
     }
 }

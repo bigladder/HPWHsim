@@ -552,11 +552,12 @@ void HPWH::runOneStep(double drawVolume_L,
     }
 
     // settle outputs
-    for (auto heatSource: heatSources)
+    for (auto heatSource : heatSources)
         if (heatSource->typeOfHeatSource() == TYPE_compressor)
         {
             auto condenser = reinterpret_cast<Condenser*>(heatSource.get());
-            condenser->energyInput_kWh += condenser->standbyPower_kW * ((minutesPerStep - condenser->runtime_min) / min_per_hr);
+            condenser->energyInput_kWh += condenser->standbyPower_kW *
+                                          ((minutesPerStep - condenser->runtime_min) / min_per_hr);
         }
 
     // outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
@@ -4206,7 +4207,6 @@ nlohmann::json HPWH::TestSummary::report()
 
     j_results["total_volume_drawn_L"] = removedVolume_L;
 
-
     j_results["usedEnergy_kJ"] = usedEnergy_kJ;
     j_results["daily_water_heating_energy_consumption_kJ"] = waterHeatingEnergy_kJ;
 
@@ -4216,8 +4216,7 @@ nlohmann::json HPWH::TestSummary::report()
     j_results["modified_daily_water_heating_energy_consumption_kJ"] =
         modifiedConsumedWaterHeatingEnergy_kJ;
 
-    j_results["annual_electrical_energy_consumption_kJ"] =
-        annualConsumedElectricalEnergy_kJ;
+    j_results["annual_electrical_energy_consumption_kJ"] = annualConsumedElectricalEnergy_kJ;
 
     j_results["annual_energy_consumption_kJ"] = annualConsumedEnergy_kJ;
 

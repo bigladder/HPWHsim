@@ -469,7 +469,8 @@ void HPWH::Condenser::to(
     }
     }
 
-    checkTo(1000. * standbyPower_kW, perf.standby_power_is_set,
+    checkTo(1000. * standbyPower_kW,
+            perf.standby_power_is_set,
             perf.standby_power,
             standbyPower_kW > 0.);
 
@@ -675,7 +676,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
 
-    checkTo(1000. * standbyPower_kW, perf.standby_power_is_set,
+    checkTo(1000. * standbyPower_kW,
+            perf.standby_power_is_set,
             perf.standby_power,
             standbyPower_kW > 0.);
 
