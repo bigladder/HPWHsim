@@ -109,25 +109,31 @@ class TestProc:
 				hide_show_div = False
 			
 			#summary table	
-			summary_data_list = []
+			summary_data_dict = {}
 			for data_set in [self.plotter.measured, self.plotter.simulated]:
 				if data_set.have_data:
 					self.plotter.analyze(data_set)
-
-				for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
-					for item in data_set.test_summary[summary]:
-						summary_data_list.append([item])
-						
-			for summary_data in summary_data_list:
-				for summary_data[0] in ['first-recovery_period', 'standby_period', '24-hr-test']:
-					for data_set in [self.plotter.measured, self.plotter.simulated]:
-						if data_set.have_data:
+					for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
+						for item in data_set.test_summary[summary]:
+							if item not in summary_data_dict:
+								summary_data_dict[item] = []
+								
+			for data_set in [self.plotter.measured, self.plotter.simulated]:
+				for item in summary_data_dict:
+					have_item = False
+					if data_set.have_data:
+						for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
 							if item in data_set.test_summary[summary]:
-								summary_data.append(data_set.test_summary[summary][item])
-							else:
-								summary_data.append("")
-						else:
-							summary_data.append("")
+								have_item = True
+								summary_data_dict[item].append(data_set.test_summary[summary][item])
+								break
+
+					if not(have_item):
+						summary_data_dict[item].append("")	
+										
+			summary_data_list = []
+			for item in summary_data_dict:
+				summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])		
 			
 			summary_table_df = pd.DataFrame(
 				columns = ['Quantity', 'Measured', 'Simulated'],	
@@ -137,8 +143,10 @@ class TestProc:
 			if self.plotter.simulated.have_data:
 				self.prev_show |= 2
 				hide_show_div = False
+			
+			summary_table_hidden = (len(summary_data_list) == 0)
 
-			return self.plotter.plot.figure, summary_table_data, hide_show_div, no_update, no_update
+			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, no_update, no_update
 	
 		return tuple([no_update] * 5)
 	
@@ -153,7 +161,7 @@ class TestProc:
 				self.plotter.plot.figure['layout'][item] = fig['layout'][item]
 		#if 'range' in fig:
 			#self.plotter.plot.figure.update_layout(range = fig['range'])
-		return tuple([self.plotter.plot.figure] + [no_update] * 4)
+		return tuple([self.plotter.plot.figure] + [no_update] * 5)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -236,10 +244,10 @@ class TestProc:
 								id='summary-table')
 							],
 						id='summary-table-div',
-						hidden = True
+						hidden = False
 					),
 				],
-			id='main-div', hidden=True)			
+			id='main-div', hidden=False)			
 		]
 		
 		@app.callback(
@@ -255,6 +263,7 @@ class TestProc:
 					Output('ws', 'send', allow_duplicate=True),
 					Output('test-graph', 'figure', allow_duplicate=True),
 					Output('summary-table', 'data'),
+					Output('summary-table-div', 'hidden'),
 					Output('show-div', 'hidden', allow_duplicate=True),
 					Output('show-check', 'options'),
 					Output('show-check', 'value'),

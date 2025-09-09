@@ -300,7 +300,6 @@ class TestPlotter:
 		
 		deliveredEnergy_kJ = 0
 		column_time = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
-		
 		standardSetpointT_C = 51.7
 		standardInletT_C = 14.4
 		standardAmbientT_C = 19.7
@@ -322,6 +321,7 @@ class TestPlotter:
 			sumInputEnergy_kJ += input_energy_kJ
 			if math.isnan(draw_volume_L):
 				draw_volume_L = 0
+			if draw_volume_L == 0:
 				is_drawing = False
 			else:
 				sumDrawInletT += draw_volume_L * inletT_C		
@@ -363,23 +363,24 @@ class TestPlotter:
 		if sumNoDrawTime_min > 0:
 			noDrawAvgAmbientT_C = noDrawSumAmbientTTime / sumNoDrawTime_min
 			
-		recoveryEfficiency = 0
+		recoveryEfficiency = 0.
 		if recoveryUsedEnergy_kJ > 0:
 			recoveryEfficiency = (recoveryStoredEnergy_kJ + recoveryDeliveredEnergy_kJ) / recoveryUsedEnergy_kJ
+					
 		recovery_summary = {
-			'recoveryEfficiency': recoveryEfficiency.astype(float),
-			'initialTankAvgT_C': initialTankAvgT_C.astype(float),
-			'maxTankAfterFirstRecoveryT_C': maxTankAfterFirstRecoveryT_C.astype(float),
-			'recoveryTotalDraw_L': recoveryTotalDraw_L.astype(float),
-			'recoveryAvgInletT_C': recoveryAvgInletT_C.astype(float),
-			'recoveryAvgOutletT_C': recoveryAvgOutletT_C.astype(float),
-			'recoveryStoredEnergy_kJ': recoveryStoredEnergy_kJ.astype(float),
-			'recoveryDeliveredEnergy_kJ': recoveryDeliveredEnergy_kJ.astype(float),
-			'recoveryUsedEnergy_kJ': recoveryUsedEnergy_kJ.astype(float),
-			'recovery efficiency': recoveryEfficiency.astype(float)
+			'recoveryEfficiency': recoveryEfficiency,
+			'initialTankAvgT_C': initialTankAvgT_C,
+			'maxTankAfterFirstRecoveryT_C': maxTankAfterFirstRecoveryT_C,
+			'recoveryTotalDraw_L': recoveryTotalDraw_L,
+			'recoveryAvgInletT_C': recoveryAvgInletT_C,
+			'recoveryAvgOutletT_C': recoveryAvgOutletT_C,
+			'recoveryStoredEnergy_kJ': recoveryStoredEnergy_kJ,
+			'recoveryDeliveredEnergy_kJ': recoveryDeliveredEnergy_kJ,
+			'recoveryUsedEnergy_kJ': recoveryUsedEnergy_kJ,
 		}
+		for k, v in recovery_summary.items():
+			recovery_summary[k] = float(v)
 		data_set.test_summary['first-recovery_period'] = recovery_summary
-		print(recovery_summary)
 		
 		standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
 		standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
@@ -399,6 +400,8 @@ class TestPlotter:
 			'standbyHourlyLossEnergy_kJperh': standbyHourlyLossEnergy_kJperh,
 			'standbyLossCoefficient_kJperhC': standbyLossCoefficient_kJperhC
 		}
+		for k, v in standby_summary.items():
+			standby_summary[k] = float(v)
 		data_set.test_summary['standby_period'] = standby_summary
 		
 		avgInletT_C = sumDrawInletT / sumDraw_L	
@@ -434,6 +437,8 @@ class TestPlotter:
 			'modifiedConsumedWaterHeatingEnergy_kJ': modifiedConsumedWaterHeatingEnergy_kJ,
 			'EF': standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
 		}
+		for k, v in _24_hr_test_summary.items():
+			_24_hr_test_summary[k] = float(v)
 		data_set.test_summary['24-hr-test'] = _24_hr_test_summary
 			
 	def read_measured(self, filepath):
