@@ -3019,8 +3019,8 @@ void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
         setpoint_C, hsi.standard_setpoint_is_set, K_TO_C(hsi.standard_setpoint), F_TO_C(135.));
 
     checkFrom(useCOP_inBtwxt,
-              hsi.use_cop_for_condenser_performance_is_set,
-              hsi.use_cop_for_condenser_performance,
+              hsi.interpolate_cop_is_set,
+              hsi.interpolate_cop,
               false);
 
     if (hsi.system_type_is_set)
@@ -3273,8 +3273,8 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
     if (hasACompressor())
         checkTo(useCOP_inBtwxt,
-                hsi.use_cop_for_condenser_performance_is_set,
-                hsi.use_cop_for_condenser_performance);
+                hsi.interpolate_cop_is_set,
+                hsi.interpolate_cop);
 
     if (hasACompressor() && (getCompressorCoilConfig() == Condenser::COIL_CONFIG::CONFIG_EXTERNAL))
     {
