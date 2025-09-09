@@ -77,11 +77,11 @@ namespace hpwh_data_model {
 			static constexpr std::string_view central_system_units = "";
 			static constexpr std::string_view central_system_description = "The corresponding data group containing Standard 205 system component representations";
 			static constexpr std::string_view central_system_name = "central_system";
-			bool use_cop_for_condenser_performance;
-			bool use_cop_for_condenser_performance_is_set = false;
-			static constexpr std::string_view use_cop_for_condenser_performance_units = "";
-			static constexpr std::string_view use_cop_for_condenser_performance_description = "Use coefficient-of-performance for condenser computations";
-			static constexpr std::string_view use_cop_for_condenser_performance_name = "use_cop_for_condenser_performance";
+			bool interpolate_cop;
+			bool interpolate_cop_is_set = false;
+			static constexpr std::string_view interpolate_cop_units = "";
+			static constexpr std::string_view interpolate_cop_description = "Performance will be calculated by interpolating COP instead of capacity";
+			static constexpr std::string_view interpolate_cop_name = "interpolate_cop";
 		};
 		NLOHMANN_JSON_SERIALIZE_ENUM (HPWHSystemType, {
 			{HPWHSystemType::UNKNOWN, "UNKNOWN"},

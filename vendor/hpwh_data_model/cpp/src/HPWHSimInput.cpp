@@ -16,7 +16,7 @@ namespace hpwh_data_model  {
 			json_get<hpwh_sim_input::HPWHSystemType>(j, logger.get(), "system_type", x.system_type, x.system_type_is_set, true);
 			json_get<rsintegratedwaterheater::RSINTEGRATEDWATERHEATER>(j, logger.get(), "integrated_system", x.integrated_system, x.integrated_system_is_set, false);
 			json_get<central_water_heating_system::CentralWaterHeatingSystem>(j, logger.get(), "central_system", x.central_system, x.central_system_is_set, false);
-			json_get<bool>(j, logger.get(), "use_cop_for_condenser_performance", x.use_cop_for_condenser_performance, x.use_cop_for_condenser_performance_is_set, false);
+			json_get<bool>(j, logger.get(), "interpolate_cop", x.interpolate_cop, x.interpolate_cop_is_set, false);
 		}
 		void to_json(nlohmann::json& j, const HPWHSimInput& x) {
 			json_set<core::Metadata>(j, "metadata", x.metadata, x.metadata_is_set);
@@ -27,7 +27,7 @@ namespace hpwh_data_model  {
 			json_set<hpwh_sim_input::HPWHSystemType>(j, "system_type", x.system_type, x.system_type_is_set);
 			json_set<rsintegratedwaterheater::RSINTEGRATEDWATERHEATER>(j, "integrated_system", x.integrated_system, x.integrated_system_is_set);
 			json_set<central_water_heating_system::CentralWaterHeatingSystem>(j, "central_system", x.central_system, x.central_system_is_set);
-			json_set<bool>(j, "use_cop_for_condenser_performance", x.use_cop_for_condenser_performance, x.use_cop_for_condenser_performance_is_set);
+			json_set<bool>(j, "interpolate_cop", x.interpolate_cop, x.interpolate_cop_is_set);
 		}
 	}
 }
