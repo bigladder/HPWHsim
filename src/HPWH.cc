@@ -709,9 +709,9 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
     *out << fmt::format(", {:0.6f}", testData.ambientT_C);
     *out << fmt::format(", {:0.6f}", testData.setpointT_C);
     *out << ((testData.drawVolume_L > 0.) ? fmt::format(", {:0.6f}", testData.inletT_C) : ",");
-    *out << (fmt::format(", {:0.6f}", L_TO_GAL(testData.drawVolume_L)));//(testData.drawVolume_L > 0.)
-                 //? fmt::format(", {:0.6f}", L_TO_GAL(testData.drawVolume_L))
-                 //: ",");
+    *out << ((testData.drawVolume_L > 0.)
+                 ? fmt::format(", {:0.6f}", L_TO_GAL(testData.drawVolume_L))
+                 : ",");
 
     if (isCompressorExternalMultipass() == 1)
     {

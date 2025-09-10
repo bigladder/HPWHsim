@@ -108,33 +108,8 @@ class TestProc:
 				self.prev_show |= 2
 				hide_show_div = False
 			
-			#summary table	
-			summary_data_dict = {}
-			for data_set in [self.plotter.measured, self.plotter.simulated]:
-				if data_set.have_data:
-					self.plotter.analyze(data_set)
-					for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
-						for item in data_set.test_summary[summary]:
-							if item not in summary_data_dict:
-								summary_data_dict[item] = []
-								
-			for data_set in [self.plotter.measured, self.plotter.simulated]:
-				for item in summary_data_dict:
-					have_item = False
-					if data_set.have_data:
-						for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
-							if item in data_set.test_summary[summary]:
-								have_item = True
-								summary_data_dict[item].append(data_set.test_summary[summary][item])
-								break
-
-					if not(have_item):
-						summary_data_dict[item].append("")	
-										
-			summary_data_list = []
-			for item in summary_data_dict:
-				summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])		
-			
+			#summary table
+			summary_data_list = self.plotter.getSummaryDataList()			
 			summary_table_df = pd.DataFrame(
 				columns = ['Quantity', 'Measured', 'Simulated'],	
 				data = summary_data_list
@@ -148,7 +123,7 @@ class TestProc:
 
 			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, no_update, no_update
 	
-		return tuple([no_update] * 5)
+		return tuple([no_update] * 6)
 	
 	def update_plot(self, fig):
 		#self.plotter.plot.figure.update_layout(autosize = False)

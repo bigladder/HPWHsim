@@ -1,16 +1,10 @@
 """
 uv run test_plot.py \
-	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/test/Villara/AquaThermAire/villara_24hr67/measured.csv" \
-	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67_Preset_AquaThermAire.csv" \
-	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67_Preset_AquaThermAire.html"
-"""
-"""
-uv run test_plot.py \
 	"AquaThermAire" \
 	"villara_24hr67" \
-	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/test/Villara/AquaThermAire/villara_24hr67/measured.csv" \
-	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67_Preset_AquaThermAire.csv" \
-	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67_Preset_AquaThermAire.html"
+	"" \
+	"/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67_JSON_BradfordWhiteAeroThermRE2HP50.csv" \
+	"temp.html"
 """
 import os
 import sys
@@ -20,6 +14,7 @@ import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
 import plotly.graph_objects as go
 import math
+import numpy as np
 from common import read_file, write_file, get_tank_volume
 
 styles = {
@@ -57,7 +52,7 @@ def retrieve_line_type(variable_type):
 	if variable_type == "Measured":
 		return None
 	elif variable_type == "Simulated":
-		return "dot"
+		return None#"dot"
 
 class EF_Bounds:
 	def __init__(self):
@@ -481,7 +476,7 @@ class TestPlotter:
 		self.find_EF_bounds(self.simulated)
 		self.analyze(self.simulated)
 		self.simulated.have_data = True
-		
+
 	def read_simulated(self, filepath):
 		try:
 			self.simulated.df = call_csv(filepath, 0)
@@ -593,28 +588,47 @@ class TestPlotter:
 			marker_size = None
 			marker_fill_color = None
 			marker_line_color = None
-
-		y_arr = [x for x in data_set.df[self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]]]
-
+		
+		#replace edge naNs with 0			
+		x_df = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
+		y_df = data_set.df[self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]	]
+		prevNan = False		
+		x_arr = []
+		y_arr = []
+		for i, y in enumerate(y_df):
+			if np.isnan(y):
+				if not prevNan:
+					x_arr.append(x_df.iloc[i])
+					y_arr.append(0)					
+				prevNan = True	
+			else:
+				if prevNan:
+					x_arr.append(x_df.iloc[i-1])
+					y_arr.append(0)
+				x_arr.append(x_df.iloc[i])
+				y_arr.append(y_df.iloc[i])
+				prevNan = False
+			
+		displayData = dimes.DisplayData(
+      y_arr,
+      name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}",
+      native_units=self.variables["Y-Variables"][variable]["Units"],
+      is_visible=self.variables["Y-Variables"][variable]["Line Visibility"][value],
+			x_axis = x_arr,
+			line_properties=LineProperties(
+        color=self.variables["Y-Variables"][variable]["Colors"][value],
+        line_type=retrieve_line_type(data_set.variable_type),
+        marker_symbol=marker_symbol,
+        marker_size=marker_size,
+        marker_line_color=marker_line_color,
+        marker_fill_color=marker_fill_color,
+		 	)
+		)
 		self.plot.add_display_data(
-				
-		    dimes.DisplayData(
-		        y_arr,
-		        name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}",
-		        native_units=self.variables["Y-Variables"][variable]["Units"],
-		        line_properties=LineProperties(
-		            color=self.variables["Y-Variables"][variable]["Colors"][value],
-		            line_type=retrieve_line_type(data_set.variable_type),
-		            marker_symbol=marker_symbol,
-		            marker_size=marker_size,
-		            marker_line_color=marker_line_color,
-		            marker_fill_color=marker_fill_color,
-		        ),
-		        is_visible=self.variables["Y-Variables"][variable]["Line Visibility"][value],
-		    ),
-		    subplot_number=row,
-		    #axis_name=variable,
-	    )
+			displayData,
+	    subplot_number=row,
+	    #axis_name=variable,
+	  )
 		
 	def update_graphs(self, data_set, variable, value, row):
 		self.plot.figure.update_traces(
@@ -667,18 +681,11 @@ class TestPlotter:
 			selectedMarkers['y'].append(point[1])					
 			diam = 15
 			selectedMarkers['size'].append(diam)	
-			
-		self.plot.figure.update_traces(
-			x = selectedMarkers['x'],
-			y = selectedMarkers['y'],
-			marker_size = selectedMarkers['size'],
-			selector = dict(name="selected points")
-			)
 		
 	def draw(self, data):
 		have_traces = False
 		draw_meas = self.measured.have_data
-		draw_sim = self.simulated.have_data
+		draw_sim = self.simulated.have_data	
 		if 'show' in data:
 			draw_meas = draw_meas and (data["show"] & 1 == 1)
 			draw_sim = draw_sim and (data["show"] & 2 == 2)
@@ -722,6 +729,7 @@ class TestPlotter:
 				)	
 			self.plot.figure.add_trace(trace_selected)
 			self.update_selected()
+			
 			if have_traces:
 				self.plot.finalize_plot()
 				self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
@@ -731,6 +739,35 @@ class TestPlotter:
 				self.have_fig = True
 		return self
 
+	def getSummaryDataList(self):	
+		summary_data_dict = {}
+		for data_set in [self.measured, self.simulated]:
+			if data_set.have_data:
+				self.analyze(data_set)
+				for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
+					for item in data_set.test_summary[summary]:
+						if item not in summary_data_dict:
+							summary_data_dict[item] = []
+							
+		for data_set in [self.measured, self.simulated]:
+			for item in summary_data_dict:
+				have_item = False
+				if data_set.have_data:
+					for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
+						if item in data_set.test_summary[summary]:
+							have_item = True
+							summary_data_dict[item].append(data_set.test_summary[summary][item])
+							break
+
+				if not(have_item):
+					summary_data_dict[item].append("")	
+									
+		summary_data_list = []
+		for item in summary_data_dict:
+			summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])		
+		
+		return summary_data_list
+
 def plot(data):
 	plotter = TestPlotter(data)
 	if "model_id" in data:
@@ -739,8 +776,8 @@ def plot(data):
 			plotter.read_measured(data["measured_filepath"])
 	if "test_points" in data:
 		plotter.test_points = data['test_points']
-	#if "simulated_filepath" in data:
-		#plotter.read_simulated(data["simulated_filepath"])
+	if "simulated_filepath" in data:
+		plotter.read_simulated(data["simulated_filepath"])
 	plotter.draw({'show': 3})
 	return plotter
 
@@ -752,13 +789,14 @@ def write_plot(data):
 # main
 if __name__ == "__main__":
 		n_args = len(sys.argv) - 1
-		if n_args > 4:
-			data = {}
+		data = {}
+		if n_args > 3:
 			data['model_id'] = sys.argv[1]
 			data['test_id'] = sys.argv[2]
 			data['measured_filepath'] = sys.argv[3]
 			data['simulated_filepath'] = sys.argv[4]
+		if n_args > 4:
 			data['plot_filepath'] = sys.argv[5]
-			if n_args > 5:
+		if n_args > 5:
 				data['model_filepath'] = sys.argv[6]
-			write_plot(data)
+		write_plot(data)
