@@ -11,10 +11,11 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
-get_filename_component(abs_presets_path "${PROJECT_BINARY_DIR}/presets" ABSOLUTE)
-file(GLOB preset_headers "${abs_presets_path}/presets.h" "${abs_presets_path}/include/*.h")
-file(GLOB preset_source "${abs_presets_path}/presets.cpp")
-file(RELATIVE_PATH rel_preset_source "${CMAKE_CURRENT_BINARY_DIR}" "${preset_source}")
+set(presets_directory "${PROJECT_BINARY_DIR}/presets")
+file(GLOB presets_headers "${presets_directory}/include/*.h")
+
+# Not sure why this is needed, but otherwise the CMake coverage checker can't find the target file
+file(RELATIVE_PATH presets_source_file "${CMAKE_CURRENT_BINARY_DIR}" "${presets_directory}/presets.cpp")
 
 set(headers
         HPWHversion.in.hh
@@ -27,7 +28,8 @@ set(headers
         Resistance.hh
         hpwh-data-model.hh
         HPWHFitter.hh
-        "${preset_headers}"
+        "${presets_directory}/presets.h"
+        "${presets_headers}"
         )
 
 set(sources
@@ -43,7 +45,7 @@ set(sources
         Resistance.cc
         hpwh-data-model.cpp
         HPWHFitter.cc
-        "${rel_preset_source}"
+        "${presets_source_file}"
         )
 
 set(library_sources
@@ -51,10 +53,15 @@ set(library_sources
         ${headers}
         )
 
+set_source_files_properties(
+        "${presets_directory}/presets.cpp"
+        "${presets_directory}/presets.h"
+        PROPERTIES GENERATED TRUE
+)
 option(${PROJECT_NAME}_STATIC_LIB "Make ${PROJECT_NAME} a static library" ON)
 
 if (${PROJECT_NAME}_STATIC_LIB)
-    add_library(${PROJECT_NAME} STATIC ${library_sources}) # TODO: Change name to ${PROJECT_NAME}
+    add_library(${PROJECT_NAME} STATIC ${library_sources})
     set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-D${PROJECT_NAME}_STATIC_DEFINE")
 else ()
     set(CMAKE_MACOSX_RPATH 1)
@@ -64,8 +71,8 @@ endif ()
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_BINARY_DIR}/src
         PUBLIC ${PROJECT_SOURCE_DIR}/src
-        PUBLIC "${abs_presets_path}"
-        PUBLIC "${abs_presets_path}/include"
+        PUBLIC "${presets_directory}"
+        PUBLIC "${presets_directory}/include"
         )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model)
@@ -74,7 +81,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header generate_hpwhsim_presets)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
