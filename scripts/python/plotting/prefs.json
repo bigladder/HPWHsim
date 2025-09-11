@@ -3,8 +3,8 @@
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
-    "list": "standard_tests",
-    "id": "UEF",
+    "list": "tests_with_data",
+    "id": "RE2HP50_UEF67",
     "draw_profile": "medium",
     "plots": {
       "show_simulated": true,

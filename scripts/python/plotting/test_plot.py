@@ -228,12 +228,13 @@ class TestPlotter:
 		data_set.ef_bounds.standby_period_end_time = data_set.ef_bounds.test_end_time
 		has_heated = False
 		has_drawn = False
-		
+
+		prev_input_energy_kJ = [0, 0, 0]
 		for index in range(len(data_set.df)):
 			t_min = column_time.iloc[index]
 			draw_volume_L = data_set.df.loc[index, self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]] * 3.78541	
-			input_energy_kJ = data_set.df.loc[index, self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]] * 60 / 1000
-
+			input_energy_kJ = float(data_set.df.loc[index, self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]] * 60 / 1000)
+			prev_input_energy_kJ = [input_energy_kJ, prev_input_energy_kJ[0], prev_input_energy_kJ[1]]
 			if math.isnan(draw_volume_L):
 				draw_volume_L = 0
 				
@@ -260,8 +261,14 @@ class TestPlotter:
 				else:
 					if has_drawn and not(is_drawing) and has_heated and not(is_heating):	
 						hasFirstRecoveryPeriodEnded = True
-						data_set.ef_bounds.first_recovery_period_end_time = t_min	- 1	
-				
+						frac_min  = 1.0
+						if prev_input_energy_kJ[2] > prev_input_energy_kJ[0]:
+							frac_min = (prev_input_energy_kJ[1] - prev_input_energy_kJ[0]) / (prev_input_energy_kJ[2] - prev_input_energy_kJ[0])
+						data_set.ef_bounds.first_recovery_period_end_time = t_min	- (2.0 - frac_min)
+						print(frac_min)
+						print(prev_input_energy_kJ)
+
+					
 	def analyze(self, data_set):		
 		self.find_EF_bounds(data_set)
 				
@@ -284,6 +291,7 @@ class TestPlotter:
 		sumNoDrawTime_min = 0
 		noDrawSumAmbientTTime = 0
 		
+		isFirstRecoveryPeriod = True
 		recoveryUsedEnergy_kJ = 0
 		recoveryStoredEnergy_kJ = 0
 		recoveryDeliveredEnergy_kJ = 0
@@ -332,11 +340,16 @@ class TestPlotter:
 				noDrawSumAmbientTTime += ambientT_C
 				sumNoDrawTime_min += 1
 	
-			if t_min == data_set.ef_bounds.first_recovery_period_end_time:
-				recoveryTotalDraw_L = sumDraw_L		
-				recoveryAvgInletT_C =	sumDrawInletT / sumDraw_L
-				recoveryAvgOutletT_C =	sumDrawOutletT / sumDraw_L
-				recoveryUsedEnergy_kJ = sumInputEnergy_kJ	
+			if isFirstRecoveryPeriod:
+				tRecover = t_min
+				if tRecover > data_set.ef_bounds.first_recovery_period_end_time:
+					tRecover = data_set.ef_bounds.first_recovery_period_end_time
+					isFirstRecoveryPeriod = False
+				dt = tRecover - (t_min - 1)
+				recoveryTotalDraw_L += draw_volume_L * dt
+				recoverySumDrawInletT += draw_volume_L * inletT_C * dt
+				recoverySumDrawOutletT += draw_volume_L * outletT_C * dt
+				recoveryUsedEnergy_kJ += input_energy_kJ * dt
 
 			if t_min > data_set.ef_bounds.first_recovery_period_end_time and t_min <= data_set.ef_bounds.standby_period_end_time:
 				maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C
@@ -352,6 +365,9 @@ class TestPlotter:
 				standbySumTimeAmbientT_minC += (1.) * ambientT_C
 				standbyUsedEnergy_kJ += input_energy_kJ
 
+
+		recoveryAvgOutletT_C = recoverySumDrawOutletT / recoveryTotalDraw_L
+		recoveryAvgInletT_C = recoverySumDrawInletT / recoveryTotalDraw_L
 		recoveryStoredEnergy_kJ = tank_heat_capacity_kJperC * (maxTankAfterFirstRecoveryT_C - initialTankAvgT_C)
 		recoveryDeliveredEnergy_kJ = water_specific_heat_kJperkgC * water_density_kgperL * recoveryTotalDraw_L * (recoveryAvgOutletT_C - recoveryAvgInletT_C)
 
