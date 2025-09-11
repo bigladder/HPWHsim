@@ -21,16 +21,8 @@ class FitProc:
 	def update(self):
 		fit_list = read_file("fit_list.json")
 		self.constraints = [] if ('constraints' not in fit_list) else fit_list['constraints']
-		self.parameters = []
-		for parameter in fit_list['parameters']:
-			if parameter['type'] == "bilinear-coeff":
-				constraint = self.constraints[parameter['constraint']]
-				self.parameters.append(constraint['value'][parameter['term']])
-				
-		self.metrics = [] 
-		for metric in fit_list['metrics']:
-			if metric['type']  == "test_point":
-				self.metrics.append(metric['value'])	
+		self.parameters = [] if ('parameters' not in fit_list) else fit_list['parameters']		
+		self.metrics = [] if ('metrics' not in fit_list) else fit_list['metrics']
 	
 	#
 	def start(self, data):
@@ -269,14 +261,12 @@ class FitProc:
 		if constraint['type'] == 'number-of-tank-nodes':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				print(f"nodes: {constraint['value']}")
 				self.apply_number_of_nodes(constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
 		if constraint['type'] == 'condenser-standby-power':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				print(f"standby_power: {constraint['value']}")
 				self.apply_standby_power(constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 											
@@ -284,25 +274,13 @@ class FitProc:
 		for constraint in self.constraints:
 			self.apply_constraint(self.constraints[constraint])
 
-	def apply_parameter(self, parameter, new_value):
-		if parameter['type'] == 'bilinear-point':					
+	def apply_parameter(self, parameter):
+		if parameter['type'] == 'bilinear-point':	
 			constraint = self.constraints[parameter['constraint']]
-			constraint['value'][parameter['point']] = new_value
+			constraint['value'][parameter['point']]["value"] = parameter["value"]
+			print(constraint)
 			self.apply_constraint(constraint)
-		
-		if parameter['type'] == 'bilinear-coeff':		
-			constraint = self.constraints[parameter['constraint']]
-			constraint['value'][parameter['term']] = new_value	
-			self.apply_constraint(constraint)			
-									
-		if parameter['type'] == 'performance-point':		
-			variable = parameter['variable']
-			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
-			if dependent == variable:
-				return
-			model_data = self.read_cache_model(parameter['model_id'])		
-			self.set_performance_point(model_data, parameter['coordinates'], variable, dependent, new_value)
-			self.write_cache_model(parameter['model_id'], model_data)
+			response = simulate(data)
 
 	def get_parameter(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
@@ -331,6 +309,7 @@ class FitProc:
 			model_data = self.read_cache_model(parameter['model_id'])	
 			return self.get_performance_point(self, model_data, parameter['coordinates'], variable)	
 
+			
 	def get_parameters(self):
 		parameterV = []
 		for parameter in self.parameters:
@@ -342,12 +321,9 @@ class FitProc:
 			self.apply_parameter(parameter)
 			
 	def fit(self, data):
-		self.update()
+		self.update()	
+		self.apply_parameters()	
 		self.apply_constraints()
-		
-		parameterV = self.get_parameters()
-		print(parameterV)
-		self.apply_parameters()
 		
 	# Runs the fitting process
 	

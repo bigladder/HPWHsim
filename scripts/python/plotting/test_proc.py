@@ -121,9 +121,9 @@ class TestProc:
 			
 			summary_table_hidden = (len(summary_data_list) == 0)
 
-			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, no_update, no_update
+			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, show_option_list, show_value_list, False
 	
-		return tuple([no_update] * 6)
+		return tuple([no_update] * 7)
 	
 	def update_plot(self, fig):
 		#self.plotter.plot.figure.update_layout(autosize = False)
@@ -136,7 +136,7 @@ class TestProc:
 				self.plotter.plot.figure['layout'][item] = fig['layout'][item]
 		#if 'range' in fig:
 			#self.plotter.plot.figure.update_layout(range = fig['range'])
-		return tuple([self.plotter.plot.figure] + [no_update] * 5)
+		return tuple([self.plotter.plot.figure] + [no_update] * 6)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -222,7 +222,7 @@ class TestProc:
 						hidden = False
 					),
 				],
-			id='main-div', hidden=False)			
+			id='main-div', hidden=True)			
 		]
 		
 		@app.callback(
@@ -242,6 +242,7 @@ class TestProc:
 					Output('show-div', 'hidden', allow_duplicate=True),
 					Output('show-check', 'options'),
 					Output('show-check', 'value'),
+					Output('main-div', 'hidden'),
 
 					[Input("ws", "message")],
 					State('test-graph', 'figure'),
@@ -259,15 +260,16 @@ class TestProc:
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
 						if data['cmd'] == 'update':
 							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))							
-			return tuple([no_update] * 7)
+			return tuple([no_update] * 8)
 		
 		@callback(
 			Output('test-graph', 'figure', allow_duplicate=True),
 			Output('show-check', 'value', allow_duplicate=True),
 			Input('show-check', 'value'),
+			State('test-graph', 'figure'),
 			prevent_initial_call=True
 		)
-		def change_show(value):	
+		def change_show(value, fig):	
 			data = {'show': 0}
 			if 'measured' in value:
 				self.prefs['tests']['plots']['show_measured'] = True
@@ -287,7 +289,11 @@ class TestProc:
 				value_list.append('measured')
 			if data['show'] & 2 == 2:
 				value_list.append('simulated')	
-				
+			
+			for item in fig['layout']:
+				if "axis" in item:		
+					self.plotter.plot.figure['layout'][item] = fig['layout'][item]	
+					
 			return self.plotter.plot.figure, value_list
 				
 		@callback(
@@ -313,7 +319,6 @@ class TestProc:
 			return fig,hidden, table_data, ""
 				
 		@callback(
-			Output('ws', 'send', allow_duplicate=True),
 			Output('test-graph', 'figure', allow_duplicate=True),
 			Input('test-graph', 'clickData'),
 			State('test-graph', 'figure'),
@@ -325,37 +330,15 @@ class TestProc:
 			
 			if not "points" in clickData:
 				return no_update, no_update
-					
-			self.plotter.click_data(clickData)	
-			self.plotter.update_selected()
-			fit_list = read_file("fit_list.json")
-			if 'metrics' in fit_list:
-				metrics = fit_list['metrics']
-			else:
-				metrics = []		
-
-			for test_point in self.plotter.test_points:
-				exists = False
-				for metric in metrics:
-					if metric['type'] == 'test_point':						
-						res = metric['variable'] == test_point['variable']
-						res = res and metric['model_id'] == test_point['model_id']
-						res = res and metric['test_id'] == test_point['test_id']
-						res = res and metric['variable'] == test_point['variable']
-						res = res and metric['t_min'] == test_point['t_min']
-						exists = exists or res
-						if exists:
-								break
-				if not(exists):
-					metric = test_point
-					metric['type'] = 'test_point' 
-					metrics.append(metric)
 			
-			fit_list['metrics'] = metrics			
-			write_file("fit_list.json", fit_list)
-			self.i_send = self.i_send + 1
-			msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": self.i_send}
-			return json.dumps(msg), self.plotter.plot.figure
+			self.plotter.click_data(clickData)	
+			self.plotter.update_clicked()
+			
+			for item in fig['layout']:
+				if "axis" in item:		
+					self.plotter.plot.figure['layout'][item] = fig['layout'][item]
+
+			return self.plotter.plot.figure
 		
 		@app.callback(
 				Output('ws', 'send', allow_duplicate=True),

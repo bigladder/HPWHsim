@@ -68,6 +68,7 @@ class DataSet:
 		self.df = {}
 		self.have_data = False
 		self.show_plot = False
+		self.ef_bounds = EF_Bounds()
 		self.test_summary = {"tank_volume_L": tank_volume_L}		
 		self.variable_type = variable_type
 		self.filepath = ""
@@ -92,8 +93,7 @@ class TestPlotter:
 		self.have_fig = False
 		self.test_points = []
 		self.model_id = ""
-
-		self.ef_bounds = EF_Bounds()
+		self.click_point = {}
 		
 		visibleT = []
 		for i in range(NUMBER_OF_THERMOCOUPLES):
@@ -214,18 +214,18 @@ class TestPlotter:
 
 	def find_EF_bounds(self, data_set):	
 		column_time = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
-		self.ef_bounds.test_start_time = column_time.iloc[0]
-		self.ef_bounds.test_end_time = column_time.iloc[-1]
+		data_set.ef_bounds.test_start_time = column_time.iloc[0]
+		data_set.ef_bounds.test_end_time = column_time.iloc[-1]
 		
 		hasFirstRecoveryPeriodStarted = True
 		hasFirstRecoveryPeriodEnded = False
-		self.ef_bounds.first_recovery_period_start_time = self.ef_bounds.test_start_time
-		self.ef_bounds.first_recovery_period_end_time = self.ef_bounds.test_end_time
+		data_set.ef_bounds.first_recovery_period_start_time = data_set.ef_bounds.test_start_time
+		data_set.ef_bounds.first_recovery_period_end_time = data_set.ef_bounds.test_end_time
 		
 		hasStandbyPeriodStarted = False
 		hasStandbyPeriodEnded = False
-		self.ef_bounds.standby_period_start_time = self.ef_bounds.test_start_time
-		self.ef_bounds.standby_period_end_time = self.ef_bounds.test_end_time
+		data_set.ef_bounds.standby_period_start_time = data_set.ef_bounds.test_start_time
+		data_set.ef_bounds.standby_period_end_time = data_set.ef_bounds.test_end_time
 		has_heated = False
 		has_drawn = False
 		
@@ -243,7 +243,7 @@ class TestPlotter:
 			is_drawing = draw_volume_L > 0
 			has_drawn = has_drawn or is_drawing
 			
-			self.ef_bounds.test_end_time = t_min
+			data_set.ef_bounds.test_end_time = t_min
 			if hasFirstRecoveryPeriodStarted:
 				if hasFirstRecoveryPeriodEnded:
 					if hasStandbyPeriodStarted:	
@@ -251,22 +251,22 @@ class TestPlotter:
 							continue
 						elif is_drawing or is_heating:	
 							hasStandbyPeriodEnded = True		
-							self.ef_bounds.standby_period_end_time = t_min - 1
+							data_set.ef_bounds.standby_period_end_time = t_min - 1
 							continue
-					elif t_min >= self.ef_bounds.first_recovery_period_end_time + 5:
+					elif t_min >= data_set.ef_bounds.first_recovery_period_end_time + 5:
 						if not(is_drawing) and not(is_heating):
 							hasStandbyPeriodStarted = True
-							self.ef_bounds.standby_period_start_time = t_min
+							data_set.ef_bounds.standby_period_start_time = t_min
 				else:
 					if has_drawn and not(is_drawing) and has_heated and not(is_heating):	
 						hasFirstRecoveryPeriodEnded = True
-						self.ef_bounds.first_recovery_period_end_time = t_min	- 1	
+						data_set.ef_bounds.first_recovery_period_end_time = t_min	- 1	
 				
 	def analyze(self, data_set):		
 		self.find_EF_bounds(data_set)
 				
-		initialTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[self.ef_bounds.test_start_time]
-		finalTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[self.ef_bounds.test_end_time]
+		initialTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[data_set.ef_bounds.test_start_time]
+		finalTankAvgT_C = data_set.df["Tank Average Temperature_C"].iloc[data_set.ef_bounds.test_end_time]
 		
 		draw_col = data_set.df[self.variables["Y-Variables"]["Flow Rate"]["Column Names"][data_set.variable_type][0]]
 		power_col = data_set.df[self.variables["Y-Variables"]["Power Input"]["Column Names"][data_set.variable_type][0]]
@@ -289,7 +289,7 @@ class TestPlotter:
 		recoveryDeliveredEnergy_kJ = 0
 	
 		standbyUsedEnergy_kJ = 0
-		standbySumTime_min = self.ef_bounds.standby_period_end_time - self.ef_bounds.standby_period_start_time + 1
+		standbySumTime_min = data_set.ef_bounds.standby_period_end_time - data_set.ef_bounds.standby_period_start_time + 1
 		standbySumTimeTankT_minC = 0
 		standbySumTimeAmbientT_minC = 0
 		
@@ -303,7 +303,7 @@ class TestPlotter:
 		maxTankAfterFirstRecoveryT_C = -10
 		for index in range(len(data_set.df)):
 			t_min = column_time.iloc[index]
-			if t_min < self.ef_bounds.test_start_time or t_min > self.ef_bounds.test_end_time:
+			if t_min < data_set.ef_bounds.test_start_time or t_min > data_set.ef_bounds.test_end_time:
 				continue
 			
 			ambientT_C = (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Ambient"][data_set.variable_type]] - 32) / 1.8
@@ -332,22 +332,22 @@ class TestPlotter:
 				noDrawSumAmbientTTime += ambientT_C
 				sumNoDrawTime_min += 1
 	
-			if t_min == self.ef_bounds.first_recovery_period_end_time:
+			if t_min == data_set.ef_bounds.first_recovery_period_end_time:
 				recoveryTotalDraw_L = sumDraw_L		
 				recoveryAvgInletT_C =	sumDrawInletT / sumDraw_L
 				recoveryAvgOutletT_C =	sumDrawOutletT / sumDraw_L
 				recoveryUsedEnergy_kJ = sumInputEnergy_kJ	
 
-			if t_min > self.ef_bounds.first_recovery_period_end_time and t_min <= self.ef_bounds.standby_period_end_time:
+			if t_min > data_set.ef_bounds.first_recovery_period_end_time and t_min <= data_set.ef_bounds.standby_period_end_time:
 				maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C
 				
-			if t_min == self.ef_bounds.standby_period_start_time:
+			if t_min == data_set.ef_bounds.standby_period_start_time:
 				standbyStartT_C = tankAvgT_C
 				
-			if t_min == self.ef_bounds.standby_period_end_time:
+			if t_min == data_set.ef_bounds.standby_period_end_time:
 				standbyEndT_C = tankAvgT_C
 				
-			if t_min >= self.ef_bounds.standby_period_start_time and t_min <= self.ef_bounds.standby_period_end_time:	
+			if t_min >= data_set.ef_bounds.standby_period_start_time and t_min <= data_set.ef_bounds.standby_period_end_time:	
 				standbySumTimeTankT_minC += (1.) * tankAvgT_C 
 				standbySumTimeAmbientT_minC += (1.) * ambientT_C
 				standbyUsedEnergy_kJ += input_energy_kJ
@@ -363,8 +363,7 @@ class TestPlotter:
 			recoveryEfficiency = (recoveryStoredEnergy_kJ + recoveryDeliveredEnergy_kJ) / recoveryUsedEnergy_kJ
 					
 		recovery_summary = {
-			'recoveryEfficiency': recoveryEfficiency,
-			'initialTankAvgT_C': initialTankAvgT_C,
+			'firstRecoveryPeriodEndTime_min': data_set.ef_bounds.first_recovery_period_end_time,
 			'maxTankAfterFirstRecoveryT_C': maxTankAfterFirstRecoveryT_C,
 			'recoveryTotalDraw_L': recoveryTotalDraw_L,
 			'recoveryAvgInletT_C': recoveryAvgInletT_C,
@@ -372,6 +371,7 @@ class TestPlotter:
 			'recoveryStoredEnergy_kJ': recoveryStoredEnergy_kJ,
 			'recoveryDeliveredEnergy_kJ': recoveryDeliveredEnergy_kJ,
 			'recoveryUsedEnergy_kJ': recoveryUsedEnergy_kJ,
+			'recoveryEfficiency': recoveryEfficiency
 		}
 		for k, v in recovery_summary.items():
 			recovery_summary[k] = float(v)
@@ -383,8 +383,8 @@ class TestPlotter:
 		standbyHourlyLossEnergy_kJperh = (standbyUsedEnergy_kJ - standbyTankLoss_kJ) / recoveryEfficiency / (standbySumTime_min / 60)
 		standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)			
 		standby_summary = {
-			'standbyPeriodStartTime_min': self.ef_bounds.standby_period_start_time,
-			'standbyPeriodEndTime': self.ef_bounds.standby_period_end_time,
+			'standbyPeriodStartTime_min': data_set.ef_bounds.standby_period_start_time,
+			'standbyPeriodEndTime': data_set.ef_bounds.standby_period_end_time,
 			'standbyTestDuration h': standbySumTime_min / 60,
 			'standbyStartT_C': standbyStartT_C,
 			'standbyEndT_C': standbyEndT_C,
@@ -416,6 +416,7 @@ class TestPlotter:
 		adjustedDailyWaterHeaterEnergyConsumption_kJ = dailyWaterHeaterEnergyConsumption_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
 		modifiedConsumedWaterHeatingEnergy_kJ = adjustedDailyWaterHeaterEnergyConsumption_kJ + waterHeatingDifferenceEnergy_kJ
 		_24_hr_test_summary = {
+			'initialTankAvgT_C': initialTankAvgT_C,
 			'avgInletT_C': avgInletT_C,
 			'avgOutletT_C': avgOutletT_C,
 			'sumDraw_L': sumDraw_L,
@@ -559,18 +560,11 @@ class TestPlotter:
 		if self.measured.have_data:
 			if "points" in clickData:
 				for point in clickData["points"]:
-					if "x" in point: # power
-						t_mins = self.measured.df["Time(min)"]
-						for i_min, t_min in enumerate(t_mins):
-							if t_min == point["x"]:
-								test_point = {}
-								test_point['model_id'] = self.model_id
-								test_point['test_id'] = self.test_id
-								test_point['variable']= "Pin"
-								test_point['value'] =  float(self.measured.df["PowerIn(W)"][i_min])
-								test_point['t_min'] = t_min
-								self.test_points.append(test_point)
-								return
+					if "curveNumber" in point:
+						self.click_point['curve_name'] =self.plot.figure["data"][point["curveNumber"]]["name"]
+						self.click_point['point_number'] = point["pointNumber"]
+						return
+		self.click_point = {}
 								            
 	def plot_graphs(self, data_set, variable, value, row):
 		if (value in [1, 2]) and (data_set.variable_type == "Measured"):
@@ -589,7 +583,7 @@ class TestPlotter:
 			marker_fill_color = None
 			marker_line_color = None
 		
-		#replace edge naNs with 0			
+		#replace edge NaNs with 0			
 		x_df = data_set.df[self.variables["X-Variables"]["Time"]["Column Names"][data_set.variable_type]]
 		y_df = data_set.df[self.variables["Y-Variables"][variable]["Column Names"][data_set.variable_type][value]	]
 		prevNan = False		
@@ -682,6 +676,28 @@ class TestPlotter:
 			diam = 15
 			selectedMarkers['size'].append(diam)	
 		
+		self.plot.figure.update_traces(
+			x = selectedMarkers['x'],
+			y = selectedMarkers['y'],
+			marker_size = selectedMarkers['size'],
+			selector = dict(name="selected points") 
+			)
+	
+#
+	def update_clicked(self):
+		if 'curve_name' in self.click_point:
+			if 'point_number' in self.click_point:
+				for curve in self.plot.figure["data"]:
+					if curve["name"] == self.click_point['curve_name']:
+						xc = [curve.x[self.click_point['point_number']]]
+						yc = [curve.y[self.click_point['point_number']]]
+						self.plot.figure.update_traces(
+							x = xc,
+							y = yc,
+							marker_size = 20,
+							selector = dict(name="clicked points") 
+						)
+				
 	def draw(self, data):
 		have_traces = False
 		draw_meas = self.measured.have_data
@@ -729,6 +745,25 @@ class TestPlotter:
 				)	
 			self.plot.figure.add_trace(trace_selected)
 			self.update_selected()
+			
+			# create selected trace (empty)
+			trace_clicked = go.Scatter(
+					name = "clicked points", 
+					x = [], 
+					y = [],
+					mode="markers", 
+					marker_size= [],
+					marker_symbol='circle-open',
+					marker_color = 'blue',
+					marker_line_color= 'blue',
+					marker_line_width = 6,
+						
+					showlegend = False,
+					hoverinfo="skip",
+					visible = True
+				)	
+			self.plot.figure.add_trace(trace_clicked)
+			self.update_clicked()
 			
 			if have_traces:
 				self.plot.finalize_plot()
