@@ -348,26 +348,29 @@ class TestPlotter:
 					tRecover = data_set.ef_bounds.first_recovery_period_end_time
 					isFirstRecoveryPeriod = False
 				dt = tRecover - (t_min - 1)
-				print(f"{draw_volume_L}, {outletT_C}, {dt}")
 				recoveryTotalDraw_L += draw_volume_L * dt
 				recoverySumDrawInletT += draw_volume_L * inletT_C * dt
 				recoverySumDrawOutletT += draw_volume_L * outletT_C * dt
 				recoveryUsedEnergy_kJ += input_energy_kJ * dt
 			
-			if t_min >= data_set.ef_bounds.standby_period_start_time:
-				if isStandbyPeriod:
-					if t_min < data_set.ef_bounds.standby_period_end_time:
-						maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C			
-						standbySumTimeTankT_minC += (1.) * tankAvgT_C 
-						standbySumTimeAmbientT_minC += (1.) * ambientT_C
-						standbyUsedEnergy_kJ += input_energy_kJ
-					else:
-						isStandbyPeriod = False
-						standbyEndT_C = tankAvgT_C
-				else:
-					standbyStartT_C = tankAvgT_C
+			if not isStandbyPeriod:	
+				if t_min >= data_set.ef_bounds.standby_period_start_time and t_min < data_set.ef_bounds.standby_period_end_time:
 					isStandbyPeriod = True
-
+					standbyStartT_C = tankAvgT_C
+					
+			if isStandbyPeriod:
+				if t_min < data_set.ef_bounds.standby_period_end_time:	
+					tStandby = t_min
+					maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C	
+				else:
+					tStandby = data_set.ef_bounds.standby_period_end_time
+					isStandbyPeriod = False
+					standbyEndT_C = tankAvgT_C
+				dt = tStandby - (t_min - 1)
+				standbySumTimeTankT_minC += tankAvgT_C * dt
+				standbySumTimeAmbientT_minC += ambientT_C * dt
+				standbyUsedEnergy_kJ += input_energy_kJ * dt				
+					
 		recoveryAvgOutletT_C = recoverySumDrawOutletT / recoveryTotalDraw_L
 		recoveryAvgInletT_C = recoverySumDrawInletT / recoveryTotalDraw_L
 		recoveryStoredEnergy_kJ = tank_heat_capacity_kJperC * (maxTankAfterFirstRecoveryT_C - initialTankAvgT_C)
