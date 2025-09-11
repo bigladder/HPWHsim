@@ -265,9 +265,6 @@ class TestPlotter:
 						if prev_input_energy_kJ[2] > prev_input_energy_kJ[0]:
 							frac_min = (prev_input_energy_kJ[1] - prev_input_energy_kJ[0]) / (prev_input_energy_kJ[2] - prev_input_energy_kJ[0])
 						data_set.ef_bounds.first_recovery_period_end_time = t_min	- (2.0 - frac_min)
-						print(frac_min)
-						print(prev_input_energy_kJ)
-
 					
 	def analyze(self, data_set):		
 		self.find_EF_bounds(data_set)
@@ -292,10 +289,14 @@ class TestPlotter:
 		noDrawSumAmbientTTime = 0
 		
 		isFirstRecoveryPeriod = True
+		recoveryTotalDraw_L = 0
+		recoverySumDrawInletT = 0
+		recoverySumDrawOutletT = 0
 		recoveryUsedEnergy_kJ = 0
 		recoveryStoredEnergy_kJ = 0
 		recoveryDeliveredEnergy_kJ = 0
 	
+		isStandbyPeriod = False
 		standbyUsedEnergy_kJ = 0
 		standbySumTime_min = data_set.ef_bounds.standby_period_end_time - data_set.ef_bounds.standby_period_start_time + 1
 		standbySumTimeTankT_minC = 0
@@ -310,20 +311,21 @@ class TestPlotter:
 		noDrawAvgAmbientT_C = standardAmbientT_C
 		maxTankAfterFirstRecoveryT_C = -10
 		for index in range(len(data_set.df)):
-			t_min = column_time.iloc[index]
+			t_min = float(column_time.iloc[index])
 			if t_min < data_set.ef_bounds.test_start_time or t_min > data_set.ef_bounds.test_end_time:
 				continue
 			
-			ambientT_C = (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Ambient"][data_set.variable_type]] - 32) / 1.8
-			tankAvgT_C = data_set.df.loc[index, "Tank Average Temperature_C"]
-			draw_volume_L = draw_col[index] * 3.78541	
+			ambientT_C = float((data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Ambient"][data_set.variable_type]] - 32) / 1.8)
+			tankAvgT_C = float(data_set.df.loc[index, "Tank Average Temperature_C"])
+			draw_volume_L = float(draw_col[index] * 3.78541)
 			input_energy_kJ = power_col[index] * 60 / 1000
-			inletT_C = 0 if draw_volume_L == 0 else (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Inlet"][data_set.variable_type]] - 32) / 1.8
-			outletT_C = 0 if draw_volume_L == 0 else (data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Outlet"][data_set.variable_type]] - 32) / 1.8
 			
 			sumInputEnergy_kJ += input_energy_kJ
 			if math.isnan(draw_volume_L):
 				draw_volume_L = 0
+			inletT_C = 0 if draw_volume_L == 0 else (float(data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Inlet"][data_set.variable_type]]) - 32) / 1.8
+			outletT_C = 0 if draw_volume_L == 0 else (float(data_set.df.loc[index, self.variables["Y-Variables"]["Temperature"]["Outlet"][data_set.variable_type]]) - 32) / 1.8
+
 			if draw_volume_L == 0:
 				is_drawing = False
 			else:
@@ -346,25 +348,25 @@ class TestPlotter:
 					tRecover = data_set.ef_bounds.first_recovery_period_end_time
 					isFirstRecoveryPeriod = False
 				dt = tRecover - (t_min - 1)
+				print(f"{draw_volume_L}, {outletT_C}, {dt}")
 				recoveryTotalDraw_L += draw_volume_L * dt
 				recoverySumDrawInletT += draw_volume_L * inletT_C * dt
 				recoverySumDrawOutletT += draw_volume_L * outletT_C * dt
 				recoveryUsedEnergy_kJ += input_energy_kJ * dt
-
-			if t_min > data_set.ef_bounds.first_recovery_period_end_time and t_min <= data_set.ef_bounds.standby_period_end_time:
-				maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C
-				
-			if t_min == data_set.ef_bounds.standby_period_start_time:
-				standbyStartT_C = tankAvgT_C
-				
-			if t_min == data_set.ef_bounds.standby_period_end_time:
-				standbyEndT_C = tankAvgT_C
-				
-			if t_min >= data_set.ef_bounds.standby_period_start_time and t_min <= data_set.ef_bounds.standby_period_end_time:	
-				standbySumTimeTankT_minC += (1.) * tankAvgT_C 
-				standbySumTimeAmbientT_minC += (1.) * ambientT_C
-				standbyUsedEnergy_kJ += input_energy_kJ
-
+			
+			if t_min >= data_set.ef_bounds.standby_period_start_time:
+				if isStandbyPeriod:
+					if t_min < data_set.ef_bounds.standby_period_end_time:
+						maxTankAfterFirstRecoveryT_C = tankAvgT_C if tankAvgT_C > maxTankAfterFirstRecoveryT_C else maxTankAfterFirstRecoveryT_C			
+						standbySumTimeTankT_minC += (1.) * tankAvgT_C 
+						standbySumTimeAmbientT_minC += (1.) * ambientT_C
+						standbyUsedEnergy_kJ += input_energy_kJ
+					else:
+						isStandbyPeriod = False
+						standbyEndT_C = tankAvgT_C
+				else:
+					standbyStartT_C = tankAvgT_C
+					isStandbyPeriod = True
 
 		recoveryAvgOutletT_C = recoverySumDrawOutletT / recoveryTotalDraw_L
 		recoveryAvgInletT_C = recoverySumDrawInletT / recoveryTotalDraw_L
