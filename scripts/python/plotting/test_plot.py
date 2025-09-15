@@ -54,7 +54,7 @@ def retrieve_line_type(variable_type):
 		return "dot"
 
 class TestPlotter:
-							            
+					            
 	def plot_dataset(self, dataset):
 		for i_variable, variable in enumerate(self.variables["Y-Variables"]):
 			for i_val, column in enumerate(self.variables["Y-Variables"][variable]["Columns"]):
@@ -79,9 +79,11 @@ class TestPlotter:
 				if variable == 'Temperature':
 					y_list = [1.8 * y + 32 for y in y_list]
 			
+				trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.variable_type}-id{dataset.id}"
+				#trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}"
 				displayData = dimes.DisplayData(
 		      y_list,
-		      name=f"{self.variables['Y-Variables'][variable]['Labels'][i_val]} - {dataset.variable_type}",
+		      name=trace_name,
 					#native_units=self.variables["Y-Variables"][variable]["Units"],
 		      is_visible=self.variables["Y-Variables"][variable]["Line Visibility"][i_val],
 					x_axis = x_list,
@@ -91,7 +93,7 @@ class TestPlotter:
 		        marker_symbol=marker_symbol,
 		        marker_size=marker_size,
 		        marker_line_color=marker_line_color,
-		        marker_fill_color=marker_fill_color
+		        marker_fill_color=marker_fill_color,
 					)
 				)
 					
@@ -100,10 +102,11 @@ class TestPlotter:
 			    subplot_number=i_variable + 1,
 			    #axis_name=variable,
 			  )
+		self.trace_dataset_ids.append(dataset.id)
 				
 	def __init__(self, data):
 		self.plot = {}
-		
+		self.next_id = 0	
 		tank_volume_L = 173
 		if 'model_filepath' in data:
 			model_data = read_file(data['model_filepath'])		
@@ -112,8 +115,9 @@ class TestPlotter:
 		self.datasets = []
 		if "dataset_specs" in data:
 			for dataset_spec in data['dataset_specs']:
-				self.datasets.append(DataSet(dataset_spec))
-											 
+				self.datasets.append(DataSet(dataset_spec, self.next_id))
+				self.next_id += 1
+									 
 		self.have_fig = False
 		self.test_points = []
 		self.model_id = ""
@@ -216,10 +220,9 @@ class TestPlotter:
 		self.update_clicked()
 		
 		self.plot.finalize_plot()
-		#l = self.plot.figure['layout']
 		self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
-		#self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
-		#self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
+		self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
+		self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
 		self.plot.figure['layout']['title']['x'] = 0.25
 		self.have_fig = True
 	
@@ -235,9 +238,9 @@ class TestPlotter:
 				curveSums = {}
 				for curveNumber in curves:
 					curve = curves[curveNumber]
-					for dataset in self.datasets:
-						if "name" in curve:
-							if "Measured" in curve["name"] and dataset.variable_type == "Measured":
+					if "name" in curve:
+						for dataset in self.datasets:
+							if f"id{dataset.id}" in curve["name"]:
 								name = dataset.variable_type
 								if "Power" in curve["name"]:
 									curveSums[curveNumber] = [dataset.df["Power Input"], 0, f"Total input energy (kJ) - {name}", 60 / 1000]

@@ -162,7 +162,7 @@ class TestProc:
 	   		WebSocket(url="ws://localhost:8600", id="ws"),
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 				
-				html.Div(dcc.Checklist(id="show-check", inline=True), id='show-div', hidden=True),
+				html.Div(dcc.Checklist(id="show-check", inline=False), id='show-div', hidden=True),
 
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
 		
@@ -277,11 +277,12 @@ class TestProc:
 		def change_show(value, fig):	
 			value_list = []
 			for dataset in self.plotter.datasets:
-				value_list.append(f"{dataset.model_id} - {dataset.test_id} - {dataset.variable_type}")
+				if f"id{dataset.id}" in value:
+					value_list.append(f"{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}-id{dataset.id}")
 			
-			for item in fig['layout']:
-				if "axis" in item:		
-					self.plotter.plot.figure['layout'][item] = fig['layout'][item]	
+			#for item in fig['layout']:
+				#if "axis" in item:		
+					#self.plotter.plot.figure['layout'][item] = fig['layout'][item]	
 					
 			return self.plotter.plot.figure, value_list
 				

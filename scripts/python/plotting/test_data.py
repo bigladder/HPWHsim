@@ -25,9 +25,9 @@ class EF_Bounds:
 		self.first_recovery_period_end_time = -1
 		self.standby_period_start_time = 0
 		self.standby_period_end_time = -1
-		
+
 class DataSet:
-	def __init__(self, data_spec):
+	def __init__(self, data_spec, id):
 		self.model_id = data_spec['model_id']
 		self.test_id = data_spec['test_id']
 		self.ef_bounds = EF_Bounds()
@@ -42,7 +42,9 @@ class DataSet:
 		except:
 			df = {}
 			return	
-	
+		
+		self.id = id
+		
 		NUMBER_OF_THERMOCOUPLES = 6
 		self.columns = {}
 		if self.variable_type == "Measured":
