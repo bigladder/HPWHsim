@@ -90,8 +90,11 @@ class TestProc:
 					data['test_points'].append(metric)
 		plot_data = {}		
 		plot_data['dataset_specs'] = []
-		plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath']})
-		plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath']})
+		if 'measured_filepath' in data:
+			plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath'], 'tank_volume_L': 173})
+		if 'simulated_filepath' in data:
+			plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath'], 'tank_volume_L': 173})
+
 		self.plotter = plot(plot_data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -100,15 +103,11 @@ class TestProc:
 			show_option_list = []
 			show_value_list = []
 			hide_show_div= True
-			if self.plotter.measured.have_data:
-				show_option_list.append({'label': 'measured', 'value': 'measured'})
-				show_value_list.append('measured')
+			for dataset in self.plotter.datasets:
+				plot_label = f"{dataset.model_id} - {dataset.test_id} - {dataset.variable_type}"
+				show_option_list.append({'label': plot_label, 'value': plot_label})
+				show_value_list.append(plot_label)
 				self.prev_show |= 1
-				hide_show_div = False
-			if self.plotter.simulated.have_data:
-				show_option_list.append({'label': 'simulated', 'value': 'simulated'})
-				show_value_list.append('simulated')
-				self.prev_show |= 2
 				hide_show_div = False
 						
 			#summary table
@@ -276,25 +275,9 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def change_show(value, fig):	
-			data = {'show': 0}
-			if 'measured' in value:
-				self.prefs['tests']['plots']['show_measured'] = True
-				data['show'] |= 1
-			if 'simulated' in value:
-				self.prefs['tests']['plots']['show_simulated'] = True
-				data['show'] |= 2
-			
-			if data['show'] == 0:
-				data['show'] = self.prev_show
-			
-			self.prev_show = data['show']
-			self.plotter.draw(data)
-			
 			value_list = []
-			if data['show'] & 1 == 1:
-				value_list.append('measured')
-			if data['show'] & 2 == 2:
-				value_list.append('simulated')	
+			for dataset in self.plotter.datasets:
+				value_list.append(f"{dataset.model_id} - {dataset.test_id} - {dataset.variable_type}")
 			
 			for item in fig['layout']:
 				if "axis" in item:		

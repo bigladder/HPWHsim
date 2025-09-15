@@ -116,6 +116,9 @@
 			{
 				await sleep(1000.);
 			}
+		  ws_connection.onerror = function (error) {
+		    console.log(error);
+		  };
 
 	}
 

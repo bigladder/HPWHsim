@@ -31,6 +31,7 @@ class DataSet:
 		self.model_id = data_spec['model_id']
 		self.test_id = data_spec['test_id']
 		self.ef_bounds = EF_Bounds()
+		self.test_summary = {'tank_volume_L': data_spec['tank_volume_L'] if 'tank_volume_L' in data_spec else 173}
 			
 		self.variable_type = data_spec['type']
 		self.filepath = data_spec['filepath']
@@ -83,20 +84,33 @@ class DataSet:
 
 		data["Power Input"] = list(df[self.columns["Power Input"]].sum(axis=1))#W
 		if self.variable_type == "Simulated": # convert simulated energy consumption (Wh) for every minute to power (W)
-			for  power in data["Power Input"]:
-				power /= 60
-				
+			data["Power Input"] = [60 * power for power in data["Power Input"]]
+
 		data["Flow Rate"] = list(df[self.columns["Flow Rate"]])
-		data["Inlet Temperature"] = list(df[self.columns["Temperature"]["Inlet"]])
-		data["Outlet Temperature"] = list(df[self.columns["Temperature"]["Outlet"]])
+		data["Tank Inlet Temperature"] = list(df[self.columns["Temperature"]["Inlet"]])
+		data["Tank Outlet Temperature"] = list(df[self.columns["Temperature"]["Outlet"]])
 		data["Ambient Temperature"] = list(df[self.columns["Temperature"]["Ambient"]])
 		for i, tank in enumerate(self.columns["Temperature"]["Tank"]):
-			print(f"{tank}")
-			data[f"Tank Temperature - #{i}"] = list(df[tank])
-		data["Average Tank Temperature"] = list(df[self.columns["Temperature"]["Tank"]].mean(axis=1))
-		
-		for key in data:
-			print(f"{key}: {len(data[key])}")
+			data[f"Tank Temperature - #{i + 1}"] = list(df[tank])
+		data["Tank Average Temperature"] = list(df[self.columns["Temperature"]["Tank"]].mean(axis=1))
+		x_list = data['Time']
+		y_list = data["Flow Rate"]
+		prevNan = False		
+		x_arr = []
+		y_arr = []
+		for i, y in enumerate(y_list):
+			if np.isnan(y):
+				if not prevNan:
+					x_arr.append(x_list[i])
+					y_arr.append(0)					
+				prevNan = True	
+			else:
+				if prevNan:
+					x_arr.append(x_list[i-1])
+					y_arr.append(0)
+				x_arr.append(x_list[i])
+				y_arr.append(x_list[i])
+				prevNan = False
 			
 		self.df = pd.DataFrame(data)
 		
@@ -156,8 +170,8 @@ class DataSet:
 	def analyze(self):		
 			self.find_EF_bounds()
 					
-			initialTankAvgT_C = self.df["Average Tank Temperature"].iloc[self.ef_bounds.test_start_time]
-			finalTankAvgT_C = self.df["Average Tank Temperature"].iloc[self.ef_bounds.test_end_time]
+			initialTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_start_time]
+			finalTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_end_time]
 			
 			#draw_col = self.df["Flow Rate"][self.variable_type]
 			#self.df["Power Input"]
@@ -190,7 +204,6 @@ class DataSet:
 			standbySumTimeAmbientT_minC = 0
 			
 			deliveredEnergy_kJ = 0
-			column_time = self.df[self.columns["Time_min"][self.variable_type]]
 			standardSetpointT_C = 51.7
 			standardInletT_C = 14.4
 			standardAmbientT_C = 19.7
@@ -198,20 +211,20 @@ class DataSet:
 			noDrawAvgAmbientT_C = standardAmbientT_C
 			maxTankAfterFirstRecoveryT_C = -10
 			for index in range(len(self.df)):
-				t_min = float(column_time.iloc[index])
+				t_min = float(self.df["Time"].iloc[index])
 				if t_min < self.ef_bounds.test_start_time or t_min > self.ef_bounds.test_end_time:
 					continue
 				
-				ambientT_C = float(self.df.iloc[index, "Ambient Temperature"])
-				tankAvgT_C = float(self.df.iloc[index, "Average Tank Temperature"])
-				draw_volume_L = float(self.df.iloc[index, "Flow Rate"]) * 3.78541 #gal->L
-				input_energy_kJ = float(self.df["Power Input"][index]) * 60 / 1000 #W->kJ
+				ambientT_C = float(self.df["Ambient Temperature"].iloc[index])
+				tankAvgT_C = float(self.df["Tank Average Temperature"].iloc[index])
+				draw_volume_L = float(self.df["Flow Rate"].iloc[index]) * 3.78541 #gal->L
+				input_energy_kJ = float(self.df["Power Input"].iloc[index]) * 60 / 1000 #W->kJ
 				
 				sumInputEnergy_kJ += input_energy_kJ
 				if math.isnan(draw_volume_L):
 					draw_volume_L = 0
-				inletT_C = 0 if draw_volume_L == 0 else float(self.df.loc[index, "Inlet Temperature"])
-				outletT_C = 0 if draw_volume_L == 0 else float(self.df.loc[index, "Outlet Temperature"])
+				inletT_C = 0 if draw_volume_L == 0 else float(self.df["Tank Inlet Temperature"].iloc[index])
+				outletT_C = 0 if draw_volume_L == 0 else float(self.df["Tank Outlet Temperature"].iloc[index])
 
 				if draw_volume_L == 0:
 					is_drawing = False
