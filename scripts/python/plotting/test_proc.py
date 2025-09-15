@@ -107,18 +107,14 @@ class TestProc:
 				show_value_list.append('simulated')
 				self.prev_show |= 2
 				hide_show_div = False
-			
+						
 			#summary table
 			summary_data_list = self.plotter.getSummaryDataList()			
 			summary_table_df = pd.DataFrame(
 				columns = ['Quantity', 'Measured', 'Simulated'],	
 				data = summary_data_list
 			)
-			summary_table_data = summary_table_df.to_dict('records')			
-			if self.plotter.simulated.have_data:
-				self.prev_show |= 2
-				hide_show_div = False
-			
+			summary_table_data = summary_table_df.to_dict('records')				
 			summary_table_hidden = (len(summary_data_list) == 0)
 
 			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, show_option_list, show_value_list, False
@@ -129,14 +125,21 @@ class TestProc:
 		#self.plotter.plot.figure.update_layout(autosize = False)
 		self.plotter.reread_simulated()		
 		self.plotter.update_simulated()
-		#self.plotter.plot.figure.update_layout(autosize = True)
-			#self.plotter.plot.figure.update_layout(fig['relayoutData'])
+		
+		#summary table
+		summary_data_list = self.plotter.getSummaryDataList()			
+		summary_table_df = pd.DataFrame(
+			columns = ['Quantity', 'Measured', 'Simulated'],	
+			data = summary_data_list
+		)
+		summary_table_data = summary_table_df.to_dict('records')				
+		summary_table_hidden = (len(summary_data_list) == 0)
+		
 		for item in fig['layout']:
 			if "axis" in item:		
 				self.plotter.plot.figure['layout'][item] = fig['layout'][item]
-		#if 'range' in fig:
-			#self.plotter.plot.figure.update_layout(range = fig['range'])
-		return tuple([self.plotter.plot.figure] + [no_update] * 6)
+
+		return tuple([self.plotter.plot.figure, summary_table_data, summary_table_hidden] + [no_update] * 4)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
