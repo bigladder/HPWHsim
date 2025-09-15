@@ -294,14 +294,14 @@ function(add_plot_test)
             set(test_prefix "${ARG_TEST_NAME}")
         endif()
 
-        set(simulationOutputName "${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
-        set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
-        set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
+        set(simulationName "${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
+        set(simulationPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationName}.csv")
+        set(plotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
         add_test(NAME "${plotTestName}"
                 COMMAND uv run "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py"
-                "${ARG_MODEL_NAME}" "${ARG_TEST_NAME}" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath}
+                "${ARG_MODEL_NAME}" "${ARG_TEST_NAME}" ${measurementsPath} ${simulationPath} ${plotPath}
                 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python/plotting"
                 )
 

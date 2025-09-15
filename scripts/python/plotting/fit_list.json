@@ -148,7 +148,8 @@
       "model_id": "BradfordWhiteAeroThermRE2HP50",
       "test_id": "RE2HP50_UEF67",
       "type": "first-recovery-period-end-time",
-      "value": 159
+      "target": 158.17,
+			"value": 151.95
     }
   ]
 }

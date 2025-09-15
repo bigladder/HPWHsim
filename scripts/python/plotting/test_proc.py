@@ -88,8 +88,11 @@ class TestProc:
 				res = res and metric['test_id'] == self.prefs['tests']['id']						
 				if res:
 					data['test_points'].append(metric)
-		
-		self.plotter = plot(data)
+		plot_data = {}		
+		plot_data['dataset_specs'] = []
+		plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath']})
+		plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath']})
+		self.plotter = plot(plot_data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
 				
