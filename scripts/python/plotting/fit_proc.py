@@ -274,14 +274,6 @@ class FitProc:
 		for constraint in self.constraints:
 			self.apply_constraint(self.constraints[constraint])
 
-	def apply_parameter(self, parameter):
-		if parameter['type'] == 'bilinear-point':	
-			constraint = self.constraints[parameter['constraint']]
-			constraint['value'][parameter['point']]["value"] = parameter["value"]
-			print(constraint)
-			self.apply_constraint(constraint)
-			response = simulate(data)
-
 	def get_parameter(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
 			constraint = self.constraints[parameter['constraint']]
@@ -322,7 +314,7 @@ class FitProc:
 			
 	def fit(self, data):
 		self.update()	
-		self.apply_parameters()	
+		#self.apply_parameters()	
 		self.apply_constraints()
 		
 	# Runs the fitting process
