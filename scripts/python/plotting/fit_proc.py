@@ -96,10 +96,12 @@ class FitProc:
 				param_vars = COPs
 				for (elem, value) in enumerate(param_vars):
 					param_vars[elem] /= Pins[elem]
-						
+			
+			print(f"{variable}: {param_vars}")		
 			for iT1 in range(nT1s):
 				for iT2 in range(nT2s):
 					elem = nT3s * (nT2s * iT1 + iT2) + iT3
+					print(f"{iT1}, {iT1}, {elem}")
 					param_vars[elem] 	= coefficients[0] + coefficients[1] * envTs[iT1] + coefficients[2] * hsTs[iT2]
 
 			if dependent == "Pin":
@@ -125,6 +127,7 @@ class FitProc:
 			return
 		iApL = np.matmul(np.linalg.inv(ApT_Ap), ApT)			
 		coefficients = iApL.dot(xp)
+		print(coefficients)
 		self.apply_bilinear_coefficients(model_data, coefficients, variable, dependent, slice)	
 
 	def apply_condenser_heat_distribution(self, new_dist, model_data):

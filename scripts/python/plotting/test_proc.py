@@ -41,7 +41,6 @@ class TestProc:
 		self.ef_val = 0
 		self.plotter = {}
 		self.process = {}
-	
 	#
 	def start(self, data):
 		if not self.running:
@@ -88,7 +87,7 @@ class TestProc:
 				res = res and metric['test_id'] == self.prefs['tests']['id']						
 				if res:
 					data['test_points'].append(metric)
-		plot_data = {}		
+		plot_data = {}
 		plot_data['dataset_specs'] = []
 		if 'measured_filepath' in data:
 			plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath'], 'tank_volume_L': 173})
@@ -162,6 +161,8 @@ class TestProc:
 	   		WebSocket(url="ws://localhost:8600", id="ws"),
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 				
+				html.Div(dcc.Checklist(id="show-check", inline=True), id='show-div', hidden=True),
+				html.Button("save", id="save-to-file-btn", n_clicks=0),
 				html.Div(dcc.Checklist(id="show-check", inline=False), id='show-div', hidden=True),
 
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
@@ -274,15 +275,15 @@ class TestProc:
 			State('test-graph', 'figure'),
 			prevent_initial_call=True
 		)
-		def change_show(value, fig):	
+		def change_show(value, fig):
 			value_list = []
 			for dataset in self.plotter.datasets:
 				if f"id{dataset.id}" in value:
 					value_list.append(f"{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}-id{dataset.id}")
 			
 			#for item in fig['layout']:
-				#if "axis" in item:		
-					#self.plotter.plot.figure['layout'][item] = fig['layout'][item]	
+				#if "axis" in item:
+					#self.plotter.plot.figure['layout'][item] = fig['layout'][item]
 					
 			return self.plotter.plot.figure, value_list
 				
@@ -391,6 +392,28 @@ class TestProc:
 			msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": self.i_send}
 			return json.dumps(msg)
 		
+		@app.callback(
+				Input("save-to-file-btn", "n_clicks"),
+				prevent_initial_call=True
+		)
+		def save_to_file(nclicks):
+			plot_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".html"
+			plot_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', plot_filename)
+			self.plotter.plot.write_html_plot(plot_filepath)
+			summary_dict = self.plotter.getSummaryDataDict()
+			quantity = []
+			measured = []
+			simulated = []
+			for item in summary_dict:
+				quantity.append(item)
+				measured.append(summary_dict[item][0])
+				simulated.append(summary_dict[item][1])
+			dict = {'Quantity': quantity, 'Measured': measured,'Simulated': simulated}
+			summary_df = pd.DataFrame(dict, columns=['Quantity','Measured','Simulated'])
+			table_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".csv"
+			table_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', table_filename)
+			summary_df.to_csv(table_filepath, sep=',', index=False,header=True)
+
 		app.run(debug=True, use_reloader=False, port = self.port_num)
 
 

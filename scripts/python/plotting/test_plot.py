@@ -43,10 +43,10 @@ NUMBER_OF_THERMOCOUPLES = 6
 def convert_values(df_column, from_units, to_units):
 	converted_column = df_column.apply(lambda x: convert(x, from_units, to_units))
 	return converted_column
-	
+
 def C_to_F(T_C):
 	return 1.8 * T_C + 32
-		
+
 def retrieve_line_type(variable_type):
 	if variable_type == "Measured":
 		return 'solid'
@@ -54,7 +54,7 @@ def retrieve_line_type(variable_type):
 		return "dot"
 
 class TestPlotter:
-					            
+
 	def plot_dataset(self, dataset):
 		for i_variable, variable in enumerate(self.variables["Y-Variables"]):
 			for i_val, column in enumerate(self.variables["Y-Variables"][variable]["Columns"]):
@@ -72,13 +72,13 @@ class TestPlotter:
 					marker_symbol = None
 					marker_size = None
 					marker_fill_color = None
-					marker_line_color = None		
-				
+					marker_line_color = None
+
 				x_list = [x for x in dataset.df["Time"]]
 				y_list = [y for y in dataset.df[column]]
 				if variable == 'Temperature':
 					y_list = [1.8 * y + 32 for y in y_list]
-			
+
 				trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.variable_type}-id{dataset.id}"
 				#trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}"
 				displayData = dimes.DisplayData(
@@ -96,17 +96,17 @@ class TestPlotter:
 		        marker_fill_color=marker_fill_color,
 					)
 				)
-					
+
 				self.plot.add_display_data(
 					displayData,
 			    subplot_number=i_variable + 1,
 			    #axis_name=variable,
 			  )
 		self.trace_dataset_ids.append(dataset.id)
-				
+
 	def __init__(self, data):
 		self.plot = {}
-		self.next_id = 0	
+		self.next_id = 0
 		tank_volume_L = 173
 		if 'model_filepath' in data:
 			model_data = read_file(data['model_filepath'])		
@@ -117,7 +117,7 @@ class TestPlotter:
 			for dataset_spec in data['dataset_specs']:
 				self.datasets.append(DataSet(dataset_spec, self.next_id))
 				self.next_id += 1
-									 
+
 		self.have_fig = False
 		self.test_points = []
 		self.model_id = ""
@@ -142,13 +142,13 @@ class TestPlotter:
 	            "Line Visibility": [True],
 
 	        },
-	        "Temperature": {	
-							"Columns": [     
+	        "Temperature": {
+							"Columns": [
 									"Tank Average Temperature",
 									"Tank Outlet Temperature",
 									"Tank Inlet Temperature",
 									"Ambient Temperature"
-									] + [f"Tank Temperature - #{i}" for i in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))],		
+									] + [f"Tank Temperature - #{i}" for i in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))],
 	            "Labels": [
 								"Tank Average Temperature",
 						    "Tank Outlet Temperature",
@@ -156,13 +156,13 @@ class TestPlotter:
 						    "Ambient Temperature"
 							] + [f"Tank Temperature - #{i}" for i in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))],
 	            "Units": f"{DEGREE_SIGN}F",
-	            "Colors": ["#e1141e", "#53a05d", "#6e62a4","#b05593","#cbc062"] + list(reversed(RED_BLUE_DIVERGING_PALLETTE)), 
+	            "Colors": ["#e1141e", "#53a05d", "#6e62a4","#b05593","#cbc062"] + list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
 	            "Line Mode": {"Tank": ["lines"] * (4 + NUMBER_OF_THERMOCOUPLES)},
-	            "Line Visibility": [False] * 4 + 
+	            "Line Visibility": [False] * 4 +
 								[True if i == 0 or i == NUMBER_OF_THERMOCOUPLES - 1 else False for i in range(NUMBER_OF_THERMOCOUPLES)]
-							}							
+							}
 	        	},
-						
+
 		    "X-Variables": {
 		        "Time": {
 		            "Labels": ["Time"],
@@ -175,57 +175,57 @@ class TestPlotter:
 		for dataset in self.datasets:
 			self.plot = dimes.DimensionalPlot(
 			  [x for x in dataset.df["Time"]],
-					f"Model: {dataset.model_id}, Test: {dataset.test_id}"					
+					f"Model: {dataset.model_id}, Test: {dataset.test_id}"
 			)
 			self.plot.x_axis.name = "Time [min]"
 			break
-			
-		for dataset in self.datasets:	
-			self.plot_dataset(dataset)	
-			
+
+		for dataset in self.datasets:
+			self.plot_dataset(dataset)
+
 		# create selected trace (empty)
 		trace_selected = go.Scatter(
-				name = "selected points", 
-				x = [], 
+				name = "selected points",
+				x = [],
 				y = [],
-				mode="markers", 
+				mode="markers",
 				marker_size= [],
 				marker_symbol='circle-open',
 				marker_color = 'black',
 				marker_line_color= 'black',
-				marker_line_width = 2,				
+				marker_line_width = 2,
 				showlegend = False,
 				hoverinfo="skip",
 				visible = True
-			)	
+			)
 		self.plot.figure.add_trace(trace_selected)
 		self.update_selected()
-			
+
 		# create selected trace (empty)
 		trace_clicked = go.Scatter(
-				name = "clicked points", 
-				x = [], 
+				name = "clicked points",
+				x = [],
 				y = [],
-				mode="markers", 
+				mode="markers",
 				marker_size= [],
 				marker_symbol='circle-open',
 				marker_color = 'blue',
 				marker_line_color= 'blue',
-				marker_line_width = 6,					
+				marker_line_width = 6,
 				showlegend = False,
 				hoverinfo="skip",
 				visible = True
-			)	
+			)
 		self.plot.figure.add_trace(trace_clicked)
 		self.update_clicked()
-		
+
 		self.plot.finalize_plot()
 		self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
 		self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
 		self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
 		self.plot.figure['layout']['title']['x'] = 0.25
 		self.have_fig = True
-	
+
 	def select_data(self, selectedData):
 		self.test_points = []
 		result = []
@@ -245,7 +245,7 @@ class TestPlotter:
 								if "Power" in curve["name"]:
 									curveSums[curveNumber] = [dataset.df["Power Input"], 0, f"Total input energy (kJ) - {name}", 60 / 1000]
 								if "Flow Rate" in curve["name"]:
-									curveSums[curveNumber] = [dataset.df["Flow Rate"], 0, f"Total volume drawn (gal) - {name}", 1]									
+									curveSums[curveNumber] = [dataset.df["Flow Rate"], 0, f"Total volume drawn (gal) - {name}", 1]
 												
 				for point in selectedData["points"]:
 					if "curveNumber" in point and "pointNumber" in point:
@@ -278,7 +278,7 @@ class TestPlotter:
 		        ]],
 			selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}")
 			)
-	
+
 	def update_variable_type(self, data_set):
 			for row, variable in enumerate(self.variables["Y-Variables"].keys()):
 				for value in range(
@@ -298,7 +298,7 @@ class TestPlotter:
 				        ]],
 					selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {self.simulated.variable_type}")
 					)
-		
+
 	def update_selected(self):
 		selected_points = []								
 		for test_point in self.test_points:
@@ -320,7 +320,7 @@ class TestPlotter:
 			marker_size = selectedMarkers['size'],
 			selector = dict(name="selected points") 
 			)
-	
+
 	def update_clicked(self):
 		if 'curve_name' in self.click_point:
 			if 'point_number' in self.click_point:
@@ -334,8 +334,86 @@ class TestPlotter:
 							marker_size = 20,
 							selector = dict(name="clicked points") 
 						)
-							
+
 	def getSummaryDataList(self):	
+
+	def draw(self, data):
+		have_traces = False
+		draw_meas = self.measured.have_data
+		draw_sim = self.simulated.have_data
+		if 'show' in data:
+			draw_meas = draw_meas and (data["show"] & 1 == 1)
+			draw_sim = draw_sim and (data["show"] & 2 == 2)
+
+			if draw_meas:
+				self.plot = dimes.DimensionalPlot(
+				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]],
+						f"Model: {self.model_id}, Test: {self.test_id}"
+				)
+				self.plot.x_axis.name = "Time [min]"
+				self.draw_variable_type(self.measured)
+				have_traces = True
+				if draw_sim:
+					self.draw_variable_type(self.simulated)
+			elif draw_sim:
+				self.plot = dimes.DimensionalPlot(
+				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]],
+						f"Model: {self.model_id}, Test: {self.test_id}"
+				)
+				self.plot.x_axis.name = "Time [min]"
+				have_traces = True
+				self.draw_variable_type(self.simulated)
+			else:
+				return
+
+			# create selected trace (empty)
+			trace_selected = go.Scatter(
+					name = "selected points",
+					x = [],
+					y = [],
+					mode="markers",
+					marker_size= [],
+					marker_symbol='circle-open',
+					marker_color = 'black',
+					marker_line_color= 'black',
+					marker_line_width = 2,
+
+					showlegend = False,
+					hoverinfo="skip",
+					visible = True
+				)
+			self.plot.figure.add_trace(trace_selected)
+			self.update_selected()
+
+			# create selected trace (empty)
+			trace_clicked = go.Scatter(
+					name = "clicked points",
+					x = [],
+					y = [],
+					mode="markers",
+					marker_size= [],
+					marker_symbol='circle-open',
+					marker_color = 'blue',
+					marker_line_color= 'blue',
+					marker_line_width = 6,
+
+					showlegend = False,
+					hoverinfo="skip",
+					visible = True
+				)
+			self.plot.figure.add_trace(trace_clicked)
+			self.update_clicked()
+
+			if have_traces:
+				self.plot.finalize_plot()
+				self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
+				self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
+				self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
+				self.plot.figure['layout']['title']['x'] = 0.25
+				self.have_fig = True
+		return self
+
+	def getSummaryDataDict(self):
 		summary_data_dict = {}
 		for dataset in self.datasets:
 				dataset.analyze()
@@ -355,11 +433,14 @@ class TestPlotter:
 
 				if not(have_item):
 					summary_data_dict[item].append("")	
-									
+
+		return summary_data_dict
+
+	def getSummaryDataList(self):
+		summary_data_dict = self.getSummaryDataDict()
 		summary_data_list = []
 		for item in summary_data_dict:
-			summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])		
-		
+			summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])
 		return summary_data_list
 
 def plot(data):
@@ -377,7 +458,7 @@ if __name__ == "__main__":
 
 		if n_args > 3:
 			model_id = sys.argv[1]
-			test_id = sys.argv[2]	
+			test_id = sys.argv[2]
 			data['dataset_specs'] = []
 			data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Measured", 'filepath': sys.argv[3]})
 			data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Simulated", 'filepath': sys.argv[4]	})
@@ -385,5 +466,5 @@ if __name__ == "__main__":
 			data['plot_filepath'] = sys.argv[5]
 		if n_args > 5:
 			data['model_filepath'] = sys.argv[6]
-		
+
 		write_plot(data)
