@@ -4,7 +4,7 @@
 		"BradfordWhiteAeroThermRE2H80": {"name": "AeroThermRE2H80", "manufacturer": "BradfordWhite", "series": "AeroTherm", "specs": ["Preset", "Legacy", "JSON"]},
 
     "BradfordWhiteAeroThermRE2HP50": {"name": "AeroThermRE2HP50", "manufacturer": "BradfordWhite", "series": "AeroTherm G2", "specs": ["Preset", "Legacy", "JSON"]},
-		"BradfordWhiteAeroThermRE2HP65": {"name": "AeroThermRE2HP65", "manufacturer": "BradfordWhite", "series": "AeroTherm G2", "specs": ["Preset", "Legacy", "JSON"]},
+		"BradfordWhiteAeroThvermRE2HP65": {"name": "AeroThermRE2HP65", "manufacturer": "BradfordWhite", "series": "AeroTherm G2", "specs": ["Preset", "Legacy", "JSON"]},
 		"BradfordWhiteAeroThermRE2HP80": {"name": "AeroThermRE2HP80", "manufacturer": "BradfordWhite", "series": "AeroTherm G2", "specs": ["Preset", "Legacy", "JSON"]},
 
 		"AOSmithHPTS40": {"manufacturer": "AOSmith", "series": "HPTS", "specs": ["Preset", "Legacy", "JSON"]},
@@ -32,6 +32,11 @@
 
 		"Stiebel220e": {"manufacturer": "Stiebel", "specs": ["Preset", "Legacy", "JSON"]},
 		"GE2014_50": {"manufacturer": "GE", "specs": ["Preset", "Legacy", "JSON"]},
+		"GE2014STDMode_50": {"manufacturer": "GE", "specs": ["Preset", "Legacy", "JSON"]},
+
+		"AWHSTier3Generic50": {"series": "AWHSTier3Generic", "specs": ["Preset", "Legacy", "JSON"]},
+
+		"AWHSTier4Generic50": {"series": "AWHSTier4Generic", "specs": ["Preset", "Legacy", "JSON"]},
 
 		"ColmacCxV_5_SP": {"manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		"ColmacCxV_5_MP": {"manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},

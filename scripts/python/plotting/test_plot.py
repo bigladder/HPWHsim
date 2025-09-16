@@ -421,8 +421,6 @@ class TestPlotter:
 				visible = is_visible,
 				selector = dict(name=curve['name']) 
 			)
-		for curve in self.plot.figure["data"]:
-			print(curve['visible'])
 
 	def getSummaryDataDict(self):
 		summary_data_dict = {}
