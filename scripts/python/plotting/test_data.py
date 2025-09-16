@@ -27,15 +27,20 @@ class EF_Bounds:
 		self.standby_period_end_time = -1
 
 class DataSet:
-	def __init__(self, data_spec, id):
-		self.model_id = data_spec['model_id']
-		self.test_id = data_spec['test_id']
+	def __init__(self, dataSpec):
+		self.model_id = dataSpec['model_id']
+		self.test_id = dataSpec['test_id']
 		self.ef_bounds = EF_Bounds()
-		self.test_summary = {'tank_volume_L': data_spec['tank_volume_L'] if 'tank_volume_L' in data_spec else 173}
+		self.test_summary = {'tank_volume_L': dataSpec['tank_volume_L'] if 'tank_volume_L' in dataSpec else 173}
 			
-		self.variable_type = data_spec['type']
-		self.filepath = data_spec['filepath']
-		
+		self.variable_type = dataSpec['type']
+		self.filepath = dataSpec['filepath']
+		if 'id' in dataSpec:
+			self._id = dataSpec['id']
+		else:
+			self._id = f"{self.model_id}-{self.test_id}-{self.variable_type}"
+		print(self._id)
+			
 		try:
 			df = call_csv(self.filepath, 0)
 			self.filepath = self.filepath

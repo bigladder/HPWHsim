@@ -90,9 +90,9 @@ class TestProc:
 		plot_data = {}
 		plot_data['dataset_specs'] = []
 		if 'measured_filepath' in data:
-			plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath'], 'tank_volume_L': 173})
+			plot_data['dataset_specs'].append({'id': "Measured", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath'], 'tank_volume_L': 173})
 		if 'simulated_filepath' in data:
-			plot_data['dataset_specs'].append({'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath'], 'tank_volume_L': 173})
+			plot_data['dataset_specs'].append({'id': "Simulated", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath'], 'tank_volume_L': 173})
 
 		self.plotter = plot(plot_data)
 		if self.plotter.have_fig:
@@ -103,9 +103,8 @@ class TestProc:
 			show_value_list = []
 			hide_show_div= True
 			for dataset in self.plotter.datasets:
-				plot_label = f"{dataset.model_id} - {dataset.test_id} - {dataset.variable_type}"
-				show_option_list.append({'label': plot_label, 'value': plot_label})
-				show_value_list.append(plot_label)
+				show_option_list.append({'label': dataset._id, 'value': dataset._id})
+				show_value_list.append(dataset._id)
 				self.prev_show |= 1
 				hide_show_div = False
 						
@@ -161,9 +160,8 @@ class TestProc:
 	   		WebSocket(url="ws://localhost:8600", id="ws"),
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 				
-				html.Div(dcc.Checklist(id="show-check", inline=True), id='show-div', hidden=True),
-				html.Button("save", id="save-to-file-btn", n_clicks=0),
 				html.Div(dcc.Checklist(id="show-check", inline=False), id='show-div', hidden=True),
+				html.Button("save", id="save-to-file-btn", n_clicks=0),
 
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
 		
@@ -275,17 +273,9 @@ class TestProc:
 			State('test-graph', 'figure'),
 			prevent_initial_call=True
 		)
-		def change_show(value, fig):
-			value_list = []
-			for dataset in self.plotter.datasets:
-				if f"id{dataset.id}" in value:
-					value_list.append(f"{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}-id{dataset.id}")
-			
-			#for item in fig['layout']:
-				#if "axis" in item:
-					#self.plotter.plot.figure['layout'][item] = fig['layout'][item]
-					
-			return self.plotter.plot.figure, value_list
+		def change_show(dataset_ids, fig):
+			self.plotter.set_datasets_visible(dataset_ids)	
+			return self.plotter.plot.figure, dataset_ids
 				
 		@callback(
 			Output('test-graph', 'figure', allow_duplicate=True),

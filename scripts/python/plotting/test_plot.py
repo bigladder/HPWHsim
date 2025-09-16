@@ -79,7 +79,7 @@ class TestPlotter:
 				if variable == 'Temperature':
 					y_list = [1.8 * y + 32 for y in y_list]
 
-				trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.variable_type}-id{dataset.id}"
+				trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset._id}"
 				#trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}"
 				displayData = dimes.DisplayData(
 		      y_list,
@@ -102,11 +102,9 @@ class TestPlotter:
 			    subplot_number=i_variable + 1,
 			    #axis_name=variable,
 			  )
-		self.trace_dataset_ids.append(dataset.id)
 
 	def __init__(self, data):
 		self.plot = {}
-		self.next_id = 0
 		tank_volume_L = 173
 		if 'model_filepath' in data:
 			model_data = read_file(data['model_filepath'])		
@@ -115,8 +113,7 @@ class TestPlotter:
 		self.datasets = []
 		if "dataset_specs" in data:
 			for dataset_spec in data['dataset_specs']:
-				self.datasets.append(DataSet(dataset_spec, self.next_id))
-				self.next_id += 1
+				self.datasets.append(DataSet(dataset_spec))
 
 		self.have_fig = False
 		self.test_points = []
@@ -178,53 +175,55 @@ class TestPlotter:
 					f"Model: {dataset.model_id}, Test: {dataset.test_id}"
 			)
 			self.plot.x_axis.name = "Time [min]"
+			have_traces = True
 			break
 
-		for dataset in self.datasets:
-			self.plot_dataset(dataset)
+		if have_traces:		
+			for dataset in self.datasets:
+				self.plot_dataset(dataset)
 
-		# create selected trace (empty)
-		trace_selected = go.Scatter(
-				name = "selected points",
-				x = [],
-				y = [],
-				mode="markers",
-				marker_size= [],
-				marker_symbol='circle-open',
-				marker_color = 'black',
-				marker_line_color= 'black',
-				marker_line_width = 2,
-				showlegend = False,
-				hoverinfo="skip",
-				visible = True
-			)
-		self.plot.figure.add_trace(trace_selected)
-		self.update_selected()
+			# create selected trace (empty)
+			trace_selected = go.Scatter(
+					name = "selected points",
+					x = [],
+					y = [],
+					mode="markers",
+					marker_size= [],
+					marker_symbol='circle-open',
+					marker_color = 'black',
+					marker_line_color= 'black',
+					marker_line_width = 2,
+					showlegend = False,
+					hoverinfo="skip",
+					visible = True
+				)
+			self.plot.figure.add_trace(trace_selected)
+			self.update_selected()
 
-		# create selected trace (empty)
-		trace_clicked = go.Scatter(
-				name = "clicked points",
-				x = [],
-				y = [],
-				mode="markers",
-				marker_size= [],
-				marker_symbol='circle-open',
-				marker_color = 'blue',
-				marker_line_color= 'blue',
-				marker_line_width = 6,
-				showlegend = False,
-				hoverinfo="skip",
-				visible = True
-			)
-		self.plot.figure.add_trace(trace_clicked)
-		self.update_clicked()
+			# create selected trace (empty)
+			trace_clicked = go.Scatter(
+					name = "clicked points",
+					x = [],
+					y = [],
+					mode="markers",
+					marker_size= [],
+					marker_symbol='circle-open',
+					marker_color = 'blue',
+					marker_line_color= 'blue',
+					marker_line_width = 6,
+					showlegend = False,
+					hoverinfo="skip",
+					visible = True
+				)
+			self.plot.figure.add_trace(trace_clicked)
+			self.update_clicked()
 
-		self.plot.finalize_plot()
-		self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
-		self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
-		self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
-		self.plot.figure['layout']['title']['x'] = 0.25
-		self.have_fig = True
+			self.plot.finalize_plot()
+			self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
+			self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
+			self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
+			self.plot.figure['layout']['title']['x'] = 0.25
+			self.have_fig = True
 
 	def select_data(self, selectedData):
 		self.test_points = []
@@ -240,7 +239,7 @@ class TestPlotter:
 					curve = curves[curveNumber]
 					if "name" in curve:
 						for dataset in self.datasets:
-							if f"id{dataset.id}" in curve["name"]:
+							if dataset.id in curve["name"]:
 								name = dataset.variable_type
 								if "Power" in curve["name"]:
 									curveSums[curveNumber] = [dataset.df["Power Input"], 0, f"Total input energy (kJ) - {name}", 60 / 1000]
@@ -335,8 +334,6 @@ class TestPlotter:
 							selector = dict(name="clicked points") 
 						)
 
-	def getSummaryDataList(self):	
-
 	def draw(self, data):
 		have_traces = False
 		draw_meas = self.measured.have_data
@@ -412,6 +409,20 @@ class TestPlotter:
 				self.plot.figure['layout']['title']['x'] = 0.25
 				self.have_fig = True
 		return self
+
+	def set_datasets_visible(self, dataset_ids):
+		curve_names = []
+		for curve in self.plot.figure["data"]:
+			curve_names.append(curve['name'])
+			is_visible = False
+			for dataset_id in dataset_ids:	
+				is_visible |= (dataset_id in curve['name'])
+			self.plot.figure.update_traces(
+				visible = is_visible,
+				selector = dict(name=curve['name']) 
+			)
+		for curve in self.plot.figure["data"]:
+			print(curve['visible'])
 
 	def getSummaryDataDict(self):
 		summary_data_dict = {}
