@@ -41,7 +41,6 @@ class TestProc:
 		self.ef_val = 0
 		self.plotter = {}
 		self.process = {}
-	
 	#
 	def start(self, data):
 		if not self.running:
@@ -161,7 +160,7 @@ class TestProc:
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
 				
 				html.Div(dcc.Checklist(id="show-check", inline=True), id='show-div', hidden=True),
-
+				html.Button("save", id="save-to-file-btn", n_clicks=0),
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
 		
 				html.Div([
@@ -404,6 +403,28 @@ class TestProc:
 			msg = {"source": "test-proc", "dest": "index", "cmd": "refresh-fit", "index": self.i_send}
 			return json.dumps(msg)
 		
+		@app.callback(
+				Input("save-to-file-btn", "n_clicks"),
+				prevent_initial_call=True
+		)
+		def save_to_file(nclicks):
+			plot_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".html"
+			plot_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', plot_filename)
+			self.plotter.plot.write_html_plot(plot_filepath)
+			summary_dict = self.plotter.getSummaryDataDict()
+			quantity = []
+			measured = []
+			simulated = []
+			for item in summary_dict:
+				quantity.append(item)
+				measured.append(summary_dict[item][0])
+				simulated.append(summary_dict[item][1])
+			dict = {'Quantity': quantity, 'Measured': measured,'Simulated': simulated}
+			summary_df = pd.DataFrame(dict, columns=['Quantity','Measured','Simulated'])
+			table_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".csv"
+			table_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', table_filename)
+			summary_df.to_csv(table_filepath, sep=',', index=False,header=True)
+				
 		app.run(debug=True, use_reloader=False, port = self.port_num)
 
 

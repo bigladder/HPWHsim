@@ -52,7 +52,7 @@ def retrieve_line_type(variable_type):
 	if variable_type == "Measured":
 		return None
 	elif variable_type == "Simulated":
-		return None#"dot"
+		return "dot"
 
 class EF_Bounds:
 	def __init__(self):
@@ -187,7 +187,7 @@ class TestPlotter:
 			    "Ambient Temperature",
 			],
 			"Colors": ["black", "orange", "purple", "limegreen"],
-			"Line Mode": ["lines", "lines+markers", "lines", "lines"],
+			"Line Mode": ["lines", "lines+markers", "lines+markers", "lines"],
 			"Line Visibility": [False, False, False, False],
 		}
 
@@ -795,7 +795,7 @@ class TestPlotter:
 				self.have_fig = True
 		return self
 
-	def getSummaryDataList(self):	
+	def getSummaryDataDict(self):	
 		summary_data_dict = {}
 		for data_set in [self.measured, self.simulated]:
 			if data_set.have_data:
@@ -817,11 +817,14 @@ class TestPlotter:
 
 				if not(have_item):
 					summary_data_dict[item].append("")	
-									
+			
+		return summary_data_dict
+
+	def getSummaryDataList(self):	
+		summary_data_dict = self.getSummaryDataDict()
 		summary_data_list = []
 		for item in summary_data_dict:
-			summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])		
-		
+			summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])				
 		return summary_data_list
 
 def plot(data):
