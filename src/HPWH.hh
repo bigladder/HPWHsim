@@ -1222,15 +1222,15 @@ class HPWH : public Courier::Sender
     struct Draw
     {
         double startTime_min;
-        double volume_L;
-        double flowRate_L_per_min;
+        double volume_gal;
+        double flowRate_gal_per_min;
 
         Draw(const double startTime_min_in,
-             const double volume_L_in,
-             const double flowRate_Lper_min_in)
+             const double volume_gal_in,
+             const double flowRate_galper_min_in)
             : startTime_min(startTime_min_in)
-            , volume_L(volume_L_in)
-            , flowRate_L_per_min(flowRate_Lper_min_in)
+            , volume_gal(volume_gal_in)
+            , flowRate_gal_per_min(flowRate_galper_min_in)
         {
         }
     };

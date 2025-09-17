@@ -89,58 +89,58 @@ std::unordered_map<HPWH::FirstHourRating::Designation, std::size_t> HPWH::firstD
 
 std::unordered_map<HPWH::FirstHourRating::Designation, HPWH::DrawPattern> HPWH::drawPatterns = {
     {HPWH::FirstHourRating::Designation::VerySmall,
-     {{HM_TO_MIN(0, 00), 7.6, 3.8},
-      {HM_TO_MIN(1, 00), 3.8, 3.8},
-      {HM_TO_MIN(1, 05), 1.9, 3.8},
-      {HM_TO_MIN(1, 10), 1.9, 3.8},
-      {HM_TO_MIN(1, 15), 1.9, 3.8},
-      {HM_TO_MIN(8, 00), 3.8, 3.8},
-      {HM_TO_MIN(8, 15), 7.6, 3.8},
-      {HM_TO_MIN(9, 00), 5.7, 3.8},
-      {HM_TO_MIN(9, 15), 3.8, 3.8}}},
+     {{HM_TO_MIN(0, 00), 2.0, 1.},
+      {HM_TO_MIN(1, 00), 1.0, 1.},
+      {HM_TO_MIN(1, 05), 0.5, 1.},
+      {HM_TO_MIN(1, 10), 0.5, 1.},
+      {HM_TO_MIN(1, 15), 0.5, 1.},
+      {HM_TO_MIN(8, 00), 1.0, 1.},
+      {HM_TO_MIN(8, 15), 2.0, 1.},
+      {HM_TO_MIN(9, 00), 1.5, 1.},
+      {HM_TO_MIN(9, 15), 1.0, 1.}}},
 
     {HPWH::FirstHourRating::Designation::Low,
-     {{HM_TO_MIN(0, 00), 56.8, 6.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(1, 00), 3.8, 3.8},
-      {HM_TO_MIN(10, 30), 22.7, 6.4},
-      {HM_TO_MIN(11, 30), 15.1, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 11.4, 6.4}}},
+     {{HM_TO_MIN(0, 00), 15.0, 1.7},
+      {HM_TO_MIN(0, 30), 2.0, 1.},
+      {HM_TO_MIN(1, 00), 1.0, 1.},
+      {HM_TO_MIN(10, 30), 6.0, 1.7},
+      {HM_TO_MIN(11, 30), 4.0, 1.7},
+      {HM_TO_MIN(12, 00), 1.0, 1.},
+      {HM_TO_MIN(12, 45), 1.0, 1.},
+      {HM_TO_MIN(12, 50), 1.0, 1.},
+      {HM_TO_MIN(16, 15), 2.0, 1.},
+      {HM_TO_MIN(16, 45), 2.0, 1.7},
+      {HM_TO_MIN(17, 00), 3.0, 1.7}}},
 
     {HPWH::FirstHourRating::Designation::Medium,
-     {{HM_TO_MIN(0, 00), 56.8, 6.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(1, 40), 34.1, 6.4},
-      {HM_TO_MIN(10, 30), 34.1, 6.4},
-      {HM_TO_MIN(11, 30), 18.9, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 00), 3.8, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 26.5, 6.4}}},
+     {{HM_TO_MIN(0, 00), 15.0, 1.7},
+      {HM_TO_MIN(0, 30), 2.0, 1.},
+      {HM_TO_MIN(1, 40), 9.0, 1.7},
+      {HM_TO_MIN(10, 30), 9.0, 1.7},
+      {HM_TO_MIN(11, 30), 5.0, 1.7},
+      {HM_TO_MIN(12, 00), 1.0, 1.},
+      {HM_TO_MIN(12, 45), 1.0, 1.},
+      {HM_TO_MIN(12, 50), 1.0, 1.},
+      {HM_TO_MIN(16, 00), 1.0, 1.},
+      {HM_TO_MIN(16, 15), 2.0, 1.},
+      {HM_TO_MIN(16, 45), 2.0, 1.7},
+      {HM_TO_MIN(17, 00), 7.0, 1.7}}},
 
     {HPWH::FirstHourRating::Designation::High,
-     {{HM_TO_MIN(0, 00), 102, 11.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(0, 40), 3.8, 3.8},
-      {HM_TO_MIN(1, 40), 34.1, 6.4},
-      {HM_TO_MIN(10, 30), 56.8, 11.4},
-      {HM_TO_MIN(11, 30), 18.9, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 00), 7.6, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 30), 7.6, 6.4},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
+     {{HM_TO_MIN(0, 00), 27.0, 3.},
+      {HM_TO_MIN(0, 30), 2.0, 1.},
+      {HM_TO_MIN(0, 40), 1.0, 1.},
+      {HM_TO_MIN(1, 40), 9.0, 1.7},
+      {HM_TO_MIN(10, 30), 15.0, 3.},
+      {HM_TO_MIN(11, 30), 5.0, 1.7},
+      {HM_TO_MIN(12, 00), 1.0, 1.},
+      {HM_TO_MIN(12, 45), 1.0, 1.},
+      {HM_TO_MIN(12, 50), 1.0, 1.},
+      {HM_TO_MIN(16, 00), 2.0, 1.},
+      {HM_TO_MIN(16, 15), 2.0, 1.},
+      {HM_TO_MIN(16, 30), 2.0, 1.7},
+      {HM_TO_MIN(16, 45), 2.0, 1.7},
+      {HM_TO_MIN(17, 00), 14.0, 3.}}}};
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
@@ -3820,13 +3820,13 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
             if (runTime_min >= draw.startTime_min)
             {
                 // limit draw-volume step to tank volume
-                stepDrawVolume_L = draw.flowRate_L_per_min * (1.);
+                stepDrawVolume_L = GAL_TO_L(draw.flowRate_gal_per_min) * (1.);
                 if (stepDrawVolume_L > tank->volume_L)
                 {
                     stepDrawVolume_L = tank->volume_L;
                 }
 
-                remainingDrawVolume_L = drawVolume_L = draw.volume_L;
+                remainingDrawVolume_L = drawVolume_L = GAL_TO_L(draw.volume_gal);
 
                 nextDraw = false;
                 isDrawing = true;
@@ -4194,25 +4194,40 @@ nlohmann::json HPWH::TestSummary::report()
     }
 
     j_results["recovery_efficiency"] = recoveryEfficiency;
+    j_results["recoveryDeliveredEnergy_kJ"] = recoveryDeliveredEnergy_kJ;
+    j_results["recoveryStoredEnergy_kJ"] = recoveryStoredEnergy_kJ;
+    j_results["recoveryUsedEnergy_kJ"] = recoveryUsedEnergy_kJ; // Q_r
 
-    j_results["standby_loss_coefficient_kJperhC"] = standbyLossCoefficient_kJperhC;
+    //
+    j_results["standbyPeriodTime_h"] = standbyPeriodTime_h; // tau_stby,1
 
-    j_results["EF"] = EF;
+    j_results["standbyStartTankT_C"] = standbyStartTankT_C; // T_su,0
+    j_results["standbyEndTankT_C"] = standbyEndTankT_C;   // T_su,f
 
-    j_results["average_inlet_temperature_degC"] = averageInletT_C;
+    j_results["standbyStartEnergy_kJ"] = standbyStartEnergy_kJ; // Q_su,0
+    j_results["standbyEndEnergy_kJ"] = standbyEndEnergy_kJ;   // Q_su,f
+    j_results["standbyUsedEnergy_kJ"] = standbyUsedEnergy_kJ;  // Q_stby
 
-    j_results["average_outlet_temperature_degC"] = averageOutletT_C;
+    j_results["standbyHourlyLossEnergy_kJperh"] = standbyHourlyLossEnergy_kJperh; // Q_hr
+    j_results["standbyLossCoefficient_kJperhC"] = standbyLossCoefficient_kJperhC; // UA
 
+    j_results["noDrawTotalTime_h"] = noDrawTotalTime_h;        // tau_stby,2
+    j_results["noDrawAverageAmbientT_C"] = noDrawAverageAmbientT_C; // <T_a,stby,2>
+
+    // 24-hr values
     j_results["total_volume_drawn_L"] = removedVolume_L;
+    j_results["waterHeatingEnergy_kJ"] = waterHeatingEnergy_kJ; // Q_HW
+    j_results["average_outlet_temperature_degC"] = averageOutletT_C;      // <Tdel,i>
+    j_results["average_inlet_temperature_degC"] = averageInletT_C;       // <Tin,i>
 
-    j_results["usedEnergy_kJ"] = usedEnergy_kJ;
-    j_results["daily_water_heating_energy_consumption_kJ"] = waterHeatingEnergy_kJ;
-
-    j_results["adjusted_daily_water_heating_energy_consumption_kJ"] =
-        adjustedConsumedWaterHeatingEnergy_kJ;
-
-    j_results["modified_daily_water_heating_energy_consumption_kJ"] =
-        modifiedConsumedWaterHeatingEnergy_kJ;
+    j_results["usedFossilFuelEnergy_kJ"] = usedFossilFuelEnergy_kJ;               // Q_f
+    j_results["usedElectricalEnergy_kJ"] = usedElectricalEnergy_kJ;               // Q_e
+    j_results["usedEnergy_kJ"] = usedEnergy_kJ;                         // Q
+    j_results["consumedHeatingEnergy_kJ"] = consumedHeatingEnergy_kJ;              // Q_d
+    j_results["standardWaterHeatingEnergy_kJ"] = standardWaterHeatingEnergy_kJ;         // Q_HW,T
+    j_results["adjusted_daily_water_heating_energy_consumption_kJ"] = adjustedConsumedWaterHeatingEnergy_kJ; // Q_da
+    j_results["modified_daily_water_heating_energy_consumption_kJ"] = modifiedConsumedWaterHeatingEnergy_kJ; // Q_dm
+    j_results["EF"] = EF;
 
     j_results["annual_electrical_energy_consumption_kJ"] = annualConsumedElectricalEnergy_kJ;
 

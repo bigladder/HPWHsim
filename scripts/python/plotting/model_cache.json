@@ -6,5 +6,9 @@
   "Rheem2020Build65": "../../../build/gui/Rheem2020Build65.json",
   "BradfordWhiteAeroThermRE2HP50": "../../../build/gui/BradfordWhiteAeroThermRE2HP50.json",
   "BradfordWhiteAeroThermRE2HP65": "../../../build/gui/BradfordWhiteAeroThermRE2HP65.json",
-  "BradfordWhiteAeroThermRE2HP80": "../../../build/gui/BradfordWhiteAeroThermRE2HP80.json"
+  "BradfordWhiteAeroThermRE2HP80": "../../../build/gui/BradfordWhiteAeroThermRE2HP80.json",
+  "GE2014STDMode_50": "../../../build/gui/GE2014STDMode_50.json",
+  "AWHSTier3Generic50": "../../../build/gui/AWHSTier3Generic50.json",
+  "AWHSTier4Generic50": "../../../build/gui/AWHSTier4Generic50.json",
+  "GenericUEF217": "../../../build/gui/GenericUEF217.json"
 }
