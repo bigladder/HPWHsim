@@ -356,7 +356,7 @@ class TestPlotter:
 			if not isStandbyPeriod:	
 				if t_min >= data_set.ef_bounds.standby_period_start_time and t_min < data_set.ef_bounds.standby_period_end_time:
 					isStandbyPeriod = True
-					standbyStartT_C = tankAvgT_C
+					standbyStartTankT_C = tankAvgT_C
 					
 			if isStandbyPeriod:
 				if t_min < data_set.ef_bounds.standby_period_end_time:	
@@ -365,16 +365,14 @@ class TestPlotter:
 				else:
 					tStandby = data_set.ef_bounds.standby_period_end_time
 					isStandbyPeriod = False
-					standbyEndT_C = tankAvgT_C
+					standbyEndTankT_C = tankAvgT_C
 				dt = tStandby - (t_min - 1)
 				standbySumTimeTankT_minC += tankAvgT_C * dt
 				standbySumTimeAmbientT_minC += ambientT_C * dt
 				standbyUsedEnergy_kJ += input_energy_kJ * dt				
 					
-		recoveryAvgOutletT_C = recoverySumDrawOutletT / recoveryTotalDraw_L
-		recoveryAvgInletT_C = recoverySumDrawInletT / recoveryTotalDraw_L
 		recoveryStoredEnergy_kJ = tank_heat_capacity_kJperC * (maxTankAfterFirstRecoveryT_C - initialTankAvgT_C)
-		recoveryDeliveredEnergy_kJ = water_specific_heat_kJperkgC * water_density_kgperL * recoveryTotalDraw_L * (recoveryAvgOutletT_C - recoveryAvgInletT_C)
+		recoveryDeliveredEnergy_kJ = water_specific_heat_kJperkgC * water_density_kgperL * (recoverySumDrawOutletT- recoverySumDrawInletT)
 
 		if sumNoDrawTime_min > 0:
 			noDrawAvgAmbientT_C = noDrawSumAmbientTTime / sumNoDrawTime_min
@@ -384,15 +382,13 @@ class TestPlotter:
 			recoveryEfficiency = (recoveryStoredEnergy_kJ + recoveryDeliveredEnergy_kJ) / recoveryUsedEnergy_kJ
 					
 		recovery_summary = {
-			'firstRecoveryPeriodEndTime_min': data_set.ef_bounds.first_recovery_period_end_time,
-			'maxTankAfterFirstRecoveryT_C': maxTankAfterFirstRecoveryT_C,
+			'recoveryPeriodEndTime_min': data_set.ef_bounds.first_recovery_period_end_time,
+			'recoveryMaxTankAfterT_C': maxTankAfterFirstRecoveryT_C,
 			'recoveryTotalDraw_L': recoveryTotalDraw_L,
-			'recoveryAvgInletT_C': recoveryAvgInletT_C,
-			'recoveryAvgOutletT_C': recoveryAvgOutletT_C,
 			'recoveryStoredEnergy_kJ': recoveryStoredEnergy_kJ,
 			'recoveryDeliveredEnergy_kJ': recoveryDeliveredEnergy_kJ,
 			'recoveryUsedEnergy_kJ': recoveryUsedEnergy_kJ,
-			'recoveryEfficiency': recoveryEfficiency
+			'recoveryEfficiency_%': recoveryEfficiency
 		}
 		for k, v in recovery_summary.items():
 			recovery_summary[k] = float(v)
@@ -400,16 +396,15 @@ class TestPlotter:
 		
 		standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
 		standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
-		standbyTankLoss_kJ = tank_heat_capacity_kJperC * (standbyEndT_C - standbyStartT_C)
+		standbyTankLoss_kJ = tank_heat_capacity_kJperC * (standbyEndTankT_C - standbyStartTankT_C)
 		standbyHourlyLossEnergy_kJperh = (standbyUsedEnergy_kJ - standbyTankLoss_kJ) / recoveryEfficiency / (standbySumTime_min / 60)
 		standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)			
 		standby_summary = {
 			'standbyPeriodStartTime_min': data_set.ef_bounds.standby_period_start_time,
-			'standbyPeriodEndTime': data_set.ef_bounds.standby_period_end_time,
+			'standbyPeriodEndTime_min': data_set.ef_bounds.standby_period_end_time,
 			'standbyTestDuration h': standbySumTime_min / 60,
-			'standbyStartT_C': standbyStartT_C,
-			'standbyEndT_C': standbyEndT_C,
-			'standbyAvgTankT_C': standbyAvgTankT_C,
+			'standbyStartTankT_C': standbyStartTankT_C,
+			'standbyEndTankT_C': standbyEndTankT_C,
 			'standbyAvgAmbientT_C': standbyAvgAmbientT_C,
 			'standbyUsedEnergy_kJ': standbyUsedEnergy_kJ,
 			'standbyTankLoss_kJ': standbyTankLoss_kJ,

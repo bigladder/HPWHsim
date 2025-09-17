@@ -1,11 +1,11 @@
 {
-  "model_id": "GenericUEF217",
+  "model_id": "AWHSTier4Generic50",
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
-    "list": "standard_tests",
-    "id": "UEF",
-    "draw_profile": "high",
+    "list": "all_tests",
+    "id": "RE2HP50_UEF67",
+    "draw_profile": "auto",
     "plots": {
       "show_simulated": true,
       "show_measured": true
@@ -13,7 +13,7 @@
   },
   "performance": {
     "plots": {
-      "contour_variable": 0,
+      "contour_variable": 2,
       "contour_coloring": 2,
       "interpolate": 0,
       "Nx": 5,

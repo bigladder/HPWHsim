@@ -37,6 +37,7 @@
 		"AWHSTier3Generic50": {"series": "AWHSTier3Generic", "specs": ["Preset", "Legacy", "JSON"]},
 		"AWHSTier4Generic50": {"series": "AWHSTier4Generic", "specs": ["Preset", "Legacy", "JSON"]},
 		"GenericUEF217": {"specs": ["Preset", "Legacy", "JSON"]},
+		"UEF2generic": {"specs": ["Preset", "Legacy", "JSON"]},
 
 		"ColmacCxV_5_SP": {"manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		"ColmacCxV_5_MP": {"manufacturer": "Colmac", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
