@@ -184,7 +184,7 @@ void make(HPWH& hpwh,
 
     hpwh.makeGenericEF(targetEF, testConfiguration, designation, perfPolySet);
 
-    auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
+    auto testSummary = hpwh.run24hrTest(testConfiguration, designation);
     j_results["24_hr_test"] = testSummary.report();
     if ((outputDir != "") && (resultsFilename != ""))
     {

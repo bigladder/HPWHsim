@@ -1114,7 +1114,7 @@ class HPWH : public Courier::Sender
     struct TestData
     {
         static const int nTCouples = 6;
-        int time_min;
+        double time_min;
         double ambientT_C;
         double setpointT_C;
         double inletT_C;
@@ -1141,21 +1141,18 @@ class HPWH : public Courier::Sender
     struct TestSummary
     {
         // first recovery values
-        double recoveryEfficiency = 0.; // eta_r
+        double recoveryPeriodEndTime_min = 0.;
+        double recoveryVolumeDrawn_L = 0.;
         double recoveryDeliveredEnergy_kJ = 0.;
         double recoveryStoredEnergy_kJ = 0.;
         double recoveryUsedEnergy_kJ = 0.; // Q_r
+        double recoveryEfficiency = 0.;    // eta_r
 
         //
-        double standbyPeriodTime_h = 0; // tau_stby,1
-
-        double standbyStartTankT_C = 0.; // T_su,0
-        double standbyEndTankT_C = 0.;   // T_su,f
-
-        double standbyStartEnergy_kJ = 0.; // Q_su,0
-        double standbyEndEnergy_kJ = 0.;   // Q_su,f
-        double standbyUsedEnergy_kJ = 0.;  // Q_stby
-
+        double standbyStartTankT_C = 0.;            // T_su,0
+        double standbyEndTankT_C = 0.;              // T_su,f
+        double standbyUsedEnergy_kJ = 0.;           // Q_stby
+        double standbyPeriodDuration_h = 0;         // tau_stby,1
         double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
         double standbyLossCoefficient_kJperhC = 0.; // UA
 
@@ -1171,6 +1168,7 @@ class HPWH : public Courier::Sender
         double usedFossilFuelEnergy_kJ = 0.;               // Q_f
         double usedElectricalEnergy_kJ = 0.;               // Q_e
         double usedEnergy_kJ = 0.;                         // Q
+        double deliveredEnergy_kJ = 0.;
         double consumedHeatingEnergy_kJ = 0.;              // Q_d
         double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
         double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
@@ -1210,27 +1208,26 @@ class HPWH : public Courier::Sender
 
     /// run 24-hr draw pattern
     TestSummary run24hrTest(TestConfiguration testConfiguration,
-                            FirstHourRating::Designation designation,
-                            bool saveOutput = false);
+                            FirstHourRating::Designation designation);
 
-    TestSummary run24hrTest(TestConfiguration testConfiguration, bool saveOutput = false)
+    TestSummary run24hrTest(TestConfiguration testConfiguration)
     {
-        return run24hrTest(testConfiguration, findFirstHourRating().designation, saveOutput);
+        return run24hrTest(testConfiguration, findFirstHourRating().designation);
     }
 
     /// specific information for a single draw
     struct Draw
     {
         double startTime_min;
-        double volume_L;
-        double flowRate_L_per_min;
+        double volume_gal;
+        double flowRate_gal_per_min;
 
         Draw(const double startTime_min_in,
-             const double volume_L_in,
-             const double flowRate_Lper_min_in)
+             const double volume_gal_in,
+             const double flowRate_galper_min_in)
             : startTime_min(startTime_min_in)
-            , volume_L(volume_L_in)
-            , flowRate_L_per_min(flowRate_Lper_min_in)
+            , volume_gal(volume_gal_in)
+            , flowRate_gal_per_min(flowRate_galper_min_in)
         {
         }
     };

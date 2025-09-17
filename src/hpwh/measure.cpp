@@ -158,7 +158,7 @@ void measure(HPWH& hpwh,
     else if (testConfig == "E95")
         testConfiguration = HPWH::testConfiguration_E95;
 
-    auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
+    auto testSummary = hpwh.run24hrTest(testConfiguration, designation);
 
     j_results["24_hr_test"] = testSummary.report();
     if ((outputDir != "") && (resultsFilename != ""))
