@@ -1,9 +1,9 @@
 {
 	"tests":
 	{
+		"E95": {"name": "24-hr E95 (95 ºF) test", "configuration": "E95"},	
 		"UEF": {"name": "24-hr UEF (67.5 ºF) test", "configuration": "UEF"},
 		"E50": {"name": "24-hr E50 (50 ºF) test", "configuration": "E50"},
-		"E95": {"name": "24-hr E95 (95 ºF) test", "configuration": "E95"},
 
 		"test30": {"desc": "24h; 30F", "path": "general_tests"},
 		"test50": {"desc": "24h; 50F", "path": "general_tests"},

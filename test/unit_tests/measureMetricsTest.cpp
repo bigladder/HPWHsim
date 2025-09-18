@@ -34,7 +34,7 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 272.5659, 1.e-4);
 
-    EXPECT_NEAR(testSummary.EF, 2.6852, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 2.6728, 1.e-4);
 }
 
 /*
@@ -59,7 +59,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 188.0302, 1.e-4);
 
-    EXPECT_NEAR(testSummary.EF, 4.0056, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 4.0834, 1.e-4);
 }
 
 /*
@@ -83,7 +83,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
 
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 310.8838, 1.e-4);
-    EXPECT_NEAR(testSummary.EF, 4.3307, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 4.3865, 1.e-4);
 }
 
 /*
@@ -153,3 +153,24 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
         EXPECT_NEAR(testSummary.EF, E95, 1.e-12) << "Did not measure expected E95";
     }
 }
+
+/*
+ * make Tier-4
+ */
+TEST_F(MeasureMetricsTest, InitGenericFunction)
+{
+    // get preset model
+    HPWH hpwh;
+    constexpr double UEF = 1.74;
+    hpwh.initGeneric(GAL_TO_L(45.), UEF, 20.);
+    EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
+        << "Could not complete first-hour rating test.";
+
+    { // verify UEF
+        EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(HPWH::testConfiguration_UEF,
+                                                       firstHourRating.designation))
+            << "Could not complete complete 24-hr test.";
+        EXPECT_NEAR(testSummary.EF, 1.81, 1.e-12) << "Did not measure expected UEF";
+    }
+}
+

@@ -1165,9 +1165,9 @@ class HPWH : public Courier::Sender
         double averageOutletT_C = 0.;      // <Tdel,i>
         double averageInletT_C = 0.;       // <Tin,i>
 
-        double usedFossilFuelEnergy_kJ = 0.;               // Q_f
-        double usedElectricalEnergy_kJ = 0.;               // Q_e
-        double usedEnergy_kJ = 0.;                         // Q
+        double usedFossilFuelEnergy_kJ = 0.; // Q_f
+        double usedElectricalEnergy_kJ = 0.; // Q_e
+        double usedEnergy_kJ = 0.;           // Q
         double deliveredEnergy_kJ = 0.;
         double consumedHeatingEnergy_kJ = 0.;              // Q_d
         double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T

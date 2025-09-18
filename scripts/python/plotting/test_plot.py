@@ -186,7 +186,7 @@ class TestPlotter:
 			have_traces = True
 			break
 
-		if have_traces:		
+		if have_traces:
 			for dataset in self.datasets:
 				self.plot_dataset(dataset)
 
@@ -246,6 +246,17 @@ class TestPlotter:
 				for curveNumber in curves:
 					curve = curves[curveNumber]
 					if "name" in curve:
+						if "Measured" in curve["name"]:
+							if "Power" in curve["name"]:
+								curveSums[curveNumber] = [curve, 0, "Measured total input energy (kJ)", 60 / 1000]
+							if "Flow Rate" in curve["name"]:
+								curveSums[curveNumber] = [curve, 0, "Measured total volume drawn (gal)", 1]
+						if "Simulated" in curve["name"]:
+							if "Power" in curve["name"]:
+								curveSums[curveNumber] = [curve, 0, "Simulated total input energy (kJ)", 60 / 1000]
+							if "Flow Rate" in curve["name"]:
+								curveSums[curveNumber] = [curve, 0, "Simulated total volume drawn (gal)", 1]
+					
 						for dataset in self.datasets:
 							if dataset.id in curve["name"]:
 								name = dataset.variable_type
@@ -253,17 +264,19 @@ class TestPlotter:
 									curveSums[curveNumber] = [dataset.df["Power Input"], 0, f"Total input energy (kJ) - {name}", 60 / 1000]
 								if "Flow Rate" in curve["name"]:
 									curveSums[curveNumber] = [dataset.df["Flow Rate"], 0, f"Total volume drawn (gal) - {name}", 1]
-												
+
 				for point in selectedData["points"]:
 					if "curveNumber" in point and "pointNumber" in point:
 						if point["curveNumber"] in curveSums:
-							val = curveSums[point["curveNumber"]][0][point["pointNumber"]]
+							curve = curveSums[point["curveNumber"]][0]
+							val = curve['y'][point["pointNumber"]]
 							if not math.isnan(val):	
 								curveSums[point["curveNumber"]][1] += val
-								
+
 				for curveNumber in curveSums:
 					curveSum = curveSums[curveNumber]
-					result.append([curveSum[2], curveSum[3] * curveSum[1]])													
+
+					result.append([curveSum[2], curveSum[3] * curveSum[1]])
 
 		return result
 				
@@ -423,11 +436,11 @@ class TestPlotter:
 		for curve in self.plot.figure["data"]:
 			curve_names.append(curve['name'])
 			is_visible = False
-			for dataset_id in dataset_ids:	
+			for dataset_id in dataset_ids:
 				is_visible |= (dataset_id in curve['name'])
 			self.plot.figure.update_traces(
 				visible = is_visible,
-				selector = dict(name=curve['name']) 
+				selector = dict(name=curve['name'])
 			)
 
 	def getSummaryDataDict(self):
@@ -477,7 +490,7 @@ if __name__ == "__main__":
 			model_id = sys.argv[1]
 			test_id = sys.argv[2]
 			data['dataset_specs'] = []
-			
+
 			if sys.argv[3] != '':
 				data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Measured", 'filepath': sys.argv[3]})
 			if sys.argv[4] != '':
