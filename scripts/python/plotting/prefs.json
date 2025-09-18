@@ -1,10 +1,10 @@
 {
-  "model_id": "AWHSTier4Generic50",
+  "model_id": "GenericUEF217",
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
     "list": "standard_tests",
-    "id": "UEF",
+    "id": "E50",
     "draw_profile": "medium",
     "plots": {
       "show_simulated": true,
