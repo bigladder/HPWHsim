@@ -525,25 +525,27 @@ class TestPlotter:
 					if "name" in curve:
 						if "Measured" in curve["name"]:
 							if "Power" in curve["name"]:
-								curveSums[curveNumber] = [self.measured.df["PowerIn(W)"], 0, "Measured total input energy (kJ)", 60 / 1000]
+								curveSums[curveNumber] = [curve, 0, "Measured total input energy (kJ)", 60 / 1000]
 							if "Flow Rate" in curve["name"]:
-								curveSums[curveNumber] = [self.measured.df["FlowRate(gal/min)"], 0, "Measured total volume drawn (gal)", 1]
+								curveSums[curveNumber] = [curve, 0, "Measured total volume drawn (gal)", 1]
 						if "Simulated" in curve["name"]:
 							if "Power" in curve["name"]:
-								curveSums[curveNumber] = [self.simulated.df["Power_W"], 0, "Simulated total input energy (kJ)", 60 / 1000]
+								curveSums[curveNumber] = [curve, 0, "Simulated total input energy (kJ)", 60 / 1000]
 							if "Flow Rate" in curve["name"]:
-								curveSums[curveNumber] = [self.simulated.df["draw"], 0, "Simulated total volume drawn (gal)", 1]
+								curveSums[curveNumber] = [curve, 0, "Simulated total volume drawn (gal)", 1]
 					
 												
 				for point in selectedData["points"]:
 					if "curveNumber" in point and "pointNumber" in point:
 						if point["curveNumber"] in curveSums:
-							val = curveSums[point["curveNumber"]][0][point["pointNumber"]]
+							curve = curveSums[point["curveNumber"]][0]
+							val = curve['y'][point["pointNumber"]]
 							if not math.isnan(val):	
 								curveSums[point["curveNumber"]][1] += val
-								
+							
 				for curveNumber in curveSums:
 					curveSum = curveSums[curveNumber]
+
 					result.append([curveSum[2], curveSum[3] * curveSum[1]])													
 					
 		elif "range" in selectedData:
