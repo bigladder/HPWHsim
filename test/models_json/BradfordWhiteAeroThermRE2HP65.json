@@ -5,14 +5,14 @@
     "description": {
       "product_information": {
         "manufacturer": "Bradford White",
-        "model_number": "RE2H65T..-....."
+        "model_number": "RE2HP65..-1NCTT"
       },
       "rating_10_cfr_430": {
-        "certified_reference_number": "204835481",
-        "first_hour_rating": 79.0,
+        "certified_reference_number": "217493297",
+        "first_hour_rating": 82.0,
         "nominal_tank_volume": 65.0,
-        "recovery_efficiency": 3.91,
-        "uniform_energy_factor": 3.64
+        "recovery_efficiency": 4.62,
+        "uniform_energy_factor": 4.20
       }
     },
     "metadata": {

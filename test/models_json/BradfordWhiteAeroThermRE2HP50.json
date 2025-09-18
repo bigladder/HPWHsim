@@ -5,14 +5,14 @@
     "description": {
       "product_information": {
         "manufacturer": "Bradford White",
-        "model_number": "RE2H50S.-....."
+        "model_number": "RE2HP50..-1NCTT"
       },
       "rating_10_cfr_430": {
-        "certified_reference_number": "200094643",
+        "certified_reference_number": "217508889",
         "first_hour_rating": 65.0,
         "nominal_tank_volume": 50.0,
-        "recovery_efficiency": 4.06,
-        "uniform_energy_factor": 3.44
+        "recovery_efficiency": 4.45,
+        "uniform_energy_factor": 3.89
       }
     },
     "metadata": {
