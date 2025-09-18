@@ -10,5 +10,6 @@
   "GenericUEF217": "../../../build/gui/GenericUEF217.json",
   "UEF2generic": "../../../build/gui/UEF2generic.json",
   "Generic65": "../../../build/gui/Generic65.json",
-  "Rheem2020Build50": "../../../build/gui/Rheem2020Build50.json"
+  "Rheem2020Build50": "../../../build/gui/Rheem2020Build50.json",
+  "BradfordWhiteAeroThermRE2HP80": "../../../build/gui/BradfordWhiteAeroThermRE2HP80.json"
 }

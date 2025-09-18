@@ -1,10 +1,10 @@
 {
-  "model_id": "BradfordWhiteAeroThermRE2HP80",
+  "model_id": "UEF2generic",
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
-    "list": "tests_with_data",
-    "id": "RE2HP80_UEF67",
+    "list": "standard_tests",
+    "id": "UEF",
     "draw_profile": "medium",
     "plots": {
       "show_simulated": true,

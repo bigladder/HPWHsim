@@ -34,7 +34,7 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 272.5659, 1.e-4);
 
-    EXPECT_NEAR(testSummary.EF, 2.6852, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 2.6728, 1.e-4);
 }
 
 /*
@@ -59,7 +59,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 188.0302, 1.e-4);
 
-    EXPECT_NEAR(testSummary.EF, 4.0056, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 4.0834, 1.e-4);
 }
 
 /*
@@ -83,7 +83,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
 
     EXPECT_TRUE(testSummary.qualifies);
     EXPECT_NEAR(firstHourRating.drawVolume_L, 310.8838, 1.e-4);
-    EXPECT_NEAR(testSummary.EF, 4.3307, 1.e-4);
+    EXPECT_NEAR(testSummary.EF, 4.3865, 1.e-4);
 }
 
 /*

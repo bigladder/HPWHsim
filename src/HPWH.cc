@@ -3666,7 +3666,7 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                                     FirstHourRating::Designation designation)
 {
     // select the first draw cluster size and pattern
-    //auto firstDrawClusterSize = firstDrawClusterSizes[designation];
+    // auto firstDrawClusterSize = firstDrawClusterSizes[designation];
     DrawPattern& drawPattern = drawPatterns[designation];
 
     const double inletT_C = testConfiguration.inletT_C;
@@ -3801,7 +3801,6 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
             drMode = DR_LOC | DR_LOR;
         }
 
-
         if (readyForNextDraw)
         {
             if (draw != drawPattern.end())
@@ -3854,7 +3853,6 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                    inletT_C,         // inlet-2 Temp (C)
                    NULL);            // no extra heat
 
-
         {
             TestData testData;
             testData.time_min = runTime_min;
@@ -3887,7 +3885,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
         // energy added to water
         double stepDrawHeatCapacity_kJperC =
             CPWATER_kJperkgC * DENSITYWATER_kgperL * stepDrawVolume_L;
-        testSummary.deliveredEnergy_kJ += stepDrawHeatCapacity_kJperC * (tank->getOutletT_C() - inletT_C);
+        testSummary.deliveredEnergy_kJ +=
+            stepDrawHeatCapacity_kJperC * (tank->getOutletT_C() - inletT_C);
 
         // collect used-energy info
         double stepUsedFossilFuelEnergy_kJ = 0.;
@@ -3922,7 +3921,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                     testSummary.recoveryStoredEnergy_kJ =
                         tankHeatCapacity_kJperC * (prevTankT_C - initialTankT_C);
                     testSummary.recoveryDeliveredEnergy_kJ =
-                        CPWATER_kJperkgC * DENSITYWATER_kgperL * (recoverySumOutletVolumeT_LC - recoverySumInletVolumeT_LC);
+                        CPWATER_kJperkgC * DENSITYWATER_kgperL *
+                        (recoverySumOutletVolumeT_LC - recoverySumInletVolumeT_LC);
                 }
             }
         }
@@ -3952,7 +3952,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
                 }
             }
         }
-        else if ((!standbyPeriodHasEnded) && (runTime_min > testSummary.recoveryPeriodEndTime_min + 5.))
+        else if ((!standbyPeriodHasEnded) &&
+                 (runTime_min > testSummary.recoveryPeriodEndTime_min + 5.))
         {
             isStandbyPeriod = true;
             testSummary.standbyStartTankT_C = tankT_C;
@@ -3974,7 +3975,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     testSummary.averageInletT_C = sumInletVolumeT_LC / testSummary.removedVolume_L;
 
     double tankHeatCapacity_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * tank->getVolume_L();
-    double removedHeatCapacity_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * testSummary.removedVolume_L;
+    double removedHeatCapacity_kJperC =
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * testSummary.removedVolume_L;
 
     testSummary.designation = designation;
 
@@ -4011,7 +4013,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
         double standbyAverageTankT_C =
             standbySumTimeTankT_minC / (standbyPeriodEndTime_min - standbyPeriodStartTime_min - 1.);
         double standbyAverageAmbientT_C =
-            standbySumTimeAmbientT_minC / (standbyPeriodEndTime_min - standbyPeriodStartTime_min - 1.);
+            standbySumTimeAmbientT_minC /
+            (standbyPeriodEndTime_min - standbyPeriodStartTime_min - 1.);
 
         double dT_C = standbyAverageTankT_C - standbyAverageAmbientT_C;
         if (dT_C != 0.)
@@ -4042,7 +4045,8 @@ HPWH::TestSummary HPWH::run24hrTest(TestConfiguration testConfiguration,
     testSummary.waterHeatingEnergy_kJ = 0.;
     if (testSummary.recoveryEfficiency > 0.)
     {
-        testSummary.waterHeatingEnergy_kJ = testSummary.deliveredEnergy_kJ / testSummary.recoveryEfficiency;
+        testSummary.waterHeatingEnergy_kJ =
+            testSummary.deliveredEnergy_kJ / testSummary.recoveryEfficiency;
     }
 
     const double standardSetpointT_C = F_TO_C(125.);
@@ -4152,9 +4156,9 @@ nlohmann::json HPWH::TestSummary::report()
     j_results["average_outlet_temperature_degC"] = averageOutletT_C; // <Tdel,i>
     j_results["average_inlet_temperature_degC"] = averageInletT_C;   // <Tin,i>
 
-    j_results["usedFossilFuelEnergy_kJ"] = usedFossilFuelEnergy_kJ;             // Q_f
-    j_results["usedElectricalEnergy_kJ"] = usedElectricalEnergy_kJ;             // Q_e
-    j_results["usedEnergy_kJ"] = usedEnergy_kJ;                                 // Q
+    j_results["usedFossilFuelEnergy_kJ"] = usedFossilFuelEnergy_kJ; // Q_f
+    j_results["usedElectricalEnergy_kJ"] = usedElectricalEnergy_kJ; // Q_e
+    j_results["usedEnergy_kJ"] = usedEnergy_kJ;                     // Q
     j_results["deliveredEnergy_kJ"] = deliveredEnergy_kJ;
     j_results["consumedHeatingEnergy_kJ"] = consumedHeatingEnergy_kJ;           // Q_d
     j_results["standardWaterHeatingEnergy_kJ"] = standardWaterHeatingEnergy_kJ; // Q_HW,T
