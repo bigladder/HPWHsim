@@ -90,9 +90,9 @@ class TestProc:
 		plot_data = {}
 		plot_data['dataset_specs'] = []
 		if 'measured_filepath' in data:
-			plot_data['dataset_specs'].append({'id': "Measured", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath'], 'tank_volume_L': 173})
+			plot_data['dataset_specs'].append({'id': "Measured", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath']})
 		if 'simulated_filepath' in data:
-			plot_data['dataset_specs'].append({'id': "Simulated", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath'], 'tank_volume_L': 173})
+			plot_data['dataset_specs'].append({'id': "Simulated", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath']})
 
 		self.plotter = plot(plot_data)
 		if self.plotter.have_fig:

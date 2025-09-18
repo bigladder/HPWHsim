@@ -39,16 +39,6 @@ class DataSet:
 			self._id = dataSpec['id']
 		else:
 			self._id = f"{self.model_id}-{self.test_id}-{self.variable_type}"
-		print(self._id)
-			
-		try:
-			df = call_csv(self.filepath, 0)
-			self.filepath = self.filepath
-		except:
-			df = {}
-			return	
-		
-		self.id = id
 		
 		NUMBER_OF_THERMOCOUPLES = 6
 		self.columns = {}
@@ -100,26 +90,9 @@ class DataSet:
 		for i, tank in enumerate(self.columns["Temperature"]["Tank"]):
 			data[f"Tank Temperature - #{i + 1}"] = list(df[tank])
 		data["Tank Average Temperature"] = list(df[self.columns["Temperature"]["Tank"]].mean(axis=1))
-		x_list = data['Time']
-		y_list = data["Flow Rate"]
-		prevNan = False		
-		x_arr = []
-		y_arr = []
-		for i, y in enumerate(y_list):
-			if np.isnan(y):
-				if not prevNan:
-					x_arr.append(x_list[i])
-					y_arr.append(0)					
-				prevNan = True	
-			else:
-				if prevNan:
-					x_arr.append(x_list[i-1])
-					y_arr.append(0)
-				x_arr.append(x_list[i])
-				y_arr.append(x_list[i])
-				prevNan = False
-			
+
 		self.df = pd.DataFrame(data)
+		print(f"Loading: {vars(self)}")
 		
 	def find_EF_bounds(self):	
 		self.ef_bounds.test_start_time = self.df["Time"].iloc[0]
@@ -303,7 +276,7 @@ class DataSet:
 			}
 			for k, v in recovery_summary.items():
 				recovery_summary[k] = float(v)
-			self.test_summary['first-recovery_period'] = recovery_summary
+			self.test_summary['first-recovery-period'] = recovery_summary
 			
 			standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
 			standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
@@ -325,7 +298,7 @@ class DataSet:
 			}
 			for k, v in standby_summary.items():
 				standby_summary[k] = float(v)
-			self.test_summary['standby_period'] = standby_summary
+			self.test_summary['standby-period'] = standby_summary
 			
 			avgInletT_C = sumDrawInletT / sumDraw_L	
 			avgOutletT_C =	sumDrawOutletT / sumDraw_L	

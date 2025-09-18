@@ -1,10 +1,10 @@
 {
-  "model_id": "AWHSTier4Generic50",
+  "model_id": "AquaThermAire",
   "build_dir": "../../../build",
   "heat_source_id": "resistiveElementTop",
   "tests": {
-    "list": "all_tests",
-    "id": "RE2HP50_UEF67",
+    "list": "standard_tests",
+    "id": "UEF",
     "draw_profile": "auto",
     "plots": {
       "show_simulated": true,

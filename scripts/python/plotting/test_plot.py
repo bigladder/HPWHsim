@@ -113,7 +113,14 @@ class TestPlotter:
 		self.datasets = []
 		if "dataset_specs" in data:
 			for dataset_spec in data['dataset_specs']:
+				if 'tank_volume_L' not in dataset_spec :
+					dataset_spec['tank_volume_L'] = tank_volume_L
 				self.datasets.append(DataSet(dataset_spec))
+
+		if 'measured_filepath' in data:
+			self.datasets.append(DataSet({'id': "Measured", 'model_id': data['model_id'], 'test_id': data['tests_id'], 'type': "Measured", 'filepath': data['measured_filepath']}))
+		if 'simulated_filepath' in data:
+			self.datasets.append(DataSet({'id': "Simulated", 'model_id': data['model_id'], 'test_id': data['tests_id'], 'type': "Simulated", 'filepath': data['simulated_filepath']}))
 
 		self.have_fig = False
 		self.test_points = []
@@ -170,6 +177,7 @@ class TestPlotter:
 
 		have_traces = False
 		for dataset in self.datasets:
+			print(f"Reading: {vars(dataset)}")
 			self.plot = dimes.DimensionalPlot(
 			  [x for x in dataset.df["Time"]],
 					f"Model: {dataset.model_id}, Test: {dataset.test_id}"
@@ -426,7 +434,7 @@ class TestPlotter:
 		summary_data_dict = {}
 		for dataset in self.datasets:
 				dataset.analyze()
-				for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
+				for summary in ['first-recovery-period', 'standby-period', '24-hr-test']:
 					for item in dataset.test_summary[summary]:
 						if item not in summary_data_dict:
 							summary_data_dict[item] = []
@@ -434,7 +442,7 @@ class TestPlotter:
 		for dataset in self.datasets:
 			for item in summary_data_dict:
 				have_item = False
-				for summary in ['first-recovery_period', 'standby_period', '24-hr-test']:
+				for summary in ['first-recovery-period', 'standby-period', '24-hr-test']:
 					if item in dataset.test_summary[summary]:
 						have_item = True
 						summary_data_dict[item].append(dataset.test_summary[summary][item])
@@ -469,8 +477,11 @@ if __name__ == "__main__":
 			model_id = sys.argv[1]
 			test_id = sys.argv[2]
 			data['dataset_specs'] = []
-			data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Measured", 'filepath': sys.argv[3]})
-			data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Simulated", 'filepath': sys.argv[4]	})
+			
+			if sys.argv[3] != '':
+				data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Measured", 'filepath': sys.argv[3]})
+			if sys.argv[4] != '':
+				data['dataset_specs'].append({'model_id': model_id, 'test_id': test_id, 'type': "Simulated", 'filepath': sys.argv[4]})
 		if n_args > 4:
 			data['plot_filepath'] = sys.argv[5]
 		if n_args > 5:
