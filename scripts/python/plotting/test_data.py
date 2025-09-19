@@ -39,7 +39,14 @@ class DataSet:
 			self._id = dataSpec['id']
 		else:
 			self._id = f"{self.model_id}-{self.test_id}-{self.variable_type}"
-		
+				
+		try:
+			df = call_csv(self.filepath, 0)
+			self.filepath = self.filepath
+		except:
+			df = {}
+			return	
+
 		NUMBER_OF_THERMOCOUPLES = 6
 		self.columns = {}
 		if self.variable_type == "Measured":
@@ -68,13 +75,6 @@ class DataSet:
 						[f"tcouple{number} (C)" for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))]
 	     	}						         
 	   	}
-			
-		try:
-			df = call_csv(self.filepath, 0)
-			self.filepath = self.filepath
-		except:
-			df = {}
-			return	
 
 		data = {}
 		data['Time'] = list(df[self.columns['Time']]) #min
@@ -91,8 +91,10 @@ class DataSet:
 			data[f"Tank Temperature - #{i + 1}"] = list(df[tank])
 		data["Tank Average Temperature"] = list(df[self.columns["Temperature"]["Tank"]].mean(axis=1))
 
+		for c in data:
+			data[c] = [0 if np.isnan(x) else x for x in data[c]]
+					
 		self.df = pd.DataFrame(data)
-		print(f"Loading: {vars(self)}")
 		
 	def find_EF_bounds(self):	
 		self.ef_bounds.test_start_time = self.df["Time"].iloc[0]

@@ -87,14 +87,8 @@ class TestProc:
 				res = res and metric['test_id'] == self.prefs['tests']['id']						
 				if res:
 					data['test_points'].append(metric)
-		plot_data = {}
-		plot_data['dataset_specs'] = []
-		if 'measured_filepath' in data:
-			plot_data['dataset_specs'].append({'id': "Measured", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Measured", 'filepath': data['measured_filepath']})
-		if 'simulated_filepath' in data:
-			plot_data['dataset_specs'].append({'id': "Simulated", 'model_id': self.prefs['model_id'], 'test_id': self.prefs['tests']['id'], 'type': "Simulated", 'filepath': data['simulated_filepath']})
-
-		self.plotter = plot(plot_data)
+					
+		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
 				
@@ -102,16 +96,18 @@ class TestProc:
 			show_option_list = []
 			show_value_list = []
 			hide_show_div= True
+			summary_table_columns = ['Quantity']
 			for dataset in self.plotter.datasets:
 				show_option_list.append({'label': dataset._id, 'value': dataset._id})
 				show_value_list.append(dataset._id)
 				self.prev_show |= 1
 				hide_show_div = False
+				summary_table_columns.append(dataset._id)
 						
 			#summary table
 			summary_data_list = self.plotter.getSummaryDataList()			
 			summary_table_df = pd.DataFrame(
-				columns = ['Quantity', 'Measured', 'Simulated'],	
+				columns = summary_table_columns,	
 				data = summary_data_list
 			)
 			summary_table_data = summary_table_df.to_dict('records')				

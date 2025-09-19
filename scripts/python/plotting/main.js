@@ -289,8 +289,11 @@
 				'dest': 'test-proc',
 				'cmd': 'update'
 				}
-			await ws_connection.send(JSON.stringify(msg));
-			test_plot.style = "display:block;";
+			if (ws_connection.readyState == ws_connection.OPEN)
+			{
+				await ws_connection.send(JSON.stringify(msg));
+				test_plot.style = "display:block;";
+			}
 		}
 	}
 
@@ -438,6 +441,7 @@
 			}
 			model_filepath = 	model_cache[prefs['model_id']];
 
+			dataset_specs = []
 			if (is_standard_test)
 			{
 				let data = {
@@ -448,6 +452,15 @@
 					'configuration': test_data['configuration']};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
 				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+
+				dataset_specs.push({
+					'id': "Simulated",
+					'model_id': prefs['model_id'],
+					'test_id': prefs['tests']['id'],
+					'type': "Simulated",
+					'filepath': simulated_filepath}
+				);
+
 			}
 			else
 			{
@@ -456,10 +469,25 @@
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
 
 				simulated_filepath = output_dir + "/" + prefs['tests']['id'] + "_JSON_" + prefs["model_id"] + ".csv";
+				dataset_specs.push({
+					'id': "Simulated",
+					'model_id': prefs['model_id'],
+					'test_id': prefs['tests']['id'],
+					'type': "Simulated",
+					'filepath': simulated_filepath}
+				);
+
 				if ("measured" in test_data)
 					for (let model_id in test_data["measured"])
 						if (model_id == prefs["model_id"]) {
 							measured_filepath = test_dir + "/" + test_data['measured'][model_id];
+							dataset_specs.push({
+								'id': "Measured",
+								'model_id': prefs['model_id'],
+								'test_id': prefs['tests']['id'],
+								'type': "Measured",
+								'filepath': measured_filepath}
+							);
 							break;
 						}
 			}
@@ -468,8 +496,7 @@
 				'source': 'index',
 				'dest': 'test-proc',
 				'cmd': 'plot',
-				'measured_filepath': measured_filepath,
-				'simulated_filepath': simulated_filepath,
+				'dataset_specs': dataset_specs,
 				'is_standard_test': (is_standard_test ? 1 : 0),
 				'model_filepath': model_filepath,
 				'build_dir': prefs['build_dir'],

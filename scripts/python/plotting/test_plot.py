@@ -17,6 +17,7 @@ import math
 import numpy as np
 from common import read_file, write_file, get_tank_volume
 from test_data import DataSet
+import json
 
 styles = {
     'pre': {
@@ -114,13 +115,9 @@ class TestPlotter:
 		if "dataset_specs" in data:
 			for dataset_spec in data['dataset_specs']:
 				if 'tank_volume_L' not in dataset_spec :
-					dataset_spec['tank_volume_L'] = tank_volume_L
-				self.datasets.append(DataSet(dataset_spec))
-
-		if 'measured_filepath' in data:
-			self.datasets.append(DataSet({'id': "Measured", 'model_id': data['model_id'], 'test_id': data['tests_id'], 'type': "Measured", 'filepath': data['measured_filepath']}))
-		if 'simulated_filepath' in data:
-			self.datasets.append(DataSet({'id': "Simulated", 'model_id': data['model_id'], 'test_id': data['tests_id'], 'type': "Simulated", 'filepath': data['simulated_filepath']}))
+					dataset_spec['tank_volume_L'] = tank_volume_L				
+				dataset = DataSet(dataset_spec)
+				self.datasets.append(dataset)
 
 		self.have_fig = False
 		self.test_points = []
@@ -177,7 +174,6 @@ class TestPlotter:
 
 		have_traces = False
 		for dataset in self.datasets:
-			print(f"Reading: {vars(dataset)}")
 			self.plot = dimes.DimensionalPlot(
 			  [x for x in dataset.df["Time"]],
 					f"Model: {dataset.model_id}, Test: {dataset.test_id}"
@@ -225,8 +221,9 @@ class TestPlotter:
 				)
 			self.plot.figure.add_trace(trace_clicked)
 			self.update_clicked()
-
+				
 			self.plot.finalize_plot()
+
 			self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
 			self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
 			self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
@@ -246,24 +243,20 @@ class TestPlotter:
 				for curveNumber in curves:
 					curve = curves[curveNumber]
 					if "name" in curve:
-						if "Measured" in curve["name"]:
-							if "Power" in curve["name"]:
-								curveSums[curveNumber] = [curve, 0, "Measured total input energy (kJ)", 60 / 1000]
-							if "Flow Rate" in curve["name"]:
-								curveSums[curveNumber] = [curve, 0, "Measured total volume drawn (gal)", 1]
-						if "Simulated" in curve["name"]:
-							if "Power" in curve["name"]:
-								curveSums[curveNumber] = [curve, 0, "Simulated total input energy (kJ)", 60 / 1000]
-							if "Flow Rate" in curve["name"]:
-								curveSums[curveNumber] = [curve, 0, "Simulated total volume drawn (gal)", 1]
+						for dataset in self.datasets:
+							if dataset._id in curve["name"]:
+								if "Power" in curve["name"]:
+									curveSums[curveNumber] = [curve, 0, f"{dataset._id} total input energy (kJ)", 60 / 1000]
+								if "Flow Rate" in curve["name"]:
+									curveSums[curveNumber] = [curve, 0, f"{dataset._id} total volume drawn (gal)", 1]
 					
 						for dataset in self.datasets:
-							if dataset.id in curve["name"]:
+							if dataset._id in curve["name"]:
 								name = dataset.variable_type
 								if "Power" in curve["name"]:
-									curveSums[curveNumber] = [dataset.df["Power Input"], 0, f"Total input energy (kJ) - {name}", 60 / 1000]
+									curveSums[curveNumber] = [curve, 0, f"Total input energy (kJ) - {name}", 60 / 1000]
 								if "Flow Rate" in curve["name"]:
-									curveSums[curveNumber] = [dataset.df["Flow Rate"], 0, f"Total volume drawn (gal) - {name}", 1]
+									curveSums[curveNumber] = [curve, 0, f"Total volume drawn (gal) - {name}", 1]
 
 				for point in selectedData["points"]:
 					if "curveNumber" in point and "pointNumber" in point:
@@ -470,7 +463,10 @@ class TestPlotter:
 		summary_data_dict = self.getSummaryDataDict()
 		summary_data_list = []
 		for item in summary_data_dict:
-			summary_data_list.append([item, summary_data_dict[item][0], summary_data_dict[item][1]])
+			summary_data_row = [item]
+			for col in summary_data_dict[item]:
+				summary_data_row.append(col)				
+			summary_data_list.append(summary_data_row)
 		return summary_data_list
 
 def plot(data):
