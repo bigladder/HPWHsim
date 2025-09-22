@@ -54,8 +54,8 @@
         }
       ]
     },
-    "BradfordWhiteAeroThermRE2HP50-heatandonlogicdist": {
-      "type": "condenser-heat-and-on-logic-distribution",
+    "BradfordWhiteAeroThermRE2HP50-heatdist": {
+      "type": "condenser-heat-distribution",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
@@ -72,8 +72,34 @@
         ]
       }
     },
-    "BradfordWhiteAeroThermRE2HP65-heatandonlogicdist": {
-      "type": "condenser-heat-and-on-logic-distribution",
+    "BradfordWhiteAeroThermRE2HP50-onlogicdist": {
+      "type": "condenser-on-logic-distribution",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "value": {
+        "normalized_height": [
+         	0.299999,
+          0.300001,
+          1
+        ],
+        "weight": [
+          0.0,
+          1.0,
+          0
+        ]
+      }
+    },
+    "BradfordWhiteAeroThermRE2HP50-turn-on-logic-temperature": {
+      "type": "condenser-turn-on-logic-temperature",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "value": 10
+    },
+
+    "BradfordWhiteAeroThermRE2HP65-heatdist": {
+      "type": "condenser-heat-distribution",
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
       ],
@@ -90,8 +116,34 @@
         ]
       }
     },
-    "BradfordWhiteAeroThermRE2HP80-heatandonlogicdist": {
-      "type": "condenser-heat-and-on-logic-distribution",
+    "BradfordWhiteAeroThermRE2HP65-onlogicdist": {
+      "type": "condenser-on-logic-distribution",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP65"
+      ],
+      "value": {
+        "normalized_height": [
+         	0.299999,
+          0.300001,
+          1
+        ],
+        "weight": [
+          0.0,
+          1.0,
+          0
+        ]
+      }
+    },
+    "BradfordWhiteAeroThermRE2HP65-turn-on-logic-temperature": {
+      "type": "condenser-turn-on-logic-temperature",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP65"
+      ],
+      "value": 19
+    },
+
+    "BradfordWhiteAeroThermRE2HP80-heatdist": {
+      "type": "condenser-heat-distribution",
       "models": [
         "BradfordWhiteAeroThermRE2HP80"
       ],
@@ -108,19 +160,23 @@
         ]
       }
     },
-    "BradfordWhiteAeroThermRE2HP50-turn-on-logic-temperature": {
-      "type": "condenser-turn-on-logic-temperature",
+    "BradfordWhiteAeroThermRE2HP80-onlogicdist": {
+      "type": "condenser-on-logic-distribution",
       "models": [
-        "BradfordWhiteAeroThermRE2HP50"
+        "BradfordWhiteAeroThermRE2HP80"
       ],
-      "value": 25
-    },
-    "BradfordWhiteAeroThermRE2HP65-turn-on-logic-temperature": {
-      "type": "condenser-turn-on-logic-temperature",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP65"
-      ],
-      "value": 19
+      "value": {
+        "normalized_height": [
+         	0.299999,
+          0.300001,
+          1
+        ],
+        "weight": [
+          0.0,
+          1.0,
+          0
+        ]
+      }
     },
     "BradfordWhiteAeroThermRE2HP80-turn-on-logic-temperature": {
       "type": "condenser-turn-on-logic-temperature",

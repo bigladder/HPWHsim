@@ -235,9 +235,11 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
+    // altered UEF2Generic map to refer to test temperatures
     PerformancePolySet perfPolySet({{50., {187.064124, 1.939747, 0.}, {5.4977772, -0.0243008, 0.}},
                                     {67.5, {152.9195905, 2.476598, 0.}, {5.445, -0.0323732875, 0.}},
                                     {95., {99.263895, 3.320221, 0.}, {7.26, -0.045058625, 0.}}});
+
     compressor->evaluatePerformance = perfPolySet.make();
 
     compressor->minT = F_TO_C(37.);
@@ -271,13 +273,14 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // set tank volume from input
     // use tank size setting function since it has bounds checking
-    setTankSize(tankVol_L);
+    tank->volume_L = tankVol_L;
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016
     double tankVol_gal = L_TO_GAL(tankVol_L);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
-    tank->UA_kJperHrC = 0.0076183819 * v1 * v1;
+    double correction_UA = 6.5 / 7.9948937115672462; // scale to match UEF2Generic
+    tank->UA_kJperHrC = correction_UA * 0.0076183819 * v1 * v1;
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
@@ -297,9 +300,9 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
-
-    constexpr double correction = 1.81 / 2.;
-    makeGenericEF(correction * energyFactor, testConfiguration_UEF, perfPolySet);
+    constexpr double actual_UEF2Generic_UEF = 1.7968735517046457;
+    constexpr double correction_UEF = actual_UEF2Generic_UEF / 2.;
+    makeGenericEF(correction_UEF * energyFactor, testConfiguration_UEF, perfPolySet);
 }
 
 void HPWH::initLegacy(const std::string& modelName)

@@ -155,14 +155,14 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
 }
 
 /*
- * make Tier-4
+ * initGeneric function
  */
 TEST_F(MeasureMetricsTest, InitGenericFunction)
 {
-    // get preset model
+    // function output scaled so that UEF = 2.0 -> 1.79687
     HPWH hpwh;
-    constexpr double UEF = 1.74;
-    hpwh.initGeneric(GAL_TO_L(45.), UEF, 20.);
+    constexpr double UEF = 2.0;
+    hpwh.initGeneric(GAL_TO_L(45.), UEF, 18.6605);
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
 
@@ -170,7 +170,7 @@ TEST_F(MeasureMetricsTest, InitGenericFunction)
         EXPECT_NO_THROW(testSummary = hpwh.run24hrTest(HPWH::testConfiguration_UEF,
                                                        firstHourRating.designation))
             << "Could not complete complete 24-hr test.";
-        EXPECT_NEAR(testSummary.EF, 1.81, 1.e-12) << "Did not measure expected UEF";
+        EXPECT_NEAR(testSummary.EF, 1.79687, 1.e-4) << "Did not measure expected UEF";
     }
 }
 
