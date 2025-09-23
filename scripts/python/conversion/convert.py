@@ -1,5 +1,5 @@
 # Raw script for converting typical supplied data to HPWHsim schedules and measured data.
-# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP80/RE2HP80_UEF50 RE2HP80_UEF50
+# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP50/RE2HP50_HVDT RE2HP50_HVDT
 import os
 import sys
 from pathlib import Path
@@ -7,7 +7,7 @@ from pathlib import Path
 setpointT_C = 51.1
 initialTankT_C = 51.1
 initTime_min = 0
-numRowsPerMin = 6
+numRowsPerMin = 60
 numTankTs = 6
 tankTsOrder = 1
 

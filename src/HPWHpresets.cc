@@ -300,8 +300,8 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
-    constexpr double actual_UEF2Generic_UEF = 1.7968735517046457;
-    constexpr double correction_UEF = actual_UEF2Generic_UEF / 2.;
+    // scale to match result for UEF2Generic with input 2.
+    constexpr double correction_UEF = 1.7968735517046457 / 2.;
     makeGenericEF(correction_UEF * energyFactor, testConfiguration_UEF, perfPolySet);
 }
 

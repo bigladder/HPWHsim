@@ -96,12 +96,10 @@ class FitProc:
 				param_vars = COPs
 				for (elem, value) in enumerate(param_vars):
 					param_vars[elem] /= Pins[elem]
-			
-			print(f"{variable}: {param_vars}")		
+				
 			for iT1 in range(nT1s):
 				for iT2 in range(nT2s):
 					elem = nT3s * (nT2s * iT1 + iT2) + iT3
-					print(f"{iT1}, {iT1}, {elem}")
 					param_vars[elem] 	= coefficients[0] + coefficients[1] * envTs[iT1] + coefficients[2] * hsTs[iT2]
 
 			if dependent == "Pin":
@@ -127,31 +125,29 @@ class FitProc:
 			return
 		iApL = np.matmul(np.linalg.inv(ApT_Ap), ApT)			
 		coefficients = iApL.dot(xp)
-		print(coefficients)
 		self.apply_bilinear_coefficients(model_data, coefficients, variable, dependent, slice)	
 
-	def apply_condenser_heat_distribution(self, new_dist, model_data):
-			heat_source_config = get_heat_source_configuration(model_data, "compressor")
+	def apply_heat_distribution(self, heat_source_id, new_dist, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, heat_source_id)
 			heat_source_config['heat_distribution'] = new_dist	
-			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+			set_heat_source_configuration(model_data, heat_source_id, heat_source_config)
 
-	def apply_condenser_on_logic_distribution(self, new_dist, model_data):
-			heat_source_config = get_heat_source_configuration(model_data, "compressor")
+	def apply_on_logic_distribution(self, heat_source_id, new_dist, model_data):
+			heat_source_config = get_heat_source_configuration(model_data, heat_source_id)
 			turn_on_logic = heat_source_config['turn_on_logic'][0]
 			turn_on_logic["heating_logic"]["temperature_weight_distribution"] = new_dist
-			set_heat_source_configuration(model_data, "compressor", heat_source_config)
-
+			set_heat_source_configuration(model_data, heat_source_id, heat_source_config)
 
 	def apply_coil_configuration(self, new_config, model_data):
 			heat_source_config = get_heat_source_configuration(model_data, "compressor")		
 			heat_source_config['heat_source']['performance']['coil_configuration'] = new_config
 			set_heat_source_configuration(model_data, "compressor", heat_source_config)
 	
-	def apply_condenser_turn_on_logic_temperature(self, new_T, model_data):
-			heat_source_config = get_heat_source_configuration(model_data, "compressor")
+	def apply_turn_on_logic_temperature(self, heat_source_id, new_T, model_data):
+			heat_source_config = get_heat_source_configuration(model_data,heat_source_id)
 			turn_on_logic = heat_source_config['turn_on_logic'][0]
 			turn_on_logic["heating_logic"]["differential_temperature"] = new_T
-			set_heat_source_configuration(model_data, "compressor", heat_source_config)
+			set_heat_source_configuration(model_data, heat_source_id, heat_source_config)
 
 	def apply_number_of_nodes(self, new_nodes, model_data):
 			model_data["number_of_nodes"] = new_nodes
@@ -229,36 +225,35 @@ class FitProc:
 				self.apply_bilinear_coefficients(constraint['value'], model_data, variable, dependent, slice)				
 				self.write_cache_model(model_id, model_data)
 					
-		if constraint['type'] == 'condenser-heat-distribution':
+		if constraint['type'] == 'heat-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				self.apply_condenser_heat_distribution(constraint['value'], model_data)				
+				self.apply_heat_distribution(constraint['heat_source'], constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
-		if constraint['type'] == 'condenser-on-logic-distribution':
+		if constraint['type'] == 'on-logic-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				self.apply_condenser_on_logic_distribution(constraint['value'], model_data)				
+				self.apply_on_logic_distribution(constraint['heat_source'], constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
-		if constraint['type'] == 'condenser-heat-and-on-logic-distribution':
+		if constraint['type'] == 'heat-and-on-logic-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				self.apply_condenser_heat_distribution(constraint['value'], model_data)
-				self.apply_condenser_on_logic_distribution(constraint['value'], model_data)					
+				self.apply_heat_distribution(constraint['value'], model_data)
+				self.apply_on_logic_distribution(constraint['heat_source'], constraint['value'], model_data)					
 				self.write_cache_model(model_id, model_data)
-				
+			
+		if constraint['type'] == 'turn-on-logic-temperature':
+			for model_id in constraint['models']:
+				model_data = self.read_cache_model(model_id)
+				self.apply_turn_on_logic_temperature(constraint['heat_source'], constraint['value'], model_data)				
+				self.write_cache_model(model_id, model_data)
+							
 		if constraint['type'] == 'coil-configuration':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-
 				self.apply_coil_configuration(constraint['value'], model_data)				
-				self.write_cache_model(model_id, model_data)
-				
-		if constraint['type'] == 'condenser-turn-on-logic-temperature':
-			for model_id in constraint['models']:
-				model_data = self.read_cache_model(model_id)
-				self.apply_condenser_turn_on_logic_temperature(constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 
 		if constraint['type'] == 'number-of-tank-nodes':
