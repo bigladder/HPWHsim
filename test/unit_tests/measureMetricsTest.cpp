@@ -173,4 +173,3 @@ TEST_F(MeasureMetricsTest, InitGenericFunction)
         EXPECT_NEAR(testSummary.EF, 1.79687, 1.e-4) << "Did not measure expected UEF";
     }
 }
-
