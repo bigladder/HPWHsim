@@ -109,7 +109,7 @@
 			"heat_source": "compressor",
       "value": {
         "normalized_height": [
-          0.01,
+          0.04,
           0.4,
           1
         ],
@@ -120,7 +120,7 @@
         ]
       }
     },
-    "BradfordWhiteAeroThermRE2HP65-onlogicdist": {
+    "BradfordWhiteAeroThermRE2HP65-condonlogicdist": {
       "type": "on-logic-distribution",
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
@@ -139,13 +139,31 @@
         ]
       }
     },
+    "BradfordWhiteAeroThermRE2HP65-upperresonlogicdist1": {
+      "type": "on-logic-distribution",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP65"
+      ],
+			"heat_source": "resistiveElementTop",
+			"on_logic_index": 1,
+      "value": {
+        "normalized_height": [
+         	0.999,
+          1
+        ],
+        "weight": [
+          0.0,
+          1.0
+        ]
+      }
+    },
     "BradfordWhiteAeroThermRE2HP65-turn-on-logic-temperature": {
       "type": "turn-on-logic-temperature",
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
       ],
 			"heat_source": "compressor",
-      "value": 19
+      "value": 16
     },
 
     "BradfordWhiteAeroThermRE2HP80-condheatdist": {

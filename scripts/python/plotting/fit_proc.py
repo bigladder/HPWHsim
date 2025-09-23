@@ -132,9 +132,9 @@ class FitProc:
 			heat_source_config['heat_distribution'] = new_dist	
 			set_heat_source_configuration(model_data, heat_source_id, heat_source_config)
 
-	def apply_on_logic_distribution(self, heat_source_id, new_dist, model_data):
+	def apply_on_logic_distribution(self, heat_source_id, on_logic_index, new_dist, model_data):
 			heat_source_config = get_heat_source_configuration(model_data, heat_source_id)
-			turn_on_logic = heat_source_config['turn_on_logic'][0]
+			turn_on_logic = heat_source_config['turn_on_logic'][on_logic_index]
 			turn_on_logic["heating_logic"]["temperature_weight_distribution"] = new_dist
 			set_heat_source_configuration(model_data, heat_source_id, heat_source_config)
 
@@ -234,7 +234,8 @@ class FitProc:
 		if constraint['type'] == 'on-logic-distribution':
 			for model_id in constraint['models']:
 				model_data = self.read_cache_model(model_id)
-				self.apply_on_logic_distribution(constraint['heat_source'], constraint['value'], model_data)				
+				on_logic_index = 0 if "on_logic_index" not in constraint else constraint["on_logic_index"]
+				self.apply_on_logic_distribution(constraint['heat_source'], on_logic_index, constraint['value'], model_data)				
 				self.write_cache_model(model_id, model_data)
 				
 		if constraint['type'] == 'heat-and-on-logic-distribution':

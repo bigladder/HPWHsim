@@ -291,6 +291,54 @@
 		}
 	}
 
+	async function rerun_test() {
+		//
+		if (gui.test_proc_active)
+		{
+			var prefs = await read_json_file("./prefs.json");
+			const output_dir = prefs['build_dir'] + "/test/output";
+
+			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+			var model_cache = await read_json_file("./model_cache.json");
+			if (!(prefs['model_id'] in model_cache))
+			{
+				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
+				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				await write_json_file("./model_cache.json", model_cache);
+			}
+			model_filepath = 	model_cache[prefs['model_id']];
+
+			const test_index = await read_json_file("./test_index.json");
+			const tests = test_index["tests"], groups = test_index['groups'];
+			let test_data = tests[prefs['tests']['id']];
+			is_standard_test = prefs['tests']['id'] in groups["standard_tests"];
+			if (is_standard_test)
+			{
+				let data = {
+					'model_spec': 'JSON',
+					'model_id_or_filepath': model_filepath,
+					'build_dir': prefs['build_dir'],
+					'draw_profile': prefs['tests']["draw_profile"],
+					'configuration': test_data["configuration"]};
+				await callPyServer("measure", "data=" + JSON.stringify(data))
+			}
+			else
+			{
+				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
+				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+				await callPyServer("simulate", "data=" + JSON.stringify(data))
+			}
+
+			var msg = {
+				'source': 'index',
+				'dest': 'test-proc',
+				'cmd': 'replot',
+			}
+			await ws_connection.send(JSON.stringify(msg));
+			test_plot.style = "display:block;";
+		}
+	}
+
 		async function reload() {
 				await update_perf();
 				await update_test();
@@ -301,11 +349,8 @@
 
 		const model_form = document.getElementById('model_form');
 		const build_form = document.getElementById('build_form');
-		const test_form = document.getElementById('test_form');
 
 		// update models control
-		test_form.test_list.value = prefs['tests']['list'];
-
 		let select_model = model_form.model_id;
 		while (select_model.hasChildNodes())
 			select_model.removeChild(select_model.firstChild);
@@ -356,6 +401,8 @@
 		};
 
 		// update select_test control
+		const test_form = document.getElementById('test_form');
+		test_form.test_list.value = prefs['tests']['list'];
 		while (test_form.test_id.hasChildNodes())
 			test_form.test_id.removeChild(test_form.test_id.firstChild);
 
@@ -473,6 +520,8 @@
 			}
 			await ws_connection.send(JSON.stringify(msg));
 			test_plot.style = "display:block;";
+
+			document.getElementById('test_rerun_div').hidden = false;
 		}
 		else
 		{
@@ -523,6 +572,35 @@
 		document.getElementById("test_btn").disabled = false;
 		document.getElementById("test_tab").innerHTML = "Test";
 	}
+
+	async function click_test_rerun_proc() {
+		document.getElementById("test_tab").innerHTML = "Test...";
+		var prefs = await read_json_file("./prefs.json")
+		document.getElementById("test_btn").disabled = true;
+		if (gui.test_proc_active)
+		{
+			var data = {'cmd': 'stop'};
+			await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
+			document.getElementById("test_plot").src = "";
+			document.getElementById("test_btn").innerHTML = "start";
+			document.getElementById("test_plot").style="display:none;"
+			gui.test_proc_active = false;
+			document.getElementById("test_btn").disabled = false;
+		}
+		else
+		{
+			var data = {'cmd': 'start'};
+			response = await callPyServerJSON("test_proc", "data=" + JSON.stringify(data));
+			document.getElementById("test_plot").src = "http://localhost:" + response["port_num"];
+			document.getElementById("test_plot").style = "display:block;"
+			document.getElementById("test_btn").innerHTML = "stop";	
+			gui.test_proc_active = true;
+		}
+		await set_elements();
+		document.getElementById("test_btn").disabled = false;
+		document.getElementById("test_tab").innerHTML = "Test";
+	}
+
 
 	async function click_perf_proc() {
 		document.getElementById("perf_tab").innerHTML = "Performance...";

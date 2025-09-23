@@ -139,7 +139,13 @@
 				<option value="very_small">Very Small</option>
 			</select><br><br>
 
-			<button type="button" id="test_btn" onclick="click_test_proc();">show</button>
+			<div style="display: flex;">
+				<button type="button" id="test_btn" onclick="click_test_proc();">show</button>
+				<div id="test_rerun_div" hidden="true">
+					<button type="button" id="test_rerun_btn" onclick="rerun_test();">rerun</button>
+				</div>
+			</div>
+
 		</form>
 
 		<iframe title="plots" src="" id="test_plot" width=1200 height=1000 style="display:none;"></iframe>
