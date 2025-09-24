@@ -12,7 +12,7 @@
         "first_hour_rating": 88.0,
         "nominal_tank_volume": 80.0,
         "recovery_efficiency": 4.48,
-        "uniform_energy_factor": 4.00
+        "uniform_energy_factor": 4.0
       }
     },
     "metadata": {
@@ -29,10 +29,11 @@
       "heat_source_configurations": [
         {
           "followed_by_heat_source_id": "resistiveElementBottom",
+          "companion_heat_source_id": "compressor",
           "heat_distribution": {
             "normalized_height": [
-              0.5,
-              0.5833333333333333,
+              0.67,
+              0.71,
               1.0
             ],
             "weight": [
@@ -62,11 +63,30 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
+                "differential_temperature": 16,
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.68,
+                    0.70,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    1.0,
+                    0.0
+                  ]
+                }
+              },
+              "heating_logic_type": "TEMPERATURE_BASED"
+            },
+						{
+              "comparison_type": "LESS_THAN",
+              "heating_logic": {
                 "differential_temperature": 18,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.5,
-                    0.6666666666666666,
+                    0.68,
+                    0.70,
                     1.0
                   ],
                   "weight": [
@@ -118,7 +138,7 @@
             {
               "comparison_type": "GREATER_THAN",
               "heating_logic": {
-                "absolute_temperature": 303.2055555555555,
+                "absolute_temperature": 293.2055555555555,
                 "temperature_weight_distribution": {
                   "normalized_height": [
                     0.08333333333333333,
@@ -139,7 +159,7 @@
           "heat_distribution": {
             "normalized_height": [
               0.03,
-              0.32,
+              0.56,
               1
             ],
             "weight": [
@@ -198,11 +218,11 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
-                "differential_temperature": 11,
+                "differential_temperature": 13,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.03,
-                    0.32,
+                    0.21,
+                    0.23,
                     1
                   ],
                   "weight": [
@@ -238,10 +258,10 @@
           "time_of_creation": "2025-07-16T21:04Z"
         },
         "performance": {
-          "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+          "bottom_fraction_of_tank_mixing_on_draw": 0.25,
           "fittings_ua": 0.0,
           "ua": 2.0060277777777777,
-          "volume": 0.28390575
+          "volume": 0.283906
         }
       }
     }

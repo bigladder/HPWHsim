@@ -12,7 +12,7 @@
         "first_hour_rating": 82.0,
         "nominal_tank_volume": 65.0,
         "recovery_efficiency": 4.62,
-        "uniform_energy_factor": 4.20
+        "uniform_energy_factor": 4.2
       }
     },
     "metadata": {
@@ -28,11 +28,11 @@
     "performance": {
       "heat_source_configurations": [
         {
-          "followed_by_heat_source_id": "resistiveElementBottom",
+        	"companion_heat_source_id": "compressor",
           "heat_distribution": {
             "normalized_height": [
-              0.5,
-              0.5833333333333333,
+              0.60,
+              0.63,
               1.0
             ],
             "weight": [
@@ -62,11 +62,11 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
-                "differential_temperature": 18,
+                "differential_temperature": 22,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.5,
-                    0.6666666666666666,
+                    0.61,
+                    0.62,
                     1.0
                   ],
                   "weight": [
@@ -85,14 +85,12 @@
           "followed_by_heat_source_id": "compressor",
           "heat_distribution": {
             "normalized_height": [
-              0.08333333333333333,
-              0.16666666666666666,
-              0.25,
+              0.4,
+              0.5,
               1.0
             ],
             "weight": [
               0.0,
-              0.25,
               1.0,
               0.0
             ]
@@ -109,7 +107,7 @@
               "time_of_creation": "2025-07-16T21:04Z"
             },
             "performance": {
-              "input_power": 4000.0
+              "input_power": 1.0
             }
           },
           "heat_source_type": "RESISTANCE",
@@ -134,16 +132,18 @@
             }
           ]
         },
-        {
+       {
           "backup_heat_source_id": "resistiveElementBottom",
           "heat_distribution": {
             "normalized_height": [
-              0.036,
-              0.355,
+              0.05,
+							0.10,
+              0.32,
               1
             ],
             "weight": [
               0.0,
+							0.94,
               1.0,
               0
             ]
@@ -160,7 +160,7 @@
               "time_of_creation": "2025-07-16T21:04Z"
             },
             "performance": {
-              "coil_configuration": "WRAPPED",
+              "coil_configuration": "SUBMERGED",
               "compressor_lockout_temperature_hysteresis": 1.1111111111111112,
               "maximum_refrigerant_temperature": 344.26111111111106,
               "performance_map": {
@@ -177,15 +177,15 @@
                 "lookup_variables": {
                   "heating_capacity": [
                     838.5456191208053,
-                    1015.8970712924004,
-                    2157.0602062098637,
-                    2334.411658381459
+                    995.8970712924004,
+                    2127.0602062098637,
+                    2234.411658381459
                   ],
                   "input_power": [
                     223.78896882493945,
-                    481.2896349586986,
-                    223.78896882494232,
-                    481.2896349587015
+                    471.2896349586986,
+                    213.78896882494232,
+                    511.2896349587015
                   ]
                 }
               },
@@ -201,8 +201,8 @@
                 "differential_temperature": 19,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.036,
-                    0.355,
+                    0.23,
+                    0.25,
                     1
                   ],
                   "weight": [
@@ -241,7 +241,7 @@
           "bottom_fraction_of_tank_mixing_on_draw": 0.0,
           "fittings_ua": 0.0,
           "ua": 1.8692222222222221,
-          "volume": 0.24226624000000002
+          "volume": 0.246052
         }
       }
     }

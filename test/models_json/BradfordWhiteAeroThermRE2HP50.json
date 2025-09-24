@@ -62,11 +62,11 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
-                "differential_temperature": 30.5,
+                "differential_temperature": 26.9,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.45,
-                    0.47,
+                    0.50,
+                    0.52,
                     1.0
                   ],
                   "weight": [
@@ -160,7 +160,7 @@
           "backup_heat_source_id": "resistiveElementBottom",
           "heat_distribution": {
             "normalized_height": [
-              0.10,
+              0.06,
               0.30,
               1
             ],
@@ -200,14 +200,14 @@
                   "heating_capacity": [
                     838.5456191208053,
                     1015.8970712924004,
-                    2157.0602062098637,
-                    2334.411658381459
+                    1957.0602062098637,
+                    2034.411658381459
                   ],
                   "input_power": [
                     223.78896882493945,
-                    481.2896349586986,
-                    223.78896882494232,
-                    481.2896349587015
+                    461.2896349586986,
+                    203.78896882494232,
+                    461.2896349587015
                   ]
                 }
               },
@@ -220,11 +220,11 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
-                "differential_temperature": 28.4,
+                "differential_temperature": 20.8,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.12,
-                    0.32,
+                    0.24,
+                    0.26,
                     1
                   ],
                   "weight": [
