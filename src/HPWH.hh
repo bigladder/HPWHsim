@@ -852,7 +852,7 @@ class HPWH : public Courier::Sender
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    Condenser* getCompressor();
+    Condenser* getCompressor() const;
 
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
@@ -1412,6 +1412,8 @@ class HPWH : public Courier::Sender
     }
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
+
+    bool useCOP_inBtwxt = false;
 
     static void swapGridAxes(std::vector<std::vector<double>>& perfGrid,
                              std::vector<std::vector<double>>& perfGridValues,
