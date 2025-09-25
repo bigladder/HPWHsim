@@ -262,7 +262,7 @@
 				await write_json_file("./model_cache.json", model_cache);
 			}
 			model_filepath = 	model_cache[prefs['model_id']];
-
+			dataset_specs = []
 			const test_index = await read_json_file("./test_index.json");
 			const tests = test_index["tests"], groups = test_index['groups'];
 			let test_data = tests[prefs['tests']['id']];
@@ -276,19 +276,42 @@
 					'draw_profile': prefs['tests']["draw_profile"],
 					'configuration': test_data["configuration"]};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
+				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+				dataset_specs.push({
+						'id': "Simulated",
+						'model_id': prefs['model_id'],
+						'test_id': prefs['tests']['id'],
+						'type': "Simulated",
+						'filepath': simulated_filepath}
+					);
 			}
 			else
 			{
 				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
-				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+				let data = {
+					'model_spec': 'JSON', 
+					'model_id_or_filepath': model_filepath,
+					'build_dir': prefs['build_dir'], 
+					'test_dir': test_dir
+				};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
-			}
+				dataset_specs.push({
+						'id': "Simulated",
+						'model_id': prefs['model_id'],
+						'test_id': prefs['tests']['id'],
+						'type': "Simulated",
+						'filepath': simulated_filepath}
+					);
+			};
 
 			var msg = {
 				'source': 'index',
 				'dest': 'test-proc',
-				'cmd': 'update'
-				}
+				'cmd': 'update',
+				'dataset_specs': dataset_specs,
+				'model_filepath': model_filepath,
+				'build_dir': prefs['build_dir'],
+			};
 			if (ws_connection.readyState == ws_connection.OPEN)
 			{
 				await ws_connection.send(JSON.stringify(msg));

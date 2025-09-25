@@ -95,6 +95,8 @@ class DataSet:
 			data[c] = [0 if np.isnan(x) else x for x in data[c]]
 					
 		self.df = pd.DataFrame(data)
+		self.traces_hidden = False
+		self.trace_visible = {}
 		
 	def find_EF_bounds(self):	
 		self.ef_bounds.test_start_time = self.df["Time"].iloc[0]

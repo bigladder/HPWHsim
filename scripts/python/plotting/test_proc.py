@@ -91,21 +91,25 @@ class TestProc:
 
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
+			
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
 				
 			#show checks					
 			show_option_list = []
 			show_value_list = []
 			hide_show_div= True
-			summary_table_columns = ['Quantity']
 			for dataset in self.plotter.datasets:
 				show_option_list.append({'label': dataset._id, 'value': dataset._id})
 				show_value_list.append(dataset._id)
-				self.prev_show |= 1
 				hide_show_div = False
-				summary_table_columns.append(dataset._id)
-						
+							
 			#summary table
+			summary_table_columns = ['Quantity']
+			summary_table_column_specs = [{'id': "Quantity", 'name': "Quantity" }]
+			for dataset in self.plotter.datasets:
+				summary_table_columns.append(dataset._id)
+				summary_table_column_specs.append({'id': dataset._id, 'name': dataset._id, 'type': "numeric", 'format': energy_kJ_format})
+
 			summary_data_list = self.plotter.getSummaryDataList()			
 			summary_table_df = pd.DataFrame(
 				columns = summary_table_columns,
@@ -113,20 +117,26 @@ class TestProc:
 			)
 			summary_table_data = summary_table_df.to_dict('records')				
 			summary_table_hidden = (len(summary_data_list) == 0)
-
-			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, show_option_list, show_value_list, False
+			return self.plotter.plot.figure, summary_table_column_specs, summary_table_data, summary_table_hidden, hide_show_div, show_option_list, show_value_list, False
 	
-		return tuple([no_update] * 7)
-
+		return tuple([no_update] * 8)
+	
 	def update_plot(self, fig):
 		#self.plotter.plot.figure.update_layout(autosize = False)
-		self.plotter.reread_simulated()		
-		self.plotter.update_simulated()
+	
+		self.plotter.update()
 		
+		#summary table
+		summary_table_columns = ['Quantity']
+		summary_table_column_specs = [{'id': "Quantity", 'name': "Quantity" }]
+		for dataset in self.plotter.datasets:
+			summary_table_columns.append(dataset._id)
+			summary_table_column_specs.append({'id': dataset._id, 'name': dataset._id, 'type': "numeric", 'format': energy_kJ_format})
+					
 		#summary table
 		summary_data_list = self.plotter.getSummaryDataList()			
 		summary_table_df = pd.DataFrame(
-			columns = ['Quantity', 'Measured', 'Simulated'],	
+			columns = summary_table_columns,	
 			data = summary_data_list
 		)
 		summary_table_data = summary_table_df.to_dict('records')				
@@ -136,7 +146,7 @@ class TestProc:
 			if "axis" in item:		
 				self.plotter.plot.figure['layout'][item] = fig['layout'][item]
 
-		return tuple([self.plotter.plot.figure, summary_table_data, summary_table_hidden] + [no_update] * 4)
+		return tuple([self.plotter.plot.figure, summary_table_column_specs, summary_table_data, summary_table_hidden] + [no_update] * 4)
 	
 	def proc(self, data):	
 		external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -200,7 +210,6 @@ class TestProc:
 							dash_table.DataTable(
 								columns=(
 									{'id': "Quantity", 'name': "Quantity" },
-									{'id': "Measured", 'name': "Measured", 'type': "numeric", 'format': energy_kJ_format}, 
 									{'id': "Simulated", 'name': "Simulated", 'type': "numeric", 'format': energy_kJ_format}),
 								data=[],
 								style_table = {'width': '400px'},
@@ -209,16 +218,6 @@ class TestProc:
 					            'if': {'column_id': 'Quantity'},
 					            'width': '200px',
 											'textAlign': 'left'
-					        },
-									{
-					            'if': {'column_id': 'Measured'},
-					            'width': '150px',
-											'textAlign': 'right'
-					        },
-									{
-					            'if': {'column_id': 'Simulated'},
-					            'width': '150px',
-											'textAlign': 'right'
 					        }
 						    ],
 								id='summary-table')
@@ -242,6 +241,7 @@ class TestProc:
 		@app.callback(
 					Output('ws', 'send', allow_duplicate=True),
 					Output('test-graph', 'figure', allow_duplicate=True),
+					Output('summary-table', 'columns'),
 					Output('summary-table', 'data'),
 					Output('summary-table-div', 'hidden'),
 					Output('show-div', 'hidden', allow_duplicate=True),
@@ -271,20 +271,19 @@ class TestProc:
 							return tuple([json.dumps(msg)] + list(self.init_plot(self.prev_data)))
 
 						if data['cmd'] == 'update':
-							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))
-
-			return tuple([no_update] * 8)
+							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))							
+			return tuple([no_update] * 9)
 		
 		@callback(
 			Output('test-graph', 'figure', allow_duplicate=True),
-			Output('show-check', 'value', allow_duplicate=True),
 			Input('show-check', 'value'),
 			State('test-graph', 'figure'),
 			prevent_initial_call=True
 		)
 		def change_show(dataset_ids, fig):
-			#self.plotter.set_datasets_visible(dataset_ids)
-			return self.plotter.plot.figure, dataset_ids
+			self.plotter.plot.figure = go.Figure(fig)			
+			self.plotter.set_datasets_visible(dataset_ids)	
+			return self.plotter.plot.figure
 				
 		@callback(
 			Output('test-graph', 'figure', allow_duplicate=True),
@@ -393,33 +392,37 @@ class TestProc:
 		
 		@app.callback(
 				Input("save-to-file-btn", "n_clicks"),
+				State('test-graph', 'figure'),
 				prevent_initial_call=True
 		)
-		def save_to_file(nclicks):
-			self.plotter.plot.finalize_plot()
+		def save_to_file(nclicks, fig):		
+
+			self.plotter.plot.figure = go.Figure(fig)
+			
+			json_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".json"
+			json_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', json_filename)
+			io.write_json(fig, json_filepath, True, False)
+
 			plot_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".html"
 			plot_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', plot_filename)
-			self.plotter.plot.write_html_plot(plot_filepath)
-			
-			fig_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".json"
-			fig_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', fig_filename)
-			io.write_json(self.plotter.plot.figure, fig_filepath, True, False)
+			io.write_html(fig, plot_filepath)
 			
 			summary_dict = self.plotter.getSummaryDataDict()
-			quantity = []
-			measured = []
-			simulated = []
+			columns = [[] for _ in range(len(self.plotter.datasets) + 1)]
 			for item in summary_dict:
-				quantity.append(item)
-				measured.append(summary_dict[item][0])
-				simulated.append(summary_dict[item][1])
-			dict = {'Quantity': quantity, 'Measured': measured,'Simulated': simulated}
-			summary_df = pd.DataFrame(dict, columns=['Quantity','Measured','Simulated'])
+				columns[0].append(item)
+				for i_dataset, dataset in enumerate(self.plotter.datasets):				
+					columns[i_dataset + 1].append(summary_dict[item][i_dataset])
+		
+			dict = {'Quantity': columns[0]}
+			for i_dataset, dataset in enumerate(self.plotter.datasets):	
+					dict[dataset._id] = columns[i_dataset]
+					
+			summary_df = pd.DataFrame(dict, columns=dict.keys())
 			table_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".csv"
 			table_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', table_filename)
 			summary_df.to_csv(table_filepath, sep=',', index=False,header=True)
-
-
+			
 		@app.callback(
 				Output("ws", "send", allow_duplicate=True),
 				Input("replot-btn", "n_clicks"),

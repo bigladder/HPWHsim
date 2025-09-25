@@ -55,69 +55,12 @@ def retrieve_line_type(variable_type):
 		return "dot"
 
 class TestPlotter:
-
-	def plot_dataset(self, dataset):
-		for i_variable, variable in enumerate(self.variables["Y-Variables"]):
-			for i_val, column in enumerate(self.variables["Y-Variables"][variable]["Columns"]):
-				if dataset.variable_type == "Measured":
-					marker_symbol = "circle"
-					marker_size = 7
-					marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
-					marker_line_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
-				elif dataset.variable_type == "Simulated":
-					marker_symbol = "circle"
-					marker_size = 7
-					marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
-					marker_line_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
-				else:
-					marker_symbol = None
-					marker_size = None
-					marker_fill_color = None
-					marker_line_color = None
-
-				x_list = [x for x in dataset.df["Time"]]
-				y_list = [y for y in dataset.df[column]]
-				if variable == 'Temperature':
-					y_list = [1.8 * y + 32 for y in y_list]
-
-				trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset._id}"
-				#trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset.model_id}-{dataset.test_id}-{dataset.variable_type}"
-				displayData = dimes.DisplayData(
-		      y_list,
-		      name=trace_name,
-					#native_units=self.variables["Y-Variables"][variable]["Units"],
-		      is_visible=self.variables["Y-Variables"][variable]["Line Visibility"][i_val],
-					x_axis = x_list,
-					line_properties=LineProperties(
-		        color=self.variables["Y-Variables"][variable]["Colors"][i_val],
-		        line_type=retrieve_line_type(dataset.variable_type),
-		        marker_symbol=marker_symbol,
-		        marker_size=marker_size,
-		        marker_line_color=marker_line_color,
-		        marker_fill_color=marker_fill_color,
-					)
-				)
-
-				self.plot.add_display_data(
-					displayData,
-			    subplot_number=i_variable + 1,
-			    #axis_name=variable,
-			  )
-
 	def __init__(self, data):
 		self.plot = {}
 		tank_volume_L = 173
 		if 'model_filepath' in data:
 			model_data = read_file(data['model_filepath'])		
 			tank_volume_L = get_tank_volume(model_data)
-		
-		self.datasets = []
-		if "dataset_specs" in data:
-			for dataset_spec in data['dataset_specs']:
-				if 'tank_volume_L' not in dataset_spec :
-					dataset_spec['tank_volume_L'] = tank_volume_L				
-				dataset = DataSet(dataset_spec)
-				self.datasets.append(dataset)
 
 		self.have_fig = False
 		self.test_points = []
@@ -172,66 +115,123 @@ class TestPlotter:
 		    },
 		}
 
-		have_traces = False
+		self.datasets = []
+		if "dataset_specs" in data:
+			for dataset_spec in data['dataset_specs']:
+				if 'tank_volume_L' not in dataset_spec :
+					dataset_spec['tank_volume_L'] = tank_volume_L
+				self.datasets.append(DataSet(dataset_spec))
+				have_dataset = True
+		
+		if not have_dataset:
+			return
+		
 		for dataset in self.datasets:
 			self.model_id = dataset.model_id
 			self.test_id = dataset.test_id
 			self.plot = dimes.DimensionalPlot(
 			  [x for x in dataset.df["Time"]],
-				f"Model: {self.model_id}, Test: {self.test_id}"
-			)	
+					f"Model: {dataset.model_id}, Test: {dataset.test_id}"
+			)
 			self.plot.x_axis.name = "Time [min]"
-			have_traces = True
 			break
 
-		if have_traces:
-			for dataset in self.datasets:
-				self.plot_dataset(dataset)
+		for dataset in self.datasets:
+			self.plot_dataset(dataset)
+			
+		self.plot.finalize_plot()
+		self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
+		self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
+		self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
+		self.plot.figure['layout']['title']['x'] = 0.25
+		
+		# create selected trace (empty)
+		trace_selected = go.Scatter(
+				name = "selected points",
+				x = [],
+				y = [],
+				mode="markers",
+				marker_size= [],
+				marker_symbol='circle-open',
+				marker_color = 'black',
+				marker_line_color= 'black',
+				marker_line_width = 2,
+				showlegend = False,
+				hoverinfo="skip",
+				visible = True
+			)
+		self.plot.figure.add_trace(trace_selected)
+		self.update_selected()
 
-			# create selected trace (empty)
-			trace_selected = go.Scatter(
-					name = "selected points",
-					x = [],
-					y = [],
-					mode="markers",
-					marker_size= [],
-					marker_symbol='circle-open',
-					marker_color = 'black',
-					marker_line_color= 'black',
-					marker_line_width = 2,
-					showlegend = False,
-					hoverinfo="skip",
-					visible = True
+		# create selected trace (empty)
+		trace_clicked = go.Scatter(
+				name = "clicked points",
+				x = [],
+				y = [],
+				mode="markers",
+				marker_size= [],
+				marker_symbol='circle-open',
+				marker_color = 'blue',
+				marker_line_color= 'blue',
+				marker_line_width = 6,
+				showlegend = False,
+				hoverinfo="skip",
+				visible = True
+			)
+		self.plot.figure.add_trace(trace_clicked)
+		self.update_clicked()
+		self.have_fig = True
+
+
+	def plot_dataset(self, dataset):
+		for i_variable, variable in enumerate(self.variables["Y-Variables"]):
+			for i_val, column in enumerate(self.variables["Y-Variables"][variable]["Columns"]):
+				if dataset.variable_type == "Measured":
+					marker_symbol = "circle"
+					marker_size = 7
+					marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
+					marker_line_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
+				elif dataset.variable_type == "Simulated":
+					marker_symbol = "circle"
+					marker_size = 7
+					marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
+					marker_line_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
+				else:
+					marker_symbol ="circle"
+					marker_size = 7
+					marker_fill_color = None
+					marker_line_color = None
+
+				x_list = [x for x in dataset.df["Time"]]
+				y_list = [y for y in dataset.df[column]]
+				if variable == 'Temperature':
+					y_list = [1.8 * y + 32 for y in y_list]
+
+				trace_name = f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset._id}"
+				displayData = dimes.DisplayData(
+		      y_list,
+		      name=trace_name,
+					#native_units=self.variables["Y-Variables"][variable]["Units"],
+		      is_visible=self.variables["Y-Variables"][variable]["Line Visibility"][i_val],
+					x_axis = x_list,
+					line_properties=LineProperties(
+		        color=self.variables["Y-Variables"][variable]["Colors"][i_val],
+		        line_type=retrieve_line_type(dataset.variable_type),
+		        marker_symbol=marker_symbol,
+		        marker_size=marker_size,
+		        marker_line_color=marker_line_color,
+		        marker_fill_color=marker_fill_color,
+					)
 				)
-			self.plot.figure.add_trace(trace_selected)
-			self.update_selected()
 
-			# create selected trace (empty)
-			trace_clicked = go.Scatter(
-					name = "clicked points",
-					x = [],
-					y = [],
-					mode="markers",
-					marker_size= [],
-					marker_symbol='circle-open',
-					marker_color = 'blue',
-					marker_line_color= 'blue',
-					marker_line_width = 6,
-					showlegend = False,
-					hoverinfo="skip",
-					visible = True
-				)
-			self.plot.figure.add_trace(trace_clicked)
-			self.update_clicked()
-				
-			self.plot.finalize_plot()
-
-			self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
-			self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
-			self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
-			self.plot.figure['layout']['title']['x'] = 0.25
-			self.have_fig = True
-
+				self.plot.add_display_data(
+					displayData,
+			    subplot_number=i_variable + 1,
+			    #axis_name=variable,
+			  )
+				dataset.trace_visible[trace_name] = displayData.is_visible
+		dataset.traces_hidden = False
+		
 	def select_data(self, selectedData):
 		self.test_points = []
 		result = []
@@ -286,32 +286,24 @@ class TestPlotter:
 							return
 		self.click_point = {}
 
-	def update_graphs(self, data_set, variable, value, row):
+	def update_graphs(self, dataset, variable, value, row):
 		self.plot.figure.update_traces(
-			y = [x for x in data_set.df[
-		            self.variables["Y-Variables"][variable]["Columns"][data_set.variable_type][value][row]
+			y = [x for x in dataset.df[
+		            self.variables["Y-Variables"][variable]["Columns"][dataset.variable_type][value][row]
 		        ]],
-			selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {data_set.variable_type}")
+			selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {dataset._id}")
 			)
 
-	def update_variable_type(self, data_set):
+	def update_dataset(self, dataset):
 			for row, variable in enumerate(self.variables["Y-Variables"].keys()):
 				for value in range(
-					len(self.variables["Y-Variables"][variable]["Columns"][data_set.variable_type])
+					len(self.variables["Y-Variables"][variable]["Columns"][dataset.variable_type])
 				):
-					self.update_graphs(data_set, variable, value, row + 1)
-
-	def update_simulated(self):
-		for row, variable in enumerate(self.variables["Y-Variables"].keys()):
-			for value in range(
-				len(self.variables["Y-Variables"][variable]["Columns"][self.simulated.variable_type])
-				):
-
-				self.plot.figure.update_traces(
-					y = [x for x in self.simulated.df[
-				            self.variables["Y-Variables"][variable]["Columns"][self.simulated.variable_type][value]
-				        ]],
-					selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {self.simulated.variable_type}")
+					self.plot.figure.update_traces(
+						y = [x for x in dataset.df[
+		            self.variables["Y-Variables"][variable]["Columns"][dataset.variable_type][value][row + 1]
+		        ]],
+						selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {dataset._id}")
 					)
 
 	def update_selected(self):
@@ -350,95 +342,37 @@ class TestPlotter:
 							selector = dict(name="clicked points") 
 						)
 
-	def draw(self, data):
-		have_traces = False
-		draw_meas = self.measured.have_data
-		draw_sim = self.simulated.have_data
-		if 'show' in data:
-			draw_meas = draw_meas and (data["show"] & 1 == 1)
-			draw_sim = draw_sim and (data["show"] & 2 == 2)
-
-			if draw_meas:
-				self.plot = dimes.DimensionalPlot(
-				    [x for x in self.measured.df[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]],
-						f"Model: {self.model_id}, Test: {self.test_id}"
-				)
-				self.plot.x_axis.name = "Time [min]"
-				self.draw_variable_type(self.measured)
-				have_traces = True
-				if draw_sim:
-					self.draw_variable_type(self.simulated)
-			elif draw_sim:
-				self.plot = dimes.DimensionalPlot(
-				    [x for x in self.simulated.df[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]],
-						f"Model: {self.model_id}, Test: {self.test_id}"
-				)
-				self.plot.x_axis.name = "Time [min]"
-				have_traces = True
-				self.draw_variable_type(self.simulated)
+	def update(self, data):
+		if "dataset_specs" in data:
+			for dataset_spec in data['dataset_specs']:
+				for dataset in self.datasets:
+					if dataset_spec['filepath'] == dataset.filepath:
+						self.update_dataset(dataset)
+					else:
+						self.plot_dataset(DataSet(dataset_spec))
+				
+	def set_datasets_visible(self, dataset_ids):				
+		for dataset in self.datasets:
+			if dataset._id in dataset_ids:
+				if dataset.traces_hidden:
+					dataset.traces_hidden = False
+					for curve in self.plot.figure["data"]:
+						if curve['name'] in dataset.trace_visible:
+							self.plot.figure.update_traces(
+								visible = dataset.trace_visible[curve['name']],
+								selector = dict(name=curve['name'])
+							)
 			else:
-				return
-
-			# create selected trace (empty)
-			trace_selected = go.Scatter(
-					name = "selected points",
-					x = [],
-					y = [],
-					mode="markers",
-					marker_size= [],
-					marker_symbol='circle-open',
-					marker_color = 'black',
-					marker_line_color= 'black',
-					marker_line_width = 2,
-
-					showlegend = False,
-					hoverinfo="skip",
-					visible = True
-				)
-			self.plot.figure.add_trace(trace_selected)
-			self.update_selected()
-
-			# create selected trace (empty)
-			trace_clicked = go.Scatter(
-					name = "clicked points",
-					x = [],
-					y = [],
-					mode="markers",
-					marker_size= [],
-					marker_symbol='circle-open',
-					marker_color = 'blue',
-					marker_line_color= 'blue',
-					marker_line_width = 6,
-
-					showlegend = False,
-					hoverinfo="skip",
-					visible = True
-				)
-			self.plot.figure.add_trace(trace_clicked)
-			self.update_clicked()
-
-			if have_traces:
-				self.plot.finalize_plot()
-				self.plot.figure['layout']['yaxis']['title'] = "Power Input [W]"
-				self.plot.figure['layout']['yaxis2']['title'] = "Flow Rate [gal/min]"
-				self.plot.figure['layout']['yaxis3']['title'] = "Temperature [°F]"
-				self.plot.figure['layout']['title']['x'] = 0.25
-				self.have_fig = True
-		return self
-
-	def set_datasets_visible(self, dataset_ids):
-		self.plotter.plot.finalize_plot()
-		curve_names = []
-		for curve in self.plot.figure["data"]:
-			curve_names.append(curve['name'])
-			is_visible = False
-			for dataset_id in dataset_ids:
-				is_visible |= (dataset_id in curve['name'])
-			self.plot.figure.update_traces(
-				visible = is_visible,
-				selector = dict(name=curve['name'])
-			)
-
+				if not dataset.traces_hidden:
+					dataset.traces_hidden = True
+					for curve in self.plot.figure["data"]:
+						if curve['name'] in dataset.trace_visible:
+							dataset.trace_visible[curve['name']] = curve['visible']
+							self.plot.figure.update_traces(
+								visible = False,
+								selector = dict(name=curve['name'])
+							)
+ 
 	def getSummaryDataDict(self):
 		summary_data_dict = {}
 		for dataset in self.datasets:
@@ -456,7 +390,6 @@ class TestPlotter:
 						have_item = True
 						summary_data_dict[item].append(dataset.test_summary[summary][item])
 						break
-
 				if not(have_item):
 					summary_data_dict[item].append("")	
 
