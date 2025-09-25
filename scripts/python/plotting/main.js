@@ -521,11 +521,12 @@
 			await ws_connection.send(JSON.stringify(msg));
 			test_plot.style = "display:block;";
 
-			document.getElementById('test_rerun_div').hidden = false;
+			document.getElementById('test_loaded_div').hidden = false;
 		}
 		else
 		{
 			test_plot.style = "display:none;";
+			document.getElementById('test_loaded_div').hidden = true;
 		}
 
 		await write_json_file("./prefs.json", prefs)
