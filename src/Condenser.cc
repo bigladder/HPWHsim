@@ -293,15 +293,16 @@ void HPWH::Condenser::from(
         perfGridValues.reserve(2);
 
         std::size_t nVals = lookup_variables.input_power.size();
-        std::vector<double> inputPowers_W(nVals), cops(nVals);
+        std::vector<double> inputPowers_W(nVals), heatingCapacities_W_or_cops(nVals);
         for (std::size_t i = 0; i < nVals; ++i)
         {
             inputPowers_W[i] = lookup_variables.input_power[i];
-            cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
+            heatingCapacities_W_or_cops[i] = lookup_variables.heating_capacity[i];
+            if (hpwh->useCOP_inBtwxt)
+                heatingCapacities_W_or_cops[i] /= lookup_variables.input_power[i];
         }
-
         perfGridValues.push_back(inputPowers_W);
-        perfGridValues.push_back(cops);
+        perfGridValues.push_back(heatingCapacities_W_or_cops);
         makePerformanceBtwxt(perfGrid, perfGridValues);
     }
 
@@ -378,15 +379,16 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         perfGridValues.reserve(2);
 
         std::size_t nVals = lookup_variables.input_power.size();
-        std::vector<double> inputPowers_W(nVals), cops(nVals);
+        std::vector<double> inputPowers_W(nVals), heatingCapacities_W_or_cops(nVals);
         for (std::size_t i = 0; i < nVals; ++i)
         {
             inputPowers_W[i] = lookup_variables.input_power[i];
-            cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
+            heatingCapacities_W_or_cops[i] = lookup_variables.heating_capacity[i];
+            if (hpwh->useCOP_inBtwxt)
+                heatingCapacities_W_or_cops[i] /= lookup_variables.input_power[i];
         }
-
         perfGridValues.push_back(inputPowers_W);
-        perfGridValues.push_back(cops);
+        perfGridValues.push_back(heatingCapacities_W_or_cops);
 
         makePerformanceBtwxt(perfGrid, perfGridValues);
     }
@@ -549,13 +551,16 @@ void HPWH::Condenser::to(
             envTs_K.push_back(C_TO_K(envT_C));
 
         // find maximimum curvatures to determine # of points
-        constexpr double refPowerVals = 11.;
+        constexpr double refPowerInVals = 11.;
+        constexpr double refPowerOutVals = 11.;
         constexpr double refCOP_vals = 11.;
-        constexpr double refPowerCoef = 0.03;
+        constexpr double refPowerInCoef = 0.03;
+        constexpr double refPowerOutCoef = 0.03;
         constexpr double refCOP_Coef = 0.0002;
         const double refRange_dC = dF_TO_dC(160. - 0.); // F
 
-        double powerCoefRatioMax = 0.;
+        double powerInCoefRatioMax = 0.;
+        double powerOutCoefRatioMax = 0.;
         double COP_CoefRatioMax = 0.;
         {
             double hsT_C = F_TO_C((0. + maxSetpoint_C) / 2.);
@@ -569,17 +574,26 @@ void HPWH::Condenser::to(
                 Performance performance_0 = evaluatePerformance(envT_C, hsT_C);
                 Performance performance_p = evaluatePerformance(envT_C, hsT_C + dhsT_C);
 
-                double powerCoef = (performance_m.inputPower_W + performance_p.inputPower_W -
-                                    2. * performance_0.inputPower_W) /
-                                   dhsT_F / dhsT_F / 2.;
+                double powerInCoef = (performance_m.inputPower_W + performance_p.inputPower_W -
+                                      2. * performance_0.inputPower_W) /
+                                     dhsT_F / dhsT_F / 2.;
+
+                double powerOutCoef = (performance_m.outputPower_W + performance_p.outputPower_W -
+                                       2. * performance_0.outputPower_W) /
+                                      dhsT_F / dhsT_F / 2.;
+
                 double COP_Coef = (performance_m.cop + performance_p.cop - 2. * performance_0.cop) /
                                   dhsT_F / dhsT_F / 2.;
 
-                double powerCoefRatio = fabs(powerCoef / refPowerCoef);
+                double powerInCoefRatio = fabs(powerInCoef / refPowerInCoef);
+                double powerOutCoefRatio = fabs(powerOutCoef / refPowerOutCoef);
                 double COP_CoefRatio = fabs(COP_Coef / refCOP_Coef);
 
-                if (powerCoefRatio > powerCoefRatioMax)
-                    powerCoefRatioMax = powerCoefRatio;
+                if (powerInCoefRatio > powerInCoefRatioMax)
+                    powerInCoefRatioMax = powerInCoefRatio;
+
+                if (powerOutCoefRatio > powerOutCoefRatioMax)
+                    powerOutCoefRatioMax = powerOutCoefRatio;
 
                 if (COP_Coef > COP_CoefRatioMax)
                     COP_CoefRatioMax = COP_CoefRatio;
@@ -598,11 +612,18 @@ void HPWH::Condenser::to(
 
             // find # of values needed along heat-sourceT axis for inputPower and COP;
             // take the larger one
-            auto nPowerVals = static_cast<std::size_t>(
-                rangeFac * powerCoefRatioMax * (refPowerVals - minVals) + minVals);
+            auto nPowerInVals = static_cast<std::size_t>(
+                rangeFac * powerInCoefRatioMax * (refPowerInVals - minVals) + minVals);
+            auto nPowerOutVals = static_cast<std::size_t>(
+                rangeFac * powerOutCoefRatioMax * (refPowerOutVals - minVals) + minVals);
             auto nCOP_vals = static_cast<std::size_t>(
                 rangeFac * COP_CoefRatioMax * (refCOP_vals - minVals) + minVals);
-            std::size_t nVals = std::max(nPowerVals, nCOP_vals);
+
+            std::size_t nVals = nPowerInVals;
+            if (hpwh->useCOP_inBtwxt)
+                nVals = std::max(nVals, nCOP_vals);
+            else
+                nVals = std::max(nVals, nPowerOutVals);
 
             heatSourceTs_C.resize(nVals);
             {
@@ -630,7 +651,7 @@ void HPWH::Condenser::to(
                 {
                     auto performance = evaluatePerformance(K_TO_C(envT_K), K_TO_C(heatSourceT_K));
                     inputPowers_W.push_back(performance.inputPower_W);
-                    heatingCapacities_W.push_back(performance.cop * performance.inputPower_W);
+                    heatingCapacities_W.push_back(performance.outputPower_W);
                 }
         }
     }
@@ -1363,12 +1384,22 @@ void HPWH::Condenser::makePerformanceBtwxt(const std::vector<std::vector<double>
             return std::vector<double>({externalT_C, heatSourceT_C});
         };
     }
-    evaluatePerformance =
-        [&perfRGI = perfRGI, getPerformanceTarget](double externalT_C, double heatSourceT_C)
+
+    std::function<Performance(std::vector<double> result)> getPerformanceFromBtwxtResult;
+    if (hpwh->useCOP_inBtwxt)
+        getPerformanceFromBtwxtResult = [](std::vector<double> result) {
+            return Performance({result[0], result[0] * result[1], result[1]});
+        };
+    else
+        getPerformanceFromBtwxtResult = [](std::vector<double> result) {
+            return Performance({result[0], result[1], result[1] / result[0]});
+        };
+
+    evaluatePerformance = [&perfRGI = perfRGI, getPerformanceTarget, getPerformanceFromBtwxtResult](
+                              double externalT_C, double heatSourceT_C)
     {
         auto target = getPerformanceTarget(externalT_C, heatSourceT_C);
         std::vector<double> result = perfRGI->get_values_at_target(target);
-        Performance performance({result[0], result[1] * result[0], result[1]});
-        return performance;
+        return getPerformanceFromBtwxtResult(result);
     };
 }

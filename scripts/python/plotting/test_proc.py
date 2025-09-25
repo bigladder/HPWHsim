@@ -73,7 +73,8 @@ class TestProc:
 		self.sync_prefs()
 		data['model_id'] = self.prefs['model_id']
 		data['test_id'] = self.prefs['tests']['id']
-				
+
+
 		fit_list = read_file("fit_list.json")
 		if 'metrics' in fit_list:
 			metrics = fit_list['metrics']
@@ -87,7 +88,7 @@ class TestProc:
 				res = res and metric['test_id'] == self.prefs['tests']['id']						
 				if res:
 					data['test_points'].append(metric)
-					
+
 		self.plotter = plot(data)
 		if self.plotter.have_fig:
 			self.plotter.plot.figure.update_layout(clickmode='event+select')
@@ -107,7 +108,7 @@ class TestProc:
 			#summary table
 			summary_data_list = self.plotter.getSummaryDataList()			
 			summary_table_df = pd.DataFrame(
-				columns = summary_table_columns,	
+				columns = summary_table_columns,
 				data = summary_data_list
 			)
 			summary_table_data = summary_table_df.to_dict('records')				
@@ -116,7 +117,7 @@ class TestProc:
 			return self.plotter.plot.figure, summary_table_data, summary_table_hidden, hide_show_div, show_option_list, show_value_list, False
 	
 		return tuple([no_update] * 7)
-	
+
 	def update_plot(self, fig):
 		#self.plotter.plot.figure.update_layout(autosize = False)
 		self.plotter.reread_simulated()		
@@ -155,7 +156,12 @@ class TestProc:
 			html.Div([
 	   		WebSocket(url="ws://localhost:8600", id="ws"),
 				html.Div(html.Button("send", id='send-btn', n_clicks=0), hidden=True),
-				
+
+				html.Div(
+					[	html.Button("save", id="save-to-file-btn", n_clicks=0),
+						html.Button("replot", id="replot-btn", n_clicks=0)
+					]),
+
 				html.Div(dcc.Checklist(id="show-check", inline=False), id='show-div', hidden=True),
 				html.Button("save", id="save-to-file-btn", n_clicks=0),
 
@@ -253,13 +259,21 @@ class TestProc:
 				data = json.loads(msg['data'])
 				if 'dest' in data and data['dest'] == 'test-proc':
 					print(f"received by test-proc:\n{data}")
+					self.data_copy = data
 					if 'cmd' in data:
 						msg = {"source": "test-proc", "dest": "index", "cmd": "refresh", 'port_num': self.port_num, "index": self.i_send}
 						self.i_send = self.i_send + 1
+
 						if data['cmd'] == 'plot':
+							self.prev_data = data
 							return tuple([json.dumps(msg)] + list(self.init_plot(data)))
+
+						if data['cmd'] == 'replot':
+							return tuple([json.dumps(msg)] + list(self.init_plot(self.prev_data)))
+
 						if data['cmd'] == 'update':
-							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))							
+							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))
+
 			return tuple([no_update] * 8)
 		
 		@callback(
@@ -270,7 +284,7 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def change_show(dataset_ids, fig):
-			self.plotter.set_datasets_visible(dataset_ids)	
+			self.plotter.set_datasets_visible(dataset_ids)
 			return self.plotter.plot.figure, dataset_ids
 				
 		@callback(
@@ -399,6 +413,19 @@ class TestProc:
 			table_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".csv"
 			table_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', table_filename)
 			summary_df.to_csv(table_filepath, sep=',', index=False,header=True)
+
+
+		@app.callback(
+				Output("ws", "send", allow_duplicate=True),
+				Input("replot-btn", "n_clicks"),
+				prevent_initial_call=True
+		)
+		def replot(nclicks):
+			self.i_send = self.i_send + 1
+			self.data_copy['index'] = self.i_send
+			print(self.data_copy)
+			return json.dumps(self.data_copy)
+
 
 		app.run(debug=True, use_reloader=False, port = self.port_num)
 

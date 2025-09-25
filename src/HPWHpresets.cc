@@ -235,9 +235,11 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
+    // altered UEF2Generic map to refer to test temperatures
     PerformancePolySet perfPolySet({{50., {187.064124, 1.939747, 0.}, {5.4977772, -0.0243008, 0.}},
                                     {67.5, {152.9195905, 2.476598, 0.}, {5.445, -0.0323732875, 0.}},
                                     {95., {99.263895, 3.320221, 0.}, {7.26, -0.045058625, 0.}}});
+
     compressor->evaluatePerformance = perfPolySet.make();
 
     compressor->minT = F_TO_C(37.);
@@ -271,13 +273,14 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // set tank volume from input
     // use tank size setting function since it has bounds checking
-    setTankSize(tankVol_L);
+    tank->volume_L = tankVol_L;
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016
     double tankVol_gal = L_TO_GAL(tankVol_L);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
-    tank->UA_kJperHrC = 0.0076183819 * v1 * v1;
+    double correction_UA = 6.5 / 7.9948937115672462; // scale to match UEF2Generic
+    tank->UA_kJperHrC = correction_UA * 0.0076183819 * v1 * v1;
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
@@ -297,9 +300,9 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
-
-    constexpr double correction = 1.81 / 2.;
-    makeGenericEF(correction * energyFactor, testConfiguration_UEF, perfPolySet);
+    // scale to match result for UEF2Generic with input 2.
+    constexpr double correction_UEF = 1.7968735517046457 / 2.;
+    makeGenericEF(correction_UEF * energyFactor, testConfiguration_UEF, perfPolySet);
 }
 
 void HPWH::initLegacy(const std::string& modelName)
@@ -1627,6 +1630,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         for (auto& val : perfGridValues[0])
             val = KW_TO_W(val);
 
+        for (std::size_t i = 0; i < perfGridValues[0].size(); ++i)
+            perfGridValues[1][i] *= perfGridValues[0][i]; // cop -> heating capacity
+
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
     // if rheem multipass
@@ -1981,6 +1987,10 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         for (auto& val : perfGridValues[0])
             val = BTUperH_TO_W(val);
 
+        for (std::size_t i = 0; i < perfGridValues[0].size(); ++i)
+            perfGridValues[1][i] *= perfGridValues[0][i]; // cop -> heating capacity
+
+        compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
         swapGridAxes(perfGrid, perfGridValues, 1, 2);
 
         compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
@@ -4324,6 +4334,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         send_error("You have tried to select a preset model which does not exist.");
     }
 
+    useCOP_inBtwxt = true;
     if (hasInitialTankTemp)
         setTankToTemperature(initialTankT_C);
     else // start tank off at setpoint
