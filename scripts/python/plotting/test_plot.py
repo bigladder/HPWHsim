@@ -174,10 +174,12 @@ class TestPlotter:
 
 		have_traces = False
 		for dataset in self.datasets:
+			self.model_id = dataset.model_id
+			self.test_id = dataset.test_id
 			self.plot = dimes.DimensionalPlot(
 			  [x for x in dataset.df["Time"]],
-					f"Model: {dataset.model_id}, Test: {dataset.test_id}"
-			)
+				f"Model: {self.model_id}, Test: {self.test_id}"
+			)	
 			self.plot.x_axis.name = "Time [min]"
 			have_traces = True
 			break
@@ -425,6 +427,7 @@ class TestPlotter:
 		return self
 
 	def set_datasets_visible(self, dataset_ids):
+		self.plotter.plot.finalize_plot()
 		curve_names = []
 		for curve in self.plot.figure["data"]:
 			curve_names.append(curve['name'])

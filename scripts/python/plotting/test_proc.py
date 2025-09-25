@@ -163,7 +163,6 @@ class TestProc:
 					]),
 
 				html.Div(dcc.Checklist(id="show-check", inline=False), id='show-div', hidden=True),
-				html.Button("save", id="save-to-file-btn", n_clicks=0),
 
 				dcc.Graph(id='test-graph', figure={}, style ={'width': '1200px', 'height': '800px', 'display': 'block'}),
 		
@@ -284,7 +283,7 @@ class TestProc:
 			prevent_initial_call=True
 		)
 		def change_show(dataset_ids, fig):
-			self.plotter.set_datasets_visible(dataset_ids)
+			#self.plotter.set_datasets_visible(dataset_ids)
 			return self.plotter.plot.figure, dataset_ids
 				
 		@callback(
@@ -397,9 +396,15 @@ class TestProc:
 				prevent_initial_call=True
 		)
 		def save_to_file(nclicks):
+			self.plotter.plot.finalize_plot()
 			plot_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".html"
 			plot_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', plot_filename)
 			self.plotter.plot.write_html_plot(plot_filepath)
+			
+			fig_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".json"
+			fig_filepath = os.path.join(self.prefs['build_dir'], 'test', 'output', fig_filename)
+			io.write_json(self.plotter.plot.figure, fig_filepath, True, False)
+			
 			summary_dict = self.plotter.getSummaryDataDict()
 			quantity = []
 			measured = []
