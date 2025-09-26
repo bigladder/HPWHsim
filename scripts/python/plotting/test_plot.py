@@ -52,7 +52,8 @@ def retrieve_line_type(variable_type):
 	if variable_type == "Measured":
 		return 'solid'
 	elif variable_type == "Simulated":
-		return "dot"
+		return 'dot'
+	return 'dashdot'
 
 class TestPlotter:
 	def __init__(self, data):
@@ -76,6 +77,7 @@ class TestPlotter:
 	            "Colors": ["red"],
 	            "Line Mode": ["lines"],
 	            "Line Visibility": [True],
+							"Marker Size": [4]
 	        },
 	        "Flow Rate": {
 							"Columns": ["Flow Rate"],
@@ -84,6 +86,7 @@ class TestPlotter:
 	            "Colors": ["green"],
 	            "Line Mode": ["lines"],
 	            "Line Visibility": [True],
+							"Marker Size": [7]
 
 	        },
 	        "Temperature": {
@@ -103,7 +106,8 @@ class TestPlotter:
 	            "Colors": ["#e1141e", "#53a05d", "#6e62a4","#b05593","#cbc062"] + list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
 	            "Line Mode": {"Tank": ["lines"] * (4 + NUMBER_OF_THERMOCOUPLES)},
 	            "Line Visibility": [False] * 4 +
-								[True if i == 0 or i == NUMBER_OF_THERMOCOUPLES - 1 else False for i in range(NUMBER_OF_THERMOCOUPLES)]
+								[True if i == 0 or i == NUMBER_OF_THERMOCOUPLES - 1 else False for i in range(NUMBER_OF_THERMOCOUPLES)],
+							"Marker Size": [None, 7, 7, None] + [4] * NUMBER_OF_THERMOCOUPLES
 							}
 	        	},
 
@@ -123,9 +127,10 @@ class TestPlotter:
 				self.datasets.append(DataSet(dataset_spec))
 				have_dataset = True
 		
-		if not have_dataset:
-			return
-		
+		if have_dataset:
+			self.draw()
+
+	def draw(self):		
 		for dataset in self.datasets:
 			self.model_id = dataset.model_id
 			self.test_id = dataset.test_id
@@ -182,25 +187,23 @@ class TestPlotter:
 		self.update_clicked()
 		self.have_fig = True
 
-
 	def plot_dataset(self, dataset):
 		for i_variable, variable in enumerate(self.variables["Y-Variables"]):
 			for i_val, column in enumerate(self.variables["Y-Variables"][variable]["Columns"]):
+				marker_symbol = None
+				marker_size = 7
+				marker_fill_color = None
+				marker_line_color = None
 				if dataset.variable_type == "Measured":
 					marker_symbol = "circle"
-					marker_size = 7
+					marker_size = self.variables["Y-Variables"][variable]["Marker Size"][i_val]
 					marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
 					marker_line_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
 				elif dataset.variable_type == "Simulated":
-					marker_symbol = "circle"
-					marker_size = 7
+					marker_symbol = "circle" 
+					marker_size = self.variables["Y-Variables"][variable]["Marker Size"][i_val]
 					marker_fill_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
 					marker_line_color = self.variables["Y-Variables"][variable]["Colors"][i_val]
-				else:
-					marker_symbol ="circle"
-					marker_size = 7
-					marker_fill_color = None
-					marker_line_color = None
 
 				x_list = [x for x in dataset.df["Time"]]
 				y_list = [y for y in dataset.df[column]]

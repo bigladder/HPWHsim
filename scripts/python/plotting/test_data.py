@@ -41,9 +41,10 @@ class DataSet:
 			self._id = f"{self.model_id}-{self.test_id}-{self.variable_type}"
 				
 		try:
+			print(self.filepath)
 			df = call_csv(self.filepath, 0)
-			self.filepath = self.filepath
 		except:
+			print("failed")
 			df = {}
 			return	
 
@@ -151,7 +152,8 @@ class DataSet:
 							frac_min = (prev_input_energy_kJ[1] - prev_input_energy_kJ[0]) / (prev_input_energy_kJ[2] - prev_input_energy_kJ[0])
 						self.ef_bounds.first_recovery_period_end_time = t_min	- (2.0 - frac_min)
 
-	def analyze(self):		
+	def analyze(self):	
+			print("analyzing")	
 			self.find_EF_bounds()
 					
 			initialTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_start_time]

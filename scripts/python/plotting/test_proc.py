@@ -396,7 +396,6 @@ class TestProc:
 				prevent_initial_call=True
 		)
 		def save_to_file(nclicks, fig):		
-
 			self.plotter.plot.figure = go.Figure(fig)
 			
 			json_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".json"
@@ -411,12 +410,12 @@ class TestProc:
 			columns = [[] for _ in range(len(self.plotter.datasets) + 1)]
 			for item in summary_dict:
 				columns[0].append(item)
-				for i_dataset, dataset in enumerate(self.plotter.datasets):				
+				for i_dataset, dataset in enumerate(self.plotter.datasets):		
 					columns[i_dataset + 1].append(summary_dict[item][i_dataset])
 		
 			dict = {'Quantity': columns[0]}
 			for i_dataset, dataset in enumerate(self.plotter.datasets):	
-					dict[dataset._id] = columns[i_dataset]
+					dict[dataset._id] = columns[i_dataset + 1]
 					
 			summary_df = pd.DataFrame(dict, columns=dict.keys())
 			table_filename = self.plotter.model_id + "_" + self.plotter.test_id + ".csv"
@@ -431,7 +430,6 @@ class TestProc:
 		def replot(nclicks):
 			self.i_send = self.i_send + 1
 			self.data_copy['index'] = self.i_send
-			print(self.data_copy)
 			return json.dumps(self.data_copy)
 
 

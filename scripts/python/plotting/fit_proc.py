@@ -5,6 +5,8 @@ import time
 import multiprocessing as mp
 from common import read_file, write_file, get_perf_map, set_perf_map, get_heat_source_configuration, set_heat_source_configuration
 import numpy as np
+from simulate import simulate
+from test_data import DataSet
 
 class FitProc:
 		
@@ -44,6 +46,17 @@ class FitProc:
 			self.running = False
 		return {}
 	
+	def find_cache_model(self, model_id):
+		model_cache = read_file("./model_cache.json")	
+		if model_id not in model_cache:
+			ref_model_filepath = "../../../test/models_json/" + model_id + ".json"
+			model_data = read_file(ref_model_filepath)
+			model_cache[model_id] = self.prefs["build_dir"] + "/gui/" + model_id + ".json"
+			write_file("./model_cache.json", model_cache)
+			write_file(model_id, model_data)
+		return model_cache[model_id]
+
+
 	def read_cache_model(self, model_id):
 			model_cache = read_file("./model_cache.json")	
 			if model_id not in model_cache:
@@ -201,7 +214,8 @@ class FitProc:
 		
 		perf_map["lookup_variables"] = lookup_vars		
 		set_perf_map(model_data, perf_map)
-				
+	
+			
 	def apply_constraint(self, constraint):
 		if constraint['type'] == 'bilinear-points':		
 			variable = constraint['variable']
@@ -273,7 +287,7 @@ class FitProc:
 		for constraint in self.constraints:
 			self.apply_constraint(self.constraints[constraint])
 
-	def get_parameter(self, parameter):
+	def get_parameter_value(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
 			constraint = self.constraints[parameter['constraint']]
 			variable = constraint['variable']
@@ -297,30 +311,89 @@ class FitProc:
 			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
 			if dependent == variable:
 				return
-			model_data = self.read_cache_model(parameter['model_id'])	
-			return self.get_performance_point(self, model_data, parameter['coordinates'], variable)	
+			for model_id in parameter['models']:
+				model_data = self.read_cache_model(model_id)
+				return self.get_performance_point(model_data, parameter['coordinates'], variable)	
 
-			
-	def get_parameters(self):
-		parameterV = []
+	def get_metric_value(self, metric):
+		if metric['type'] == 'first-recovery-period-end-time':		
+			test_index = read_file("./test_index.json");
+			test_data = test_index['tests'][metric['test_id']]
+			test_dir = "../../../test/" 											 
+			if 'path' in test_data:
+					test_dir = os.path.join(test_dir, test_data['path' ])			 
+			test_dir = os.path.join(test_dir, metric['test_id'])
+
+			model_filepath = self.find_cache_model(metric['model_id'])
+			data = {	
+				"model_spec": "JSON",		
+				"model_id_or_filepath": model_filepath,
+				"is_standard_test": 1 if "is_standard_test" in metric else 0,
+				'test_dir': test_dir,
+				'build_dir': self.prefs['build_dir']
+			}
+			simulate(data)
+				
+			data_filename = metric['test_id'] + "_JSON_" + metric["model_id"] + ".csv";
+			data_filepath = os.path.join(self.prefs["build_dir"], "test", "output", data_filename)	
+			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Simulated", 'filepath': data_filepath})
+			dataset.analyze()
+			result = dataset.test_summary[metric['group']]['firstRecoveryPeriodEndTime_min']
+			return result	
+	
+	def get_parameter_values(self):
+		paramV = []
 		for parameter in self.parameters:
-			parameterV.append(self.get_parameter(parameter))
-		return parameterV
+			param = self.get_parameter_value(parameter)
+			paramV.append(self.get_parameter_value(parameter))
+		return paramV
+				
+	def get_parameters(self):
+		paramV = []
+		for parameter in self.parameters:
+			param = self.get_parameter(parameter)
+			paramV.append({"value": param, "increment": parameter['increment']})
+		return paramV
 				
 	def apply_parameters(self):
 		for parameter in self.parameters:
 			self.apply_parameter(parameter)
+	
+	def get_metric_values(self):
+		metricV = []
+		for metric in self.metrics:
+			metricV.append(self.get_metric_value(metric))
+		return metricV
 			
 	def fit(self, data):
 		self.update()	
-		#self.apply_parameters()	
-		self.apply_constraints()
 		
-	# Runs the fitting process
-	
-		n_params = len(self.parameters)
-		n_metrics = len(self.metrics)
+		paramsL = self.get_parameters()
+		paramsV = self.get_parameter_values()
+		print(f"parameters:\n {paramsV}")	
+		#self.apply_constraints()
 
+		metricsL = self.get_metrics()
+		metricsV = self.get_metric_values()
+		print(f"metrics:\n {metricsV}")
+	
+		n_params = len(paramsV)
+		n_metrics = len(metricsV)
+
+		diffV0 = [0] * n_metrics
+		for i_metric, metric in enumerate(metricsL):
+			diffV0[i_metric] = (metricsV[i_metric] - metricsL['target']) / metricsL['tolerance']
+
+		print(f"diffs0:\n {diffV0}")
+		covarM = [[0] * n_metrics] * n_params
+		for i_param in range(n_params):
+			param0 = paramsV[i_param]
+			param_p = param0 + paramsL[i_param]['increment']
+			diffV = [0] * n_metrics
+			for i_metric, metric in enumerate(metricsL):
+				diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+				covarM[i_param][i_metric] = (diffV[i_metric] - diffV0[i_metric]) / metricsL[i_metric][1]
+		
 		done = False
 		i_iter = 0
 
