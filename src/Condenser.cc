@@ -357,15 +357,6 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
             minT = evapTs_C.front();
         }
 
-        if (grid_variables.condenser_leaving_temperature_is_set)
-        {
-            std::vector<double> outletTs_C = {};
-            outletTs_C.reserve(grid_variables.condenser_leaving_temperature.size());
-            for (auto& T_K : grid_variables.condenser_leaving_temperature)
-                outletTs_C.push_back(K_TO_C(T_K));
-            perfGrid.push_back(outletTs_C);
-        }
-
         if (grid_variables.condenser_entering_temperature_is_set)
         {
             std::vector<double> heatSourceTs_C = {};
@@ -373,6 +364,15 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
             for (auto& T_K : grid_variables.condenser_entering_temperature)
                 heatSourceTs_C.push_back(K_TO_C(T_K));
             perfGrid.push_back(heatSourceTs_C);
+        }
+
+        if (grid_variables.condenser_leaving_temperature_is_set)
+        {
+            std::vector<double> outletTs_C = {};
+            outletTs_C.reserve(grid_variables.condenser_leaving_temperature.size());
+            for (auto& T_K : grid_variables.condenser_leaving_temperature)
+                outletTs_C.push_back(K_TO_C(T_K));
+            perfGrid.push_back(outletTs_C);
         }
 
         auto& lookup_variables = perf_map.lookup_variables;
@@ -403,22 +403,20 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
         standbyPower_kW = W_TO_KW(perf.standby_power);
     }
 
-    if (hpwh->model == hpwh_presets::MODELS::NyleC60A_C_MP)
-        resDefrost = {4.5, 5.0, 40.0}; // inputPower_KW, constTempLift_dF, onBelowTemp_F;
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC90A_C_MP)
-        resDefrost = {5.4, 5.0, 40.0};
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC125A_C_MP)
-        resDefrost = {9.0, 5.0, 40.0};
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC185A_C_MP)
-        resDefrost = {7.25, 5.0, 40.0};
-    else if (hpwh->model == hpwh_presets::MODELS::NyleC250A_C_MP)
-        resDefrost = {18.0, 5.0, 40.0};
-
-    if ((hpwh_presets::MODELS::NyleC60A_C_SP <= hpwh->model) &&
-        (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_SP))
+    if (perf.resistance_element_defrost_is_set)
     {
-        maxOut_at_LowT.outT_C = F_TO_C(140.);
-        maxOut_at_LowT.airT_C = F_TO_C(40.);
+        auto& resdef = perf.resistance_element_defrost;
+        resDefrost = {W_TO_KW(resdef.input_power),
+                      dC_TO_dF(resdef.lift_temperature),
+                      K_TO_F(resdef.activation_temperature)};
+    }
+
+    if (perf.maximum_setpoint_at_low_temperature_is_set)
+    {
+        maxOut_at_LowT.outT_C =
+            K_TO_C(perf.maximum_setpoint_at_low_temperature.maximum_setpoint_temperature);
+        maxOut_at_LowT.airT_C =
+            K_TO_C(perf.maximum_setpoint_at_low_temperature.threshold_environment_temperature);
     }
 }
 
@@ -559,9 +557,9 @@ void HPWH::Condenser::to(
         double powerOutCoefRatioMax = 0.;
         double COP_CoefRatioMax = 0.;
         {
-            double hsT_C = F_TO_C(0.);
+            double hsT_C = F_TO_C((0. + maxSetpoint_C) / 2.);
 
-            double dhsT_F = 0.00001;
+            double dhsT_F = 1.e-5;
             double dhsT_C = dF_TO_dC(dhsT_F);
 
             for (auto& envT_C : envTs_C)
@@ -716,8 +714,8 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
         envTs_C.push_back(maxT);
         trimGridVector(envTs_C, minT, maxT);
 
-        std::vector<double>& outletTs_C = perfGrid[1];
-        std::vector<double>& heatSourceTs_C = perfGrid[2];
+        std::vector<double>& heatSourceTs_C = perfGrid[1];
+        std::vector<double>& outletTs_C = perfGrid[2];
 
         {
             envTs_K.reserve(envTs_C.size());
@@ -726,31 +724,30 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             nVals *= envTs_K.size();
         }
         {
-            outletTs_K.reserve(outletTs_C.size());
-            for (auto T_C : outletTs_C)
-                outletTs_K.push_back(C_TO_K(T_C));
-            nVals *= outletTs_K.size();
-        }
-        {
             heatSourceTs_K.reserve(heatSourceTs_C.size());
             for (auto T_C : heatSourceTs_C)
                 heatSourceTs_K.push_back(C_TO_K(T_C));
             nVals *= heatSourceTs_K.size();
         }
+        {
+            outletTs_K.reserve(outletTs_C.size());
+            for (auto T_C : outletTs_C)
+                outletTs_K.push_back(C_TO_K(T_C));
+            nVals *= outletTs_K.size();
+        }
 
         inputPowers_W.reserve(nVals);
         heatingCapacities_W.reserve(nVals);
         for (auto& envT_C : envTs_C)
-            for (auto& outletT_C : outletTs_C)
-            {
-                hpwh->setpoint_C = outletT_C - secondaryHeatExchanger.hotSideTemperatureOffset_dC;
-                for (auto& heatSourceT_C : heatSourceTs_C)
+            for (auto& heatSourceT_C : heatSourceTs_C)
+                for (auto& outletT_C : outletTs_C)
                 {
+                    hpwh->setpoint_C =
+                        outletT_C - secondaryHeatExchanger.hotSideTemperatureOffset_dC;
                     auto performance = evaluatePerformance(envT_C, heatSourceT_C);
                     inputPowers_W.push_back(performance.inputPower_W);
                     heatingCapacities_W.push_back(performance.outputPower_W);
                 }
-            }
     }
     else
     {
@@ -764,6 +761,20 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             trimGridVector(envTs_C, minT, maxT);
             for (auto& envT_C : envTs_C)
                 envTs_K.push_back(C_TO_K(envT_C));
+        }
+
+        { // fill vector of heat source temps
+            auto tempRange_dC = maxSetpoint_C - 0.;
+            constexpr double steps_per_degC = 51. / 100.;
+            auto nSteps = static_cast<std::size_t>(std::max(steps_per_degC * tempRange_dC, 2.));
+            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nSteps);
+            heatSourceTs_K.reserve(nSteps + 1);
+            for (std::size_t i = 0; i <= nSteps; ++i)
+            {
+                double heatSourceT_C = 0. + dHeatSourceT_dC * static_cast<double>(i);
+                heatSourceTs_K.push_back(C_TO_K(heatSourceT_C));
+            }
+            arrangeGridVector(heatSourceTs_K);
         }
 
         { // fill vector of outlet temps
@@ -788,38 +799,23 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
                     C_TO_K(outletT_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC));
         }
 
-        { // fill vector of heat source temps
-            auto tempRange_dC = maxSetpoint_C - 0.;
-            constexpr double steps_per_degC = 51. / 100.;
-            auto nSteps = static_cast<std::size_t>(std::max(steps_per_degC * tempRange_dC, 2.));
-            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nSteps);
-            heatSourceTs_K.reserve(nSteps + 1);
-            for (std::size_t i = 0; i <= nSteps; ++i)
-            {
-                double heatSourceT_C = 0. + dHeatSourceT_dC * static_cast<double>(i);
-                heatSourceTs_K.push_back(C_TO_K(heatSourceT_C));
-            }
-            arrangeGridVector(heatSourceTs_K);
-        }
         { // fill grid values
-            std::size_t nTotVals = envTs_K.size() * outletTs_K.size() * heatSourceTs_K.size();
+            std::size_t nTotVals = envTs_K.size() * heatSourceTs_K.size() * outletTs_K.size();
             inputPowers_W.reserve(nTotVals);
             heatingCapacities_W.reserve(nTotVals);
             double orig_setpointT_C = hpwh->getSetpoint(UNITS_C);
             for (auto& envT_K : envTs_K)
-                for (auto& outletT_K : outletTs_K)
-                {
-                    hpwh->setSetpoint(K_TO_C(outletT_K) -
-                                          secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                                      UNITS_C);
-                    for (auto& heatSourceT_K : heatSourceTs_K)
+                for (auto& heatSourceT_K : heatSourceTs_K)
+                    for (auto& outletT_K : outletTs_K)
                     {
+                        hpwh->setSetpoint(K_TO_C(outletT_K) -
+                                              secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                                          UNITS_C); // correct for offset
                         auto performance =
                             evaluatePerformance(K_TO_C(envT_K), K_TO_C(heatSourceT_K));
                         inputPowers_W.push_back(performance.inputPower_W);
                         heatingCapacities_W.push_back(performance.cop * performance.inputPower_W);
                     }
-                }
             hpwh->setSetpoint(orig_setpointT_C, UNITS_C);
         }
     }
@@ -843,6 +839,31 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
     map.grid_variables_is_set = true;
     map.lookup_variables_is_set = true;
     perf.performance_map_is_set = true;
+
+    if (resDefrost.inputPwr_kW > 0.)
+    {
+        auto& resdef = perf.resistance_element_defrost;
+        checkTo(KW_TO_W(resDefrost.inputPwr_kW), resdef.input_power_is_set, resdef.input_power);
+        checkTo(dF_TO_dC(resDefrost.constTempLift_dF),
+                resdef.lift_temperature_is_set,
+                resdef.lift_temperature);
+        checkTo(F_TO_K(resDefrost.onBelowT_F),
+                resdef.activation_temperature_is_set,
+                resdef.activation_temperature);
+        perf.resistance_element_defrost_is_set = true;
+    }
+
+    if (maxOut_at_LowT.airT_C > -273.15)
+    {
+        auto& limit = perf.maximum_setpoint_at_low_temperature;
+        checkTo(C_TO_K(maxOut_at_LowT.airT_C),
+                limit.threshold_environment_temperature_is_set,
+                limit.threshold_environment_temperature);
+        checkTo(C_TO_K(maxOut_at_LowT.outT_C),
+                limit.maximum_setpoint_temperature_is_set,
+                limit.maximum_setpoint_temperature);
+        perf.maximum_setpoint_at_low_temperature_is_set = true;
+    }
 
     hs.performance_is_set = true;
 }
@@ -1291,20 +1312,7 @@ HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
                                             get_courier()));
         ++iAxis;
     }
-    if (perfGrid.size() > 2)
-    { // condenser outlet T (CWHS only)
-        auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
-                                            : Btwxt::InterpolationMethod::linear;
-        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
-                                            : Btwxt::ExtrapolationMethod::linear;
-        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                                            interpMethod,
-                                            extrapMethod,
-                                            {-DBL_MAX, DBL_MAX},
-                                            "CondenserOutletT",
-                                            get_courier()));
-        ++iAxis;
-    }
+
     { // heat-source T
         auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
                                                          : Btwxt::InterpolationMethod::cubic;
@@ -1316,6 +1324,21 @@ HPWH::Condenser::setUpGridAxes(const std::vector<std::vector<double>>& perfGrid)
                                             extrapMethod,
                                             {-DBL_MAX, DBL_MAX},
                                             "HeatSourceT",
+                                            get_courier()));
+        ++iAxis;
+    }
+
+    if (perfGrid.size() > 2)
+    { // condenser outlet T (CWHS only)
+        auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
+                                            : Btwxt::InterpolationMethod::linear;
+        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
+                                            : Btwxt::ExtrapolationMethod::linear;
+        grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "CondenserOutletT",
                                             get_courier()));
         ++iAxis;
     }
@@ -1340,8 +1363,8 @@ void HPWH::Condenser::makePerformanceBtwxt(const std::vector<std::vector<double>
         {
             return std::vector<double>(
                 {externalT_C,
-                 hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC,
-                 heatSourceT_C});
+                 heatSourceT_C,
+                 hpwh->getSetpoint() + secondaryHeatExchanger.hotSideTemperatureOffset_dC});
         };
     }
     else
