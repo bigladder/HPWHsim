@@ -4,10 +4,6 @@
 
 #include <iostream>
 
-{% for model in models %}
-#include "{{ model.name }}.h"
-{% endfor %}
-
 namespace hpwh_presets {
 
 /// specifies the allowable preset HPWH models
@@ -31,31 +27,11 @@ struct Model
 	MODELS model() const {return static_cast<MODELS>(id);}
 };
 
-inline std::vector<Model> models({
-{% for model in models %}
-	{ MODELS::{{ model.name }}, "{{ model.name }}", cbor_{{ model.name }}.data(), sizeof(cbor_{{ model.name }})},
-{% endfor %}	
-});
+extern std::vector<Model> models;
 
-inline Model find_by_name(const std::string& name)
-{
-    auto it = find_if(models.begin(),
-                      models.end(),
-                      [&name](Model& model){ return model.name == name; });
-    if (it != models.end())
-        return *it;
-    return {MODELS::unknown, "unknown", nullptr, 0};
-}
+Model find_by_name(const std::string& name);
 
-inline Model find_by_id(const MODELS id)
-{
-    auto it =
-        find_if(models.begin(),
-                models.end(),
-                [&id](Model& model) { return model.id == id; });
-    if (it != models.end())
-        return *it;
-    return {MODELS::unknown, "unknown", nullptr, 0};
-}
+Model find_by_id(const MODELS id);
+
 }
 #endif

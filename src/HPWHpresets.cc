@@ -1193,14 +1193,14 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         else
         {
             compressor->minT = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
+
+            // Defines the maximum outlet temperature at low air temperature
+            compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
+            compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
         }
         compressor->maxT = F_TO_C(120.0); // Max air temperature
         compressor->hysteresis_dC = 0;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-        // Defines the maximum outlet temperature at the a low air temperature
-        compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
-        compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
@@ -1799,6 +1799,10 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
             {41, 48.2, 62.6, 75.2, 84.2}                                   // Grid Axis 3 Tin (F)
         });
 
+        for (auto& axis : perfGrid)
+            for (auto& val : axis)
+                val = F_TO_C(val);
+
         std::vector<std::vector<double>> perfGridValues = {};
 
         // Grid values in long format, table 1, input power (Btu/hr)
@@ -1999,17 +2003,14 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
              4.520572, 4.213452, 3.993147, 3.713376, 4.522957, 4.520572, 4.213452, 3.993147,
              3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959});
 
-        for (auto& axis : perfGrid)
-            for (auto& val : axis)
-                val = F_TO_C(val);
         for (auto& val : perfGridValues[0])
             val = BTUperH_TO_W(val);
 
         swapGridAxes(perfGrid, perfGridValues, 1, 2);
 
-        compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
-
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
+
+        compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
     }
 
     else if (presetNum == hpwh_presets::MODELS::Sanco83 ||
