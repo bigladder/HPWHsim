@@ -1649,6 +1649,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         for (auto& val : perfGridValues[0])
             val = KW_TO_W(val);
 
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
+
+        useCOP_inBtwxt = true;
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
     // if rheem multipass
@@ -2002,6 +2005,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         for (auto& val : perfGridValues[0])
             val = BTUperH_TO_W(val);
+
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
 
         useCOP_inBtwxt = true;
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
