@@ -1193,14 +1193,14 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         else
         {
             compressor->minT = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
+
+            // Defines the maximum outlet temperature at low air temperature
+            compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
+            compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
         }
         compressor->maxT = F_TO_C(120.0); // Max air temperature
         compressor->hysteresis_dC = 0;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-        // Defines the maximum outlet temperature at the a low air temperature
-        compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
-        compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);

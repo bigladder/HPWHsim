@@ -414,7 +414,7 @@ void HPWH::Condenser::from(const hpwh_data_model::rsairtowaterheatpump::RSAIRTOW
     else if (hpwh->model == hpwh_presets::MODELS::NyleC250A_C_MP)
         resDefrost = {18.0, 5.0, 40.0};
 
-    if ((hpwh_presets::MODELS::NyleC25A_SP <= hpwh->model) &&
+    if ((hpwh_presets::MODELS::NyleC60A_C_SP <= hpwh->model) &&
         (hpwh->model <= hpwh_presets::MODELS::NyleC250A_C_SP))
     {
         maxOut_at_LowT.outT_C = F_TO_C(140.);
