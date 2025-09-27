@@ -21,6 +21,9 @@ CLI::App* add_measure(CLI::App& app)
     const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
 
     //
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
+
     auto model_group = subcommand->add_option_group("model");
 
     static std::string modelName = "";
@@ -54,7 +57,6 @@ CLI::App* add_measure(CLI::App& app)
         [&]()
         {
             HPWH hpwh;
-            std::string specType = "Preset";
             if (!modelName.empty())
                 hpwh.initPreset(modelName);
             else if (modelNumber != -1)
