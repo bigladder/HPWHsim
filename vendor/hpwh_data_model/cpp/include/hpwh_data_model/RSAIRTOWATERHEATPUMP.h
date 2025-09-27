@@ -79,6 +79,35 @@ namespace hpwh_data_model {
 			static constexpr std::string_view lookup_variables_description = "Data group defining the lookup variables for heating performance";
 			static constexpr std::string_view lookup_variables_name = "lookup_variables";
 		};
+		struct MaximumSetpointAtLowTemperature {
+			double threshold_environment_temperature;
+			bool threshold_environment_temperature_is_set = false;
+			static constexpr std::string_view threshold_environment_temperature_units = "K";
+			static constexpr std::string_view threshold_environment_temperature_description = "Low environment-temperature threshold for setpoint control";
+			static constexpr std::string_view threshold_environment_temperature_name = "threshold_environment_temperature";
+			double maximum_setpoint_temperature;
+			bool maximum_setpoint_temperature_is_set = false;
+			static constexpr std::string_view maximum_setpoint_temperature_units = "K";
+			static constexpr std::string_view maximum_setpoint_temperature_description = "Maximum setpoint temperature below `threshold_environment_temperature`";
+			static constexpr std::string_view maximum_setpoint_temperature_name = "maximum_setpoint_temperature";
+		};
+		struct ResistanceElementDefrost {
+			double input_power;
+			bool input_power_is_set = false;
+			static constexpr std::string_view input_power_units = "K";
+			static constexpr std::string_view input_power_description = "Input power";
+			static constexpr std::string_view input_power_name = "input_power";
+			double lift_temperature;
+			bool lift_temperature_is_set = false;
+			static constexpr std::string_view lift_temperature_units = "K";
+			static constexpr std::string_view lift_temperature_description = "Resulting increase of environment temperature";
+			static constexpr std::string_view lift_temperature_name = "lift_temperature";
+			double activation_temperature;
+			bool activation_temperature_is_set = false;
+			static constexpr std::string_view activation_temperature_units = "K";
+			static constexpr std::string_view activation_temperature_description = "Low environment temperature for activation";
+			static constexpr std::string_view activation_temperature_name = "activation_temperature";
+		};
 		struct Performance {
 			rsairtowaterheatpump::PerformanceMap performance_map;
 			bool performance_map_is_set = false;
@@ -105,6 +134,16 @@ namespace hpwh_data_model {
 			static constexpr std::string_view use_defrost_map_units = "";
 			static constexpr std::string_view use_defrost_map_description = "Use defrost map";
 			static constexpr std::string_view use_defrost_map_name = "use_defrost_map";
+			rsairtowaterheatpump::MaximumSetpointAtLowTemperature maximum_setpoint_at_low_temperature;
+			bool maximum_setpoint_at_low_temperature_is_set = false;
+			static constexpr std::string_view maximum_setpoint_at_low_temperature_units = "";
+			static constexpr std::string_view maximum_setpoint_at_low_temperature_description = "Use maximum setpoint temperature at low environment temperature.";
+			static constexpr std::string_view maximum_setpoint_at_low_temperature_name = "maximum_setpoint_at_low_temperature";
+			rsairtowaterheatpump::ResistanceElementDefrost resistance_element_defrost;
+			bool resistance_element_defrost_is_set = false;
+			static constexpr std::string_view resistance_element_defrost_units = "";
+			static constexpr std::string_view resistance_element_defrost_description = "Resistance element for defrost";
+			static constexpr std::string_view resistance_element_defrost_name = "resistance_element_defrost";
 		};
 		struct RSAIRTOWATERHEATPUMP : ashrae205::HeatSourceTemplate {
 			core::Metadata metadata;
@@ -137,6 +176,10 @@ namespace hpwh_data_model {
 		void to_json(nlohmann::json& j, const GridVariables& x);
 		void from_json(const nlohmann::json& j, LookupVariables& x);
 		void to_json(nlohmann::json& j, const LookupVariables& x);
+		void from_json(const nlohmann::json& j, MaximumSetpointAtLowTemperature& x);
+		void to_json(nlohmann::json& j, const MaximumSetpointAtLowTemperature& x);
+		void from_json(const nlohmann::json& j, ResistanceElementDefrost& x);
+		void to_json(nlohmann::json& j, const ResistanceElementDefrost& x);
 	}
 }
 #endif
