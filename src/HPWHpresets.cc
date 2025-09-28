@@ -75,7 +75,7 @@ void HPWH::initResistanceTank(double tankVol_L,
 
     // standard logic conditions
     resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-    resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
+    resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10)));
 
     if (resistiveElementTop && resistiveElementBottom)
     {
@@ -102,8 +102,6 @@ void HPWH::initResistanceTank(double tankVol_L,
         tank->UA_kJperHrC = 0.0;
     }
 
-    model = MODELS_CustomResTank;
-
     calcDerivedValues();
 
     checkInputs();
@@ -127,7 +125,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     heatSources.clear();
 
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
-    if (lowerPower_W < 0)
+    if (lowerPower_W < 0.)
     {
         send_error("Lower resistance tank wattage below 0 W.");
     }
@@ -172,7 +170,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         resistiveElementBottom->setup(0, lowerPower_W);
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
-        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10.)));
+        resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10.)));
     }
 
     if (resistiveElementTop && resistiveElementBottom)
@@ -194,8 +192,6 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         tank->UA_kJperHrC = 0.0;
     }
 
-    model = MODELS_CustomResTankGeneric;
-
     calcDerivedValues();
 
     checkInputs();
@@ -215,7 +211,8 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     setAllDefaults(); // reset all defaults if you're re-initializing
     heatSources.clear();
 
-    // except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
+    // except where noted, these values are taken from hpwh_presets::MODELS::GE2014STDMode on
+    // 5/17/16
     setNumNodes(12);
     setpoint_C = F_TO_C(127.0);
 
@@ -238,19 +235,9 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
-    compressor->performanceMap.reserve(2);
-
-    compressor->performanceMap.push_back({
-        50,                          // Temperature (T_F)
-        {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-    });
-
-    compressor->performanceMap.push_back({
-        70,                         // Temperature (T_F)
-        {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-        {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-    });
+    PerformancePolySet perfPolySet(
+        {{50., {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+         {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}});
 
     compressor->minT = F_TO_C(45.);
     compressor->maxT = F_TO_C(120.);
@@ -274,7 +261,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
     compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-    compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+    compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
     // custom adjustment for poorer performance
     // compressor->addShutOffLogic(lowT(F_TO_C(37)));
@@ -300,21 +287,23 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     double fUEF = (energyFactor - 2.0) / uefSpan;
     double genericFudge = (1. - fUEF) * .7 + fUEF * .95;
 
-    compressor->performanceMap[0].COP_coeffs[0] *= genericFudge;
-    compressor->performanceMap[0].COP_coeffs[1] *= genericFudge;
-    compressor->performanceMap[0].COP_coeffs[2] *= genericFudge;
+    perfPolySet[0].COP_coeffs[0] *= genericFudge;
+    perfPolySet[0].COP_coeffs[1] *= genericFudge;
+    perfPolySet[0].COP_coeffs[2] *= genericFudge;
 
-    compressor->performanceMap[1].COP_coeffs[0] *= genericFudge;
-    compressor->performanceMap[1].COP_coeffs[1] *= genericFudge;
-    compressor->performanceMap[1].COP_coeffs[2] *= genericFudge;
+    perfPolySet[1].COP_coeffs[0] *= genericFudge;
+    perfPolySet[1].COP_coeffs[1] *= genericFudge;
+    perfPolySet[1].COP_coeffs[2] *= genericFudge;
 
-    compressor->performanceMap[0].inputPower_coeffs[0] /= genericFudge;
-    compressor->performanceMap[0].inputPower_coeffs[1] /= genericFudge;
-    compressor->performanceMap[0].inputPower_coeffs[2] /= genericFudge;
+    perfPolySet[0].inputPower_coeffs[0] /= genericFudge;
+    perfPolySet[0].inputPower_coeffs[1] /= genericFudge;
+    perfPolySet[0].inputPower_coeffs[2] /= genericFudge;
 
-    compressor->performanceMap[1].inputPower_coeffs[0] /= genericFudge;
-    compressor->performanceMap[1].inputPower_coeffs[1] /= genericFudge;
-    compressor->performanceMap[1].inputPower_coeffs[2] /= genericFudge;
+    perfPolySet[1].inputPower_coeffs[0] /= genericFudge;
+    perfPolySet[1].inputPower_coeffs[1] /= genericFudge;
+    perfPolySet[1].inputPower_coeffs[2] /= genericFudge;
+
+    compressor->evaluatePerformance = perfPolySet.make();
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
@@ -322,8 +311,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     resistiveElementTop->followedByHeatSource = resistiveElementBottom;
     resistiveElementBottom->followedByHeatSource = compressor;
-
-    model = MODELS_genericCustomUEF;
 
     calcDerivedValues();
 
@@ -337,20 +324,35 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
-    compressor->sortPerformanceMap();
 }
 
-void HPWH::initPreset(MODELS presetNum)
+void HPWH::initLegacy(const std::string& modelName)
+{
+    hpwh_presets::MODELS modelID;
+    if (getPresetNumberFromName(modelName, modelID))
+    {
+        initLegacy(modelID);
+    }
+    else
+    {
+        send_error("Unable to initialize model.");
+    }
+}
+
+void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 {
     setAllDefaults();
 
     heatSources.clear();
 
+    model = presetNum;
+    name = hpwh_presets::find_by_id(model).name;
+
     bool hasInitialTankTemp = false;
     double initialTankT_C = F_TO_C(120.);
 
     // resistive with no UA losses for testing
-    if (presetNum == MODELS_restankNoUA)
+    if (presetNum == hpwh_presets::MODELS::restankNoUA)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -371,7 +373,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
+        resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10)));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->isVIP = true;
@@ -380,7 +382,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
 
     // resistive tank with massive UA loss for testing
-    else if (presetNum == MODELS_restankHugeUA)
+    else if (presetNum == hpwh_presets::MODELS::restankHugeUA)
     {
         setNumNodes(12);
         setpoint_C = 50;
@@ -402,7 +404,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -411,7 +413,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
 
     // realistic resistive tank
-    else if (presetNum == MODELS_restankRealistic)
+    else if (presetNum == hpwh_presets::MODELS::restankRealistic)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -433,7 +435,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -441,7 +443,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
     }
 
-    else if (presetNum == MODELS_StorageTank)
+    else if (presetNum == hpwh_presets::MODELS::StorageTank)
     {
         setNumNodes(12);
         setpoint_C = 800.;
@@ -458,7 +460,7 @@ void HPWH::initPreset(MODELS presetNum)
     }
 
     // basic compressor tank for testing
-    else if (presetNum == MODELS_basicIntegrated)
+    else if (presetNum == hpwh_presets::MODELS::basicIntegrated)
     {
         setNumNodes(12);
         setpoint_C = 50;
@@ -481,7 +483,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -493,23 +495,14 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0.});
 
         // GE tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47, // Temperature (T_F)
-            {0.290 * 1000,
-             0.00159 * 1000,
-             0.00000107 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67, // Temperature (T_F)
-            {0.375 * 1000,
-             0.00121 * 1000,
-             0.00000216 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{47,
+                                 {0.290 * 1000, 0.00159 * 1000, 0.00000107 * 1000},
+                                 {4.49, -0.0187, -0.0000133}},
+                                {67,
+                                 {0.375 * 1000, 0.00121 * 1000, 0.00000216 * 1000},
+                                 {5.60, -0.0252, 0.00000254}}})
+                .make();
 
         compressor->minT = 0;
         compressor->maxT = F_TO_C(120.);
@@ -518,7 +511,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(bottomThird(20));
-        compressor->addTurnOnLogic(standby(15));
+        compressor->addTurnOnLogic(topNode(15));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
@@ -528,61 +521,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->followedByHeatSource = resistiveElementBottom;
     }
 
-    // simple external style for testing
-    else if (presetNum == MODELS_externalTest)
-    {
-        setNumNodes(96);
-        setpoint_C = 50;
-
-        tank->volumeFixed = false;
-        tank->volume_L = 120;
-        // tank->UA_kJperHrC = 10; //0 to turn off
-        tank->UA_kJperHrC = 0; // 0 to turn off
-
-        doTempDepression = false;
-        tank->mixesOnDraw = false;
-
-        heatSources.reserve(1);
-        auto compressor = addCondenser("compressor");
-
-        compressor->isOn = false;
-        compressor->isVIP = false;
-
-        compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-
-        // GE tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47, // Temperature (T_F)
-            {0.290 * 1000,
-             0.00159 * 1000,
-             0.00000107 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67, // Temperature (T_F)
-            {0.375 * 1000,
-             0.00121 * 1000,
-             0.00000216 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->maxT = F_TO_C(120.);
-        compressor->hysteresis_dC = 0; // no hysteresis
-        compressor->configuration = Condenser::CONFIG_EXTERNAL;
-        compressor->isMultipass = false;
-        compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-        compressor->addTurnOnLogic(bottomThird(20));
-        compressor->addTurnOnLogic(standby(15));
-
-        // lowT cutoff
-        compressor->addShutOffLogic(bottomNodeMaxTemp(20, true));
-    }
     // voltex 60 gallon
-    else if (presetNum == MODELS_AOSmithPHPT60)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithPHPT60)
     {
         productInformation = {"A. O. Smith", "PHPT-60"};
 
@@ -608,23 +548,13 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47, // Temperature (T_F)
-            {0.467 * 1000,
-             0.00281 * 1000,
-             0.0000072 * 1000},       // Input Power Coefficients (inputPower_coeffs)
-            {4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67, // Temperature (T_F)
-            {0.541 * 1000,
-             0.00147 * 1000,
-             0.0000176 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet(
+                {{47, {0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, {4.86, -0.0222, -0.00001}},
+                 {67,
+                  {0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000},
+                  {6.58, -0.0392, 0.0000407}}})
+                .make();
 
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
@@ -643,7 +573,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -656,7 +586,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = compressor;
         compressor->followedByHeatSource = resistiveElementBottom;
     }
-    else if (presetNum == MODELS_AOSmithPHPT80)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithPHPT80)
     {
         productInformation = {"A. O. Smith", "PHPT-80"};
 
@@ -682,23 +612,13 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47, // Temperature (T_F)
-            {0.467 * 1000,
-             0.00281 * 1000,
-             0.0000072 * 1000},       // Input Power Coefficients (inputPower_coeffs)
-            {4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67, // Temperature (T_F)
-            {0.541 * 1000,
-             0.00147 * 1000,
-             0.0000176 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet(
+                {{47, {0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, {4.86, -0.0222, -0.00001}},
+                 {67,
+                  {0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000},
+                  {6.58, -0.0392, 0.0000407}}})
+                .make();
 
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
@@ -717,7 +637,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -731,9 +651,9 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = compressor;
         compressor->followedByHeatSource = resistiveElementBottom;
     }
-    else if (presetNum == MODELS_GE2012)
+    else if (presetNum == hpwh_presets::MODELS::GE2012_50)
     {
-        productInformation = {"GE", "2012"};
+        productInformation = {"GE", "2012-50"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -756,23 +676,11 @@ void HPWH::initPreset(MODELS presetNum)
         double split = 1.0 / 5.0;
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47, // Temperature (T_F)
-            {0.3 * 1000,
-             0.00159 * 1000,
-             0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
-            {4.7, -0.0210, 0.0}  // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67, // Temperature (T_F)
-            {0.378 * 1000,
-             0.00121 * 1000,
-             0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
-            {4.8, -0.0167, 0.0}  // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet(
+                {{47, {0.3 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, {4.7, -0.0210, 0.0}},
+                 {67, {0.378 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, {4.8, -0.0167, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
@@ -792,7 +700,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(40.0);
         double standbyT = dF_TO_dC(5.2);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
         // compressor->addShutOffLogic(largeDraw(F_TO_C(66)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
@@ -812,7 +720,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->followedByHeatSource = resistiveElementBottom;
     }
     // If a Colmac single pass preset cold weather or not
-    else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
+    else if (hpwh_presets::MODELS::ColmacCxV_5_SP <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::ColmacCxA_30_SP)
     {
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
@@ -833,7 +742,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
-        compressor->performanceMap.reserve(1);
         compressor->hysteresis_dC = 0;
 
         compressor->externalOutletHeight = 0;
@@ -855,7 +763,7 @@ void HPWH::initPreset(MODELS presetNum)
         // Defrost Derate
         compressor->setupDefrostMap();
 
-        if (presetNum == MODELS_ColmacCxV_5_SP)
+        if (presetNum == hpwh_presets::MODELS::ColmacCxV_5_SP)
         {
             compressor->productInformation.model_number = {"CxV_5_SP"};
             setTankSize_adjustUA(200., UNITS_GAL);
@@ -863,33 +771,32 @@ void HPWH::initPreset(MODELS presetNum)
             compressor->minT = F_TO_C(-4.0);
             compressor->maxSetpoint_C = MAXOUTLET_R410A;
 
-            compressor->performanceMap.push_back({
-                100, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(100,
 
-                {4.9621645063,
-                 -0.0096084144,
-                 -0.0095647009,
-                 -0.0115911960,
-                 -0.0000788517,
-                 0.0000886176,
-                 0.0001114142,
-                 0.0001832377,
-                 -0.0000451308,
-                 0.0000411975,
-                 0.0000003535}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {4.9621645063,
+                                                                       -0.0096084144,
+                                                                       -0.0095647009,
+                                                                       -0.0115911960,
+                                                                       -0.0000788517,
+                                                                       0.0000886176,
+                                                                       0.0001114142,
+                                                                       0.0001832377,
+                                                                       -0.0000451308,
+                                                                       0.0000411975,
+                                                                       0.0000003535},
 
-                {3.8189922420,
-                 0.0569412237,
-                 -0.0320101962,
-                 -0.0012859036,
-                 0.0000576439,
-                 0.0001101241,
-                 -0.0000352368,
-                 -0.0002630301,
-                 -0.0000509365,
-                 0.0000369655,
-                 -0.0000000606} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {3.8189922420,
+                                                                       0.0569412237,
+                                                                       -0.0320101962,
+                                                                       -0.0012859036,
+                                                                       0.0000576439,
+                                                                       0.0001101241,
+                                                                       -0.0000352368,
+                                                                       -0.0002630301,
+                                                                       -0.0000509365,
+                                                                       0.0000369655,
+                                                                       -0.0000000606})
+                                                  .make(compressor);
         }
         else
         {
@@ -897,176 +804,172 @@ void HPWH::initPreset(MODELS presetNum)
             compressor->minT = F_TO_C(40.);
             compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-            if (presetNum == MODELS_ColmacCxA_10_SP)
+            if (presetNum == hpwh_presets::MODELS::ColmacCxA_10_SP)
             {
                 compressor->productInformation.model_number = {"CxA_10_SP"};
                 setTankSize_adjustUA(500., UNITS_GAL);
 
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_SP(100,
 
-                    {5.9786974243,
-                     0.0194445115,
-                     -0.0077802278,
-                     0.0053809029,
-                     -0.0000334832,
-                     0.0001864310,
-                     0.0001190540,
-                     0.0000040405,
-                     -0.0002538279,
-                     -0.0000477652,
-                     0.0000014101}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {5.9786974243,
+                                                                           0.0194445115,
+                                                                           -0.0077802278,
+                                                                           0.0053809029,
+                                                                           -0.0000334832,
+                                                                           0.0001864310,
+                                                                           0.0001190540,
+                                                                           0.0000040405,
+                                                                           -0.0002538279,
+                                                                           -0.0000477652,
+                                                                           0.0000014101},
 
-                    {3.6128563086,
-                     0.0527064498,
-                     -0.0278198945,
-                     -0.0070529748,
-                     0.0000934705,
-                     0.0000781711,
-                     -0.0000359215,
-                     -0.0002223206,
-                     0.0000359239,
-                     0.0000727189,
-                     -0.0000005037} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {3.6128563086,
+                                                                           0.0527064498,
+                                                                           -0.0278198945,
+                                                                           -0.0070529748,
+                                                                           0.0000934705,
+                                                                           0.0000781711,
+                                                                           -0.0000359215,
+                                                                           -0.0002223206,
+                                                                           0.0000359239,
+                                                                           0.0000727189,
+                                                                           -0.0000005037})
+                                                      .make(compressor);
             }
-            else if (presetNum == MODELS_ColmacCxA_15_SP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_15_SP)
             {
                 compressor->productInformation.model_number = {"CxA_15_SP"};
                 setTankSize_adjustUA(600., UNITS_GAL);
 
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_SP(100,
 
-                    {15.5869846555,
-                     -0.0044503761,
-                     -0.0577941202,
-                     -0.0286911185,
-                     -0.0000803325,
-                     0.0003399817,
-                     0.0002009576,
-                     0.0002494761,
-                     -0.0000595773,
-                     0.0001401800,
-                     0.0000004312}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {15.5869846555,
+                                                                           -0.0044503761,
+                                                                           -0.0577941202,
+                                                                           -0.0286911185,
+                                                                           -0.0000803325,
+                                                                           0.0003399817,
+                                                                           0.0002009576,
+                                                                           0.0002494761,
+                                                                           -0.0000595773,
+                                                                           0.0001401800,
+                                                                           0.0000004312},
 
-                    {1.6643120405,
-                     0.0515623393,
-                     -0.0110239930,
-                     0.0041514430,
-                     0.0000481544,
-                     0.0000493424,
-                     -0.0000262721,
-                     -0.0002356218,
-                     -0.0000989625,
-                     -0.0000070572,
-                     0.0000004108} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {1.6643120405,
+                                                                           0.0515623393,
+                                                                           -0.0110239930,
+                                                                           0.0041514430,
+                                                                           0.0000481544,
+                                                                           0.0000493424,
+                                                                           -0.0000262721,
+                                                                           -0.0002356218,
+                                                                           -0.0000989625,
+                                                                           -0.0000070572,
+                                                                           0.0000004108})
+                                                      .make(compressor);
             }
-            else if (presetNum == MODELS_ColmacCxA_20_SP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_20_SP)
             {
                 compressor->productInformation.model_number = {"CxA_20_SP"};
                 setTankSize_adjustUA(800., UNITS_GAL);
 
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_SP(100,
 
-                    {23.0746692231,
-                     0.0248584608,
-                     -0.1417927282,
-                     -0.0253733303,
-                     -0.0004882754,
-                     0.0006508079,
-                     0.0002139934,
-                     0.0005552752,
-                     -0.0002026772,
-                     0.0000607338,
-                     0.0000021571}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {23.0746692231,
+                                                                           0.0248584608,
+                                                                           -0.1417927282,
+                                                                           -0.0253733303,
+                                                                           -0.0004882754,
+                                                                           0.0006508079,
+                                                                           0.0002139934,
+                                                                           0.0005552752,
+                                                                           -0.0002026772,
+                                                                           0.0000607338,
+                                                                           0.0000021571},
 
-                    {1.7692660120,
-                     0.0525134783,
-                     -0.0081102040,
-                     -0.0008715405,
-                     0.0001274956,
-                     0.0000369489,
-                     -0.0000293775,
-                     -0.0002778086,
-                     -0.0000095067,
-                     0.0000381186,
-                     -0.0000003135} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {1.7692660120,
+                                                                           0.0525134783,
+                                                                           -0.0081102040,
+                                                                           -0.0008715405,
+                                                                           0.0001274956,
+                                                                           0.0000369489,
+                                                                           -0.0000293775,
+                                                                           -0.0002778086,
+                                                                           -0.0000095067,
+                                                                           0.0000381186,
+                                                                           -0.0000003135})
+                                                      .make(compressor);
             }
-            else if (presetNum == MODELS_ColmacCxA_25_SP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_25_SP)
             {
                 compressor->productInformation.model_number = {"CxA_25_SP"};
                 setTankSize_adjustUA(1000., UNITS_GAL);
 
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_SP(100,
 
-                    {20.4185336541,
-                     -0.0236920615,
-                     -0.0736219119,
-                     -0.0260385082,
-                     -0.0005048074,
-                     0.0004940510,
-                     0.0002632660,
-                     0.0009820050,
-                     -0.0000223587,
-                     0.0000885101,
-                     0.0000005649}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {20.4185336541,
+                                                                           -0.0236920615,
+                                                                           -0.0736219119,
+                                                                           -0.0260385082,
+                                                                           -0.0005048074,
+                                                                           0.0004940510,
+                                                                           0.0002632660,
+                                                                           0.0009820050,
+                                                                           -0.0000223587,
+                                                                           0.0000885101,
+                                                                           0.0000005649},
 
-                    {0.8942843854,
-                     0.0677641611,
-                     -0.0001582927,
-                     0.0048083998,
-                     0.0001196407,
-                     0.0000334921,
-                     -0.0000378740,
-                     -0.0004146401,
-                     -0.0001213363,
-                     -0.0000031856,
-                     0.0000006306} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {0.8942843854,
+                                                                           0.0677641611,
+                                                                           -0.0001582927,
+                                                                           0.0048083998,
+                                                                           0.0001196407,
+                                                                           0.0000334921,
+                                                                           -0.0000378740,
+                                                                           -0.0004146401,
+                                                                           -0.0001213363,
+                                                                           -0.0000031856,
+                                                                           0.0000006306})
+                                                      .make(compressor);
             }
-            else if (presetNum == MODELS_ColmacCxA_30_SP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_30_SP)
             {
                 compressor->productInformation.model_number = {"CxA_30_SP"};
                 setTankSize_adjustUA(1200., UNITS_GAL);
 
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_SP(100,
 
-                    {11.3687485772,
-                     -0.0207292362,
-                     0.0496254077,
-                     -0.0038394967,
-                     -0.0005991041,
-                     0.0001304318,
-                     0.0003099774,
-                     0.0012092717,
-                     -0.0001455509,
-                     -0.0000893889,
-                     0.0000018221}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {11.3687485772,
+                                                                           -0.0207292362,
+                                                                           0.0496254077,
+                                                                           -0.0038394967,
+                                                                           -0.0005991041,
+                                                                           0.0001304318,
+                                                                           0.0003099774,
+                                                                           0.0012092717,
+                                                                           -0.0001455509,
+                                                                           -0.0000893889,
+                                                                           0.0000018221},
 
-                    {4.4170108542,
-                     0.0596384263,
-                     -0.0416104579,
-                     -0.0017199887,
-                     0.0000774664,
-                     0.0001521934,
-                     -0.0000251665,
-                     -0.0003289731,
-                     -0.0000801823,
-                     0.0000325972,
-                     0.0000002705} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {4.4170108542,
+                                                                           0.0596384263,
+                                                                           -0.0416104579,
+                                                                           -0.0017199887,
+                                                                           0.0000774664,
+                                                                           0.0001521934,
+                                                                           -0.0000251665,
+                                                                           -0.0003289731,
+                                                                           -0.0000801823,
+                                                                           0.0000325972,
+                                                                           0.0000002705})
+                                                      .make(compressor);
             }
-        } // End if MODELS_ColmacCxV_5_SP
+        } // End if hpwh_presets::MODELS::ColmacCxV_5_SP
     }
 
     // if colmac multipass
-    else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
+    else if (hpwh_presets::MODELS::ColmacCxV_5_MP <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::ColmacCxA_30_MP)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -1086,7 +989,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
-        compressor->performanceMap.reserve(1);
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3) - 1;
@@ -1107,7 +1009,7 @@ void HPWH::initPreset(MODELS presetNum)
         // Defrost Derate
         compressor->setupDefrostMap();
 
-        if (presetNum == MODELS_ColmacCxV_5_MP)
+        if (presetNum == hpwh_presets::MODELS::ColmacCxV_5_MP)
         {
             compressor->productInformation.model_number = {"CxV_5_MP"};
             setTankSize_adjustUA(200., UNITS_GAL);
@@ -1118,23 +1020,22 @@ void HPWH::initPreset(MODELS presetNum)
             compressor->minT = F_TO_C(-4.0);
             compressor->maxT = F_TO_C(105.);
             compressor->maxSetpoint_C = MAXOUTLET_R410A;
-            compressor->performanceMap.push_back({
-                100, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_MP(100,
 
-                {5.8438525529,
-                 0.0003288231,
-                 -0.0494255840,
-                 -0.0000386642,
-                 0.0004385362,
-                 0.0000647268}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {5.8438525529,
+                                                                       0.0003288231,
+                                                                       -0.0494255840,
+                                                                       -0.0000386642,
+                                                                       0.0004385362,
+                                                                       0.0000647268},
 
-                {0.6679056901,
-                 0.0499777846,
-                 0.0251828292,
-                 0.0000699764,
-                 -0.0001552229,
-                 -0.0002911167} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {0.6679056901,
+                                                                       0.0499777846,
+                                                                       0.0251828292,
+                                                                       0.0000699764,
+                                                                       -0.0001552229,
+                                                                       -0.0002911167})
+                                                  .make();
         }
         else
         {
@@ -1143,128 +1044,123 @@ void HPWH::initPreset(MODELS presetNum)
             compressor->maxT = F_TO_C(105.);
             compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-            if (presetNum == MODELS_ColmacCxA_10_MP)
+            if (presetNum == hpwh_presets::MODELS::ColmacCxA_10_MP)
             {
                 compressor->productInformation.model_number = {"CxA_10_MP"};
                 setTankSize_adjustUA(500., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(18.);
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_MP(100,
 
-                    {8.6918824405,
-                     0.0136666667,
-                     -0.0548348214,
-                     -0.0000208333,
-                     0.0005301339,
-                     -0.0000250000}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {8.6918824405,
+                                                                           0.0136666667,
+                                                                           -0.0548348214,
+                                                                           -0.0000208333,
+                                                                           0.0005301339,
+                                                                           -0.0000250000},
 
-                    {0.6944181117,
-                     0.0445926666,
-                     0.0213188804,
-                     0.0001172913,
-                     -0.0001387694,
-                     -0.0002365885} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {0.6944181117,
+                                                                           0.0445926666,
+                                                                           0.0213188804,
+                                                                           0.0001172913,
+                                                                           -0.0001387694,
+                                                                           -0.0002365885})
+                                                      .make();
             }
-            else if (presetNum == MODELS_ColmacCxA_15_MP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_15_MP)
             {
                 compressor->productInformation.model_number = {"CxA_15_MP"};
                 setTankSize_adjustUA(600., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(26.);
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_MP(100,
 
-                    {12.4908723958,
-                     0.0073988095,
-                     -0.0411417411,
-                     0.0000000000,
-                     0.0005789621,
-                     0.0000696429}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {12.4908723958,
+                                                                           0.0073988095,
+                                                                           -0.0411417411,
+                                                                           0.0000000000,
+                                                                           0.0005789621,
+                                                                           0.0000696429},
 
-                    {1.2846349520,
-                     0.0334658309,
-                     0.0019121906,
-                     0.0002840970,
-                     0.0000497136,
-                     -0.0004401737} // COP Coefficients (COP_coeffs)
-
-                });
+                                                                          {1.2846349520,
+                                                                           0.0334658309,
+                                                                           0.0019121906,
+                                                                           0.0002840970,
+                                                                           0.0000497136,
+                                                                           -0.0004401737})
+                                                      .make();
             }
-            else if (presetNum == MODELS_ColmacCxA_20_MP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_20_MP)
             {
                 compressor->productInformation.model_number = {"CxA_20_MP"};
                 setTankSize_adjustUA(800., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(
                     36.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_MP(100,
 
-                    {14.4893345424,
-                     0.0355357143,
-                     -0.0476593192,
-                     -0.0002916667,
-                     0.0006120954,
-                     0.0003607143}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {14.4893345424,
+                                                                           0.0355357143,
+                                                                           -0.0476593192,
+                                                                           -0.0002916667,
+                                                                           0.0006120954,
+                                                                           0.0003607143},
 
-                    {1.2421582831,
-                     0.0450256569,
-                     0.0051234755,
-                     0.0001271296,
-                     -0.0000299981,
-                     -0.0002910606} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {1.2421582831,
+                                                                           0.0450256569,
+                                                                           0.0051234755,
+                                                                           0.0001271296,
+                                                                           -0.0000299981,
+                                                                           -0.0002910606})
+                                                      .make();
             }
-            else if (presetNum == MODELS_ColmacCxA_25_MP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_25_MP)
             {
                 compressor->productInformation.model_number = {"CxA_25_MP"};
                 setTankSize_adjustUA(1000., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(32.);
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_MP(100,
 
-                    {14.5805808222,
-                     0.0081934524,
-                     -0.0216169085,
-                     -0.0001979167,
-                     0.0007376535,
-                     0.0004955357}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {14.5805808222,
+                                                                           0.0081934524,
+                                                                           -0.0216169085,
+                                                                           -0.0001979167,
+                                                                           0.0007376535,
+                                                                           0.0004955357},
 
-                    {2.0013175767,
-                     0.0576617432,
-                     -0.0130480870,
-                     0.0000856818,
-                     0.0000610760,
-                     -0.0003684106} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {2.0013175767,
+                                                                           0.0576617432,
+                                                                           -0.0130480870,
+                                                                           0.0000856818,
+                                                                           0.0000610760,
+                                                                           -0.0003684106})
+                                                      .make();
             }
-            else if (presetNum == MODELS_ColmacCxA_30_MP)
+            else if (presetNum == hpwh_presets::MODELS::ColmacCxA_30_MP)
             {
                 compressor->productInformation.model_number = {"CxA_30_MP"};
                 setTankSize_adjustUA(1200., UNITS_GAL);
                 compressor->mpFlowRate_LPS = GPM_TO_LPS(41.);
-                compressor->performanceMap.push_back({
-                    100, // Temperature (T_F)
+                compressor->evaluatePerformance = PerformancePoly_CWHS_MP(100,
 
-                    {14.5824911644,
-                     0.0072083333,
-                     -0.0278055246,
-                     -0.0002916667,
-                     0.0008841378,
-                     0.0008125000}, // Input Power Coefficients (inputPower_coeffs)
+                                                                          {14.5824911644,
+                                                                           0.0072083333,
+                                                                           -0.0278055246,
+                                                                           -0.0002916667,
+                                                                           0.0008841378,
+                                                                           0.0008125000},
 
-                    {2.6996807527,
-                     0.0617507969,
-                     -0.0220966420,
-                     0.0000336149,
-                     0.0000890989,
-                     -0.0003682431} // COP Coefficients (COP_coeffs)
-                });
+                                                                          {2.6996807527,
+                                                                           0.0617507969,
+                                                                           -0.0220966420,
+                                                                           0.0000336149,
+                                                                           0.0000890989,
+                                                                           -0.0003682431})
+                                                      .make();
             }
         }
     }
     // If Nyle single pass preset
-    else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
+    else if (hpwh_presets::MODELS::NyleC25A_SP <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::NyleC250A_C_SP)
     {
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
@@ -1283,29 +1179,28 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = true;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = Condenser::EXTRAP_NEAREST;
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
-        compressor->performanceMap.reserve(1);
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = getNumNodes() - 1;
 
         // logic conditions
-        if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
+        if (hpwh_presets::MODELS::NyleC25A_SP <= presetNum &&
+            presetNum <= hpwh_presets::MODELS::NyleC250A_SP)
         {                                   // If not cold weather package
             compressor->minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
         }
         else
         {
             compressor->minT = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
+
+            // Defines the maximum outlet temperature at low air temperature
+            compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
+            compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
         }
         compressor->maxT = F_TO_C(120.0); // Max air temperature
         compressor->hysteresis_dC = 0;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-        // Defines the maximum outlet temperature at the a low air temperature
-        compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
-        compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
@@ -1323,223 +1218,223 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setupDefrostMap();
 
         // Perfmaps for each compressor size
-        if (presetNum == MODELS_NyleC25A_SP)
+        if (presetNum == hpwh_presets::MODELS::NyleC25A_SP)
         {
             compressor->productInformation.model_number = {"C25A_SP"};
             setTankSize_adjustUA(200., UNITS_GAL);
-            compressor->performanceMap.push_back({
-                90, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(90,
 
-                {4.060120364,
-                 -0.020584279,
-                 -0.024201054,
-                 -0.007023945,
-                 0.000017461,
-                 0.000110366,
-                 0.000060338,
-                 0.000120015,
-                 0.000111068,
-                 0.000138907,
-                 -0.000001569}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {4.060120364,
+                                                                       -0.020584279,
+                                                                       -0.024201054,
+                                                                       -0.007023945,
+                                                                       0.000017461,
+                                                                       0.000110366,
+                                                                       0.000060338,
+                                                                       0.000120015,
+                                                                       0.000111068,
+                                                                       0.000138907,
+                                                                       -0.000001569},
 
-                {0.462979529,
-                 0.065656840,
-                 0.001077377,
-                 0.003428059,
-                 0.000243692,
-                 0.000021522,
-                 0.000005143,
-                 -0.000384778,
-                 -0.000404744,
-                 -0.000036277,
-                 0.000001900} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {0.462979529,
+                                                                       0.065656840,
+                                                                       0.001077377,
+                                                                       0.003428059,
+                                                                       0.000243692,
+                                                                       0.000021522,
+                                                                       0.000005143,
+                                                                       -0.000384778,
+                                                                       -0.000404744,
+                                                                       -0.000036277,
+                                                                       0.000001900})
+                                                  .make(compressor);
         }
-        else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC60A_SP ||
+                 presetNum == hpwh_presets::MODELS::NyleC60A_C_SP)
         {
-            if (presetNum == MODELS_NyleC60A_SP)
+            if (presetNum == hpwh_presets::MODELS::NyleC60A_SP)
                 compressor->productInformation.model_number = {"C60A_SP"};
-            else if (presetNum == MODELS_NyleC60A_SP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC60A_C_SP)
                 compressor->productInformation.model_number = {"C60A_C_SP"};
 
             setTankSize_adjustUA(300., UNITS_GAL);
-            compressor->performanceMap.push_back({
-                90, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(90,
 
-                {-0.1180905709,
-                 0.0045354306,
-                 0.0314990479,
-                 -0.0406839757,
-                 0.0002355294,
-                 0.0000818684,
-                 0.0001943834,
-                 -0.0002160871,
-                 0.0003053633,
-                 0.0003612413,
-                 -0.0000035912}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {-0.1180905709,
+                                                                       0.0045354306,
+                                                                       0.0314990479,
+                                                                       -0.0406839757,
+                                                                       0.0002355294,
+                                                                       0.0000818684,
+                                                                       0.0001943834,
+                                                                       -0.0002160871,
+                                                                       0.0003053633,
+                                                                       0.0003612413,
+                                                                       -0.0000035912},
 
-                {6.8205043418,
-                 0.0860385185,
-                 -0.0748330699,
-                 -0.0172447955,
-                 0.0000510842,
-                 0.0002187441,
-                 -0.0000321036,
-                 -0.0003311463,
-                 -0.0002154270,
-                 0.0001307922,
-                 0.0000005568} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {6.8205043418,
+                                                                       0.0860385185,
+                                                                       -0.0748330699,
+                                                                       -0.0172447955,
+                                                                       0.0000510842,
+                                                                       0.0002187441,
+                                                                       -0.0000321036,
+                                                                       -0.0003311463,
+                                                                       -0.0002154270,
+                                                                       0.0001307922,
+                                                                       0.0000005568})
+                                                  .make(compressor);
         }
-        else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC90A_SP ||
+                 presetNum == hpwh_presets::MODELS::NyleC90A_C_SP)
         {
-            if (presetNum == MODELS_NyleC90A_SP)
+            if (presetNum == hpwh_presets::MODELS::NyleC90A_SP)
                 compressor->productInformation.model_number = {"C90A_SP"};
-            else if (presetNum == MODELS_NyleC90A_C_SP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC90A_C_SP)
                 compressor->productInformation.model_number = {"C90A_C_SP"};
 
             setTankSize_adjustUA(400., UNITS_GAL);
-            compressor->performanceMap.push_back({
-                90, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(90,
 
-                {13.27612215047,
-                 -0.01014009337,
-                 -0.13401028549,
-                 -0.02325705976,
-                 -0.00032515646,
-                 0.00040270625,
-                 0.00001988733,
-                 0.00069451670,
-                 0.00069067890,
-                 0.00071091372,
-                 -0.00000854352}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {13.27612215047,
+                                                                       -0.01014009337,
+                                                                       -0.13401028549,
+                                                                       -0.02325705976,
+                                                                       -0.00032515646,
+                                                                       0.00040270625,
+                                                                       0.00001988733,
+                                                                       0.00069451670,
+                                                                       0.00069067890,
+                                                                       0.00071091372,
+                                                                       -0.00000854352},
 
-                {1.49112327987,
-                 0.06616282153,
-                 0.00715307252,
-                 -0.01269458185,
-                 0.00031448571,
-                 0.00001765313,
-                 0.00006002498,
-                 -0.00045661397,
-                 -0.00034003896,
-                 -0.00004327766,
-                 0.00000176015} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {1.49112327987,
+                                                                       0.06616282153,
+                                                                       0.00715307252,
+                                                                       -0.01269458185,
+                                                                       0.00031448571,
+                                                                       0.00001765313,
+                                                                       0.00006002498,
+                                                                       -0.00045661397,
+                                                                       -0.00034003896,
+                                                                       -0.00004327766,
+                                                                       0.00000176015})
+                                                  .make(compressor);
         }
-        else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC125A_SP ||
+                 presetNum == hpwh_presets::MODELS::NyleC125A_C_SP)
         {
-            if (presetNum == MODELS_NyleC125A_SP)
+            if (presetNum == hpwh_presets::MODELS::NyleC125A_SP)
                 compressor->productInformation.model_number = {"C125A_SP"};
-            else if (presetNum == MODELS_NyleC125A_C_SP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC125A_C_SP)
                 compressor->productInformation.model_number = {"C125A_C_SP"};
 
             setTankSize_adjustUA(500., UNITS_GAL);
-            compressor->performanceMap.push_back({
-                90, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(90,
 
-                {-3.558277209,
-                 -0.038590968,
-                 0.136307181,
-                 -0.016945699,
-                 0.000983753,
-                 -5.18201E-05,
-                 0.000476904,
-                 -0.000514211,
-                 -0.000359172,
-                 0.000266509,
-                 -1.58646E-07}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {-3.558277209,
+                                                                       -0.038590968,
+                                                                       0.136307181,
+                                                                       -0.016945699,
+                                                                       0.000983753,
+                                                                       -5.18201E-05,
+                                                                       0.000476904,
+                                                                       -0.000514211,
+                                                                       -0.000359172,
+                                                                       0.000266509,
+                                                                       -1.58646E-07},
 
-                {4.889555031,
-                 0.117102769,
-                 -0.060005795,
-                 -0.011871234,
-                 -1.79926E-05,
-                 0.000207293,
-                 -1.4452E-05,
-                 -0.000492486,
-                 -0.000376814,
-                 7.85911E-05,
-                 1.47884E-06} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {4.889555031,
+                                                                       0.117102769,
+                                                                       -0.060005795,
+                                                                       -0.011871234,
+                                                                       -1.79926E-05,
+                                                                       0.000207293,
+                                                                       -1.4452E-05,
+                                                                       -0.000492486,
+                                                                       -0.000376814,
+                                                                       7.85911E-05,
+                                                                       1.47884E-06})
+                                                  .make(compressor);
         }
-        else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC185A_SP ||
+                 presetNum == hpwh_presets::MODELS::NyleC185A_C_SP)
         {
-            if (presetNum == MODELS_NyleC185A_SP)
+            if (presetNum == hpwh_presets::MODELS::NyleC185A_SP)
                 compressor->productInformation.model_number = {"C185A_SP"};
-            else if (presetNum == MODELS_NyleC185A_C_SP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC185A_C_SP)
                 compressor->productInformation.model_number = {"C185A_C_SP"};
 
             setTankSize_adjustUA(800., UNITS_GAL);
-            compressor->performanceMap.push_back({
-                90, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(90,
 
-                {18.58007733,
-                 -0.215324777,
-                 -0.089782421,
-                 0.01503161,
-                 0.000332503,
-                 0.000274216,
-                 2.70498E-05,
-                 0.001387914,
-                 0.000449199,
-                 0.000829578,
-                 -5.28641E-06}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {18.58007733,
+                                                                       -0.215324777,
+                                                                       -0.089782421,
+                                                                       0.01503161,
+                                                                       0.000332503,
+                                                                       0.000274216,
+                                                                       2.70498E-05,
+                                                                       0.001387914,
+                                                                       0.000449199,
+                                                                       0.000829578,
+                                                                       -5.28641E-06},
 
-                {-0.629432348,
-                 0.181466663,
-                 0.00044047,
-                 0.012104957,
-                 -6.61515E-05,
-                 9.29975E-05,
-                 9.78042E-05,
-                 -0.000872708,
-                 -0.001013945,
-                 -0.00021852,
-                 5.55444E-06} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {-0.629432348,
+                                                                       0.181466663,
+                                                                       0.00044047,
+                                                                       0.012104957,
+                                                                       -6.61515E-05,
+                                                                       9.29975E-05,
+                                                                       9.78042E-05,
+                                                                       -0.000872708,
+                                                                       -0.001013945,
+                                                                       -0.00021852,
+                                                                       5.55444E-06})
+                                                  .make(compressor);
         }
-        else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC250A_SP ||
+                 presetNum == hpwh_presets::MODELS::NyleC250A_C_SP)
         {
-            if (presetNum == MODELS_NyleC250A_SP)
+            if (presetNum == hpwh_presets::MODELS::NyleC250A_SP)
                 compressor->productInformation.model_number = {"C250A_SP"};
-            else if (presetNum == MODELS_NyleC250A_C_SP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC250A_C_SP)
                 compressor->productInformation.model_number = {"C250A_C_SP"};
 
             setTankSize_adjustUA(800., UNITS_GAL);
 
-            compressor->performanceMap.push_back({
-                90, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_SP(90,
 
-                {-13.89057656,
-                 0.025902417,
-                 0.304250541,
-                 0.061695153,
-                 -0.001474249,
-                 -0.001126845,
-                 -0.000220192,
-                 0.001241026,
-                 0.000571009,
-                 -0.000479282,
-                 9.04063E-06}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {-13.89057656,
+                                                                       0.025902417,
+                                                                       0.304250541,
+                                                                       0.061695153,
+                                                                       -0.001474249,
+                                                                       -0.001126845,
+                                                                       -0.000220192,
+                                                                       0.001241026,
+                                                                       0.000571009,
+                                                                       -0.000479282,
+                                                                       9.04063E-06},
 
-                {7.443904067,
-                 0.185978755,
-                 -0.098481635,
-                 -0.002500073,
-                 0.000127658,
-                 0.000444321,
-                 0.000139547,
-                 -0.001000195,
-                 -0.001140199,
-                 -8.77557E-05,
-                 4.87405E-06} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {7.443904067,
+                                                                       0.185978755,
+                                                                       -0.098481635,
+                                                                       -0.002500073,
+                                                                       0.000127658,
+                                                                       0.000444321,
+                                                                       0.000139547,
+                                                                       -0.001000195,
+                                                                       -0.001140199,
+                                                                       -8.77557E-05,
+                                                                       4.87405E-06})
+                                                  .make(compressor);
         }
     }
 
     // If Nyle multipass presets
-    else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
+    else if (hpwh_presets::MODELS::NyleC60A_MP <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::NyleC250A_C_MP)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -1559,14 +1454,14 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
         compressor->isMultipass = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = Condenser::EXTRAP_NEAREST;
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
         // logic conditions//logic conditions
-        if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP)
+        if (hpwh_presets::MODELS::NyleC60A_MP <= presetNum &&
+            presetNum <= hpwh_presets::MODELS::NyleC250A_MP)
         {                                   // If not cold weather package
             compressor->minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
         }
@@ -1592,24 +1487,29 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setupDefrostMap();
 
         // Performance grid
-        compressor->perfGrid.reserve(2);
-        compressor->perfGridValues.reserve(2);
-
         // Nyle MP models are all on the same grid axes
-        compressor->perfGrid.push_back({40., 60., 80., 90.});              // Grid Axis 1 Tair (F)
-        compressor->perfGrid.push_back({C_TO_F(setpoint_C)});              // Grid Axis 2 Tout (F)
-        compressor->perfGrid.push_back({40., 60., 80., 100., 130., 150.}); // Grid Axis 3 Tin (F)
+        std::vector<std::vector<double>> perfGrid(
+            {{40., 60., 80., 90.},                // Grid Axis 1 Tair (F)
+             {C_TO_F(setpoint_C)},                // Grid Axis 2 Tout (F)
+             {40., 60., 80., 100., 130., 150.}}); // Grid Axis 3 Tin (F)
 
-        if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
+        for (auto& axis : perfGrid)
+            for (auto& val : axis)
+                val = F_TO_C(val);
+
+        std::vector<std::vector<double>> perfGridValues = {};
+
+        if (presetNum == hpwh_presets::MODELS::NyleC60A_MP ||
+            presetNum == hpwh_presets::MODELS::NyleC60A_C_MP)
         {
-            if (presetNum == MODELS_NyleC60A_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC60A_MP)
                 compressor->productInformation.model_number = {"NyleC60A_MP"};
-            else if (presetNum == MODELS_NyleC60A_C_MP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC60A_C_MP)
                 compressor->productInformation.model_number = {"NyleC60A_C_MP"};
 
             setTankSize_adjustUA(360., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(13.);
-            if (presetNum == MODELS_NyleC60A_C_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC60A_C_MP)
             {
                 compressor->resDefrost = {
                     4.5, // inputPwr_kW;
@@ -1618,26 +1518,27 @@ void HPWH::initPreset(MODELS presetNum)
                 };
             }
             // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back({3.64, 4.11, 4.86, 5.97,  8.68, 9.95, 3.72, 4.27,
-                                                  4.99, 6.03, 8.55, 10.02, 3.98, 4.53, 5.24, 6.24,
-                                                  8.54, 9.55, 4.45, 4.68,  5.37, 6.34, 8.59, 9.55});
+            perfGridValues.push_back({3.64, 4.11, 4.86, 5.97,  8.68, 9.95, 3.72, 4.27,
+                                      4.99, 6.03, 8.55, 10.02, 3.98, 4.53, 5.24, 6.24,
+                                      8.54, 9.55, 4.45, 4.68,  5.37, 6.34, 8.59, 9.55});
             // Grid values in long format, table 2, COP
-            compressor->perfGridValues.push_back(
+            perfGridValues.push_back(
                 {3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387,
                  4.438172043, 3.772833724, 3.132264529, 2.505804312, 1.678362573, 1.386227545,
                  5.467336683, 4.708609272, 3.921755725, 3.169871795, 2.165105386, 1.860732984,
                  5.512359551, 5.153846154, 4.290502793, 3.417981073, 2.272409779, 1.927748691});
         }
-        else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC90A_MP ||
+                 presetNum == hpwh_presets::MODELS::NyleC90A_C_MP)
         {
-            if (presetNum == MODELS_NyleC90A_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC90A_MP)
                 compressor->productInformation.model_number = {"NyleC90A_MP"};
-            else if (presetNum == MODELS_NyleC90A_C_MP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC90A_C_MP)
                 compressor->productInformation.model_number = {"NyleC90A_C_MP"};
 
             setTankSize_adjustUA(480., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(20.);
-            if (presetNum == MODELS_NyleC90A_C_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC90A_C_MP)
             {
                 compressor->resDefrost = {
                     5.4, // inputPwr_kW;
@@ -1646,26 +1547,27 @@ void HPWH::initPreset(MODELS presetNum)
                 };
             }
             // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back(
-                {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
-                 5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35});
+            perfGridValues.push_back({4.41,  6.04,  7.24,  9.14,  12.23, 14.73, 4.78,  6.61,
+                                      7.74,  9.40,  12.47, 14.75, 5.51,  6.66,  8.44,  9.95,
+                                      13.06, 15.35, 6.78,  7.79,  8.81,  10.01, 11.91, 13.35});
             // Grid values in long format, table 2, COP
-            compressor->perfGridValues.push_back(
+            perfGridValues.push_back(
                 {4.79138322,  3.473509934, 2.801104972, 2.177242888, 1.569910057, 1.272233537,
                  6.071129707, 4.264750378, 3.536175711, 2.827659574, 2.036086608, 1.666440678,
                  7.150635209, 5.659159159, 4.305687204, 3.493467337, 2.487748851, 2.018241042,
                  6.750737463, 5.604621309, 4.734392736, 3.94005994,  3.04534005,  2.558801498});
         }
-        else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC125A_MP ||
+                 presetNum == hpwh_presets::MODELS::NyleC125A_C_MP)
         {
-            if (presetNum == MODELS_NyleC125A_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC125A_MP)
                 compressor->productInformation.model_number = {"NyleC125A_MP"};
-            else if (presetNum == MODELS_NyleC125A_C_MP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC125A_C_MP)
                 compressor->productInformation.model_number = {"NyleC125A_C_MP"};
 
             setTankSize_adjustUA(600., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(28.);
-            if (presetNum == MODELS_NyleC125A_C_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC125A_C_MP)
             {
                 compressor->resDefrost = {
                     9.0, // inputPwr_kW;
@@ -1674,26 +1576,27 @@ void HPWH::initPreset(MODELS presetNum)
                 };
             }
             // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back(
-                {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
-                 7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4});
+            perfGridValues.push_back({6.4,   7.72,  9.65,  12.54, 20.54, 24.69, 6.89,  8.28,
+                                      10.13, 12.85, 19.75, 24.39, 7.69,  9.07,  10.87, 13.44,
+                                      19.68, 22.35, 8.58,  9.5,   11.27, 13.69, 19.72, 22.4});
             // Grid values in long format, table 2, COP
-            compressor->perfGridValues.push_back(
+            perfGridValues.push_back(
                 {4.2390625,   3.465025907, 2.718134715, 2.060606061, 1.247809153, 1.016605913,
                  5.374455733, 4.352657005, 3.453109576, 2.645136187, 1.66278481,  1.307093071,
                  6.503250975, 5.276736494, 4.229070837, 3.27827381,  2.113821138, 1.770469799,
                  6.657342657, 5.749473684, 4.612244898, 3.542731921, 2.221095335, 1.816964286});
         }
-        else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC185A_MP ||
+                 presetNum == hpwh_presets::MODELS::NyleC185A_C_MP)
         {
-            if (presetNum == MODELS_NyleC185A_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC185A_MP)
                 compressor->productInformation.model_number = {"NyleC185A_MP"};
-            else if (presetNum == MODELS_NyleC185A_C_MP)
+            else if (presetNum == hpwh_presets::MODELS::NyleC185A_C_MP)
                 compressor->productInformation.model_number = {"NyleC185A_C_MP"};
 
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(40.);
-            if (presetNum == MODELS_NyleC185A_C_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC185A_C_MP)
             {
                 compressor->resDefrost = {
                     7.2, // inputPwr_kW;
@@ -1702,26 +1605,27 @@ void HPWH::initPreset(MODELS presetNum)
                 };
             }
             // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back(
-                {7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
-                 7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62});
+            perfGridValues.push_back({7.57,  11.66, 14.05, 18.3,  25.04, 30.48, 6.99,  10.46,
+                                      14.28, 18.19, 26.24, 32.32, 7.87,  12.04, 15.02, 18.81,
+                                      25.99, 31.26, 8.15,  12.46, 15.17, 18.95, 26.23, 31.62});
             // Grid values in long format, table 2, COP
-            compressor->perfGridValues.push_back(
+            perfGridValues.push_back(
                 {5.531043593, 3.556603774, 2.918149466, 2.214754098, 1.590255591, 1.291010499,
                  8.010014306, 5.258126195, 3.778711485, 2.916437603, 1.964176829, 1.56404703,
                  9.65819568,  6.200166113, 4.792276964, 3.705475811, 2.561369758, 2.05950096,
                  10.26993865, 6.350722311, 5.04218853,  3.841688654, 2.574151735, 2.025616698});
         }
-        else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
+        else if (presetNum == hpwh_presets::MODELS::NyleC250A_MP ||
+                 presetNum == hpwh_presets::MODELS::NyleC250A_C_MP)
         {
-            if (presetNum == MODELS_NyleC250A_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC250A_MP)
                 compressor->productInformation.model_number = {"NyleC250A_MP"};
-            if (presetNum == MODELS_NyleC250A_C_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC250A_C_MP)
                 compressor->productInformation.model_number = {"NyleC250A_C_MP"};
 
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(50.);
-            if (presetNum == MODELS_NyleC250A_C_MP)
+            if (presetNum == hpwh_presets::MODELS::NyleC250A_C_MP)
             {
                 compressor->resDefrost = {
                     18.0, // inputPwr_kW;
@@ -1730,30 +1634,29 @@ void HPWH::initPreset(MODELS presetNum)
                 };
             }
             // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back({10.89, 12.23, 13.55, 14.58, 15.74, 16.72,
-                                                  11.46, 13.76, 15.97, 17.79, 20.56, 22.50,
-                                                  10.36, 14.66, 18.07, 21.23, 25.81, 29.01,
-                                                  8.67,  15.05, 18.76, 21.87, 26.63, 30.02});
+            perfGridValues.push_back({10.89, 12.23, 13.55, 14.58, 15.74, 16.72, 11.46, 13.76,
+                                      15.97, 17.79, 20.56, 22.50, 10.36, 14.66, 18.07, 21.23,
+                                      25.81, 29.01, 8.67,  15.05, 18.76, 21.87, 26.63, 30.02});
 
             // Grid values in long format, table 2, COP
-            compressor->perfGridValues.push_back(
-                {5.81818181, 4.50040883, 3.69667896, 3.12414266, 2.38500635, 1.93540669,
-                 7.24520069, 5.50145348, 4.39323732, 3.67734682, 2.73249027, 2.23911111,
-                 10.6196911, 7.05320600, 5.41228555, 4.28638718, 3.04804339, 2.46053085,
-                 14.7831603, 7.77903268, 5.71801705, 4.40237768, 2.92489673, 2.21419054});
+            perfGridValues.push_back({5.81818181, 4.50040883, 3.69667896, 3.12414266, 2.38500635,
+                                      1.93540669, 7.24520069, 5.50145348, 4.39323732, 3.67734682,
+                                      2.73249027, 2.23911111, 10.6196911, 7.05320600, 5.41228555,
+                                      4.28638718, 3.04804339, 2.46053085, 14.7831603, 7.77903268,
+                                      5.71801705, 4.40237768, 2.92489673, 2.21419054});
         }
 
-        // Set up regular grid interpolator.
-        compressor->perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-            Btwxt::RegularGridInterpolator(compressor->perfGrid,
-                                           compressor->perfGridValues,
-                                           "RegularGridInterpolator",
-                                           get_courier()));
-        compressor->useBtwxtGrid = true;
+        for (auto& val : perfGridValues[0])
+            val = KW_TO_W(val);
+
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
+
+        useCOP_inBtwxt = true;
+        compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
     // if rheem multipass
-    else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum &&
-             presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
+    else if (hpwh_presets::MODELS::RheemHPHD60 <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::RheemHPHD135)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -1773,7 +1676,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
-        compressor->performanceMap.reserve(1);
+        ;
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
@@ -1798,65 +1701,55 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = F_TO_C(110.);
         compressor->maxSetpoint_C = MAXOUTLET_R134A; // data says 150...
 
-        if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
-            presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
+        if (presetNum == hpwh_presets::MODELS::RheemHPHD60)
         {
-            if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP)
-                compressor->productInformation.model_number = {"HPHD60HNU_201_MP"};
-            else if (presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
-                compressor->productInformation.model_number = {"HPHD60VNU_201_MP"};
+            compressor->productInformation.model_number = {"HPHD60VNU_201_MP"};
 
             setTankSize_adjustUA(250., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(17.4);
-            compressor->performanceMap.push_back({
-                110, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_MP(110,
 
-                {1.8558438453,
-                 0.0120796155,
-                 -0.0135443327,
-                 0.0000059621,
-                 0.0003010506,
-                 -0.0000463525}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {1.8558438453,
+                                                                       0.0120796155,
+                                                                       -0.0135443327,
+                                                                       0.0000059621,
+                                                                       0.0003010506,
+                                                                       -0.0000463525},
 
-                {3.6840046360,
-                 0.0995685071,
-                 -0.0398107723,
-                 -0.0001903160,
-                 0.0000980361,
-                 -0.0003469814} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {3.6840046360,
+                                                                       0.0995685071,
+                                                                       -0.0398107723,
+                                                                       -0.0001903160,
+                                                                       0.0000980361,
+                                                                       -0.0003469814})
+                                                  .make();
         }
-        else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
-                 presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
+        else if (presetNum == hpwh_presets::MODELS::RheemHPHD135)
         {
-            if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP)
-                compressor->productInformation.model_number = {"HPHD135HNU_483_MP"};
-            else if (presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
-                compressor->productInformation.model_number = {"HPHD135VNU_483_MP"};
+            compressor->productInformation.model_number = {"HPHD135VNU_483_MP"};
 
             setTankSize_adjustUA(500., UNITS_GAL);
             compressor->mpFlowRate_LPS = GPM_TO_LPS(34.87);
-            compressor->performanceMap.push_back({
-                110, // Temperature (T_F)
+            compressor->evaluatePerformance = PerformancePoly_CWHS_MP(110,
 
-                {5.1838201136,
-                 0.0247312962,
-                 -0.0120766440,
-                 0.0000493862,
-                 0.0005422089,
-                 -0.0001385078}, // Input Power Coefficients (inputPower_coeffs)
+                                                                      {5.1838201136,
+                                                                       0.0247312962,
+                                                                       -0.0120766440,
+                                                                       0.0000493862,
+                                                                       0.0005422089,
+                                                                       -0.0001385078},
 
-                {5.0207181209,
-                 0.0442525790,
-                 -0.0418284882,
-                 0.0000793531,
-                 0.0001132421,
-                 -0.0002491563} // COP Coefficients (COP_coeffs)
-            });
+                                                                      {5.0207181209,
+                                                                       0.0442525790,
+                                                                       -0.0418284882,
+                                                                       0.0000793531,
+                                                                       0.0001132421,
+                                                                       -0.0002491563})
+                                                  .make();
         }
     }
 
-    else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    else if (presetNum == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP)
     {
         setNumNodes(96);
         setpoint_C = 65;
@@ -1870,7 +1763,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         heatSources.reserve(1);
         auto compressor = addCondenser("compressor");
-        compressor->productInformation = {"Mitsubishi", "QAHV_N136TAU_HPB_SP"};
+        compressor->productInformation = {"Mitsubishi", "Mitsubishi_QAHV_N136TAU_HPB_SP"};
 
         compressor->isOn = false;
         compressor->isVIP = true;
@@ -1899,17 +1792,21 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->depressesTemperature = false;
 
         // Performance grid: externalT_F, Tout_F, condenserTemp_F
-        compressor->perfGrid.reserve(2); // Should be 3
-        compressor->perfGridValues.reserve(2);
-        compressor->perfGrid.push_back(
-            {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
-             28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
-             71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}); // Grid Axis 1 Tair (F)
-        compressor->perfGrid.push_back({140., 158., 176.});                 // Grid Axis 2 Tout (F)
-        compressor->perfGrid.push_back({41, 48.2, 62.6, 75.2, 84.2});       // Grid Axis 3 Tin (F)
+        std::vector<std::vector<double>> perfGrid(
+            {{-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
+              28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
+              71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
+             {140., 158., 176.},                                            // Grid Axis 2 Tout (F)
+             {41, 48.2, 62.6, 75.2, 84.2}});                                // Grid Axis 3 Tin (F)
+
+        for (auto& axis : perfGrid)
+            for (auto& val : axis)
+                val = F_TO_C(val);
+
+        std::vector<std::vector<double>> perfGridValues = {};
 
         // Grid values in long format, table 1, input power (Btu/hr)
-        compressor->perfGridValues.push_back(
+        perfGridValues.push_back(
             {56518.565328,     57130.739544,     57094.73612,      57166.756616,
              57238.777112,     56518.565328,     57130.739544,     57094.73612,
              57166.756616,     57238.777112,     58061.348896,     58360.24692,
@@ -2040,7 +1937,7 @@ void HPWH::initPreset(MODELS presetNum)
              41825.090996,     43359.446924});
 
         // Grid values in long format, table 2, COP
-        compressor->perfGridValues.push_back(
+        perfGridValues.push_back(
             {1.177126, 1.1393,   1.091664, 1.033858, 0.981755, 1.177126, 1.1393,   1.091664,
              1.033858, 0.981755, 1.134534, 1.106615, 1.04928,  0.989101, 0.946182, 1.228935,
              1.190326, 1.136507, 1.075244, 1.023802, 1.228935, 1.190326, 1.136507, 1.075244,
@@ -2106,45 +2003,26 @@ void HPWH::initPreset(MODELS presetNum)
              4.520572, 4.213452, 3.993147, 3.713376, 4.522957, 4.520572, 4.213452, 3.993147,
              3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959});
 
-        // Set up regular grid interpolator.
-        Btwxt::GridAxis g0(compressor->perfGrid[0],
-                           Btwxt::InterpolationMethod::linear,
-                           Btwxt::ExtrapolationMethod::constant,
-                           {-DBL_MAX, DBL_MAX},
-                           "TAir",
-                           get_courier());
-        Btwxt::GridAxis g1(compressor->perfGrid[1],
-                           Btwxt::InterpolationMethod::linear,
-                           Btwxt::ExtrapolationMethod::constant,
-                           {-DBL_MAX, DBL_MAX},
-                           "TOut",
-                           get_courier());
-        Btwxt::GridAxis g2(compressor->perfGrid[2],
-                           Btwxt::InterpolationMethod::linear,
-                           Btwxt::ExtrapolationMethod::linear,
-                           {-DBL_MAX, DBL_MAX},
-                           "Tin",
-                           get_courier());
+        for (auto& val : perfGridValues[0])
+            val = BTUperH_TO_W(val);
 
-        std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
 
-        compressor->perfRGI =
-            std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
-                gx, compressor->perfGridValues, "RegularGridInterpolator", get_courier()));
-
-        compressor->useBtwxtGrid = true;
+        useCOP_inBtwxt = true;
+        compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
 
         compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
     }
 
-    else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
-             presetNum == MODELS_SANCO2_119)
+    else if (presetNum == hpwh_presets::MODELS::Sanco83 ||
+             presetNum == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP ||
+             presetNum == hpwh_presets::MODELS::Sanco119)
     {
         setNumNodes(96);
         setpoint_C = 65;
         setpointFixed = true;
 
-        if (presetNum == MODELS_SANCO2_119)
+        if (presetNum == hpwh_presets::MODELS::Sanco119)
         {
             tank->volume_L = GAL_TO_L(119);
             tank->UA_kJperHrC = 9;
@@ -2153,7 +2031,7 @@ void HPWH::initPreset(MODELS presetNum)
         {
             tank->volume_L = 315;
             tank->UA_kJperHrC = 7;
-            if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+            if (presetNum == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP)
             {
                 tank->volumeFixed = false;
             }
@@ -2166,11 +2044,11 @@ void HPWH::initPreset(MODELS presetNum)
         auto compressor = addCondenser("compressor");
 
         compressor->productInformation.manufacturer = {"SANCO2"};
-        if (presetNum == MODELS_SANCO2_83)
+        if (presetNum == hpwh_presets::MODELS::Sanco83)
             compressor->productInformation.model_number = {"83"};
-        else if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+        else if (presetNum == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP)
             compressor->productInformation.model_number = {"GS3_45HPA_US_SP"};
-        else if (presetNum == MODELS_SANCO2_119)
+        else if (presetNum == hpwh_presets::MODELS::Sanco119)
             compressor->productInformation.model_number = {"119"};
 
         compressor->isOn = false;
@@ -2180,37 +2058,13 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = getNumNodes() - 1;
 
-        compressor->performanceMap.reserve(5);
-
-        compressor->performanceMap.push_back({
-            17,                // Temperature (T_F)
-            {1650, 5.5, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            35,                // Temperature (T_F)
-            {1100, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            50,                 // Temperature (T_F)
-            {880, 3.1, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,               // Temperature (T_F)
-            {740, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                // Temperature (T_F)
-            {790, 2, 0.0},     // Input Power Coefficients (inputPower_coeffs)
-            {7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{17, {1650, 5.5, 0.0}, {3.2, -0.015, 0.0}},
+                                {35, {1100, 4.0, 0.0}, {3.7, -0.015, 0.0}},
+                                {50, {880, 3.1, 0.0}, {5.25, -0.025, 0.0}},
+                                {67, {740, 4.0, 0.0}, {6.2, -0.03, 0.0}},
+                                {95, {790, 2, 0.0}, {7.15, -0.04, 0.0}}})
+                .make();
 
         compressor->hysteresis_dC = 4;
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
@@ -2221,7 +2075,8 @@ void HPWH::initPreset(MODELS presetNum)
         nodeWeights.emplace_back(8);
         compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "eighth node absolute", nodeWeights, F_TO_C(113), this, true));
-        if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
+        if (presetNum == hpwh_presets::MODELS::Sanco83 ||
+            presetNum == hpwh_presets::MODELS::Sanco119)
         {
             compressor->addTurnOnLogic(standby(dF_TO_dC(8.2639)));
             // Adds a bonus standby logic so the external heater does not cycle, recommended for any
@@ -2248,7 +2103,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                                             true));
         compressor->depressesTemperature = false; // no temp depression
     }
-    else if (presetNum == MODELS_SANCO2_43)
+    else if (presetNum == hpwh_presets::MODELS::Sanco43)
     {
         setNumNodes(96);
         setpoint_C = 65;
@@ -2274,37 +2129,13 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
-        compressor->performanceMap.reserve(5);
-
-        compressor->performanceMap.push_back({
-            17,                // Temperature (T_F)
-            {1650, 5.5, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            35,                // Temperature (T_F)
-            {1100, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            50,                 // Temperature (T_F)
-            {880, 3.1, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,               // Temperature (T_F)
-            {740, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                // Temperature (T_F)
-            {790, 2, 0.0},     // Input Power Coefficients (inputPower_coeffs)
-            {7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{17, {1650, 5.5, 0.0}, {3.2, -0.015, 0.0}},
+                                {35, {1100, 4.0, 0.0}, {3.7, -0.015, 0.0}},
+                                {50, {880, 3.1, 0.0}, {5.25, -0.025, 0.0}},
+                                {67, {740, 4.0, 0.0}, {6.2, -0.03, 0.0}},
+                                {95, {790, 2, 0.0}, {7.15, -0.04, 0.0}}})
+                .make();
 
         compressor->hysteresis_dC = 4;
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
@@ -2337,23 +2168,24 @@ void HPWH::initPreset(MODELS presetNum)
                                                     true));
         compressor->depressesTemperature = false; // no temp depression
     }
-    else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 ||
-             presetNum == MODELS_RheemHBDR4550)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithHPTU50 ||
+             presetNum == hpwh_presets::MODELS::RheemHBDR2250 ||
+             presetNum == hpwh_presets::MODELS::RheemHBDR4550)
     {
-        if (presetNum == MODELS_AOSmithHPTU50)
+        if (presetNum == hpwh_presets::MODELS::AOSmithHPTU50)
         {
             description = {"50 Gallon HPTU-50N Voltex Residential Hybrid Electric Heat "
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-50(?:N|DR|CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:69|86|87)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(66.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 66.;
             rating10CFR430.recovery_efficiency = 4.07;
             rating10CFR430.uniform_energy_factor = 3.45;
         }
-        if (presetNum == MODELS_RheemHBDR2250)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2250)
             productInformation = {"Rheem", "HBDR2250"};
-        if (presetNum == MODELS_RheemHBDR4550)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR4550)
             productInformation = {"Rheem", "HBDR4550"};
 
         setNumNodes(24);
@@ -2377,26 +2209,11 @@ void HPWH::initPreset(MODELS presetNum)
         double split = 1.0 / 5.0;
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
-        // performance map
-        compressor->performanceMap.reserve(3);
-
-        compressor->performanceMap.push_back({
-            50,                 // Temperature (T_F)
-            {170, 2.02, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                 // Temperature (T_F)
-            {144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                 // Temperature (T_F)
-            {94.1, 3.15, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {170, 2.02, 0.0}, {5.93, -0.027, 0.0}},
+                                {70, {144.5, 2.42, 0.0}, {7.67, -0.037, 0.0}},
+                                {95, {94.1, 3.15, 0.0}, {11.1, -0.056, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
@@ -2405,7 +2222,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        if (presetNum == MODELS_RheemHBDR2250)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2250)
         {
             resistiveElementTop->setup(8, 2250);
         }
@@ -2416,7 +2233,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        if (presetNum == MODELS_RheemHBDR2250)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2250)
         {
             resistiveElementBottom->setup(0, 2250);
         }
@@ -2429,7 +2246,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2450,27 +2267,28 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (presetNum == MODELS_AOSmithHPTU66 || presetNum == MODELS_RheemHBDR2265 ||
-             presetNum == MODELS_RheemHBDR4565)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithHPTU66 ||
+             presetNum == hpwh_presets::MODELS::RheemHBDR2265 ||
+             presetNum == hpwh_presets::MODELS::RheemHBDR4565)
     {
-        if (presetNum == MODELS_AOSmithHPTU66)
+        if (presetNum == hpwh_presets::MODELS::AOSmithHPTU66)
         {
             description = {"66 Gallon HPTU-60N Voltex Residential Hybrid Electric Heat "
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-66(?:N:DR:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:70|86|98)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 66.;
+            rating10CFR430.first_hour_rating = 79.;
             rating10CFR430.recovery_efficiency = 2.65;
             rating10CFR430.uniform_energy_factor = 3.45;
             tank->volume_L = 244.6;
         }
-        else if (presetNum == MODELS_RheemHBDR2265)
+        else if (presetNum == hpwh_presets::MODELS::RheemHBDR2265)
         {
             productInformation = {"Rheem", "HBDR2265"};
             tank->volume_L = 221.4;
         }
-        else if (presetNum == MODELS_RheemHBDR4565)
+        else if (presetNum == hpwh_presets::MODELS::RheemHBDR4565)
         {
             productInformation = {"Rheem", "HBDR4565"};
             tank->volume_L = 221.4;
@@ -2496,26 +2314,11 @@ void HPWH::initPreset(MODELS presetNum)
         // double split = 1.0 / 4.0;
         compressor->setCondensity({1., 0., 0.});
 
-        // performance map
-        compressor->performanceMap.reserve(3);
-
-        compressor->performanceMap.push_back({
-            50,                 // Temperature (T_F)
-            {170, 2.02, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                 // Temperature (T_F)
-            {144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                 // Temperature (T_F)
-            {94.1, 3.15, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {170, 2.02, 0.0}, {5.93, -0.027, 0.0}},
+                                {70, {144.5, 2.42, 0.0}, {7.67, -0.037, 0.0}},
+                                {95, {94.1, 3.15, 0.0}, {11.1, -0.056, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
@@ -2524,7 +2327,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        if (presetNum == MODELS_RheemHBDR2265)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2265)
         {
             resistiveElementTop->setup(8, 2250);
         }
@@ -2535,7 +2338,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        if (presetNum == MODELS_RheemHBDR2265)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2265)
         {
             resistiveElementBottom->setup(0, 2250);
         }
@@ -2548,7 +2351,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2569,23 +2372,24 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 ||
-             presetNum == MODELS_RheemHBDR4580)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithHPTU80 ||
+             presetNum == hpwh_presets::MODELS::RheemHBDR2280 ||
+             presetNum == hpwh_presets::MODELS::RheemHBDR4580)
     {
-        if (presetNum == MODELS_AOSmithHPTU80)
+        if (presetNum == hpwh_presets::MODELS::AOSmithHPTU80)
         { // note: HPTU-80DR initialized separately (see below)
             description = {"80 Gallon HPTU-80N Voltex Residential Hybrid Electric Heat "
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 86.;
             rating10CFR430.recovery_efficiency = 2.33;
             rating10CFR430.uniform_energy_factor = 3.45;
         }
-        if (presetNum == MODELS_RheemHBDR2280)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2280)
             productInformation = {"Rheem", "HBDR2280"};
-        if (presetNum == MODELS_RheemHBDR4580)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR4580)
             productInformation = {"Rheem", "HBDR4580"};
 
         setNumNodes(24);
@@ -2611,32 +2415,18 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0., 0.});
 
-        compressor->performanceMap.reserve(3);
-
-        compressor->performanceMap.push_back({
-            50,                 // Temperature (T_F)
-            {170, 2.02, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                 // Temperature (T_F)
-            {144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                 // Temperature (T_F)
-            {94.1, 3.15, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {170, 2.02, 0.0}, {5.93, -0.027, 0.0}},
+                                {70, {144.5, 2.42, 0.0}, {7.67, -0.037, 0.0}},
+                                {95, {94.1, 3.15, 0.0}, {11.1, -0.056, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.0);
         compressor->hysteresis_dC = dF_TO_dC(1);
 
         // top resistor values
-        if (presetNum == MODELS_RheemHBDR2280)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2280)
         {
             resistiveElementTop->setup(8, 2250);
         }
@@ -2647,7 +2437,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        if (presetNum == MODELS_RheemHBDR2280)
+        if (presetNum == hpwh_presets::MODELS::RheemHBDR2280)
         {
             resistiveElementBottom->setup(0, 2250);
         }
@@ -2660,7 +2450,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2682,12 +2472,12 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (presetNum == MODELS_AOSmithHPTU80_DR)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithHPTU80_DR)
     {
         productInformation = {"A. O. Smith", "HPTU-80DR 1.."};
         rating10CFR430.certified_reference_number = {"206428809"};
-        rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-        rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+        rating10CFR430.nominal_tank_volume = 80.;
+        rating10CFR430.first_hour_rating = 86.;
         rating10CFR430.recovery_efficiency = 2.33;
         rating10CFR430.uniform_energy_factor = 3.45;
 
@@ -2714,19 +2504,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47,                        // Temperature (T_F)
-            {142.6, 2.152, 0.0},       // Input Power Coefficients (inputPower_coeffs)
-            {6.989258, -0.038320, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                   // Temperature (T_F)
-            {120.14, 2.513, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {8.188, -0.0432, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{47, {142.6, 2.152, 0.0}, {6.989258, -0.038320, 0.0}},
+                                {67, {120.14, 2.513, 0.0}, {8.188, -0.0432, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
@@ -2744,7 +2525,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(34.1636);
         double standbyT = dF_TO_dC(7.1528);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80.108)));
 
@@ -2759,7 +2540,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_AOSmithCAHP120)
+    else if (presetNum == hpwh_presets::MODELS::AOSmithCAHP120)
     {
         description = {"120 Gallon Hybrid Light Commercial Water Heater"};
         productInformation = {"A. O. Smith", "CAHP-120"};
@@ -2785,26 +2566,12 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
         // From CAHP 120 COP Tests
-        compressor->performanceMap.reserve(3);
-
-        // Tuned on the multiple K167 tests
-        compressor->performanceMap.push_back({
-            50.,                              // Temperature (T_F)
-            {2010.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
-            {5.91, -0.026299, 0.0}            // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67.5,                             // Temperature (T_F)
-            {2171.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
-            {7.26272, -0.034135, 0.0}         // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95.,                              // Temperature (T_F)
-            {2276.0625, -7.106608, 0.119911}, // Input Power Coefficients (inputPower_coeffs)
-            {8.821262, -0.042059, 0.0}        // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet(
+                {{50., {2010.49966, -4.20966, 0.085395}, {5.91, -0.026299, 0.0}},
+                 {67.5, {2171.012, -6.936571, 0.1094962}, {7.26272, -0.034135, 0.0}},
+                 {95., {2276.0625, -7.106608, 0.119911}, {8.821262, -0.042059, 0.0}}})
+                .make();
 
         compressor->minT =
             F_TO_C(47.0); // Product documentation says 45F doesn't look like it in CMP-T test//
@@ -2828,7 +2595,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(5.25);
         double standbyT = dF_TO_dC(5.); // Given CMP_T test
         compressor->addTurnOnLogic(secondSixth(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         double resistanceStart = 12.;
         resistiveElementTop->addTurnOnLogic(topThird(resistanceStart));
@@ -2848,53 +2615,54 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->companionHeatSource = resistiveElementBottom;
         resistiveElementBottom->companionHeatSource = compressor;
     }
-    else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+    else if (hpwh_presets::MODELS::AOSmithHPTS40 <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::AOSmithHPTS80)
     {
         productInformation.manufacturer = {"A. O. Smith"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AOSmithHPTS40)
+        if (presetNum == hpwh_presets::MODELS::AOSmithHPTS40)
         { // discontinued?
             productInformation.model_number = {"HPTS-40 2.."};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
-        else if (presetNum == MODELS_AOSmithHPTS50)
+        else if (presetNum == hpwh_presets::MODELS::AOSmithHPTS50)
         {
             description = {
                 "ProLine XE® Voltex® AL 50-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-50 2.."};
             rating10CFR430.certified_reference_number = {"208531033"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 65.;
             rating10CFR430.recovery_efficiency = 4.52;
             rating10CFR430.uniform_energy_factor = 3.80;
             tank->volume_L = GAL_TO_L(45.6);
             tank->UA_kJperHrC = 6.403;
         }
-        else if (presetNum == MODELS_AOSmithHPTS66)
+        else if (presetNum == hpwh_presets::MODELS::AOSmithHPTS66)
         {
             description = {
                 "ProLine XE® Voltex® AL 66-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-66 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(82.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 66.;
+            rating10CFR430.first_hour_rating = 82.;
             rating10CFR430.recovery_efficiency = 4.25;
             rating10CFR430.uniform_energy_factor = 3.70;
             tank->volume_L = GAL_TO_L(67.63);
             tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
-        else if (presetNum == MODELS_AOSmithHPTS80)
+        else if (presetNum == hpwh_presets::MODELS::AOSmithHPTS80)
         {
             description = {
                 "ProLine XE® Voltex® AL 80-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-80 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(95.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 95.;
             rating10CFR430.recovery_efficiency = 4.30;
             rating10CFR430.uniform_energy_factor = 3.88;
             tank->volume_L = GAL_TO_L(81.94);
@@ -2913,26 +2681,11 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0});
 
-        // performance map
-        compressor->performanceMap.reserve(3);
-
-        compressor->performanceMap.push_back({
-            50,                  // Temperature (T_F)
-            {66.82, 2.49, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {8.64, -0.0436, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67.5,                 // Temperature (T_F)
-            {85.1, 2.38, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {10.82, -0.0551, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                   // Temperature (T_F)
-            {89, 2.62, 0.0},      // Input Power Coefficients (inputPower_coeffs)
-            {12.52, -0.0534, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {66.82, 2.49, 0.0}, {8.64, -0.0436, 0.0}},
+                                {67.5, {85.1, 2.38, 0.0}, {10.82, -0.0551, 0.0}},
+                                {95, {89, 2.62, 0.0}, {12.52, -0.0534, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.);
         compressor->maxT = F_TO_C(120.);
@@ -2949,7 +2702,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(30.2);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(11.87)));
 
@@ -2964,9 +2717,9 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->companionHeatSource = compressor;
     }
 
-    else if (presetNum == MODELS_GE2014STDMode)
+    else if (presetNum == hpwh_presets::MODELS::GE2014STDMode_50)
     {
-        productInformation = {"GE", "2014STDMode"};
+        productInformation = {"GE", "2014STDMode_50"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -2988,19 +2741,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0.});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -3022,7 +2766,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -3031,7 +2775,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_GE2014STDMode_80)
+    else if (presetNum == hpwh_presets::MODELS::GE2014STDMode_80)
     {
         productInformation = {"GE", "2014STDMode_80"};
 
@@ -3055,19 +2799,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0.});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}})
+                .make();
 
         // top resistor values
         resistiveElementTop->setup(6, 4500);
@@ -3083,7 +2818,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
         compressor->minT = F_TO_C(37);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
@@ -3094,9 +2829,9 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_GE2014)
+    else if (presetNum == hpwh_presets::MODELS::GE2014_50)
     {
-        productInformation = {"GE", "2014"};
+        productInformation = {"GE", "2014-50"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3119,19 +2854,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -3152,7 +2878,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -3164,7 +2890,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_GE2014_80)
+    else if (presetNum == hpwh_presets::MODELS::GE2014_80)
     {
         productInformation = {"GE", "2014-80"};
 
@@ -3189,19 +2915,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -3222,7 +2939,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
         // compressor->addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
@@ -3235,7 +2952,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_GE2014_80DR)
+    else if (presetNum == hpwh_presets::MODELS::GE2014_80DR)
     {
         productInformation = {"GE", "2014-80DR"};
 
@@ -3260,19 +2977,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -3292,7 +3000,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird_absolute(F_TO_C(87)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
 
@@ -3304,7 +3012,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->followedByHeatSource = compressor;
     }
     // PRESET USING GE2014 DATA
-    else if (presetNum == MODELS_BWC2020_65)
+    else if (presetNum == hpwh_presets::MODELS::BWC2020_65)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3327,19 +3035,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -3360,7 +3059,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -3370,32 +3069,33 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->backupHeatSource = compressor;
     }
     // If Rheem Premium
-    else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80)
+    else if (hpwh_presets::MODELS::Rheem2020Prem40 <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::Rheem2020Prem80)
     {
         productInformation.manufacturer = {"Rheem"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_Rheem2020Prem40)
+        if (presetNum == hpwh_presets::MODELS::Rheem2020Prem40)
         {
             productInformation.model_number = {"2020Prem40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
-        else if (presetNum == MODELS_Rheem2020Prem50)
+        else if (presetNum == hpwh_presets::MODELS::Rheem2020Prem50)
         {
             productInformation.model_number = {"2020Prem50"};
             tank->volume_L = GAL_TO_L(45.1);
             tank->UA_kJperHrC = 8.55;
         }
-        else if (presetNum == MODELS_Rheem2020Prem65)
+        else if (presetNum == hpwh_presets::MODELS::Rheem2020Prem65)
         {
             productInformation.model_number = {"2020Prem65"};
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
         }
-        else if (presetNum == MODELS_Rheem2020Prem80)
+        else if (presetNum == hpwh_presets::MODELS::Rheem2020Prem80)
         {
             productInformation.model_number = {"2020Prem80"};
             tank->volume_L = GAL_TO_L(72.0);
@@ -3416,19 +3116,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                     // Temperature (T_F)
-            {250, -1.0883, 0.0176}, // Input Power Coefficients (inputPower_coeffs)
-            {6.7, -0.0087, -0.0002} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                        // Temperature (T_F)
-            {275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
-            {7.0, -0.0168, -0.0001}    // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {250, -1.0883, 0.0176}, {6.7, -0.0087, -0.0002}},
+                                {67, {275.0, -0.6631, 0.01571}, {7.0, -0.0168, -0.0001}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.0);
@@ -3448,7 +3139,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3464,32 +3155,33 @@ void HPWH::initPreset(MODELS presetNum)
     }
 
     // If Rheem Build
-    else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80)
+    else if (hpwh_presets::MODELS::Rheem2020Build40 <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::Rheem2020Build80)
     {
         productInformation.manufacturer = {"Rheem"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_Rheem2020Build40)
+        if (presetNum == hpwh_presets::MODELS::Rheem2020Build40)
         {
             productInformation.model_number = {"2020Build40"};
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 9.5;
         }
-        else if (presetNum == MODELS_Rheem2020Build50)
+        else if (presetNum == hpwh_presets::MODELS::Rheem2020Build50)
         {
             productInformation.model_number = {"2020Build50"};
             tank->volume_L = GAL_TO_L(45.1);
             tank->UA_kJperHrC = 8.55;
         }
-        else if (presetNum == MODELS_Rheem2020Build65)
+        else if (presetNum == hpwh_presets::MODELS::Rheem2020Build65)
         {
             productInformation.model_number = {"2020Build65"};
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
         }
-        else if (presetNum == MODELS_Rheem2020Build80)
+        else if (presetNum == hpwh_presets::MODELS::Rheem2020Build80)
         {
             productInformation.model_number = {"2020Build80"};
             tank->volume_L = GAL_TO_L(72.0);
@@ -3510,18 +3202,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
-        compressor->performanceMap.reserve(2);
-        compressor->performanceMap.push_back({
-            50,                       // Temperature (T_F)
-            {220.0, 0.8743, 0.00454}, // Input Power Coefficients (inputPower_coeffs)
-            {7.96064, -0.0448, 0.0}   // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                        // Temperature (T_F)
-            {275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
-            {8.45936, -0.04539, 0.0}   // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {220.0, 0.8743, 0.00454}, {7.96064, -0.0448, 0.0}},
+                                {67, {275.0, -0.6631, 0.01571}, {8.45936, -0.04539, 0.0}}})
+                .make();
 
         compressor->hysteresis_dC = dF_TO_dC(1);
         compressor->minT = F_TO_C(37.0);
@@ -3541,7 +3225,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(30);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3555,61 +3239,62 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80)
+    else if (hpwh_presets::MODELS::RheemPlugInShared40 <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::RheemPlugInShared80)
     {
         productInformation.manufacturer = {"Rheem"};
         setNumNodes(12);
 
-        if (presetNum == MODELS_RheemPlugInShared40)
+        if (presetNum == hpwh_presets::MODELS::RheemPlugInShared40)
         {
             description = {"Performance Platinum ProTerra 40 Gal. 120-Volt Plug-in Smart Heat Pump "
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE40T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471723."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(40.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(45.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 40.;
+            rating10CFR430.first_hour_rating = 45.;
             rating10CFR430.recovery_efficiency = 3.87;
             rating10CFR430.uniform_energy_factor = 2.80;
             tank->volume_L = GAL_TO_L(36.0);
             tank->UA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
-        else if (presetNum == MODELS_RheemPlugInShared50)
+        else if (presetNum == hpwh_presets::MODELS::RheemPlugInShared50)
         {
             description = {"Performance Platinum ProTerra 50 Gal. 120-Volt Plug-in Smart Heat Pump "
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE50T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471724."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(55.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 55.;
             rating10CFR430.recovery_efficiency = 3.67;
             rating10CFR430.uniform_energy_factor = 3.00;
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 8.55;
             setpoint_C = F_TO_C(140.0);
         }
-        else if (presetNum == MODELS_RheemPlugInShared65)
+        else if (presetNum == hpwh_presets::MODELS::RheemPlugInShared65)
         {
             description = {"Performance Platinum ProTerra 65 Gal. 120-Volt Plug-in Smart Heat Pump "
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE65T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471725."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(63.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 65.;
+            rating10CFR430.first_hour_rating = 63.;
             rating10CFR430.recovery_efficiency = 3.98;
             rating10CFR430.uniform_energy_factor = 3.33;
             tank->volume_L = GAL_TO_L(58.5);
             tank->UA_kJperHrC = 10.64;
             setpoint_C = F_TO_C(127.0);
         }
-        else if (presetNum == MODELS_RheemPlugInShared80)
+        else if (presetNum == hpwh_presets::MODELS::RheemPlugInShared80)
         {
             description = {"Performance Platinum ProTerra 80 Gal. 120-Volt Plug-in Smart Heat Pump "
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE80T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471726."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(84.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 84.;
             rating10CFR430.recovery_efficiency = 3.93;
             rating10CFR430.uniform_energy_factor = 3.46;
             tank->volume_L = GAL_TO_L(72.0);
@@ -3629,19 +3314,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                     // Temperature (T_F)
-            {250, -1.0883, 0.0176}, // Input Power Coefficients (inputPower_coeffs)
-            {6.7, -0.0087, -0.0002} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                        // Temperature (T_F)
-            {275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
-            {7.0, -0.0168, -0.0001}    // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {250, -1.0883, 0.0176}, {6.7, -0.0087, -0.0002}},
+                                {67, {275.0, -0.6631, 0.01571}, {7.0, -0.0168, -0.0001}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.0);
@@ -3653,21 +3329,21 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
     }
-    else if (presetNum == MODELS_RheemPlugInDedicated40 ||
-             presetNum == MODELS_RheemPlugInDedicated50)
+    else if (presetNum == hpwh_presets::MODELS::RheemPlugInDedicated40 ||
+             presetNum == hpwh_presets::MODELS::RheemPlugInDedicated50)
     {
         productInformation.manufacturer = {"Rheem"};
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
-        if (presetNum == MODELS_RheemPlugInDedicated40)
+        if (presetNum == hpwh_presets::MODELS::RheemPlugInDedicated40)
         {
             productInformation.model_number = {"PlugInDedicated40"};
             tank->volume_L = GAL_TO_L(36);
             tank->UA_kJperHrC = 5.5;
         }
-        else if (presetNum == MODELS_RheemPlugInDedicated50)
+        else if (presetNum == hpwh_presets::MODELS::RheemPlugInDedicated50)
         {
             productInformation.model_number = {"PlugInDedicated50"};
             tank->volume_L = GAL_TO_L(45);
@@ -3685,18 +3361,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0.5, 0.5, 0.});
 
-        compressor->performanceMap.reserve(2);
-        compressor->performanceMap.push_back({
-            50,                      // Temperature (T_F)
-            {528.91, 4.8988, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {4.3943, -0.012443, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                      // Temperature (T_F)
-            {494.03, 7.7266, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.48189, -0.01604, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {528.91, 4.8988, 0.0}, {4.3943, -0.012443, 0.0}},
+                                {95, {494.03, 7.7266, 0.0}, {5.48189, -0.01604, 0.0}}})
+                .make();
 
         compressor->hysteresis_dC = dF_TO_dC(1);
         compressor->minT = F_TO_C(37.0);
@@ -3709,9 +3377,9 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(20);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
     }
-    else if (presetNum == MODELS_RheemHB50)
+    else if (presetNum == hpwh_presets::MODELS::RheemHB50)
     {
         productInformation = {"Rheem", "HB50"};
 
@@ -3736,19 +3404,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            47,                        // Temperature (T_F)
-            {280, 4.97342, 0.0},       // Input Power Coefficients (inputPower_coeffs)
-            {5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                  // Temperature (T_F)
-            {280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {6.3, -0.03, 0.0}    // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{47, {280, 4.97342, 0.0}, {5.634009, -0.029485, 0.0}},
+                                {67, {280, 5.35992, 0.0}, {6.3, -0.03, 0.0}}})
+                .make();
 
         compressor->hysteresis_dC = dF_TO_dC(1);
         compressor->minT = F_TO_C(40.0);
@@ -3768,7 +3427,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(38);
         double standbyT = dF_TO_dC(13.2639);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(76.7747)));
 
@@ -3781,7 +3440,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_Stiebel220E)
+    else if (presetNum == hpwh_presets::MODELS::Stiebel220E)
     {
         description = {"Accelera 220 E, 58 Gallon Hybrid Electric Heat Pump Water Heater"};
         productInformation = {"Stiebel Eltron", "220 E"};
@@ -3807,19 +3466,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                        // Temperature (T_F)
-            {295.55337, 2.28518, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.744118, -0.025946, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                        // Temperature (T_F)
-            {282.2126, 2.82001, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {8.012112, -0.039394, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {295.55337, 2.28518, 0.0}, {5.744118, -0.025946, 0.0}},
+                                {67, {282.2126, 2.82001, 0.0}, {8.012112, -0.039394, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(32.0);
         compressor->maxT = F_TO_C(120.);
@@ -3835,7 +3485,7 @@ void HPWH::initPreset(MODELS presetNum)
         //
         compressor->backupHeatSource = resistiveElement;
     }
-    else if (presetNum == MODELS_Generic1)
+    else if (presetNum == hpwh_presets::MODELS::Generic1)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3855,19 +3505,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0.});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                         // Temperature (T_F)
-            {472.58616, 2.09340, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {2.942642, -0.0125954, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                         // Temperature (T_F)
-            {439.5615, 2.62997, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {3.95076, -0.01638033, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {472.58616, 2.09340, 0.0}, {2.942642, -0.0125954, 0.0}},
+                                {67, {439.5615, 2.62997, 0.0}, {3.95076, -0.01638033, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
@@ -3884,7 +3525,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40.0)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3899,7 +3540,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_Generic2)
+    else if (presetNum == hpwh_presets::MODELS::Generic2)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3921,19 +3562,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                         // Temperature (T_F)
-            {272.58616, 2.09340, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {4.042642, -0.0205954, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                         // Temperature (T_F)
-            {239.5615, 2.62997, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.25076, -0.02638033, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {272.58616, 2.09340, 0.0}, {4.042642, -0.0205954, 0.0}},
+                                {67, {239.5615, 2.62997, 0.0}, {5.25076, -0.02638033, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(40.0);
         compressor->maxT = F_TO_C(120.);
@@ -3950,7 +3582,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(60)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3965,7 +3597,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_Generic3)
+    else if (presetNum == hpwh_presets::MODELS::Generic3)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -3990,19 +3622,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                         // Temperature (T_F)
-            {172.58616, 2.09340, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {5.242642, -0.0285954, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                         // Temperature (T_F)
-            {139.5615, 2.62997, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {6.75076, -0.03638033, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {172.58616, 2.09340, 0.0}, {5.242642, -0.0285954, 0.0}},
+                                {67, {139.5615, 2.62997, 0.0}, {6.75076, -0.03638033, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(35.0);
         compressor->maxT = F_TO_C(120.);
@@ -4019,7 +3642,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(55)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(60)));
@@ -4033,7 +3656,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_UEF2generic)
+    else if (presetNum == hpwh_presets::MODELS::UEF2generic)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
@@ -4055,19 +3678,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0.});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {4.29, -0.0243008, 0.0}      // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                        // Temperature (T_F)
-            {148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.61, -0.0335265, 0.0}    // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {187.064124, 1.939747, 0.0}, {4.29, -0.0243008, 0.0}},
+                                {70, {148.0418, 2.553291, 0.0}, {5.61, -0.0335265, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -4089,7 +3703,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -4098,27 +3712,28 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80)
+    else if (hpwh_presets::MODELS::AWHSTier3Generic40 <= presetNum &&
+             presetNum <= hpwh_presets::MODELS::AWHSTier3Generic80)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AWHSTier3Generic40)
+        if (presetNum == hpwh_presets::MODELS::AWHSTier3Generic40)
         {
             tank->volume_L = GAL_TO_L(36.1);
             tank->UA_kJperHrC = 5;
         }
-        else if (presetNum == MODELS_AWHSTier3Generic50)
+        else if (presetNum == hpwh_presets::MODELS::AWHSTier3Generic50)
         {
             tank->volume_L = GAL_TO_L(45);
             tank->UA_kJperHrC = 6.5;
         }
-        else if (presetNum == MODELS_AWHSTier3Generic65)
+        else if (presetNum == hpwh_presets::MODELS::AWHSTier3Generic65)
         {
             tank->volume_L = GAL_TO_L(64);
             tank->UA_kJperHrC = 7.6;
         }
-        else if (presetNum == MODELS_AWHSTier3Generic80)
+        else if (presetNum == hpwh_presets::MODELS::AWHSTier3Generic80)
         {
             tank->volume_L = GAL_TO_L(75.4);
             tank->UA_kJperHrC = 10.;
@@ -4143,25 +3758,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                           // Temperature (F)
-            {187.064124, 1.939747, 0.0},  // Input Power (W) Coefficients
-            {5.22288834, -0.0243008, 0.0} // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            67.5,                            // Temperature (F)
-            {152.9195905, 2.476598, 0.0},    // Input Power (W) Coefficients
-            {6.643934986, -0.032373288, 0.0} // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            95,                           // Temperature (F)
-            {99.263895, 3.320221, 0.0},   // Input Power (W) Coefficients
-            {8.87700829, -0.0450586, 0.0} // COP Coefficients
-        });
+        compressor->evaluatePerformance = tier3.make();
 
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
@@ -4181,7 +3778,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -4194,7 +3791,8 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->followedByHeatSource = compressor;
     }
     // If the model is the TamOMatic, HotTam, Generic... This model is scalable.
-    else if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
+    else if ((hpwh_presets::MODELS::TamScalable_SP <= presetNum) &&
+             (presetNum <= hpwh_presets::MODELS::TamScalable_SP_Half))
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -4219,7 +3817,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
-        compressor->performanceMap.reserve(1);
         compressor->hysteresis_dC = 0;
 
         compressor->externalOutletHeight = 0;
@@ -4255,11 +3852,11 @@ void HPWH::initPreset(MODELS presetNum)
 
         // Set model scale factor
         double scaleFactor = 1.;
-        if (presetNum == MODELS_TamScalable_SP_2X)
+        if (presetNum == hpwh_presets::MODELS::TamScalable_SP_2X)
         {
             scaleFactor = 2.;
         }
-        else if (presetNum == MODELS_TamScalable_SP_Half)
+        else if (presetNum == hpwh_presets::MODELS::TamScalable_SP_Half)
         {
             scaleFactor = 0.5;
         }
@@ -4267,11 +3864,8 @@ void HPWH::initPreset(MODELS presetNum)
         // Scale the compressor capacity
         scaleVector(inputPower_coeffs, scaleFactor);
 
-        compressor->performanceMap.push_back({
-            105,               // Temperature (T_F)
-            inputPower_coeffs, // Input Power Coefficients (inputPower_coeffs
-            COP_coeffs         // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePoly_CWHS_SP(105, inputPower_coeffs, COP_coeffs).make(compressor);
 
         // logic conditions
         compressor->minT = F_TO_C(40.);
@@ -4308,7 +3902,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (presetNum == MODELS_Scalable_MP)
+    else if (presetNum == hpwh_presets::MODELS::Scalable_MP)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -4331,7 +3925,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
-        compressor->performanceMap.reserve(1);
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
@@ -4358,15 +3951,11 @@ void HPWH::initPreset(MODELS presetNum)
 
         setTankSize_adjustUA(600., UNITS_GAL);
         compressor->mpFlowRate_LPS = GPM_TO_LPS(25.);
-        compressor->performanceMap.push_back({
-            100, // Temperature (T_F)
-
-            {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coefficients
-                                                                // (inputPower_coeffs)
-
-            {1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440} // COP Coefficients (COP_coeffs)
-
-        });
+        compressor->evaluatePerformance =
+            PerformancePoly_CWHS_MP(100,
+                                    {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696},
+                                    {1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440})
+                .make();
 
         resistiveElementBottom->setup(0, 30000);
         resistiveElementTop->setup(9, 30000);
@@ -4385,11 +3974,11 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (presetNum == MODELS_AquaThermAire)
+    else if (presetNum == hpwh_presets::MODELS::AquaThermAire)
     {
         description = {"AquaThermAire-CHT2021-48A"};
         productInformation = {"Villara", "AquaThermAire - CHT2021-48A"};
-        rating10CFR430.first_hour_rating = GAL_TO_L(78.) / 1000.;
+        rating10CFR430.first_hour_rating = 78.;
         rating10CFR430.recovery_efficiency = 3.837;
         rating10CFR430.uniform_energy_factor = 2.95;
 
@@ -4417,32 +4006,12 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1.});
 
-        // AOSmithPHPT60 values
-        compressor->performanceMap.reserve(4);
-
-        compressor->performanceMap.push_back({
-            5,                     // Temperature (T_F)
-            {-1356, 39.80, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {2.003, -0.003637, 0.} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            34,                    // Temperature (T_F)
-            {-1485, 43.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {2.805, -0.005092, 0.} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            67,                    // Temperature (T_F)
-            {-1632, 47.93, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {4.076, -0.007400, 0.} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            95,                    // Temperature (T_F)
-            {-1757, 51.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {6.843, -0.012424, 0.} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{5, {-1356, 39.80, 0.}, {2.003, -0.003637, 0.}},
+                                {34, {-1485, 43.60, 0.}, {2.805, -0.005092, 0.}},
+                                {67, {-1632, 47.93, 0.}, {4.076, -0.007400, 0.}},
+                                {95, {-1757, 51.60, 0.}, {6.843, -0.012424, 0.}}})
+                .make();
 
         compressor->minT = F_TO_C(-25);
         compressor->maxT = F_TO_C(125.);
@@ -4451,9 +4020,9 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(wholeTank(111, UNITS_F, true));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(14)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(14)));
     }
-    else if (presetNum == MODELS_GenericUEF217)
+    else if (presetNum == hpwh_presets::MODELS::GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
         setNumNodes(12);
         setpoint_C = F_TO_C(127.);
@@ -4475,19 +4044,11 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0.});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                         // Temperature (F)
-            {187.064124, 1.939747, 0.}, // Input Power Coefficients (kW)
-            {5.4977772, -0.0243008, 0.} // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            67,                                     // Temperature (F)
-            {148.0418, 2.553291, 0.},               // Input Power Coefficients (kW)
-            {6.556322712161, -0.03974367485016, 0.} // COP Coefficients
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet(
+                {{50, {187.064124, 1.939747, 0.}, {5.4977772, -0.0243008, 0.}},
+                 {67, {148.0418, 2.553291, 0.}, {6.556322712161, -0.03974367485016, 0.}}})
+                .make();
 
         compressor->minT = F_TO_C(45);
         compressor->maxT = F_TO_C(120.);
@@ -4495,7 +4056,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.)));
 
         // top resistor values
         resistiveElementTop->setup(6, 4500.);
@@ -4514,27 +4075,28 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
     }
-    else if ((MODELS_AWHSTier4Generic40 <= presetNum) && (presetNum <= MODELS_AWHSTier4Generic80))
+    else if ((hpwh_presets::MODELS::AWHSTier4Generic40 <= presetNum) &&
+             (presetNum <= hpwh_presets::MODELS::AWHSTier4Generic80))
     { // AWHS: Advanced Water Heater Specification
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AWHSTier4Generic40)
+        if (presetNum == hpwh_presets::MODELS::AWHSTier4Generic40)
         {
             tank->volume_L = GAL_TO_L(36.0);
             tank->UA_kJperHrC = 5.0;
         }
-        else if (presetNum == MODELS_AWHSTier4Generic50)
+        else if (presetNum == hpwh_presets::MODELS::AWHSTier4Generic50)
         {
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 6.5;
         }
-        else if (presetNum == MODELS_AWHSTier4Generic65)
+        else if (presetNum == hpwh_presets::MODELS::AWHSTier4Generic65)
         {
             tank->volume_L = GAL_TO_L(64.0);
             tank->UA_kJperHrC = 7.6;
         }
-        else if (presetNum == MODELS_AWHSTier4Generic80)
+        else if (presetNum == hpwh_presets::MODELS::AWHSTier4Generic80)
         {
             tank->volume_L = GAL_TO_L(75.4);
             tank->UA_kJperHrC = 10.0;
@@ -4558,25 +4120,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0., 0., 0., 0., 0., 0., 0.});
 
         //
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                    // Temperature (F)
-            {126.9, 2.215, 0.0},   // Input Power (W) Coefficients
-            {6.931, -0.03395, 0.0} // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            67.5,                  // Temperature (F)
-            {116.6, 2.467, 0.0},   // Input Power (W) Coefficients
-            {8.833, -0.04431, 0.0} // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            95,                     // Temperature (F)
-            {100.4, 2.863, 0.0},    // Input Power (W) Coefficients
-            {11.822, -0.06059, 0.0} // COP Coefficients
-        });
+        compressor->evaluatePerformance = tier4.make();
 
         compressor->minT = F_TO_C(37.);
         compressor->maxT = F_TO_C(120.);
@@ -4594,7 +4138,7 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(12.0)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.0)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(9.0)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(9.0)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -4607,47 +4151,47 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if ((MODELS_BradfordWhiteAeroThermRE2H50 <= presetNum) &&
-             (presetNum <= MODELS_BradfordWhiteAeroThermRE2H80))
+    else if ((hpwh_presets::MODELS::BradfordWhiteAeroThermRE2H50 <= presetNum) &&
+             (presetNum <= hpwh_presets::MODELS::BradfordWhiteAeroThermRE2H80))
     {
         productInformation.manufacturer = {"Bradford White"};
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
+        if (presetNum == hpwh_presets::MODELS::BradfordWhiteAeroThermRE2H50)
         {
             description = {
                 "ENERGY STAR Certified Aerotherm 50 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H50S.-....."};
             rating10CFR430.certified_reference_number = {"200094643"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 65.;
             rating10CFR430.recovery_efficiency = 4.06;
             rating10CFR430.uniform_energy_factor = 3.44;
             tank->volume_L = GAL_TO_L(45.0);
             tank->UA_kJperHrC = 6.8373;
         }
-        else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
+        else if (presetNum == hpwh_presets::MODELS::BradfordWhiteAeroThermRE2H65)
         {
             description = {
                 "ENERGY STAR Certified Aerotherm 65 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H65T..-....."};
             rating10CFR430.certified_reference_number = {"204835481"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 65.;
+            rating10CFR430.first_hour_rating = 79.;
             rating10CFR430.recovery_efficiency = 3.91;
             rating10CFR430.uniform_energy_factor = 3.64;
             tank->volume_L = GAL_TO_L(64.0);
             tank->UA_kJperHrC = 6.7292;
         }
-        else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
+        else if (presetNum == hpwh_presets::MODELS::BradfordWhiteAeroThermRE2H80)
         {
             description = {
                 "ENERGY STAR Certified Aerotherm 80 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H80T.-....."};
             rating10CFR430.certified_reference_number = {"200094645"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(88.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 88.;
             rating10CFR430.recovery_efficiency = 3.92;
             rating10CFR430.uniform_energy_factor = 3.59;
             tank->volume_L = GAL_TO_L(75.0);
@@ -4668,19 +4212,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->setCondensity({1., 0., 0.});
 
-        compressor->performanceMap.reserve(2);
-
-        compressor->performanceMap.push_back({
-            50,                // Temperature (T_F)
-            {120, 2.45, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {6.3, -0.030, 0.0} // COP Coefficients (COP_coeffs)
-        });
-
-        compressor->performanceMap.push_back({
-            70,                // Temperature (T_F)
-            {124, 2.45, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {6.8, -0.030, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {120, 2.45, 0.0}, {6.3, -0.030, 0.0}},
+                                {70, {124, 2.45, 0.0}, {6.8, -0.030, 0.0}}})
+                .make();
 
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
@@ -4702,7 +4237,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(25)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -4711,34 +4246,35 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if ((presetNum == MODELS_LG_APHWC50) || (presetNum == MODELS_LG_APHWC80))
+    else if ((presetNum == hpwh_presets::MODELS::LG_APHWC50) ||
+             (presetNum == hpwh_presets::MODELS::LG_APHWC80))
     { //
         productInformation.manufacturer = {"LG"};
 
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
 
-        if (presetNum == MODELS_LG_APHWC50)
+        if (presetNum == hpwh_presets::MODELS::LG_APHWC50)
         {
             description = {"58 Gallon High-Efficiency Electric Inverter Heat Pump Water Heater "
                            "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC501."};
             rating10CFR430.certified_reference_number = {"213352429"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(58.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(76.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 58.;
+            rating10CFR430.first_hour_rating = 76.;
             rating10CFR430.recovery_efficiency = 4.10;
             rating10CFR430.uniform_energy_factor = 3.93;
             tank->volume_L = GAL_TO_L(52.8);
             tank->UA_kJperHrC = 7.78;
         }
-        else if (presetNum == MODELS_LG_APHWC80)
+        else if (presetNum == hpwh_presets::MODELS::LG_APHWC80)
         {
             description = {"80 Gallon High-Efficiency Electric Inverter Heat Pump Water Heater "
                            "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC801."};
             rating10CFR430.certified_reference_number = {"213363354"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(94.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 94.;
             rating10CFR430.recovery_efficiency = 4.10;
             rating10CFR430.uniform_energy_factor = 3.90;
             tank->volume_L = GAL_TO_L(72.0);
@@ -4757,8 +4293,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = false;
 
         compressor->setCondensity({0.17, 0.166, 0.166, 0.166, 0.166, 0.166, 0, 0, 0, 0, 0, 0});
-
-        compressor->performanceMap.reserve(3);
 
         double dPin_dTs = 2.1;
         double dcop_dTs = -0.01;
@@ -4779,23 +4313,11 @@ void HPWH::initPreset(MODELS presetNum)
         double Pin95_0 = Pin95_op - dPin_dTs * (Ts_op - 0.);
         double cop95_0 = cop95_op - dcop_dTs * (Ts_op - 0.);
 
-        compressor->performanceMap.push_back({
-            50,                      // Temperature (F)
-            {Pin50_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
-            {cop50_0, dcop_dTs, 0.}  // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            67.5,                    // Temperature (F)
-            {Pin67_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
-            {cop67_0, dcop_dTs, 0.}  // COP Coefficients
-        });
-
-        compressor->performanceMap.push_back({
-            95,                      // Temperature (F)
-            {Pin95_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
-            {cop95_0, dcop_dTs, 0.}  // COP Coefficients
-        });
+        compressor->evaluatePerformance =
+            PerformancePolySet({{50, {Pin50_0, dPin_dTs, 0.}, {cop50_0, dcop_dTs, 0.}},
+                                {67.5, {Pin67_0, dPin_dTs, 0.}, {cop67_0, dcop_dTs, 0.}},
+                                {95, {Pin95_0, dPin_dTs, 0.}, {cop95_0, dcop_dTs, 0.}}})
+                .make();
 
         compressor->minT = F_TO_C(23);
         compressor->maxT = F_TO_C(120.);
@@ -4804,7 +4326,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(52.9)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(9.)));
 
         // top resistor values
         resistiveElementTop->setup(8, 5000.);
@@ -4828,12 +4350,12 @@ void HPWH::initPreset(MODELS presetNum)
         send_error("You have tried to select a preset model which does not exist.");
     }
 
+    useCOP_inBtwxt = true;
     if (hasInitialTankTemp)
         setTankToTemperature(initialTankT_C);
     else // start tank off at setpoint
         resetTankToSetpoint();
 
-    model = presetNum;
     calcDerivedValues();
 
     checkInputs();
@@ -4844,10 +4366,6 @@ void HPWH::initPreset(MODELS presetNum)
         if (heatSources[i]->isOn)
         {
             isHeating = true;
-        }
-        if (heatSources[i]->isACompressor())
-        {
-            reinterpret_cast<Condenser*>(heatSources[i].get())->sortPerformanceMap();
         }
     }
 

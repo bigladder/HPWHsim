@@ -49,6 +49,23 @@ if (${PROJECT_NAME}_BUILD_TESTING)
 endif ()
 
 add_subdirectory(vendor)
+
+#generate presets
+find_program(UV_EXECUTABLE NAMES uv REQUIRED)
+
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
+
+add_custom_command(
+        OUTPUT "${PROJECT_BINARY_DIR}/presets/presets.cpp" "${PROJECT_BINARY_DIR}/presets/presets.h"
+        COMMAND ${UV_EXECUTABLE} run incorporate_presets.py JSON "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
+        MAIN_DEPENDENCY "${pythonScriptDir}/incorporate_presets.py"
+        DEPENDS "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
+        WORKING_DIRECTORY "${pythonScriptDir}")
+
+add_custom_target(generate_hpwhsim_presets DEPENDS
+        "${PROJECT_BINARY_DIR}/presets/presets.cpp"
+)
+#
 add_subdirectory(src)
 
 if (${PROJECT_NAME}_BUILD_TESTING)

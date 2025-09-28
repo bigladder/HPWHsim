@@ -23,9 +23,9 @@ struct CompressorFncsTest : public testing::Test
 
     const std::vector<ModelSpecs> modelSpecs = {
         {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A, 42.},
-        {"Stiebel220e", true, 1, true, false, HPWH::MAXOUTLET_R134A, 32.},
+        {"Stiebel220E", true, 1, true, false, HPWH::MAXOUTLET_R134A, 32.},
         {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A, 47.},
-        {"Sanden80", true, 2, false, false, HPWH::MAXOUTLET_R744, -25.},
+        {"Sanco83", true, 2, false, false, HPWH::MAXOUTLET_R744, -25.},
         {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},
         {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
         {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
@@ -33,7 +33,7 @@ struct CompressorFncsTest : public testing::Test
         {"Scalable_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"NyleC90A_MP", true, 2, true, true, F_TO_C(160.), 40.},
         {"NyleC90A_C_MP", true, 2, true, true, F_TO_C(160.), 35.},
-        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.},
+        {"Mitsubishi_QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.},
         {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
         {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort}};
 };
@@ -56,9 +56,9 @@ TEST_F(CompressorFncsTest, compressorSpecs)
             EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.modelName;
             EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
                 << modelSpec.modelName;
-            EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
+            EXPECT_NEAR(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C, 1.e-6)
                 << modelSpec.modelName;
-            EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
+            EXPECT_NEAR(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F, 1.e-6)
                 << modelSpec.modelName;
         }
         else

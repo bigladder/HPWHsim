@@ -96,7 +96,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     double airTempF = 100.;
     double waterTempF = 125.;
     double setpointF = 150.;
-    double capacityData_kW = 52.779317;
+    double capacityData_kW = 53.88837556;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
         airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
@@ -110,7 +110,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     airTempF = 80.;
     waterTempF = 40.;
     setpointF = 150.;
-    capacityData_kW = 44.962957379;
+    capacityData_kW = 45.0040148;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
         airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
@@ -124,7 +124,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     airTempF = 60.;
     waterTempF = 40.;
     setpointF = 125.;
-    capacityData_kW = 37.5978306881;
+    capacityData_kW = 37.626637089;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
         airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
@@ -151,7 +151,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     double airTempF = 100.;
     double waterTempF = 125.;
     double setpointF = 150.;
-    double capacityData_kW = 105.12836804;
+    double capacityData_kW = 106.70415790;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
         airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
@@ -165,7 +165,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     airTempF = 80.;
     waterTempF = 40.;
     setpointF = 150.;
-    capacityData_kW = 89.186101453;
+    capacityData_kW = 89.2637138;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
         airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
@@ -179,7 +179,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     airTempF = 60.;
     waterTempF = 40.;
     setpointF = 125.;
-    capacityData_kW = 74.2437689948;
+    capacityData_kW = 74.3201109;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
         airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
@@ -203,19 +203,19 @@ TEST_F(PerformanceMapTest, ColmacCxV_5_MP)
     performancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {10.0, 60.0, 8.7756391};
+    checkPoint = {10.0, 60.0, 8.8483098713720114};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {10.0, 102.0, 9.945545};
+    checkPoint = {10.0, 102.0, 10.039598621171928};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {70.0, 74.0, 19.09682784};
+    checkPoint = {70.0, 74.0, 19.0996161};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {70.0, 116.0, 18.97090763};
+    checkPoint = {70.0, 116.0, 18.97610017};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 116.0, 24.48703111};
+    checkPoint = {100.0, 116.0, 24.5075363};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
@@ -238,16 +238,16 @@ TEST_F(PerformanceMapTest, ColmacCxA_10_MP)
     checkPoint = {60.0, 114.0, 27.7407144};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 37.4860496};
+    checkPoint = {80.0, 66.0, 37.52058789686};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 35.03416199};
+    checkPoint = {80.0, 114.0, 35.0782463538};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 46.63144};
+    checkPoint = {100.0, 66.0, 46.6905667972};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 43.4308219};
+    checkPoint = {100.0, 114.0, 43.506450244};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
@@ -270,16 +270,16 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_MP)
     checkPoint = {60.0, 114.0, 35.2295393};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 50.360549115};
+    checkPoint = {80.0, 66.0, 50.510448366};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 43.528417017};
+    checkPoint = {80.0, 114.0, 43.71557228};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 66.2675493};
+    checkPoint = {100.0, 66.0, 66.5292749};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 55.941855};
+    checkPoint = {100.0, 114.0, 56.268770094};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
@@ -302,16 +302,16 @@ TEST_F(PerformanceMapTest, ColmacCxA_20_MP)
     checkPoint = {60.0, 114.0, 53.554293};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 73.11242842};
+    checkPoint = {80.0, 66.0, 73.147586458};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 68.034677};
+    checkPoint = {80.0, 114.0, 68.1051475};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 90.289474295};
+    checkPoint = {100.0, 66.0, 90.331496756};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 84.69323};
+    checkPoint = {100.0, 114.0, 84.8043890};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
@@ -334,16 +334,16 @@ TEST_F(PerformanceMapTest, ColmacCxA_25_MP)
     checkPoint = {60.0, 114.0, 63.5665037};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 84.9221285742};
+    checkPoint = {80.0, 66.0, 84.9483363};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 79.6237088};
+    checkPoint = {80.0, 114.0, 79.68651304};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 103.43268186};
+    checkPoint = {100.0, 66.0, 103.465037};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 97.71458413};
+    checkPoint = {100.0, 114.0, 97.81726576};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
@@ -366,16 +366,16 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_MP)
     checkPoint = {60.0, 114.0, 73.66879620};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 94.863116775};
+    checkPoint = {80.0, 66.0, 94.8331270};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 90.998904269};
+    checkPoint = {80.0, 114.0, 91.00129995996};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 112.864628};
+    checkPoint = {100.0, 66.0, 112.796244163};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 109.444451};
+    checkPoint = {100.0, 114.0, 109.432497713};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 }
 
@@ -394,11 +394,11 @@ TEST_F(PerformanceMapTest, RheemHPHD60)
     performancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {66.6666666, 60.0, 16.785535996};
+    checkPoint = {66.6666666, 60.0, 16.7885495};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
-    checkPoint = {66.6666666, 120.0, 16.76198953};
+    checkPoint = {66.6666666, 120.0, 16.76773245};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
-    checkPoint = {88.3333333, 80.0, 20.8571194294};
+    checkPoint = {88.3333333, 80.0, 20.82753681};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
     checkPoint = {110.0, 100.0, 24.287512};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
@@ -418,11 +418,11 @@ TEST_F(PerformanceMapTest, RheemHPHD135)
     performancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {66.6666666, 80.0, 38.560161199};
+    checkPoint = {66.6666666, 80.0, 38.554550};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
-    checkPoint = {66.6666666, 140.0, 34.70681846};
+    checkPoint = {66.6666666, 140.0, 34.69896296};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
-    checkPoint = {88.3333333, 140.0, 42.40407101};
+    checkPoint = {88.3333333, 140.0, 42.466694957};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
     checkPoint = {110.0, 120.0, 54.3580927};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
@@ -531,81 +531,81 @@ TEST_F(PerformanceMapTest, NyleC250A_MP)
 /*
  * QAHV_N136TAU_HPB_SP tests
  */
-TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
+TEST_F(PerformanceMapTest, Mitsubishi_QAHV_N136TAU_HPB_SP)
 {
     HPWH hpwh;
-    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
     hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
     double outputBTUH;
 
     // test
-    checkPoint = {-13.0, 140.0, 41.0, 66529.47273};
+    checkPoint = {-13.0, 140.0, 41.0, 66529.472730};
     outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
     // test
-    checkPoint = {-13.0, 176.0, 41.0, 65872.57441};
+    checkPoint = {-13.0, 176.0, 41.0, 65872.5744};
     EXPECT_ANY_THROW(
         getCapacitySP_F_BTUHR(hpwh, checkPoint)); // max setpoint without adjustment forces error
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {-13.0, 176.0, 84.2, 55913.249232};
+    checkPoint = {-13.0, 176.0, 84.2, 55913.2506};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {14.0, 176.0, 84.2, 92933.01932};
+    checkPoint = {14.0, 176.0, 84.2, 92932.9969257};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {42.8, 140.0, 41.0, 136425.98804};
+    checkPoint = {42.8, 140.0, 41.0, 136425.997808};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {50.0, 140.0, 41.0, 136425.98804};
+    checkPoint = {50.0, 140.0, 41.0, 136426.00443};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {50.0, 176.0, 84.2, 136564.470884};
+    checkPoint = {50.0, 176.0, 84.2, 136564.48267855};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
     // test
-    checkPoint = {60.8, 158.0, 84.2, 136461.998288};
+    checkPoint = {60.8, 158.0, 84.2, 136462.00100};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {71.6, 158.0, 48.2, 136498.001712};
+    checkPoint = {71.6, 158.0, 48.2, 136498.0066422};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test constant with setpoint between 140 and 158
-    checkPoint = {71.6, 149.0, 48.2, 136498.001712};
+    checkPoint = {71.6, 149.0, 48.2, 136498.0066422};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {82.4, 176.0, 41.0, 136557.496756};
+    checkPoint = {82.4, 176.0, 41.0, 136557.49631};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
-    checkPoint = {104.0, 140.0, 62.6, 136480};
+    checkPoint = {104.0, 140.0, 62.6, 136479.9926886};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
     // test
-    checkPoint = {104.0, 158.0, 62.6, 136480};
+    checkPoint = {104.0, 158.0, 62.6, 136479.9926886};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
     // test
-    checkPoint = {104.0, 176.0, 84.2, 136564.470884};
+    checkPoint = {104.0, 176.0, 84.2, 136564.480437};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 }
@@ -613,13 +613,13 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
 /*
  * QAHV_N136TAU_HPB_SP_extrapolation tests
  */
-TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
+TEST_F(PerformanceMapTest, Mitsubishi_QAHV_N136TAU_HPB_SP_extrapolation)
 {
     // Also test QAHV constant extrpolation at high air temperatures AND linear extrapolation to hot
     // water temperatures!
 
     HPWH hpwh;
-    const std::string modelName = "QAHV_N136TAU_HPB_SP";
+    const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
     hpwh.initPreset(modelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
@@ -686,12 +686,12 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test const along Tair
-    checkPoint = {110.0, 140.0, 62.6, 136480};
+    checkPoint = {110.0, 140.0, 62.6, 136479.9926886};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test const along Tair
-    checkPoint = {114.0, 176.0, 84.2, 136564.470884};
+    checkPoint = {114.0, 176.0, 84.2, 136564.480437};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
@@ -700,31 +700,28 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
 }
 
 /*
- * Sanden120 tests
+ * Sanco119 tests
  */
-TEST_F(PerformanceMapTest, Sanden120)
+TEST_F(PerformanceMapTest, Sanco119)
 {
     HPWH hpwh;
-    const std::string modelName = "Sanden120";
+    const std::string modelName = "Sanco119";
     hpwh.initPreset(modelName);
 
-    performancePointSP checkPoint; // tairF, toutF, tinF, outputW
-    double outputBTUH;
-
-    // nominal
-    checkPoint = {60, 149.0, 41.0, 15059.59167};
-    outputBTUH = hpwh.getCompressorCapacity(
+    // fixed setpoint = 149 F
+    performancePointSP checkPoint = {60, 149.0, 41.0, 15059.5988779879};
+    double outputBTUH = hpwh.getCompressorCapacity(
         checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
-    // Cold outlet temperature
-    checkPoint = {60, 125.0, 41.0, 15059.59167};
+    // Setpoint fixed; outlet temperature has no effect
+    checkPoint = {60, 125.0, 41.0, 15059.5988779879};
     outputBTUH = hpwh.getCompressorCapacity(
         checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
     // tests fails when output high
-    checkPoint = {60, 200, 41.0, 15059.59167};
+    checkPoint = {60, 200, 41.0, 15059.5988779879};
     EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
         checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F));
 }
@@ -742,7 +739,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {67., 50.2857, 135, 1.66080299485364};
+        checkPoint = {67., 50.2857, 135, 1.66326882164};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
@@ -813,19 +810,73 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
     {
-        const std::string modelName = "QAHV_N136TAU_HPB_SP";
+        const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
         hpwh.initPreset(modelName);
 
         PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {45., 40., 135, 40.195550598336204};
+        checkPoint = {45., 40., 135, 40.19555};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
+
+        reloadFromDataModel(hpwh);
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
+    }
+}
+
+/*
+ * Legacy spec test
+ */
+TEST_F(PerformanceMapTest, LegacyTest)
+{
+    HPWH hpwh;
+    {
+        const std::string modelName = "Rheem2020Prem50";
+        hpwh.initLegacy(modelName);
+
+        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+
+        // using polynomial map
+        checkPoint = {67., 50.2857, 135, 1.6608029948536398};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Legacy";
+
+        reloadFromDataModel(hpwh);
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL_TOL(checkPoint.output_kW, output_kW, 1.e-2) << modelName << ": data model";
+    }
+    {
+        const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
+        hpwh.initLegacy(modelName);
+
+        PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
+
+        // using legacy grid
+        checkPoint = {45., 40., 135, 40.19555};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Legacy";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,

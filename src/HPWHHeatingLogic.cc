@@ -230,11 +230,8 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    resample(resampledTankTemps, hpwh->tank->nodeTs_C);
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
-    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
     switch (dist.distributionType)
     {
     case DistributionType::BottomOfTank:
@@ -252,32 +249,21 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
         totWeight = 1.;
         break;
     }
-
     case DistributionType::Weighted:
     {
-        for (auto& distPoint : dist.weightedDistribution)
+        double df = 1. / hpwh->getNumNodes();
+        for (int i = 0; i < hpwh->getNumNodes(); ++i)
         {
-            if (distPoint.weight > 0.)
+            double fStart = static_cast<double>(i) / hpwh->getNumNodes();
+            double w = dist.weightedDistribution.normalizedWeight(fStart, fStart + df);
+            if (w > 0.)
             {
-                firstNode = 0;
-                calcNode = static_cast<int>(nodeDensity) - 1; // last tank node in logic node
-                break;
+                if (firstNode == -1)
+                    firstNode = i;
+                calcNode = i;
+                sum += w * hpwh->tank->nodeTs_C[i];
+                totWeight += w;
             }
-            else
-            {
-                double norm_dist_height =
-                    distPoint.height / dist.weightedDistribution.maximumHeight();
-                firstNode = static_cast<int>(
-                    norm_dist_height * hpwh->getNumNodes()); // first tank node with non-zero weight
-                calcNode =
-                    firstNode + static_cast<int>(nodeDensity); // last tank node in logic node
-                break;
-            }
-        }
-        for (int i = firstNode; i <= calcNode; ++i)
-        {
-            sum += hpwh->tank->nodeTs_C[i];
-            totWeight += 1.;
         }
     }
     }
@@ -296,13 +282,13 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     // If the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
     // about, so shift a whole node.
-    // factor of nodeDensity converts logic-node fraction to tank-node fraction
-    double nodeFrac =
-        compare(averageT_C, comparisonT_C)
-            ? 0.
-            : ((nodeDiffT_C > 0.) ? nodeDensity * logicNodeDiffT_C / nodeDiffT_C : 1.);
+    double nodeFrac = compare(averageT_C, comparisonT_C)
+                          ? 0.
+                          : ((nodeDiffT_C > 0.) ? logicNodeDiffT_C / nodeDiffT_C : 1.);
 
-    return nodeFrac;
+    // factor of nodeDensity preserves legacy behavior
+    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
+    return nodeDensity * nodeFrac;
 }
 
 /*static*/
@@ -370,7 +356,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
         else
             break;
 
-        bool checksStandby_in = false;
+        bool isEnteringWaterHighTempShutoff = false;
         Distribution dist;
         if (temp_based_logic->standby_temperature_location_is_set)
         {
@@ -381,7 +367,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             {
                 dist = DistributionType::TopOfTank;
                 label = "top of tank";
-                checksStandby_in = true;
+                // checksStandby = true;
                 break;
             }
             case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
@@ -406,6 +392,10 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             }
         }
 
+        bool checksStandby = false;
+        if (temp_based_logic->checks_standby_logic_is_set)
+            checksStandby = temp_based_logic->checks_standby_logic;
+
         heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
             label,
             dist,
@@ -413,7 +403,8 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             hpwh,
             temp_based_logic->absolute_temperature_is_set,
             comparison_type,
-            checksStandby_in);
+            isEnteringWaterHighTempShutoff,
+            checksStandby);
         break;
     }
     }
@@ -475,6 +466,9 @@ void HPWH::TempBasedHeatingLogic::to(
             logic.differential_temperature_is_set,
             logic.differential_temperature,
             !isAbsolute);
+
+    checkTo(
+        checkStandby, logic.checks_standby_logic_is_set, logic.checks_standby_logic, checkStandby);
 
     if (compare(1., 2.))
     {
