@@ -286,6 +286,37 @@ class FitProc:
 	def apply_constraints(self):
 		for constraint in self.constraints:
 			self.apply_constraint(self.constraints[constraint])
+	
+	def set_parameter_value(self, parameter, x):
+		if parameter['type'] == 'bilinear-point':					
+			constraint = self.constraints[parameter['constraint']]
+			variable = constraint['variable']
+			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
+			if dependent == variable:
+				return			
+			model_data = self.read_cache_model(constraint['model_id'])					
+			constraint['value'][parameter['point']]	= x
+			self.apply_constraint(constraint)
+		
+		if parameter['type'] == 'bilinear-coeff':		
+			constraint = self.constraints[parameter['constraint']]
+			variable = constraint['variable']
+			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
+			if dependent == variable:
+				return
+			model_data = self.read_cache_model(constraint['model_id'])
+			constraint['value'][parameter['term']]	= x							
+			self.apply_constraint(constraint)
+						
+		if parameter['type'] == 'performance-point':		
+			variable =  parameter['variable']
+			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
+			if dependent == variable:
+				return
+			for model_id in parameter['models']:
+				model_data = self.read_cache_model(model_id)
+				self.set_performance_point(model_data, parameter['coordinates'], variable, dependent, x)	
+				self.write_cache_model(model_id, model_data)
 
 	def get_parameter_value(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
@@ -344,7 +375,6 @@ class FitProc:
 	def get_parameter_values(self):
 		paramV = []
 		for parameter in self.parameters:
-			param = self.get_parameter_value(parameter)
 			paramV.append(self.get_parameter_value(parameter))
 		return paramV
 				
@@ -368,32 +398,45 @@ class FitProc:
 	def fit(self, data):
 		self.update()	
 		
-		paramsL = self.get_parameters()
+
 		paramsV = self.get_parameter_values()
-		print(f"parameters:\n {paramsV}")	
-		#self.apply_constraints()
+		for iter in range(10):
+			print(f"\niteration {iter}")
+			metricsV = self.get_metric_values()
+			print(f"metrics:\n {metricsV}")
 
-		metricsL = self.get_metrics()
-		metricsV = self.get_metric_values()
-		print(f"metrics:\n {metricsV}")
-	
-		n_params = len(paramsV)
-		n_metrics = len(metricsV)
+			diffV = [0] * len(metricsV)
+			for i_metric, metric in enumerate(self.metrics):
+				diffV[i_metric] = (metricsV[i_metric] - self.metrics[i_metric]['target']) / self.metrics[i_metric]['tolerance']
+			print(f"diffs0: {diffV}")
 
-		diffV0 = [0] * n_metrics
-		for i_metric, metric in enumerate(metricsL):
-			diffV0[i_metric] = (metricsV[i_metric] - metricsL['target']) / metricsL['tolerance']
-
-		print(f"diffs0:\n {diffV0}")
-		covarM = [[0] * n_metrics] * n_params
-		for i_param in range(n_params):
-			param0 = paramsV[i_param]
-			param_p = param0 + paramsL[i_param]['increment']
-			diffV = [0] * n_metrics
-			for i_metric, metric in enumerate(metricsL):
-				diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
-				covarM[i_param][i_metric] = (diffV[i_metric] - diffV0[i_metric]) / metricsL[i_metric][1]
+			jacobiM = [[0] * len(metricsV)] * len(paramsV)				
+			for (i_param, parameter) in enumerate(self.parameters):
+				self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])		
+				metricsV = self.get_metric_values()
+				print(f"metrics (inc): {metricsV}")		
+				for i_metric, metric in enumerate(self.metrics):
+					diff = (metricsV[i_metric] - metric['target']) / metric['tolerance']				
+					jacobiM[i_param][i_metric] = (diff - diffV[i_metric]) / parameter['increment']			
+				self.set_parameter_value(parameter, paramsV[i_param])
+								
+			print(f"jacobiM: {jacobiM}")
+			
+			jM = np.array(jacobiM)
+			jMT = jM.transpose()
+			jMT_jM = np.matmul(jMT, jM)	
+			if np.linalg.det(jMT_jM) == 0:
+				print("det = 0")
+				break
+			ijML = np.matmul(np.linalg.inv(jMT_jM), jMT)	
 		
+			p_incV = -np.matmul(ijML, np.array(diffV))
+			for (i_param, parameter) in enumerate(self.parameters):
+				paramsV[i_param] += p_incV[i_param]
+				self.set_parameter_value(parameter, paramsV[i_param])	
+				parameter['increment'] = 	p_incV[i_param] / 100		
+		
+									 
 		done = False
 		i_iter = 0
 

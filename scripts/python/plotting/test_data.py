@@ -153,7 +153,6 @@ class DataSet:
 						self.ef_bounds.first_recovery_period_end_time = t_min	- (2.0 - frac_min)
 
 	def analyze(self):	
-			print("analyzing")	
 			self.find_EF_bounds()
 					
 			initialTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_start_time]

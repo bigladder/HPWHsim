@@ -252,7 +252,7 @@
       ],
 			"heat_source": "compressor",
 			"coordinates": [1, 1, 0],
-			"increment": 0.1
+			"increment": 100.0
 		}
 	],
 
