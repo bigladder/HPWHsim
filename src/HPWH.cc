@@ -149,6 +149,15 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
     hoursPerStep = minutesPerStep / min_per_hr;
 }
 
+const HPWH::PerformancePolySet
+    HPWH::tier3({{50., {187.064124, 1.939747, 0.}, {5.22288834, -0.0243008, 0.}},
+                 {67.5, {152.9195905, 2.476598, 0.}, {6.643934986, -0.032373288, 0.}},
+                 {95., {99.263895, 3.320221, 0.}, {8.87700829, -0.0450586, 0.}}});
+
+const HPWH::PerformancePolySet HPWH::tier4({{50., {126.9, 2.215, 0.0}, {6.931, -0.03395, 0.0}},
+                                            {67.5, {116.6, 2.467, 0.0}, {8.833, -0.04431, 0.0}},
+                                            {95., {100.4, 2.863, 0.0}, {11.822, -0.06059, 0.0}}});
+
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/)
     : Sender("HPWH", name_in, courier)
@@ -181,6 +190,8 @@ void HPWH::setAllDefaults()
     timerTOT = 0.;
     usesSoCLogic = false;
     setMinutesPerStep(1.0);
+
+    model = hpwh_presets::MODELS::unknown;
 }
 
 HPWH& HPWH::operator=(const HPWH& hpwh)
@@ -219,7 +230,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
-    // description = hpwh.description;
+    model = hpwh.model;
     productInformation = hpwh.productInformation;
 
     return *this;
@@ -399,20 +410,20 @@ void HPWH::runOneStep(double drawVolume_L,
             // going through in order, check if the heat source is on
             if (heatSources[i]->isEngaged())
             {
-
                 HeatSource* heatSourcePtr;
                 if (heatSources[i]->isLockedOut() && heatSources[i]->backupHeatSource != NULL)
                 {
-
-                    // Check that the backup isn't locked out too or already engaged then it will
-                    // heat on its own.
+                    // std::cout << "\t" << i << ": locked out and backup not null.\n";
+                    //  Check that the backup isn't locked out too or already engaged then it will
+                    //  heat on its own.
                     bool shouldLockOut =
                         heatSources[i]->backupHeatSource->isEngaged() ||
                         shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
                                         DRstatus);
                     if (heatSources[i]->backupHeatSource->typeOfHeatSource() == TYPE_compressor)
                     {
-                        auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
+                        auto condenser =
+                            reinterpret_cast<Condenser*>(heatSources[i]->backupHeatSource);
                         shouldLockOut |= condenser->toLockOrUnlock(heatSourceAmbientT_C);
                     }
                     else if (heatSources[i]->typeOfHeatSource() == TYPE_resistance)
@@ -420,6 +431,7 @@ void HPWH::runOneStep(double drawVolume_L,
                         auto resistance = reinterpret_cast<Resistance*>(heatSources[i].get());
                         shouldLockOut |= resistance->toLockOrUnlock();
                     }
+
                     if (shouldLockOut)
                     {
                         continue;
@@ -630,8 +642,8 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
 
         // Check the air temprature and setpoint against maxOut_at_LowT
         double tempSetpoint_C = -273.15;
-        if (heatSourceAmbientT_C <= cond_ptr->maxOut_at_LowT.airT_C &&
-            setpoint_C >= cond_ptr->maxOut_at_LowT.outT_C)
+        if ((heatSourceAmbientT_C <= cond_ptr->maxOut_at_LowT.airT_C) &&
+            (setpoint_C >= cond_ptr->maxOut_at_LowT.outT_C))
         {
             tempSetpoint_C = setpoint_C; // Store setpoint
             setSetpoint(cond_ptr->maxOut_at_LowT
@@ -812,6 +824,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
 
     bool returnVal = false;
 
+    constexpr double tolT_C = 1.e-9;
     if (isSetpointFixed())
     {
         returnVal = (newSetpoint_C == setpoint_C);
@@ -823,17 +836,16 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
     }
     else
     {
-
         if (hasACompressor())
         { // If there's a compressor lets check the new setpoint against the compressor's max
-          // setpoint
+            // setpoint
 
             auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
             maxAllowedSetpoint_C = cond_ptr->maxSetpoint_C -
                                    cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
-            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
+            if ((newSetpoint_C > maxAllowedSetpoint_C + tolT_C) && lowestElementIndex == -1)
             {
                 why = "The compressor cannot meet the setpoint temperature and there is no "
                       "resistance backup.";
@@ -849,7 +861,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
           // setpoint
 
             maxAllowedSetpoint_C = 100.;
-            if (newSetpoint_C > maxAllowedSetpoint_C)
+            if (newSetpoint_C > maxAllowedSetpoint_C + tolT_C)
             {
                 why = "The resistance elements cannot produce water this hot.";
                 returnVal = false;
@@ -861,7 +873,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         }
         else if (lowestElementIndex == -1 && !hasACompressor())
         { // There are no heat sources here!
-            if (model == MODELS_StorageTank)
+            if (model == hpwh_presets::MODELS::StorageTank)
             {
                 returnVal = true; // The one pass the storage tank doesn't have any heating elements
                                   // so sure change the setpoint it does nothing!
@@ -1578,6 +1590,13 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
         "standby", dist, decisionPoint, this, false, std::less<double>(), false, true);
 }
 
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNode(double decisionPoint)
+{
+    HPWH::Distribution dist = DistributionType::TopOfTank;
+    return std::make_shared<HPWH::TempBasedHeatingLogic>(
+        "top of tank", dist, decisionPoint, this, false, std::less<double>(), false, false);
+}
+
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
     HPWH::Distribution dist = DistributionType::TopOfTank;
@@ -1696,6 +1715,38 @@ int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
 
+HPWH::Condenser* HPWH::getCompressor() const
+{
+    for (auto heatSource : heatSources)
+    {
+        auto obj = heatSource.get();
+        if (typeid(*obj) == typeid(Condenser))
+            return static_cast<Condenser*>(heatSource.get());
+    }
+    return nullptr;
+}
+
+void HPWH::makeCondenserPerformance(const PerformancePolySet& perfPolySet)
+{
+    auto condenser = getCompressor();
+    if (condenser)
+        condenser->evaluatePerformance = perfPolySet.make();
+}
+
+void HPWH::makeCondenserPerformance(const PerformancePoly_CWHS_SP& perfPoly_cwhs_sp)
+{
+    auto condenser = getCompressor();
+    if (condenser)
+        condenser->evaluatePerformance = perfPoly_cwhs_sp.make(condenser);
+}
+
+void HPWH::makeCondenserPerformance(const PerformancePoly_CWHS_MP& perfPoly_cwhs_mp)
+{
+    auto condenser = getCompressor();
+    if (condenser)
+        condenser->evaluatePerformance = perfPoly_cwhs_mp.make();
+}
+
 int HPWH::getNumResistanceElements() const
 {
     int count = 0;
@@ -1712,9 +1763,6 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
                                    UNITS pwrUnit /*=UNITS_KW*/,
                                    UNITS tempUnit /*=UNITS_C*/)
 {
-    // calculate capacity btu/hr, input btu/hr, and cop
-    double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
-
     if (!hasACompressor())
     {
         send_error("Current model does not have a compressor.");
@@ -1736,54 +1784,57 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Invalid units.");
     }
 
+    constexpr double tolT_C = 1.e-9;
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
-    if (airTemp_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT)
+    if (airTemp_C + tolT_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT + tolT_C)
     {
-        send_error("The compress does not operate at the specified air temperature.");
+        send_error("The compressor does not operate at the specified air temperature.");
     }
 
     double maxAllowedSetpoint_C =
         cond_ptr->maxSetpoint_C - cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
-    if (outTemp_C > maxAllowedSetpoint_C)
+    if (outTemp_C > maxAllowedSetpoint_C + tolT_C)
     {
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
+    Performance performance = {0., 0., 0.};
     if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
+        double orig_setpointT_C = getSetpoint(UNITS_C);
+        std::string why;
+        if (isNewSetpointPossible(outTemp_C, maxAllowedSetpoint_C, why, UNITS_C))
+            setSetpoint(outTemp_C, UNITS_C);
+
         if (cond_ptr->isExternalMultipass())
         {
             double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-            cond_ptr->getCapacityMP(
-                airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            performance = cond_ptr->getPerformance(airTemp_C, averageTemp_C);
         }
         else
         {
-            cond_ptr->getCapacity(
-                airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
         }
+        if (isNewSetpointPossible(orig_setpointT_C, maxAllowedSetpoint_C, why, UNITS_C))
+            setSetpoint(orig_setpointT_C, UNITS_C);
     }
     else
     {
-        cond_ptr->getCapacity(
-            airTemp_C, inletTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        performance = cond_ptr->getPerformance(airTemp_C, inletTemp_C);
     }
 
-    double outputCapacity = capTemp_BTUperHr;
     switch (pwrUnit)
     {
     case UNITS_BTUperHr:
-        break;
+        return W_TO_BTUperH(performance.outputPower_W);
     case UNITS_KW:
-        outputCapacity = BTU_TO_KWH(capTemp_BTUperHr);
-        break;
+        return W_TO_KW(performance.outputPower_W);
     default:
         send_error("Invalid units.");
     }
-
-    return outputCapacity;
+    return 0.;
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
@@ -2221,7 +2272,7 @@ void HPWH::setInlet2ByFraction(double fractionalHeight)
 
 bool HPWH::isScalable() const { return canScale; }
 
-void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/)
+void HPWH::setScaleCapacityCOP(double scaleCapacity_in /*=1.0*/, double scaleCOP_in /*=1.0*/)
 {
     if (!isScalable())
     {
@@ -2231,17 +2282,13 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
     {
         send_error("Current model does not have a compressor.");
     }
-    if (scaleCapacity <= 0 || scaleCOP <= 0)
+    if (scaleCapacity_in <= 0 || scaleCOP_in <= 0)
     {
         send_error("Can not scale the HPWH Capacity or COP to 0 or less than 0.");
     }
-
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    for (auto& performancePoint : cond_ptr->performanceMap)
-    {
-        scaleVector(performancePoint.inputPower_coeffs, scaleCapacity);
-        scaleVector(performancePoint.COP_coeffs, scaleCOP);
-    }
+    cond_ptr->inputPowerScale *= scaleCapacity_in;
+    cond_ptr->COP_scale *= scaleCOP_in;
 }
 
 void HPWH::setCompressorOutputCapacity(double newCapacity,
@@ -2278,7 +2325,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         send_error("Can not have a negative input power.");
     }
     // Unit conversion
-    double watts = 1000. * power;
+    double watts = KW_TO_W(power);
     switch (pwrUnit)
     {
     case UNITS_KW:
@@ -2369,9 +2416,9 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     switch (pwrUnit)
     {
     case UNITS_KW:
-        return returnPower_W / 1000.;
+        return W_TO_KW(returnPower_W);
     case UNITS_BTUperHr:
-        return KWH_TO_BTU(returnPower_W / 1000.); // kW to BTU/h
+        return KWH_TO_BTU(W_TO_KW(returnPower_W)); // kW to BTU/h
     default:
         send_error("Invalid units.");
     }
@@ -2441,7 +2488,7 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
     {
         if (heatDistribution_W[i] != 0)
         {
-            double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
+            double qAdd_BTUperHr = KWH_TO_BTU(W_TO_KW(heatDistribution_W[i]));
             double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
             addExtraHeatAboveNode(qAdd_KJ, i);
             tot_qAdded_BTUperHr += qAdd_BTUperHr;
@@ -2679,7 +2726,7 @@ void HPWH::checkInputs()
 {
     std::queue<std::string> error_msgs = {};
 
-    if (getNumHeatSources() <= 0 && (model != MODELS_StorageTank))
+    if (getNumHeatSources() <= 0 && (model != hpwh_presets::MODELS::StorageTank))
     {
         error_msgs.push("You must have at least one HeatSource.");
     }
@@ -2782,51 +2829,9 @@ void HPWH::checkInputs()
                 }
             }
 
-            // Check performance map
-            // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal
-            // and that ;
-            if (cond_ptr->useBtwxtGrid)
+            if (cond_ptr->evaluatePerformance == nullptr)
             {
-                // If useBtwxtGrid is true that the perfMap is empty
-                if (cond_ptr->performanceMap.size() != 0)
-                {
-                    error_msgs.push("\n\tUsing the grid lookups but a regression-based performance "
-                                    "map is given.");
-                }
-
-                // Check length of vectors in perfGridValue are equal
-                if (cond_ptr->perfGridValues[0].size() != cond_ptr->perfGridValues[1].size() &&
-                    cond_ptr->perfGridValues[0].size() != 0)
-                {
-                    error_msgs.push("When using grid lookups for performance the vectors in "
-                                    "perfGridValues must "
-                                    "be the same length.");
-                }
-
-                // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
-                // lengths
-                size_t expLength = 1;
-                for (const auto& v : cond_ptr->perfGrid)
-                {
-                    expLength *= v.size();
-                }
-                if (expLength != cond_ptr->perfGridValues[0].size())
-                {
-                    error_msgs.push(
-                        "When using grid lookups for perfmance the vectors in perfGridValues must "
-                        "be the same length.");
-                }
-            }
-
-            else
-            {
-                // Check that perfmap only has 1 point if config_external and multipass
-                if (cond_ptr->isExternalMultipass() && cond_ptr->performanceMap.size() != 1)
-                {
-                    error_msgs.push(
-                        "External multipass heat sources must have a perfMap of only one point "
-                        "with regression equations.");
-                }
+                error_msgs.push("Condenser does not have a performance function.");
             }
         }
     }
@@ -2884,466 +2889,127 @@ void HPWH::checkInputs()
     }
 }
 
-/* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
+/* static */ bool HPWH::getPresetNumberFromName(const std::string& modelName,
+                                                hpwh_presets::MODELS& model_id)
 {
-    if (modelName == "Voltex60" || modelName == "AOSmithPHPT60")
-    {
-        model = HPWH::MODELS_AOSmithPHPT60;
-    }
-    else if (modelName == "Voltex80" || modelName == "AOSmith80")
-    {
-        model = HPWH::MODELS_AOSmithPHPT80;
-    }
-    else if (modelName == "GEred" || modelName == "GE")
-    {
-        model = HPWH::MODELS_GE2012;
-    }
-    else if (modelName == "SandenGAU" || modelName == "Sanden80" || modelName == "SandenGen3")
-    {
-        model = HPWH::MODELS_Sanden80;
-    }
-    else if (modelName == "Sanden120")
-    {
-        model = HPWH::MODELS_Sanden120;
-    }
-    else if (modelName == "SandenGES" || modelName == "Sanden40")
-    {
-        model = HPWH::MODELS_Sanden40;
-    }
-    else if (modelName == "AOSmithHPTU50")
-    {
-        model = HPWH::MODELS_AOSmithHPTU50;
-    }
-    else if (modelName == "AOSmithHPTU66")
-    {
-        model = HPWH::MODELS_AOSmithHPTU66;
-    }
-    else if (modelName == "AOSmithHPTU80")
-    {
-        model = HPWH::MODELS_AOSmithHPTU80;
-    }
-    else if (modelName == "AOSmithHPTS40")
-    {
-        model = HPWH::MODELS_AOSmithHPTS40;
-    }
-    else if (modelName == "AOSmithHPTS50")
-    {
-        model = HPWH::MODELS_AOSmithHPTS50;
-    }
-    else if (modelName == "AOSmithHPTS66")
-    {
-        model = HPWH::MODELS_AOSmithHPTS66;
-    }
-    else if (modelName == "AOSmithHPTS80")
-    {
-        model = HPWH::MODELS_AOSmithHPTS80;
-    }
-    else if (modelName == "AOSmithHPTU80DR")
-    {
-        model = HPWH::MODELS_AOSmithHPTU80_DR;
-    }
-    else if (modelName == "GE502014STDMode" || modelName == "GE2014STDMode")
-    {
-        model = HPWH::MODELS_GE2014STDMode;
-    }
-    else if (modelName == "GE2014STDMode_80")
-    {
-        model = HPWH::MODELS_GE2014STDMode_80;
-    }
-    else if (modelName == "GE502014" || modelName == "GE2014")
-    {
-        model = HPWH::MODELS_GE2014;
-    }
-    else if (modelName == "GE802014")
-    {
-        model = HPWH::MODELS_GE2014_80DR;
-    }
-    else if (modelName == "RheemHB50")
-    {
-        model = HPWH::MODELS_RheemHB50;
-    }
-    else if (modelName == "RheemHBDR2250")
-    {
-        model = HPWH::MODELS_RheemHBDR2250;
-    }
-    else if (modelName == "RheemHBDR2265")
-    {
-        model = HPWH::MODELS_RheemHBDR2265;
-    }
-    else if (modelName == "RheemHBDR2280")
-    {
-        model = HPWH::MODELS_RheemHBDR2280;
-    }
-    else if (modelName == "RheemHBDR4550")
-    {
-        model = HPWH::MODELS_RheemHBDR4550;
-    }
-    else if (modelName == "RheemHBDR4565")
-    {
-        model = HPWH::MODELS_RheemHBDR4565;
-    }
-    else if (modelName == "RheemHBDR4580")
-    {
-        model = HPWH::MODELS_RheemHBDR4580;
-    }
-    else if (modelName == "Stiebel220e" || modelName == "Stiebel220E")
-    {
-        model = HPWH::MODELS_Stiebel220E;
-    }
-    else if (modelName == "Generic1")
-    {
-        model = HPWH::MODELS_Generic1;
-    }
-    else if (modelName == "Generic2")
-    {
-        model = HPWH::MODELS_Generic2;
-    }
-    else if (modelName == "Generic3")
-    {
-        model = HPWH::MODELS_Generic3;
-    }
-    else if (modelName == "custom")
-    {
-        model = HPWH::MODELS_CustomFile;
-    }
-    else if (modelName == "restankRealistic")
-    {
-        model = HPWH::MODELS_restankRealistic;
-    }
-    else if (modelName == "StorageTank")
-    {
-        model = HPWH::MODELS_StorageTank;
-    }
-    else if (modelName == "BWC2020_65")
-    {
-        model = HPWH::MODELS_BWC2020_65;
-    }
-    // New Rheems
-    else if (modelName == "Rheem2020Prem40")
-    {
-        model = HPWH::MODELS_Rheem2020Prem40;
-    }
-    else if (modelName == "Rheem2020Prem50")
-    {
-        model = HPWH::MODELS_Rheem2020Prem50;
-    }
-    else if (modelName == "Rheem2020Prem65")
-    {
-        model = HPWH::MODELS_Rheem2020Prem65;
-    }
-    else if (modelName == "Rheem2020Prem80")
-    {
-        model = HPWH::MODELS_Rheem2020Prem80;
-    }
-    else if (modelName == "Rheem2020Build40")
-    {
-        model = HPWH::MODELS_Rheem2020Build40;
-    }
-    else if (modelName == "Rheem2020Build50")
-    {
-        model = HPWH::MODELS_Rheem2020Build50;
-    }
-    else if (modelName == "Rheem2020Build65")
-    {
-        model = HPWH::MODELS_Rheem2020Build65;
-    }
-    else if (modelName == "Rheem2020Build80")
-    {
-        model = HPWH::MODELS_Rheem2020Build80;
-    }
-    else if (modelName == "RheemPlugInDedicated40")
-    {
-        model = HPWH::MODELS_RheemPlugInDedicated40;
-    }
-    else if (modelName == "RheemPlugInDedicated50")
-    {
-        model = HPWH::MODELS_RheemPlugInDedicated50;
-    }
-    else if (modelName == "RheemPlugInShared40")
-    {
-        model = HPWH::MODELS_RheemPlugInShared40;
-    }
-    else if (modelName == "RheemPlugInShared50")
-    {
-        model = HPWH::MODELS_RheemPlugInShared50;
-    }
-    else if (modelName == "RheemPlugInShared65")
-    {
-        model = HPWH::MODELS_RheemPlugInShared65;
-    }
-    else if (modelName == "RheemPlugInShared80")
-    {
-        model = HPWH::MODELS_RheemPlugInShared80;
-    }
-    // Large HPWH's
-    else if (modelName == "AOSmithCAHP120")
-    {
-        model = HPWH::MODELS_AOSmithCAHP120;
-    }
-    else if (modelName == "ColmacCxV_5_SP")
-    {
-        model = HPWH::MODELS_ColmacCxV_5_SP;
-    }
-    else if (modelName == "ColmacCxA_10_SP")
-    {
-        model = HPWH::MODELS_ColmacCxA_10_SP;
-    }
-    else if (modelName == "ColmacCxA_15_SP")
-    {
-        model = HPWH::MODELS_ColmacCxA_15_SP;
-    }
-    else if (modelName == "ColmacCxA_20_SP")
-    {
-        model = HPWH::MODELS_ColmacCxA_20_SP;
-    }
-    else if (modelName == "ColmacCxA_25_SP")
-    {
-        model = HPWH::MODELS_ColmacCxA_25_SP;
-    }
-    else if (modelName == "ColmacCxA_30_SP")
-    {
-        model = HPWH::MODELS_ColmacCxA_30_SP;
-    }
-    else if (modelName == "ColmacCxV_5_MP")
-    {
-        model = HPWH::MODELS_ColmacCxV_5_MP;
-    }
-    else if (modelName == "ColmacCxA_10_MP")
-    {
-        model = HPWH::MODELS_ColmacCxA_10_MP;
-    }
-    else if (modelName == "ColmacCxA_15_MP")
-    {
-        model = HPWH::MODELS_ColmacCxA_15_MP;
-    }
-    else if (modelName == "ColmacCxA_20_MP")
-    {
-        model = HPWH::MODELS_ColmacCxA_20_MP;
-    }
-    else if (modelName == "ColmacCxA_25_MP")
-    {
-        model = HPWH::MODELS_ColmacCxA_25_MP;
-    }
-    else if (modelName == "ColmacCxA_30_MP")
-    {
-        model = HPWH::MODELS_ColmacCxA_30_MP;
-    }
-    else if (modelName == "RheemHPHD60")
-    {
-        model = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
-    }
-    else if (modelName == "RheemHPHD135")
-    {
-        model = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
-    }
-    // Nyle Single pass models
-    else if (modelName == "NyleC25A_SP")
-    {
-        model = HPWH::MODELS_NyleC25A_SP;
-    }
-    else if (modelName == "NyleC60A_SP")
-    {
-        model = HPWH::MODELS_NyleC60A_SP;
-    }
-    else if (modelName == "NyleC90A_SP")
-    {
-        model = HPWH::MODELS_NyleC90A_SP;
-    }
-    else if (modelName == "NyleC125A_SP")
-    {
-        model = HPWH::MODELS_NyleC125A_SP;
-    }
-    else if (modelName == "NyleC185A_SP")
-    {
-        model = HPWH::MODELS_NyleC185A_SP;
-    }
-    else if (modelName == "NyleC250A_SP")
-    {
-        model = HPWH::MODELS_NyleC250A_SP;
-    }
-    else if (modelName == "NyleC60A_C_SP")
-    {
-        model = HPWH::MODELS_NyleC60A_C_SP;
-    }
-    else if (modelName == "NyleC90A_C_SP")
-    {
-        model = HPWH::MODELS_NyleC90A_C_SP;
-    }
-    else if (modelName == "NyleC125A_C_SP")
-    {
-        model = HPWH::MODELS_NyleC125A_C_SP;
-    }
-    else if (modelName == "NyleC185A_C_SP")
-    {
-        model = HPWH::MODELS_NyleC185A_C_SP;
-    }
-    else if (modelName == "NyleC250A_C_SP")
-    {
-        model = HPWH::MODELS_NyleC250A_C_SP;
-    }
-    // Nyle MP models
-    else if (modelName == "NyleC60A_MP")
-    {
-        model = HPWH::MODELS_NyleC60A_MP;
-    }
-    else if (modelName == "NyleC90A_MP")
-    {
-        model = HPWH::MODELS_NyleC90A_MP;
-    }
-    else if (modelName == "NyleC125A_MP")
-    {
-        model = HPWH::MODELS_NyleC125A_MP;
-    }
-    else if (modelName == "NyleC185A_MP")
-    {
-        model = HPWH::MODELS_NyleC185A_MP;
-    }
-    else if (modelName == "NyleC250A_MP")
-    {
-        model = HPWH::MODELS_NyleC250A_MP;
-    }
-    else if (modelName == "NyleC60A_C_MP")
-    {
-        model = HPWH::MODELS_NyleC60A_C_MP;
-    }
-    else if (modelName == "NyleC90A_C_MP")
-    {
-        model = HPWH::MODELS_NyleC90A_C_MP;
-    }
-    else if (modelName == "NyleC125A_C_MP")
-    {
-        model = HPWH::MODELS_NyleC125A_C_MP;
-    }
-    else if (modelName == "NyleC185A_C_MP")
-    {
-        model = HPWH::MODELS_NyleC185A_C_MP;
-    }
-    else if (modelName == "NyleC250A_C_MP")
-    {
-        model = HPWH::MODELS_NyleC250A_C_MP;
-    }
-    else if (modelName == "QAHV_N136TAU_HPB_SP")
-    {
-        model = HPWH::MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP;
-    }
-    // Stack in a couple scalable models
-    else if (modelName == "TamScalable_SP")
-    {
-        model = HPWH::MODELS_TamScalable_SP;
-    }
-    else if (modelName == "TamScalable_SP_2X")
-    {
-        model = HPWH::MODELS_TamScalable_SP_2X;
-    }
-    else if (modelName == "TamScalable_SP_Half")
-    {
-        model = HPWH::MODELS_TamScalable_SP_Half;
-    }
-    else if (modelName == "Scalable_MP")
-    {
-        model = HPWH::MODELS_Scalable_MP;
-    }
-    else if (modelName == "AWHSTier3Generic40")
-    {
-        model = HPWH::MODELS_AWHSTier3Generic40;
-    }
-    else if (modelName == "AWHSTier3Generic50")
-    {
-        model = HPWH::MODELS_AWHSTier3Generic50;
-    }
-    else if (modelName == "AWHSTier3Generic65")
-    {
-        model = HPWH::MODELS_AWHSTier3Generic65;
-    }
-    else if (modelName == "AWHSTier3Generic80")
-    {
-        model = HPWH::MODELS_AWHSTier3Generic80;
-    }
-    else if (modelName == "AWHSTier4Generic40") // Tier-4 Generic 40 gal
-    {
-        model = HPWH::MODELS_AWHSTier4Generic40;
-    }
-    else if (modelName == "AWHSTier4Generic50") // Tier-4 Generic 50 gal
-    {
-        model = HPWH::MODELS_AWHSTier4Generic50;
-    }
-    else if (modelName == "AWHSTier4Generic65") // Tier-4 Generic 65 gal
-    {
-        model = HPWH::MODELS_AWHSTier4Generic65;
-    }
-    else if (modelName == "AWHSTier4Generic80") // Tier-4 Generic 80 gal
-    {
-        model = HPWH::MODELS_AWHSTier4Generic80;
-    }
-    else if (modelName == "AquaThermAire")
-    {
-        model = HPWH::MODELS_AquaThermAire;
-    }
-    else if (modelName == "GenericUEF217")
-    {
-        model = HPWH::MODELS_GenericUEF217;
-    }
-    else if (modelName == "BradfordWhiteAeroThermRE2H50")
-    {
-        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H50;
-    }
-    else if (modelName == "BradfordWhiteAeroThermRE2H65")
-    {
-        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H65;
-    }
-    else if (modelName == "BradfordWhiteAeroThermRE2H80")
-    {
-        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H80;
-    }
-    else if (modelName == "LG_APHWC50")
-    {
-        model = HPWH::MODELS_LG_APHWC50;
-    }
-    else if (modelName == "LG_APHWC80")
-    {
-        model = HPWH::MODELS_LG_APHWC80;
-    }
-    else
-    {
-        model = HPWH::MODELS_basicIntegrated;
-        cout << "Couldn't find model " << modelName << ".  Exiting...\n";
-        return false;
-    }
-    return true;
+    model_id = hpwh_presets::find_by_name(modelName).model();
+    return (model_id != -1);
 }
 
-/// Initializes a preset from the modelName
-void HPWH::initPreset(const std::string& modelName)
+/* static */
+bool HPWH::getPresetNameFromNumber(std::string& modelName, const hpwh_presets::MODELS id)
 {
-    HPWH::MODELS targetModel;
-    if (mapNameToPreset(modelName, targetModel))
+    auto model = hpwh_presets::find_by_id(id);
+    if (model.id != -1)
     {
-        initPreset(targetModel);
+        modelName = model.name;
+        return true;
+    }
+    return false;
+}
+
+void HPWH::configure()
+{ // adjustments for non-data-model properties
+    if (model == hpwh_presets::MODELS::GE2012_50)
+    {
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+        logic->description = "large draw";
+    }
+    else if ((model == hpwh_presets::MODELS::Sanco83) ||
+             (model == hpwh_presets::MODELS::SancoGS3_45HPA_US_SP) ||
+             (model == hpwh_presets::MODELS::Sanco119) || (model == hpwh_presets::MODELS::Sanco43))
+    {
+        setpointFixed = true;
+        {
+            auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+            logic->getIsEnteringWaterHighTempShutoff() = true;
+        }
+    }
+    else if ((hpwh_presets::MODELS::NyleC25A_SP <= model) &&
+             (model <= hpwh_presets::MODELS::NyleC250A_C_SP))
+    {
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+    else if ((hpwh_presets::MODELS::ColmacCxV_5_SP <= model) &&
+             (model <= hpwh_presets::MODELS::ColmacCxA_30_SP))
+    {
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+    else if (model == hpwh_presets::MODELS::Mitsubishi_QAHV_N136TAU_HPB_SP)
+    {
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+    else if (model == hpwh_presets::MODELS::Scalable_MP)
+    {
+        canScale = true;
+    }
+    else if ((hpwh_presets::MODELS::TamScalable_SP <= model) &&
+             (model <= hpwh_presets::MODELS::TamScalable_SP_Half))
+    {
+        canScale = true;
+
+        // hard-code fix: two VIPs assigned in preset
+        heatSources[0]->isVIP = heatSources[2]->isVIP = true;
+
+        auto logic = heatSources[compressorIndex]->shutOffLogicSet[0];
+        logic->getIsEnteringWaterHighTempShutoff() = true;
+    }
+
+    // calculate oft-used derived values
+    calcDerivedValues();
+    checkInputs();
+    resetTankToSetpoint();
+    isHeating = false;
+    for (auto i = 0; i < getNumHeatSources(); i++)
+    {
+        if (heatSources[i]->isOn)
+        {
+            isHeating = true;
+        }
+    }
+}
+
+void HPWH::initPreset(hpwh_presets::MODELS presetNum)
+{
+    auto presetData = hpwh_presets::find_by_id(presetNum);
+    nlohmann::json j =
+        nlohmann::json::from_cbor(presetData.cbor_data, presetData.cbor_data + presetData.size);
+
+    hpwh_data_model::init(get_courier());
+    hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
+    hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
+    name = presetData.name;
+    model = presetNum;
+    from(hsi);
+    configure();
+}
+
+void HPWH::initPreset(const std::string& presetName)
+{
+    hpwh_presets::MODELS presetNum;
+    if (getPresetNumberFromName(presetName, presetNum))
+    {
+        initPreset(presetNum);
     }
     else
     {
         send_error("Unable to initialize model.");
     }
-    name = modelName;
 }
 
-#ifndef HPWH_ABRIDGED
-
-void HPWH::initFromJSON(string modelName)
+void HPWH::initFromJSON(const nlohmann::json& j, const std::string& modelName)
 {
-    auto sInputFileName = "models_json/" + modelName + ".json";
-    std::ifstream inputFile(sInputFileName);
-    nlohmann::json j = nlohmann::json::parse(inputFile);
     hpwh_data_model::init(get_courier());
-
-    mapNameToPreset(modelName, model);
-
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input::from_json(j, hsi);
+    name = modelName;
+    getPresetNumberFromName(name, model);
     from(hsi);
+    configure();
 }
-
-#endif
 
 void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
 {
@@ -3352,8 +3018,12 @@ void HPWH::from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi)
     int number_of_nodes;
     checkFrom(number_of_nodes, hsi.number_of_nodes_is_set, hsi.number_of_nodes, 12);
     tank->setNumNodes(number_of_nodes);
+    checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, true);
+
     checkFrom(
         setpoint_C, hsi.standard_setpoint_is_set, K_TO_C(hsi.standard_setpoint), F_TO_C(135.));
+
+    checkFrom(useCOP_inBtwxt, hsi.interpolate_cop_is_set, hsi.interpolate_cop, false);
 
     if (hsi.system_type_is_set)
         switch (hsi.system_type)
@@ -3430,6 +3100,7 @@ void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATE
                 hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE*>(
                 config.heat_source.get());
             condenser->from(*cond_ptr);
+            compressorIndex = static_cast<int>(iHeatSource);
             break;
         }
         case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
@@ -3478,19 +3149,6 @@ void HPWH::from(const hpwh_data_model::rsintegratedwaterheater::RSINTEGRATEDWATE
         {
             auto iCompanion = heat_source_lookup[configuration.companion_heat_source_id];
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
-        }
-    }
-
-    // calculate oft-used derived values
-    calcDerivedValues();
-    checkInputs();
-    resetTankToSetpoint();
-    isHeating = false;
-    for (auto i = 0; i < getNumHeatSources(); i++)
-    {
-        if (heatSources[i]->isOn)
-        {
-            isHeating = true;
         }
     }
 }
@@ -3547,6 +3205,7 @@ void HPWH::from(
                 reinterpret_cast<hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEATPUMP*>(
                     config.heat_source.get());
             condenser->from(*ptr);
+            compressorIndex = static_cast<int>(iHeatSource);
             break;
         }
         case hpwh_data_model::heat_source_configuration::HeatSourceType::RESISTANCE:
@@ -3597,23 +3256,6 @@ void HPWH::from(
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
-
-    // hard-code fix: two VIPs assigned in preset
-    if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
-        heatSources[0]->isVIP = heatSources[2]->isVIP = true;
-
-    // calculate oft-used derived values
-    calcDerivedValues();
-    checkInputs();
-    resetTankToSetpoint();
-    isHeating = false;
-    for (auto i = 0; i < getNumHeatSources(); i++)
-    {
-        if (heatSources[i]->isOn)
-        {
-            isHeating = true;
-        }
-    }
 }
 
 void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
@@ -3631,11 +3273,15 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi) const
 
     checkTo(C_TO_K(setpoint_C), hsi.standard_setpoint_is_set, hsi.standard_setpoint);
 
+    if (hasACompressor())
+        checkTo(useCOP_inBtwxt, hsi.interpolate_cop_is_set, hsi.interpolate_cop);
+
     if (hasACompressor() && (getCompressorCoilConfig() == Condenser::COIL_CONFIG::CONFIG_EXTERNAL))
     {
         checkTo(hpwh_data_model::hpwh_sim_input::HPWHSystemType::CENTRAL,
                 hsi.system_type_is_set,
                 hsi.system_type);
+
         to(hsi.central_system);
         hsi.central_system_is_set = true;
         hsi.integrated_system_is_set = false;
@@ -3746,8 +3392,9 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
             cwhs.fixed_flow_rate,
             condenser->isMultipass);
 
-    if ((cwhs.secondary_heat_exchanger_is_set =
-             (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.)))
+    cwhs.secondary_heat_exchanger_is_set =
+        (condenser->secondaryHeatExchanger.extraPumpPower_W > 0.);
+    if (cwhs.secondary_heat_exchanger_is_set)
     {
         auto& she = cwhs.secondary_heat_exchanger;
         checkTo(condenser->secondaryHeatExchanger.coldSideTemperatureOffset_dC,
@@ -3764,22 +3411,6 @@ void HPWH::to(hpwh_data_model::central_water_heating_system::CentralWaterHeating
     cwhs.heat_source_configurations_is_set = true;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	convert condenser performance map to grid representation
-//-----------------------------------------------------------------------------
-void HPWH::convertMapToGrid()
-{
-    if (!hasACompressor())
-    {
-        send_error("Current model does not have a compressor.");
-    }
-
-    auto condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
-    if (!condenser->useBtwxtGrid)
-    {
-        condenser->convertMapToGrid();
-    }
-}
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prepare for test
 ///         Draw until heating begins, wait for recovery.
@@ -4600,48 +4231,44 @@ std::string HPWH::TestSummary::report()
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
                                       TestConfiguration testConfiguration,
-                                      FirstHourRating::Designation designation)
+                                      FirstHourRating::Designation designation,
+                                      PerformancePolySet& perfPolySet)
 {
-    // set up metrics
+    auto compressor = getCompressor();
+    if (!compressor)
+        send_error("No compressor");
+
+    // set up metric
     std::vector<std::shared_ptr<Fitter::Metric>> metrics = {};
     auto ef_metric = std::make_shared<HPWH::Fitter::EF_Metric>(
         targetEF, testConfiguration, designation, get_courier(), this);
     metrics.push_back(ef_metric);
 
-    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    compressor->evaluatePerformance = perfPolySet.use();
 
-    int i_ambientT = compressor->getAmbientT_index(testConfiguration.ambientT_C);
+    int i_ambientT = perfPolySet.getAmbientT_index(testConfiguration.ambientT_C);
 
-    // set up parameters
+    // set up parameter
     std::vector<std::shared_ptr<Fitter::Parameter>> parameters;
     auto copCoefficient0 =
-        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), this);
+        std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 0, get_courier(), &perfPolySet);
     parameters.push_back(copCoefficient0);
-
-    // auto copCoefficient1 =
-    //     std::make_shared<HPWH::Fitter::COP_Coefficient>(i_ambientT, 1, get_courier(), this);
-    // parameters.push_back(copCoefficient1);
 
     Fitter fitter(metrics, parameters, get_courier());
     fitter.fit();
 
-    double input_BTUperHr, cap_BTUperHr, cop1, cop;
-    compressor->getCapacity(testConfiguration.ambientT_C,
-                            compressor->maxSetpoint_C,
-                            getSetpoint(),
-                            input_BTUperHr,
-                            cap_BTUperHr,
-                            cop1);
-    if (cop1 < 0.)
+    compressor->evaluatePerformance = perfPolySet.make();
+
+    auto performance1 =
+        compressor->getPerformance(testConfiguration.ambientT_C, compressor->maxSetpoint_C);
+
+    if (performance1.cop < 0.)
         send_error("COP is negative at maximum condenser temperature.");
 
-    compressor->getCapacity(testConfiguration.ambientT_C,
-                            0., /// low condenserT_C
-                            getSetpoint(),
-                            input_BTUperHr,
-                            cap_BTUperHr,
-                            cop);
-    if (cop < cop1)
+    /// low condenserT_C
+    auto performance0 = compressor->getPerformance(testConfiguration.ambientT_C, 0.);
+
+    if (performance0.cop < performance1.cop)
         send_error("COP slope is positive.");
 
     return ef_metric->getTestSummary();
@@ -4653,26 +4280,28 @@ HPWH::TestSummary HPWH::makeGenericEF(double targetEF,
 /// @returns	Test summary using UEF configuration
 //-----------------------------------------------------------------------------
 HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
-                                       HPWH::FirstHourRating::Designation designation)
+                                       HPWH::FirstHourRating::Designation designation,
+                                       HPWH::PerformancePolySet& perfPolySet)
 {
-    auto compressor = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    auto compressor = getCompressor();
+    if (!compressor)
+        send_error("No compressor");
 
     // pick the nearest temperature index
-    int i_ambientT = compressor->getAmbientT_index(testConfiguration_UEF.ambientT_C);
+    int i_ambientT = perfPolySet.getAmbientT_index(testConfiguration_UEF.ambientT_C);
 
-    auto originalCoefficient = compressor->performanceMap[i_ambientT].COP_coeffs[0];
-    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation);
+    double originalCoefficient = perfPolySet[i_ambientT].COP_coeffs[0];
+    auto testSummary = makeGenericEF(targetUEF, testConfiguration_UEF, designation, perfPolySet);
 
-    double dCOP_Coefficient =
-        compressor->performanceMap[i_ambientT].COP_coeffs[0] - originalCoefficient;
+    double dCOP_Coefficient = perfPolySet[i_ambientT].COP_coeffs[0] - originalCoefficient;
 
-    int nPerfPts = static_cast<int>(compressor->performanceMap.size());
+    int nPerfPts = static_cast<int>(perfPolySet.size());
     for (int i = 0; i < nPerfPts; ++i)
     {
         if (i != i_ambientT)
-            compressor->performanceMap[i].COP_coeffs[0] += dCOP_Coefficient;
+            perfPolySet[i].COP_coeffs[0] += dCOP_Coefficient;
     }
-
+    compressor->evaluatePerformance = perfPolySet.make();
     return testSummary;
 }
 
@@ -4682,10 +4311,144 @@ HPWH::TestSummary HPWH::makeGenericUEF(double targetUEF,
 void HPWH::makeGenericE50_UEF_E95(double targetE50,
                                   double targetUEF,
                                   double targetE95,
-                                  FirstHourRating::Designation designation)
+                                  FirstHourRating::Designation designation,
+                                  HPWH::PerformancePolySet& perfPolySet)
 {
-    // return test summaries unused
-    makeGenericEF(targetE50, testConfiguration_E50, designation);
-    makeGenericEF(targetUEF, testConfiguration_UEF, designation);
-    makeGenericEF(targetE95, testConfiguration_E95, designation);
+    // returned test summaries are unused
+    makeGenericEF(targetE50, testConfiguration_E50, designation, perfPolySet);
+    makeGenericEF(targetUEF, testConfiguration_UEF, designation, perfPolySet);
+    makeGenericEF(targetE95, testConfiguration_E95, designation, perfPolySet);
+}
+
+int HPWH::PerformancePolySet::getAmbientT_index(double ambientT_C) const
+{
+    int nPerfPts = static_cast<int>(size());
+    int i0 = 0, i1 = 0;
+    for (auto& perfPoint : *this)
+    {
+        if (C_TO_F(ambientT_C) < perfPoint.T_F)
+            break;
+        i0 = i1;
+        ++i1;
+    }
+    double ratio = 0.;
+    if ((i1 > i0) && (i1 < nPerfPts))
+    {
+        ratio = (C_TO_F(ambientT_C) - at(i0).T_F) / (at(i1).T_F - at(i0).T_F);
+    }
+    return (ratio < 0.5) ? i0 : i1;
+}
+
+HPWH::Performance HPWH::PerformancePolySet::evaluate(double externalT_C, double heatSourceT_C) const
+{
+    Performance performance = {0., 0., 0.};
+
+    size_t i_prev = 0;
+    size_t i_next = 1;
+
+    double externalT_F = C_TO_F(externalT_C);
+    double heatSourceT_F = C_TO_F(heatSourceT_C);
+    for (size_t i = 0; i < size(); ++i)
+    {
+        if (externalT_F < at(i).T_F)
+        {
+            if (i == 0)
+            {
+                i_prev = 0;
+                i_next = 1;
+            }
+            else
+            {
+                i_prev = i - 1;
+                i_next = i;
+            }
+            break;
+        }
+        else
+        {
+            if (i == size() - 1)
+            {
+                i_prev = i - 1;
+                i_next = i;
+                break;
+            }
+        }
+    }
+
+    // Calculate COP and Input Power at each of the two reference temperatures
+    double COP_T1 = at(i_prev).COP_coeffs[0];
+    COP_T1 += at(i_prev).COP_coeffs[1] * heatSourceT_F;
+    COP_T1 += at(i_prev).COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double COP_T2 = at(i_next).COP_coeffs[0];
+    COP_T2 += at(i_next).COP_coeffs[1] * heatSourceT_F;
+    COP_T2 += at(i_next).COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double inputPower_T1_W = at(i_prev).inputPower_coeffs[0];
+    inputPower_T1_W += at(i_prev).inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T1_W += at(i_prev).inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    double inputPower_T2_W = at(i_next).inputPower_coeffs[0];
+    inputPower_T2_W += at(i_next).inputPower_coeffs[1] * heatSourceT_F;
+    inputPower_T2_W += at(i_next).inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
+
+    // Interpolate to get COP and input power at the current ambient temperature
+    linearInterp(performance.cop, externalT_F, at(i_prev).T_F, at(i_next).T_F, COP_T1, COP_T2);
+    linearInterp(performance.inputPower_W,
+                 externalT_F,
+                 at(i_prev).T_F,
+                 at(i_next).T_F,
+                 inputPower_T1_W,
+                 inputPower_T2_W);
+    performance.outputPower_W = performance.cop * performance.inputPower_W;
+    return performance;
+}
+
+static double regressedMethod(const std::vector<double>& coef, double x1, double x2, double x3)
+{
+    return coef[0] + coef[1] * x1 + coef[2] * x2 + coef[3] * x3 + coef[4] * x1 * x1 +
+           coef[5] * x2 * x2 + coef[6] * x3 * x3 + coef[7] * x1 * x2 + coef[8] * x1 * x3 +
+           coef[9] * x2 * x3 + coef[10] * x1 * x2 * x3;
+}
+
+static double regressedMethodMP(const std::vector<double>& coef, double x1, double x2)
+{
+    // Const Tair Tin Tair2 Tin2 TairTin
+    return coef[0] + coef[1] * x1 + coef[2] * x2 + coef[3] * x1 * x1 + coef[4] * x2 * x2 +
+           coef[5] * x1 * x2;
+}
+
+std::function<HPWH::Performance(double, double)>
+HPWH::PerformancePoly_CWHS_SP::make(Condenser* condenser) const
+{
+    return [*this, condenser](double externalT_C, double heatSourceT_C)
+    {
+        Performance performance = {0., 0., 0.};
+
+        double T1 = C_TO_F(externalT_C);
+        double T2 = C_TO_F(condenser->hpwh->getSetpoint() +
+                           condenser->secondaryHeatExchanger.hotSideTemperatureOffset_dC);
+        double T3 = C_TO_F(heatSourceT_C);
+
+        performance.inputPower_W = KW_TO_W(regressedMethod(inputPower_coeffs, T1, T2, T3));
+        performance.cop = regressedMethod(COP_coeffs, T1, T2, T3);
+        performance.outputPower_W = performance.cop * performance.inputPower_W;
+        return performance;
+    };
+}
+
+std::function<HPWH::Performance(double, double)> HPWH::PerformancePoly_CWHS_MP::make() const
+{
+    return [*this](double externalT_C, double heatSourceT_C)
+    {
+        Performance performance = {0., 0., 0.};
+
+        double T1 = C_TO_F(externalT_C);
+        double T2 = C_TO_F(heatSourceT_C);
+
+        performance.inputPower_W = KW_TO_W(regressedMethodMP(inputPower_coeffs, T1, T2));
+        performance.cop = regressedMethodMP(COP_coeffs, T1, T2);
+        performance.outputPower_W = performance.cop * performance.inputPower_W;
+        return performance;
+    };
 }

@@ -28,13 +28,13 @@ TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
 }
 
 /*
- * Sanden80_SizingFract tests
+ * Sanco83_SizingFract tests
  */
-TEST(SizingFractionsTest, Sanden80_SizingFract)
+TEST(SizingFractionsTest, Sanco83_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "Sanden80";
+    const std::string modelName = "Sanco83";
     hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
@@ -88,7 +88,7 @@ TEST(SizingFractionsTest, GE_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "GE";
+    const std::string modelName = "GE2012_50";
     hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;
@@ -102,11 +102,11 @@ TEST(SizingFractionsTest, GE_SizingFract)
 /*
  * Stiebel220e_SizingFract tests
  */
-TEST(SizingFractionsTest, Stiebel220e_SizingFract)
+TEST(SizingFractionsTest, Stiebel220E_SizingFract)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "Stiebel220e";
+    const std::string modelName = "Stiebel220E";
     hpwh.initPreset(modelName);
 
     double aquaFrac, useableFrac;

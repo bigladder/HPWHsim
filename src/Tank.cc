@@ -30,7 +30,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 
 void HPWH::Tank::from(const hpwh_data_model::rstank::RSTANK& rstank)
 {
-    // description.from(rstank);
+    description.from(rstank);
     productInformation.from(rstank);
 
     auto& perf = rstank.performance;
@@ -60,7 +60,7 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
         "RSTANK",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml");
 
-    // description.to(rstank);
+    description.to(rstank);
     productInformation.to(rstank);
 
     //

@@ -1,7 +1,6 @@
-# 'poetry run python build_data_model.py'
-#
+# uv run build_data_model.py
 # generates source code based on hpwh_data_model schema.
-# schema repo is cloned in repo
+# schema repo is cloned in build directory
 
 from lattice import Lattice
 from pathlib import Path
@@ -43,7 +42,7 @@ def generate(repo_dir, build_dir):
 	result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 	print(result.stdout)
  
-	cmd = ["git", "checkout", "add-rating-info"]
+	cmd = ["git", "checkout", "add-checks-standby"]
 	result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 	print(result.stdout)
   
