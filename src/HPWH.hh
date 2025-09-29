@@ -92,8 +92,7 @@ class HPWH : public Courier::Sender
     HPWH(const HPWH& hpwh);                    /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
-                                                                                       eventually?
-              */
+                                                     eventually?   */
 
     void from(const hpwh_data_model::hpwh_sim_input::HPWHSimInput& hsi);
 
@@ -938,6 +937,9 @@ class HPWH : public Courier::Sender
     /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not  */
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
+
+    /// get a pointer to the Nth heat source
+    HeatSource* getNthHeatSource(int N);
 
     /// get a pointer to the Nth heat source
     bool getNthHeatSource(int N, HPWH::HeatSource*& heatSource);

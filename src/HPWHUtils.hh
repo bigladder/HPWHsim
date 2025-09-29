@@ -46,11 +46,11 @@ bool checkFrom(T& t, nlohmann::json& j, std::string_view key, const T t_default)
 template <typename T>
 void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
 {
-    is_set = has_value;
     if (has_value)
     {
         t_new = t;
     }
+    is_set |= has_value;
 }
 
 //-----------------------------------------------------------------------------
