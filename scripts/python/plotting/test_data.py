@@ -28,6 +28,7 @@ class EF_Bounds:
 
 class DataSet:
 	def __init__(self, dataSpec):
+		print(dataSpec)
 		self.model_id = dataSpec['model_id']
 		self.test_id = dataSpec['test_id']
 		self.ef_bounds = EF_Bounds()
@@ -41,7 +42,6 @@ class DataSet:
 			self._id = f"{self.model_id}-{self.test_id}-{self.variable_type}"
 				
 		try:
-			print(self.filepath)
 			df = call_csv(self.filepath, 0)
 		except:
 			print("failed")
@@ -154,7 +154,7 @@ class DataSet:
 
 	def analyze(self):	
 			self.find_EF_bounds()
-					
+			print("analyzing")
 			initialTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_start_time]
 			finalTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_end_time]
 			
@@ -255,7 +255,7 @@ class DataSet:
 					standbySumTimeTankT_minC += tankAvgT_C * dt
 					standbySumTimeAmbientT_minC += ambientT_C * dt
 					standbyUsedEnergy_kJ += input_energy_kJ * dt				
-						
+				
 			recoveryAvgOutletT_C = recoverySumDrawOutletT / recoveryTotalDraw_L
 			recoveryAvgInletT_C = recoverySumDrawInletT / recoveryTotalDraw_L
 			recoveryStoredEnergy_kJ = tank_heat_capacity_kJperC * (maxTankAfterFirstRecoveryT_C - initialTankAvgT_C)

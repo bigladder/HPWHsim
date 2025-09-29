@@ -8,6 +8,16 @@ import numpy as np
 from simulate import simulate
 from test_data import DataSet
 
+def get_damped_inverse_left(M, nu):
+	MT = M.transpose()
+	MT_M = np.matmul(MT, M)	
+	num = np.size(MT_M, 0)
+	wMT_M = MT_M + np.diag(np.full(num, nu))
+	if np.linalg.det(wMT_M) == 0:
+			print("det = 0")
+			return M
+	return np.matmul(np.linalg.inv(wMT_M), MT)	
+
 class FitProc:
 		
 	def __init__(self):
@@ -347,14 +357,13 @@ class FitProc:
 				return self.get_performance_point(model_data, parameter['coordinates'], variable)	
 
 	def get_metric_value(self, metric):
-		if metric['type'] == 'first-recovery-period-end-time':		
+		if metric['type'] == 'analysis':		
 			test_index = read_file("./test_index.json");
 			test_data = test_index['tests'][metric['test_id']]
 			test_dir = "../../../test/" 											 
 			if 'path' in test_data:
 					test_dir = os.path.join(test_dir, test_data['path' ])			 
 			test_dir = os.path.join(test_dir, metric['test_id'])
-
 			model_filepath = self.find_cache_model(metric['model_id'])
 			data = {	
 				"model_spec": "JSON",		
@@ -364,13 +373,13 @@ class FitProc:
 				'build_dir': self.prefs['build_dir']
 			}
 			simulate(data)
-				
+
 			data_filename = metric['test_id'] + "_JSON_" + metric["model_id"] + ".csv";
 			data_filepath = os.path.join(self.prefs["build_dir"], "test", "output", data_filename)	
 			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Simulated", 'filepath': data_filepath})
 			dataset.analyze()
-			result = dataset.test_summary[metric['group']]['firstRecoveryPeriodEndTime_min']
-			return result	
+			result = dataset.test_summary[metric['group']][metric['item']]
+		return result	
 	
 	def get_parameter_values(self):
 		paramV = []
@@ -398,49 +407,82 @@ class FitProc:
 	def fit(self, data):
 		self.update()	
 		
-
-		paramsV = self.get_parameter_values()
+		paramsV = self.get_parameter_values()		
+		for (i_param, parameter) in enumerate(self.parameters):
+			self.set_parameter_value(parameter, paramsV[i_param])		
+			
+		nu = 0.1
 		for iter in range(10):
 			print(f"\niteration {iter}")
+						
 			metricsV = self.get_metric_values()
 			print(f"metrics:\n {metricsV}")
 
-			diffV = [0] * len(metricsV)
+			diff0V = [0] * len(metricsV)
 			for i_metric, metric in enumerate(self.metrics):
-				diffV[i_metric] = (metricsV[i_metric] - self.metrics[i_metric]['target']) / self.metrics[i_metric]['tolerance']
-			print(f"diffs0: {diffV}")
-
-			jacobiM = [[0] * len(metricsV)] * len(paramsV)				
+				diff0V[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+			FOM = np.matmul(diff0V, diff0V)
+			print(f"FOM: {FOM}")
+				
+			jacobiM = [[0] * len(metricsV)] * len(paramsV)
 			for (i_param, parameter) in enumerate(self.parameters):
-				self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])		
+				self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])
 				metricsV = self.get_metric_values()
-				print(f"metrics (inc): {metricsV}")		
+				print(f"metricsV: {metricsV}")
 				for i_metric, metric in enumerate(self.metrics):
 					diff = (metricsV[i_metric] - metric['target']) / metric['tolerance']				
-					jacobiM[i_param][i_metric] = (diff - diffV[i_metric]) / parameter['increment']			
-				self.set_parameter_value(parameter, paramsV[i_param])
-								
-			print(f"jacobiM: {jacobiM}")
-			
+					jacobiM[i_param][i_metric] = (diff - diff0V[i_metric]) / parameter['increment']			
+				self.set_parameter_value(parameter, paramsV[i_param])								
+			print(f"jacobiM: {jacobiM}")		
 			jM = np.array(jacobiM)
-			jMT = jM.transpose()
-			jMT_jM = np.matmul(jMT, jM)	
-			if np.linalg.det(jMT_jM) == 0:
-				print("det = 0")
-				break
-			ijML = np.matmul(np.linalg.inv(jMT_jM), jMT)	
-		
-			p_incV = -np.matmul(ijML, np.array(diffV))
+			
+			ijML = get_damped_inverse_left(jM, nu)		
+			p_inc1V = -np.matmul(ijML, np.array(diff0V))
+			print(f"\np_inc1V: {p_inc1V}")
 			for (i_param, parameter) in enumerate(self.parameters):
-				paramsV[i_param] += p_incV[i_param]
-				self.set_parameter_value(parameter, paramsV[i_param])	
-				parameter['increment'] = 	p_incV[i_param] / 100		
-		
-									 
-		done = False
-		i_iter = 0
-
-
+				self.set_parameter_value(parameter, paramsV[i_param] + p_inc1V[i_param])				
+			time.sleep(1)
+			metricsV = self.get_metric_values()
+			print(f"metricsV_1: {metricsV}")
+			
+			diffV = [0] * len(metricsV)
+			for i_metric, metric in enumerate(self.metrics):
+				diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+			FOM_1 = np.matmul(diffV, diffV)
+			print(f"FOM_1: {FOM_1}")
+			
+			ijML = get_damped_inverse_left(jM, nu / 2)
+			p_inc2V = -np.matmul(ijML, np.array(diff0V))
+			print(f"\np_inc2V: {p_inc2V}")
+			for (i_param, parameter) in enumerate(self.parameters):
+				self.set_parameter_value(parameter, paramsV[i_param] + p_inc2V[i_param])
+			time.sleep(1)
+			metricsV = self.get_metric_values()
+			print(f"metricsV_2: {metricsV}")
+			diffV = [0] * len(metricsV)
+			for i_metric, metric in enumerate(self.metrics):
+				diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+			FOM_2 = np.matmul(diffV, diffV)
+			print(f"FOM_2: {FOM_2}")	
+			
+			if FOM_1 < FOM or FOM_2 < FOM:
+				if FOM_1 < FOM_2:
+					p_incV = p_inc1V
+					FOM = FOM_1
+				else:
+					p_incV = p_inc2V
+					FOM = FOM_2
+					nu /= 2			
+				for (i_param, parameter) in enumerate(self.parameters):
+					paramsV[i_param] +=  p_incV[i_param]
+					self.set_parameter_value(parameter, paramsV[i_param])				
+					parameter['increment'] = 	p_incV[i_param] / 100		
+			else:
+				nu *= 10
+				if nu > 1e6:
+					print(f"Unable to improve fit.")
+					return
+										
 fit_proc = FitProc()
 
 
