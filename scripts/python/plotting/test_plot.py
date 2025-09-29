@@ -292,22 +292,21 @@ class TestPlotter:
 	def update_graphs(self, dataset, variable, value, row):
 		self.plot.figure.update_traces(
 			y = [x for x in dataset.df[
-		            self.variables["Y-Variables"][variable]["Columns"][dataset.variable_type][value][row]
+		            self.variables["Y-Variables"][variable]["Columns"][value][row]
 		        ]],
 			selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {dataset._id}")
 			)
 
 	def update_dataset(self, dataset):
-			for row, variable in enumerate(self.variables["Y-Variables"].keys()):
-				for value in range(
-					len(self.variables["Y-Variables"][variable]["Columns"][dataset.variable_type])
-				):
-					self.plot.figure.update_traces(
-						y = [x for x in dataset.df[
-		            self.variables["Y-Variables"][variable]["Columns"][dataset.variable_type][value][row + 1]
-		        ]],
-						selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {dataset._id}")
-					)
+		for i_variable, variable in enumerate(self.variables["Y-Variables"]):
+			for i_val, column in enumerate(self.variables["Y-Variables"][variable]["Columns"]):
+				y_list = [y for y in dataset.df[column]]
+				if variable == 'Temperature':
+					y_list = [1.8 * y + 32 for y in y_list]
+				self.plot.figure.update_traces(
+					y = y_list,
+					selector = dict(name=f"{self.variables['Y-Variables'][variable]['Labels'][i_val]}-{dataset._id}")
+				)
 
 	def update_selected(self):
 		selected_points = []								
@@ -350,6 +349,7 @@ class TestPlotter:
 			for dataset_spec in data['dataset_specs']:
 				for dataset in self.datasets:
 					if dataset_spec['filepath'] == dataset.filepath:
+						dataset = DataSet(dataset_spec)
 						self.update_dataset(dataset)
 					else:
 						self.plot_dataset(DataSet(dataset_spec))

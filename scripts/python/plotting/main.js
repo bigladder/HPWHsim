@@ -295,13 +295,14 @@
 					'test_dir': test_dir
 				};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
+				simulated_filepath = output_dir + "/" + prefs['tests']['id'] + "_JSON_" + prefs["model_id"] + ".csv";
 				dataset_specs.push({
 						'id': "Simulated",
 						'model_id': prefs['model_id'],
 						'test_id': prefs['tests']['id'],
 						'type': "Simulated",
-						'filepath': simulated_filepath}
-					);
+						'filepath': simulated_filepath
+						});
 			};
 
 			var msg = {
@@ -312,11 +313,13 @@
 				'model_filepath': model_filepath,
 				'build_dir': prefs['build_dir'],
 			};
-			if (ws_connection.readyState == ws_connection.OPEN)
+			while(!ws_connection.readyState == ws_connection.OPEN)
 			{
-				await ws_connection.send(JSON.stringify(msg));
-				test_plot.style = "display:block;";
+				await init_websocket();
 			}
+
+			await ws_connection.send(JSON.stringify(msg));
+			test_plot.style = "display:block;";
 		}
 	}
 

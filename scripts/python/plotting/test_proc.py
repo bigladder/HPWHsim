@@ -121,10 +121,8 @@ class TestProc:
 	
 		return tuple([no_update] * 8)
 	
-	def update_plot(self, fig):
-		#self.plotter.plot.figure.update_layout(autosize = False)
-	
-		self.plotter.update()
+	def update_plot(self, fig, data):
+		self.plotter.update(data)
 		
 		#summary table
 		summary_table_columns = ['Quantity']
@@ -271,7 +269,7 @@ class TestProc:
 							return tuple([json.dumps(msg)] + list(self.init_plot(self.prev_data)))
 
 						if data['cmd'] == 'update':
-							return tuple([json.dumps(msg)] + list(self.update_plot(fig)))							
+							return tuple([json.dumps(msg)] + list(self.update_plot(fig, data)))							
 			return tuple([no_update] * 9)
 		
 		@callback(
