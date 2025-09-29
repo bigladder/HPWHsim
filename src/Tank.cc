@@ -23,13 +23,17 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     mixBelowFractionOnDraw = tank_in.mixBelowFractionOnDraw;
     doInversionMixing = tank_in.doInversionMixing;
     hasHeatExchanger = tank_in.hasHeatExchanger;
+    description = tank_in.description;
+    productInformation = tank_in.productInformation;
     return *this;
 }
 
-void HPWH::Tank::from(hpwh_data_model::rstank::RSTANK& rstank)
+void HPWH::Tank::from(const hpwh_data_model::rstank::RSTANK& rstank)
 {
-    auto& perf = rstank.performance;
+    description.from(rstank);
+    productInformation.from(rstank);
 
+    auto& perf = rstank.performance;
     checkFrom(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
     checkFrom(UA_kJperHrC, perf.ua_is_set, 3600. * perf.ua / 1000., 0.);
     checkFrom(fittingsUA_kJperHrC, perf.fittings_ua_is_set, 3600. * perf.fittings_ua / 1000., 0.);
@@ -56,6 +60,10 @@ void HPWH::Tank::to(hpwh_data_model::rstank::RSTANK& rstank) const
         "RSTANK",
         "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml");
 
+    description.to(rstank);
+    productInformation.to(rstank);
+
+    //
     auto& perf = rstank.performance;
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
     checkTo(1000. * UA_kJperHrC / 3600., perf.ua_is_set, perf.ua);

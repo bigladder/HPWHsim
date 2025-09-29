@@ -11,11 +11,12 @@
 #include <RSAIRTOWATERHEATPUMP.h>
 #include <CentralWaterHeatingSystem.h>
 #include <RSTANK.h>
+#include "courier/helpers.h"
 
 #define JSON_HAS_CPP_17
 
 namespace hpwh_data_model
 {
 void init(std::shared_ptr<Courier::Courier> logger_in);
-}
+} // namespace hpwh_data_model
 #endif

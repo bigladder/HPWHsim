@@ -93,22 +93,15 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "AWHSTier4Generic50";
+    const std::string modelName = "Rheem2020Prem50";
     hpwh.initPreset(modelName);
+    hpwh.makeCondenserPerformance(HPWH::tier4);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
-        << "Could not complete first-hour rating test.";
-
-    HPWH::HeatSource* heatSource;
-    hpwh.getNthHeatSource(hpwh.getCompressorIndex(), heatSource);
-    auto compressor = reinterpret_cast<HPWH::Condenser*>(heatSource);
-
-    std::vector<double> COP_Coeffs0 = {};
-    for (auto& perfPoint : compressor->performanceMap)
-        COP_Coeffs0.push_back(perfPoint.COP_coeffs[0]);
+        << "Could not complete first-hour rating sequence.";
 
     constexpr double UEF = 4.3;
-    EXPECT_NO_THROW(hpwh.makeGenericUEF(UEF, firstHourRating.designation))
+    EXPECT_NO_THROW(hpwh.makeGenericUEF(UEF, firstHourRating.designation, HPWH::tier4))
         << "Could not make generic model.";
 
     { // verify UEF
@@ -116,19 +109,6 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_UEF)
                                                        firstHourRating.designation))
             << "Could not complete complete 24-hr test.";
         EXPECT_NEAR(testSummary.EF, UEF, 1.e-12) << "Did not measure expected UEF";
-    }
-
-    {
-        // verify the COP 0 coefficient offset
-        int i_ambientT = compressor->getAmbientT_index(HPWH::testConfiguration_UEF.ambientT_C);
-        double dCOP_coef =
-            compressor->performanceMap[i_ambientT].COP_coeffs[0] - COP_Coeffs0[i_ambientT];
-        for (int i = 0; i < compressor->performanceMap.size(); ++i)
-        {
-            EXPECT_NEAR(
-                compressor->performanceMap[i].COP_coeffs[0], COP_Coeffs0[i] + dCOP_coef, 1.e-12)
-                << "Did not measure expected COP coefficient";
-        }
     }
 }
 
@@ -139,8 +119,9 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
 {
     // get preset model
     HPWH hpwh;
-    const std::string modelName = "AWHSTier4Generic50";
+    const std::string modelName = "Rheem2020Prem50";
     hpwh.initPreset(modelName);
+    hpwh.makeCondenserPerformance(HPWH::tier4);
 
     EXPECT_NO_THROW(firstHourRating = hpwh.findFirstHourRating())
         << "Could not complete first-hour rating test.";
@@ -149,7 +130,8 @@ TEST_F(MeasureMetricsTest, MakeGenericTier4_E50_UEF_E95)
     constexpr double UEF = 4.3;
     constexpr double E95 = 4.9;
 
-    EXPECT_NO_THROW(hpwh.makeGenericE50_UEF_E95(E50, UEF, E95, firstHourRating.designation))
+    EXPECT_NO_THROW(
+        hpwh.makeGenericE50_UEF_E95(E50, UEF, E95, firstHourRating.designation, HPWH::tier4))
         << "Could not make generic model.";
 
     { // verify E50

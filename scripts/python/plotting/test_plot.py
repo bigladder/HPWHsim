@@ -1,3 +1,5 @@
+# uv run --no-project test_plot.py "/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/test/Villara/AquaThermAire/villara_24hr67/measured.csv" "/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67__AquaThermAire.csv" "/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/villara_24hr67__AquaThermAire.html"
+
 import os
 import sys
 import dimes  # type: ignore
@@ -238,27 +240,22 @@ class Plotter:
 			marker_fill_color = None
 			marker_line_color = None
 
-		self.plot.add_time_series(
-		    dimes.TimeSeriesData(
+			"""
+					self.plot.add_display_data(
+
+		    dimes.DimensionalData(
 		        df[
 		            self.variables["Y-Variables"][variable]["Column Names"][variable_type][value]
 		        ],
 		        name=f"{self.variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
 		        native_units=self.variables["Y-Variables"][variable]["Units"],
-		        line_properties=LineProperties(
-		            color=self.variables["Y-Variables"][variable]["Colors"][value],
-		            line_type=retrieve_line_type(variable_type),
-		            marker_symbol=marker_symbol,
-		            marker_size=marker_size,
-		            marker_line_color=marker_line_color,
-		            marker_fill_color=marker_fill_color,
-		            is_visible=self.variables["Y-Variables"][variable]["Line Visibility"][value],
-		        ),
 		    ),
 		    subplot_number=row,
-		    axis_name=variable,
-	  )
+		    #axis_name=variable,
 
+	  )
+		"""
+		
 	def draw_variable_type(self, variable_type):
 			for row, variable in enumerate(self.variables["Y-Variables"].keys()):
 				for value in range(
@@ -268,14 +265,14 @@ class Plotter:
 
 	def draw(self):		
 		if self.have_measured:
-			self.plot = dimes.TimeSeriesPlot(
+			self.plot = dimes.DimensionalPlot(
 				self.df_measured[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
 			)
 			self.draw_variable_type("Measured")
 			if self.have_simulated:
 				self.draw_variable_type("Simulated")
 		elif self.have_simulated:
-			self.plot = dimes.TimeSeriesPlot(
+			self.plot = dimes.DimensionalPPlot(
 				self.df_simulated[self.variables["X-Variables"]["Time"]["Column Names"]["Simulated"]]
 			)
 			self.draw_variable_type("Simulated")
@@ -284,7 +281,7 @@ class Plotter:
 		else:
 			return
 
-		self.plot.finalize_plot()
+		#self.plot.finalize_plot()
 		return self
 
 def plot(measured_path, simulated_path):
@@ -299,7 +296,7 @@ def write_plot(measured_path, simulated_path, plot_path):
 	plotter.read_measured(measured_path)
 	plotter.read_simulated(simulated_path)
 	plotter.draw()
-	plotter.plot.write_html_plot(plot_path)
+	#plotter.plot.write_html_plot(plot_path)
 	
 # main
 if __name__ == "__main__":

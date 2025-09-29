@@ -1,9 +1,6 @@
-# 'poetry update lattice', if needed
-# 'poetry run python convert_models.py IHPWH_models.json ../../../build ../../../test/models_json'
-# or
-# 'poetry run python convert_models.py CWHS_models.json ../../../build ../../../test/models_json'
-# Generates hpwh-data-model source code based on schema in 'data_model'dir'
-# into 'src_out_dir'.
+# uv run convert_models.py ../../../test/models_json/models.json ../../../build ../../../test/models_json
+#
+# calls `hpwh convert' for each model in models_list_file json
 
 from pathlib import Path
 import os
@@ -29,8 +26,9 @@ def convert_models(models_list_file, build_dir, output_dir):
     if not os.path.exists(output_dir):
       os.mkdir(output_dir)
 
-    for model in json_data:  
-      convert_list = [app_cmd, 'convert', '-m', str(model["number"]), '-n', '-d', output_dir, '-f', model["name"]]
+    for model,id in json_data.items():  
+      #convert_list = [app_cmd, 'convert', '-n', str(model["number"]), '-d', output_dir, '-f', model["name"]]
+      convert_list = [app_cmd, 'convert', '-s', 'Legacy', '-n', str(id), '-d', output_dir, '-f', model]
       print(convert_list)
       result = subprocess.run(convert_list, stdout=subprocess.PIPE, text=True)
 

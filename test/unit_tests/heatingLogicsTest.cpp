@@ -10,8 +10,8 @@
 
 struct HeatingLogicsTest : public testing::Test
 {
-    const std::vector<std::string> sHighShutOffSP_modelNames = {"Sanden80",
-                                                                "QAHV_N136TAU_HPB_SP",
+    const std::vector<std::string> sHighShutOffSP_modelNames = {"Sanco83",
+                                                                "Mitsubishi_QAHV_N136TAU_HPB_SP",
                                                                 "ColmacCxA_20_SP",
                                                                 "ColmacCxV_5_SP",
                                                                 "NyleC60A_SP",
@@ -30,7 +30,7 @@ struct HeatingLogicsTest : public testing::Test
 
     const std::vector<std::string> sNoHighShutOffIntegratedModelNames = {"AOSmithHPTU80",
                                                                          "Rheem2020Build80",
-                                                                         "Stiebel220e",
+                                                                         "Stiebel220E",
                                                                          "AOSmithCAHP120",
                                                                          "AWHSTier3Generic80",
                                                                          "Generic1",
