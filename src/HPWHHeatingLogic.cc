@@ -356,7 +356,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
         else
             break;
 
-        bool checksStandby_in = false;
+        bool isEnteringWaterHighTempShutoff = false;
         Distribution dist;
         if (temp_based_logic->standby_temperature_location_is_set)
         {
@@ -367,7 +367,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             {
                 dist = DistributionType::TopOfTank;
                 label = "top of tank";
-                checksStandby_in = true;
+                // checksStandby = true;
                 break;
             }
             case hpwh_data_model::heat_source_configuration::StandbyTemperatureLocation::
@@ -392,6 +392,10 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             }
         }
 
+        bool checksStandby = false;
+        if (temp_based_logic->checks_standby_logic_is_set)
+            checksStandby = temp_based_logic->checks_standby_logic;
+
         heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
             label,
             dist,
@@ -399,7 +403,8 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration::Heati
             hpwh,
             temp_based_logic->absolute_temperature_is_set,
             comparison_type,
-            checksStandby_in);
+            isEnteringWaterHighTempShutoff,
+            checksStandby);
         break;
     }
     }
@@ -461,6 +466,9 @@ void HPWH::TempBasedHeatingLogic::to(
             logic.differential_temperature_is_set,
             logic.differential_temperature,
             !isAbsolute);
+
+    checkTo(
+        checkStandby, logic.checks_standby_logic_is_set, logic.checks_standby_logic, checkStandby);
 
     if (compare(1., 2.))
     {

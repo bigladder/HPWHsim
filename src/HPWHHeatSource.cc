@@ -17,7 +17,7 @@
 // public HPWH::HeatSource functions
 HPWH::HeatSource::HeatSource(
     HPWH* hpwh_in,
-    const std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/,
+    std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/,
     const std::string& name_in)
     : Sender("HeatSource", name_in, courier_in)
     , lockedOut(false)

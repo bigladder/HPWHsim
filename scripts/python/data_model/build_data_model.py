@@ -1,8 +1,6 @@
-# 'poetry update lattice', if needed
-# 'poetry run python build_data_model.py'
-
-# Generates hpwh-data-model source code based on schema in 'data_model_dir'
-# into 'src_out_dir'.
+# uv run build_data_model.py
+# generates source code based on hpwh_data_model schema.
+# schema repo is cloned in build directory
 
 from lattice import Lattice
 from pathlib import Path
@@ -12,9 +10,8 @@ import shutil
 import sys
 import time
 
-def generate(repo_dir):
-	
-	data_model_dir = os.path.join(repo_dir, "build", "hpwh_data_model")
+def generate(repo_dir, build_dir):
+	data_model_dir = os.path.join(build_dir, "hpwh_data_model")
 	working_dir = "."
 	gen_out_dir = os.path.join(repo_dir, "vendor", "hpwh_data_model")
 
@@ -68,11 +65,10 @@ def generate(repo_dir):
 # main
 if __name__ == "__main__":
 		repo_dir = "../../../"
-		data_model_dir = ""
-		gen_out_dir = ""
+		build_dir = os.path.join(repo_dir, "build")
 		n_args = len(sys.argv) - 1
-		if n_args == 31:
+		if n_args == 2:
 			repo_dir = sys.argv[1]
-
-		generate(repo_dir)
+			build_dir = sys.argv[2]
+		generate(repo_dir, build_dir)
 

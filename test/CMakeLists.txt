@@ -1,7 +1,11 @@
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
-add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
+# "Preset", "JSON", or "Legacy"
+set(TestSpec "Preset")
+set(RefSpec "Preset")
+
+add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY_${TestSpec}.csv")
 
 # Run model tests and unit tests on models
 set(modelNames
@@ -10,10 +14,10 @@ set(modelNames
         AOSmithHPTS50
         AOSmithPHPT60
         AOSmithHPTU80
-        Sanden80
+        Sanco83
         RheemHB50
-        Stiebel220e
-        GE502014
+        Stiebel220E
+        GE2014_50
         Rheem2020Prem40
         Rheem2020Prem50
         Rheem2020Build50
@@ -26,7 +30,6 @@ set(general_Tests
         test50
         test70
         test95
-        testSandenCombi
         )
 
 # Demand-response tests
@@ -44,14 +47,14 @@ set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
         RheemHB50
-        Stiebel220e
-        GE502014
+        Stiebel220E
+        GE2014_50
         )
 
 set(yearTestsModels
         AOSmithHPTU80
-        Sanden80
-        GE502014
+        Sanco83
+        GE2014_50
         Rheem2020Prem40
         Rheem2020Prem50
         Rheem2020Build50
@@ -76,8 +79,8 @@ set(maxTempModels
         AOSmithHPTU80
         Rheem2020Build50
         RheemHB50
-        Stiebel220e
-        GE502014
+        Stiebel220E
+        GE2014_50
         TamScalable_SP
         AOSmithCAHP120
         )
@@ -89,7 +92,7 @@ set(largeCompressorTests
         testLargeCompHot
         )
 set(largeCompressorNames
-        QAHV_N136TAU_HPB_SP
+        Mitsubishi_QAHV_N136TAU_HPB_SP
 
         AOSmithCAHP120
         ColmacCxV_5_SP
@@ -123,7 +126,7 @@ set(largeCompressorNames
         )
 
 set(yearLargeTestsModels
-        QAHV_N136TAU_HPB_SP
+        Mitsubishi_QAHV_N136TAU_HPB_SP
 
         ColmacCxV_5_SP
         ColmacCxA_10_SP
@@ -160,8 +163,16 @@ set(yearLargeTests
         )
 
 #
+set(SancoModels 
+        Sanco83
+)
+set(SancoTests
+        testSandenCombi
+)
+
+#
 set(SoC_Models
-        Sanden120
+        Sanco119
         NyleC25A_SP
         )
 set(SoC_TestDir "SoC_tests")
@@ -173,9 +184,9 @@ set(SoC_Tests
         )
 
 #
-set(Villara_Models "AquaThermAire")
-set(Villara_TestDir "Villara/AquaThermAire")
-set(Villara_Tests
+set(VillaraModels "AquaThermAire")
+set(VillaraTestDir "Villara/AquaThermAire")
+set(VillaraTests
         villara_24hr67
         )
 
@@ -208,14 +219,6 @@ set(LG_Tests
         DP_LGC50_HVT
         )
 
-cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
-if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
-    include(poetry-install)
-    poetry_install(${pythonScriptDir})
-    set(${PROJECT_NAME}_PYTHON_PLOTS_SETUP TRUE CACHE BOOL "Python plotting environment is already setup" FORCE)
-endif ()
-
 #Tests for successful runs
 function(add_model_test)
     set(options)
@@ -223,7 +226,11 @@ function(add_model_test)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    if (${ARG_SPEC_TYPE} STREQUAL "JSON")
+        set(hpwhArgs run -s ${ARG_SPEC_TYPE} -f "models_json/${ARG_MODEL_NAME}" -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    else()
+        set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    endif()
 
     if (DEFINED ARG_AIR_T_F)
         set(hpwhArgs ${hpwhArgs} -a ${ARG_AIR_T_F})
@@ -271,7 +278,7 @@ endfunction()
 #Plot test
 function(add_plot_test)
     set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
+    set(oneValueArgs MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -292,8 +299,13 @@ function(add_plot_test)
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python/plotting" run python
-                "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
+
+        add_test(NAME "${plotTestName}"
+                COMMAND uv run "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py"
+                ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath}
+                WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python/plotting"
+                )
+
         set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
     endif ()
 
@@ -304,7 +316,7 @@ endfunction()
 foreach (test ${general_Tests})
     foreach (model ${modelNames})
 				set(fullTestName "${general_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -316,43 +328,48 @@ foreach (model ${lockoutTestModels})
       set(airT_F "45")
   elseif (${model} STREQUAL "RheemHB50")
       set(airT_F "43")
-  elseif (${model} STREQUAL "Stiebel220e")
+  elseif (${model} STREQUAL "Stiebel220E")
       set(airT_F "35")
-  elseif (${model} STREQUAL "GE502014")
+  elseif (${model} STREQUAL "GE2014_50")
       set(airT_F "40")
 	else ()
 		continue()
   endif ()
-
-	add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "Preset" AIR_T_F "${airT_F}")
+  add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" AIR_T_F "${airT_F}")
 endforeach (model)
+
+# Sanco tests
+foreach (test ${SancoTests})
+    foreach (model ${SancoModels})
+				set(fullTestName "${test}")
+				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+    endforeach (model)
+endforeach (test)
 
 # DR tests
 foreach (test ${DR_Tests})
     foreach (model ${modelNames})
 				set(fullTestName "${DR_TestDir}/${test}")
-				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
 # Villara AquaThermAire tests
-foreach (model ${Villara_Models})
-    foreach (test ${Villara_Tests})
-				set(fullTestName "${Villara_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+foreach (model ${VillaraModels})
+    foreach (test ${VillaraTests})
+				set(fullTestName "${VillaraTestDir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (test)
 endforeach (model)
 
 ## Plot test
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
+add_plot_test(SPEC_TYPE "${TestSpec}" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
 
 # Bradford White AeroTherm tests
 foreach (model ${BradfordWhiteModels})
     foreach (test "${BradfordWhite${model}_Tests}")
 		set(fullTestName "BradfordWhite/${model}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "JSON")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "${TestSpec}")
     endforeach (test)
 endforeach (model)
 
@@ -360,15 +377,14 @@ endforeach (model)
 foreach(model ${LG_Models})
     foreach (test ${LG_Tests})
         set(fullTestName "${LG_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (test)
 endforeach (model)
 
 # Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -376,7 +392,7 @@ endforeach (test)
 foreach (test ${SoC_Tests})
     foreach (model ${SoC_Models})
 			set(fullTestName "${SoC_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -384,8 +400,7 @@ endforeach (test)
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         set(fullTestName "${largeCompressor_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -393,66 +408,62 @@ endforeach (test)
 # general regression tests
 foreach (test ${general_Tests})
     foreach (model ${modelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
 # lockout test regressions
 foreach (model ${lockoutTestModels})
-  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "Preset")
+  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
 endforeach (model)
 
 # DR regression tests
 foreach (test ${DR_Tests})
     foreach (model ${modelNames})
 			set(fullTestName "${DR_TestDir}/${test}")
-       add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+       add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
 # Max temp regression tests
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
 # State-of-charge regression tests
 foreach (test ${SoC_Tests})
     foreach (model ${SoC_Models})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
 # Villara Aerotherm regression tests
-foreach (model ${Villara_Models})
-    foreach (test ${Villara_Tests})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+foreach (model ${VillaraModels})
+    foreach (test ${VillaraTests})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (test)
 endforeach (model)
 
 # BradfordWhite regression tests
 foreach (model ${BradfordWhiteModels})
     foreach (test "${BradfordWhite${model}_Tests}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (test)
 endforeach (model)
 
 # LG regression tests
 foreach (model ${LG_Models})
     foreach (test ${LG_Tests})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (test)
 endforeach (model)
 
 # Large-compressor regression tests
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -460,19 +471,19 @@ endforeach (test)
 #Add small compressor yearly tests to the list
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
 #Add LARGE compressor yearly tests to the list
 foreach (test ${yearLargeTests})
     foreach (model ${yearLargeTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
 #Add regression test for yearly file
-add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
+add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY_${TestSpec}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY_${RefSpec}.csv")
 
 # Add unit tests
 add_subdirectory(unit_tests)

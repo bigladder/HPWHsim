@@ -10,26 +10,30 @@ namespace hpwh_cli
 {
 
 /// measure
-static void convert(const std::string& sSpecType,
-                    const std::string& modelName,
-                    bool useModelNumber,
-                    std::string sOutputDir,
-                    std::string sOutputFilename);
+void convert(const std::string& specType,
+             HPWH& hpwh,
+             std::string sOutputDir,
+             std::string sOutputFilename);
 
 CLI::App* add_convert(CLI::App& app)
 {
-    const auto subcommand = app.add_subcommand("convert", "Convert from legacy format to JSON");
+    const auto subcommand = app.add_subcommand("convert", "Convert to JSON");
 
-    static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, JSON)");
+    //
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
+
+    auto model_group = subcommand->add_option_group("Model options");
 
     static std::string modelName = "";
-    subcommand->add_option("-m,--model", modelName, "Model name or number")->required();
+    model_group->add_option("-m,--model", modelName, "Model name");
 
-    static bool use_model_number = false;
-    subcommand->add_flag(
-        "-n,--number", use_model_number, "Identify by model number, instead of name");
+    static int modelNumber = -1;
+    model_group->add_option("-n,--number", modelNumber, "Model number");
 
+    model_group->required(1);
+
+    //
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
@@ -37,59 +41,67 @@ CLI::App* add_convert(CLI::App& app)
     subcommand->add_option("-f,--filename", sOutputFilename, "Output filename");
 
     subcommand->callback(
-        [&]() { convert(sSpecType, modelName, use_model_number, sOutputDir, sOutputFilename); });
+        [&]()
+        {
+            HPWH hpwh;
+            if (specType == "Preset")
+            {
+                if (!modelName.empty())
+                    hpwh.initPreset(modelName);
+                else if (modelNumber != -1)
+                    hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
+            }
+            else if (specType == "JSON")
+            {
+                if (!modelName.empty())
+                {
+                    std::ifstream inputFile(modelName);
+                    nlohmann::json j = nlohmann::json::parse(inputFile);
+                    hpwh.initFromJSON(j, modelName);
+                }
+            }
+            else if (specType == "Legacy")
+            {
+                if (!modelName.empty())
+                    hpwh.initLegacy(modelName);
+                else if (modelNumber != -1)
+                    hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
+            }
+            convert(specType, hpwh, sOutputDir, sOutputFilename);
+        });
 
     return subcommand;
 }
 
-void convert(const std::string& sSpecType,
-             const std::string& modelName,
-             bool useModelNumber,
+void convert(const std::string& specType,
+             HPWH& hpwh,
              std::string sOutputDir,
              std::string sOutputFilename)
 {
-    // process command line arguments
-    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (sSpecType_mod == "preset")
-        sSpecType_mod = "Preset";
-    else if (sSpecType_mod == "json")
-        sSpecType_mod = "JSON";
-
-    HPWH hpwh;
-    if (sSpecType_mod == "Preset")
-    {
-        if (useModelNumber)
-            hpwh.initPreset(static_cast<HPWH::MODELS>(std::stoi(modelName)));
-        else
-            hpwh.initPreset(modelName);
-    }
-    else if (sSpecType_mod == "JSON")
-    {
-        hpwh.initFromJSON(modelName);
-    }
-
     hpwh_data_model::hpwh_sim_input::HPWHSimInput hsi;
     hpwh.to(hsi);
 
     nlohmann::json j;
     hpwh_data_model::hpwh_sim_input::to_json(j, hsi);
-    // add_to_json(hsi, j);
+
+    if (sOutputFilename == "")
+        sOutputFilename = hpwh.name + "_" + specType;
+
+    if (sOutputFilename.substr(sOutputFilename.length() - 5) != ".json")
+        sOutputFilename += ".json";
+
+    if (sOutputDir != "")
+        sOutputFilename = sOutputDir + "/" + sOutputFilename;
 
     std::ofstream outputFile;
-    if (sOutputFilename == "")
-        sOutputFilename = modelName + "_" + sSpecType;
-    sOutputFilename = sOutputDir + "/" + sOutputFilename + ".json";
     outputFile.open(sOutputFilename.c_str(), std::ifstream::out);
     if (!outputFile.is_open())
     {
-        std::cout << "Could not open output file " << sOutputFilename << "\n";
-        exit(1);
+        hpwh.get_courier()->send_error(
+            fmt::format("Could not open output file {}\n", sOutputFilename));
     }
-    outputFile << j.dump(2);
+    outputFile << j.dump(2) << "\n";
     outputFile.close();
 }
+
 } // namespace hpwh_cli

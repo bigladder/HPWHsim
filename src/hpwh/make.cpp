@@ -11,30 +11,46 @@ namespace hpwh_cli
 {
 
 /// make
-static void make(const std::string& sSpecType,
-                 const std::string& modelName,
+static void make(const std::string& specType,
+                 HPWH& hpwh,
                  double targetEF,
                  std::string sTestConfig,
                  std::string sOutputDir,
                  bool saveTestData,
                  std::string sResultsFilename,
-                 std::string drawProfileName);
+                 std::string drawProfileName,
+                 std::vector<HPWH::PerformancePoly>& perfPolySet);
 
 CLI::App* add_make(CLI::App& app)
 {
     const auto subcommand = app.add_subcommand("make", "Make a model with a specified EF");
 
-    static std::string sSpecType = "Preset";
-    subcommand->add_option("-s,--spec", sSpecType, "specification type (Preset)");
+    static std::string specType = "Preset";
+    subcommand->add_option("-s,--spec", specType, "Specification type (Preset, JSON, Legacy)");
+
+    //
+    auto model_group = subcommand->add_option_group("model");
 
     static std::string modelName = "";
-    subcommand->add_option("-m,--model", modelName, "model name")->required();
+    model_group->add_option("-m,--model", modelName, "Model name");
 
+    static int modelNumber = -1;
+    model_group->add_option("-n,--number", modelNumber, "Model number");
+
+    static std::string modelFilename = "";
+    model_group->add_option("-f,--filename", modelFilename, "Model filename");
+
+    model_group->required(1);
+
+    //
     static double targetUEF = -1.;
     subcommand->add_option("-e,--ef", targetUEF, "target EF")->required();
 
     static std::string sTestConfig = "UEF";
     subcommand->add_option("-c,--config", sTestConfig, "test configuration");
+
+    static int tier = 4;
+    subcommand->add_option("-t,--tier", tier, "tier 3 or 4")->check(CLI::IsMember({3, 4}));
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -51,27 +67,44 @@ CLI::App* add_make(CLI::App& app)
     subcommand->callback(
         [&]()
         {
-            make(sSpecType,
-                 modelName,
+            HPWH hpwh;
+            if (!modelName.empty())
+                hpwh.initPreset(modelName);
+            else if (modelNumber != -1)
+                hpwh.initPreset(static_cast<hpwh_presets::MODELS>(modelNumber));
+            else if (!modelFilename.empty())
+            {
+                std::ifstream inputFile(modelFilename);
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                specType = "JSON";
+                modelName = getModelNameFromFilename(modelFilename);
+                hpwh.initFromJSON(j, modelName);
+            }
+            auto perfPolySet = (tier == 3) ? HPWH::tier3 : HPWH::tier4;
+
+            make(specType,
+                 hpwh,
                  targetUEF,
                  sTestConfig,
                  sOutputDir,
                  saveTestData,
                  sResultsFilename,
-                 drawProfileName);
+                 drawProfileName,
+                 perfPolySet);
         });
 
     return subcommand;
 }
 
-void make(const std::string& sSpecType,
-          const std::string& modelName,
+void make(const std::string& specType,
+          HPWH& hpwh,
           double targetEF,
           std::string sTestConfig,
           std::string sOutputDir,
           bool saveTestData,
           std::string sResultsFilename,
-          std::string drawProfileName)
+          std::string drawProfileName,
+          std::vector<HPWH::PerformancePoly>& perfPolySet)
 {
     // select test configuration
     transform(sTestConfig.begin(),
@@ -87,38 +120,9 @@ void make(const std::string& sSpecType,
     else
         testConfiguration = HPWH::testConfiguration_UEF;
 
-    HPWH hpwh;
-
-    // process command line arguments
-    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (sSpecType_mod == "preset")
-        sSpecType_mod = "Preset";
-    else if (sSpecType_mod == "json")
-        sSpecType_mod = "JSON";
-
-    // Parse the model
-    if (sSpecType_mod == "Preset")
-    {
-        hpwh.initPreset(modelName);
-    }
-    else if (sSpecType_mod == "JSON")
-    {
-        hpwh.initFromJSON(modelName);
-    }
-    else
-    {
-        std::cout << "Invalid argument, received '" << sSpecType_mod
-                  << "', expected 'Preset' or 'JSON'.\n";
-        exit(1);
-    }
-
     std::string results = "";
-    results.append(fmt::format("\tSpecification Type: {}\n", sSpecType_mod));
-    results.append(fmt::format("\tModel Name: {}\n", modelName));
+    results.append(fmt::format("\tSpecification Type: {}\n", specType));
+    results.append(fmt::format("\tModel Name: {}\n", hpwh.name));
 
     auto designation = HPWH::FirstHourRating::Designation::Medium;
     if (drawProfileName != "")
@@ -156,13 +160,13 @@ void make(const std::string& sSpecType,
         results.append(firstHourRating.report());
     }
 
-    hpwh.makeGenericEF(targetEF, testConfiguration, designation);
+    hpwh.makeGenericEF(targetEF, testConfiguration, designation, perfPolySet);
 
     std::ofstream outputFile;
     auto testSummary = hpwh.run24hrTest(testConfiguration, designation, saveTestData);
     if (saveTestData)
     {
-        std::string sOutputFilename = "test24hr_" + sSpecType_mod + "_" + modelName + ".csv";
+        std::string sOutputFilename = "test24hr_" + specType + "_" + hpwh.name + ".csv";
         if (sOutputDir != "")
             sOutputFilename = sOutputDir + "/" + sOutputFilename;
         outputFile.open(sOutputFilename.c_str(), std::ifstream::out);

@@ -11,7 +11,7 @@ class HPWH::HeatSource : public Sender
     static const int CONDENSITY_SIZE = 12;
 
     HeatSource(HPWH* hpwh_in = NULL,
-               const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+               std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
                const std::string& name_in = "heatsource");
 
     HeatSource(const HeatSource& heatSource); /// copy constructor
@@ -19,14 +19,14 @@ class HPWH::HeatSource : public Sender
     virtual ~HeatSource() = default;
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void to(hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& config) const;
-    void from(const hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& config);
+    void to(hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& hsc) const;
+    void from(const hpwh_data_model::heat_source_configuration::HeatSourceConfiguration& hsc);
 
     virtual HEATSOURCE_TYPE typeOfHeatSource() const = 0;
     virtual void
-    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) const = 0;
+    to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) const = 0;
     virtual void
-    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& rshs_ptr) = 0;
+    from(const std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceTemplate>& p_hs) = 0;
 
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 

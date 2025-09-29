@@ -1,10 +1,11 @@
 ﻿/*
- * Implementation of static HPWH utility functions
+ * Implementation of HPWH utility functions
  */
 
 #include "HPWH.hh"
 #include "HPWHUtils.hh"
 #include "HPWHHeatSource.hh"
+#include "Condenser.hh"
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -238,4 +239,62 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
         return 0.;
     }
     return (tHot - tCold) / (tMix - tCold);
+}
+
+/*static*/
+void HPWH::linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1)
+{
+    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
+}
+
+/*static*/
+void HPWH::swapGridAxes(std::vector<std::vector<double>>& perfGrid,
+                        std::vector<std::vector<double>>& perfGridValues,
+                        std::size_t axis_i,
+                        std::size_t axis_j)
+{
+    std::size_t nAxes = perfGrid.size();
+    std::size_t nElems = perfGridValues[0].size();
+
+    std::vector<std::vector<double>> origPerfGridValues = perfGridValues;
+
+    std::vector<std::size_t> axes_ind = {};
+    std::vector<std::size_t> elem_ind = {};
+
+    axes_ind.reserve(nAxes);
+    elem_ind.reserve(nAxes);
+    for (std::size_t iAxis = 0; iAxis < nAxes; ++iAxis)
+    {
+        axes_ind.push_back((iAxis == axis_i) ? axis_j : ((iAxis == axis_j) ? axis_i : iAxis));
+        elem_ind.push_back(0);
+    }
+    for (std::size_t iElem = 0; iElem < nElems; ++iElem)
+    {
+        std::size_t iElemNew = 0;
+        for (std::size_t iAxis = 0; iAxis < nAxes; ++iAxis)
+        {
+            std::size_t dimSize = 1;
+            for (std::size_t ip = axes_ind[iAxis] + 1; ip < nAxes; ++ip)
+                dimSize *= perfGrid[ip].size();
+            iElemNew += dimSize * elem_ind[axes_ind[iAxis]];
+        }
+
+        perfGridValues[0][iElem] = origPerfGridValues[0][iElemNew];
+        perfGridValues[1][iElem] = origPerfGridValues[1][iElemNew];
+
+        for (int iAxis = static_cast<int>(nAxes) - 1; iAxis >= 0; --iAxis)
+        {
+            ++elem_ind[axes_ind[iAxis]];
+            if (elem_ind[axes_ind[iAxis]] < perfGrid[axes_ind[iAxis]].size())
+            {
+                break;
+            }
+            else
+            {
+                elem_ind[axes_ind[iAxis]] = 0;
+            }
+        }
+    }
+
+    std::swap(perfGrid[axis_i], perfGrid[axis_j]);
 }
