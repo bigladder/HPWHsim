@@ -130,7 +130,6 @@ void run(const std::string specType,
     int doInvMix, doCondu;
 
     std::ofstream outputFile;
-    std::ofstream yearOutFile;
     ifstream controlFile;
 
     string strPreamble;
@@ -326,30 +325,29 @@ void run(const std::string specType,
     }
 
     // ----------------------Open the Output Files and Print the Header----------------------------
-    // //
+    //
 
+    fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
+    outputFile.open(fileToOpen.c_str(), std::ifstream::out);
+    if (!outputFile.is_open())
+    {
+        std::cout << "Could not open output file " << fileToOpen << "\n";
+        exit(1);
+    }
     if (minutesToRun > 500000.)
     {
-        fileToOpen = sOutputDir + "/DHW_YRLY_" + specType + ".csv";
-        yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
-        if (!yearOutFile.is_open())
+        bool first = true;
+        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
         {
-            std::cout << "Could not open output file " << fileToOpen << "\n";
-            exit(1);
+            if (!first)
+                outputFile << ",";
+            outputFile << fmt::format("h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
+            first = false;
         }
+        outputFile << std::endl;
     }
     else
     {
-
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
-
-        outputFile.open(fileToOpen.c_str(), std::ifstream::out);
-        if (!outputFile.is_open())
-        {
-            std::cout << "Could not open output file " << fileToOpen << "\n";
-            exit(1);
-        }
-
         string header = strHead;
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
@@ -495,27 +493,18 @@ void run(const std::string specType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = sTestName + "," + hpwh.name;
-        yearOutFile << firstCol;
-        double totalIn = 0, totalOut = 0;
-        for (int iHS = 0; iHS < 3; iHS++)
+        bool first = true;
+        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
         {
-            yearOutFile << fmt::format(",{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
-            totalIn += cumHeatIn[iHS];
-            totalOut += cumHeatOut[iHS];
+            if (!first)
+                outputFile << ",";
+            outputFile << fmt::format("{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
+            first = false;
         }
-        yearOutFile << fmt::format(",{:0.0f},{:0.0f}", totalIn, totalOut);
-        for (int iHS = 0; iHS < 3; iHS++)
-        {
-            yearOutFile << fmt::format(",{:0.2f}", cumHeatOut[iHS] / cumHeatIn[iHS]);
-        }
-        yearOutFile << fmt::format(",{:0.2f}", totalOut / totalIn) << std::endl;
-        yearOutFile.close();
+        outputFile << std::endl;
     }
-    else
-    {
-        yearOutFile.close();
-    }
+    outputFile.close();
+
     controlFile.close();
 }
 
