@@ -36,6 +36,27 @@ jobs:
             cc: clang
             cxx: clang++
             experimental: false
+          - os: macos
+            os_ver: "14"
+            config: Release
+            coverage: false
+            cc: clang
+            cxx: clang++
+            experimental: true
+          - os: macos
+            os_ver: "15"
+            config: Release
+            coverage: false
+            cc: clang
+            cxx: clang++
+            experimental: true
+          - os: macos
+            os_ver: "26"
+            config: Release
+            coverage: false
+            cc: clang
+            cxx: clang++
+            experimental: true
           - os: ubuntu
             os_ver: "22.04"
             config: Debug
