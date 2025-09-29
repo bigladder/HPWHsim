@@ -188,6 +188,7 @@ void run(const std::string specType,
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
+    int subhourTime_min = 0;
 
     std::cout << "Running: " << hpwh.name << ", " << specType << ", " << fullTestName << endl;
 
@@ -336,13 +337,10 @@ void run(const std::string specType,
     }
     if (minutesToRun > 500000.)
     {
-        bool first = true;
+        outputFile << "time (day)";
         for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
         {
-            if (!first)
-                outputFile << ",";
-            outputFile << fmt::format("h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
-            first = false;
+            outputFile << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
         }
         outputFile << std::endl;
     }
@@ -488,21 +486,28 @@ void run(const std::string specType,
                 cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH) * 1000.;
                 cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
             }
+
+            if (subhourTime_min >= 1439.)
+            {
+                outputFile << fmt::format("{:d}", static_cast<int>(trunc((i + 1) / 1440.) - 1));
+                for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+                {
+                    outputFile << fmt::format(",{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
+                }
+                outputFile << std::endl;
+
+                subhourTime_min = 0;
+                for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+                {
+                    cumHeatIn[iHS] = 0.;
+                    cumHeatOut[iHS] = 0.;
+                }
+            }
+            else
+                ++subhourTime_min;
         }
     }
 
-    if (minutesToRun > 500000.)
-    {
-        bool first = true;
-        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
-        {
-            if (!first)
-                outputFile << ",";
-            outputFile << fmt::format("{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
-            first = false;
-        }
-        outputFile << std::endl;
-    }
     outputFile.close();
 
     controlFile.close();
