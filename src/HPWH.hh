@@ -571,7 +571,6 @@ class HPWH : public Courier::Sender
 
     std::shared_ptr<TempBasedHeatingLogic> standby(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topNode(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomNode(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic>
     bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff = false);
@@ -867,7 +866,7 @@ class HPWH : public Courier::Sender
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    Condenser* getCompressor();
+    Condenser* getCompressor() const;
 
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
@@ -1272,6 +1271,8 @@ class HPWH : public Courier::Sender
 
     struct PerformancePolySet : public std::vector<PerformancePoly>
     {
+        PerformancePolySet() : std::vector<PerformancePoly>({}) {}
+
         PerformancePolySet(const std::vector<PerformancePoly>& vect)
             : std::vector<PerformancePoly>(vect)
         {
@@ -1414,6 +1415,13 @@ class HPWH : public Courier::Sender
     }
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
+
+    static void swapGridAxes(std::vector<std::vector<double>>& perfGrid,
+                             std::vector<std::vector<double>>& perfGridValues,
+                             std::size_t axis_i,
+                             std::size_t axis_j);
+
+    bool useCOP_inBtwxt = false;
 
   private:
     void setAllDefaults(); /**< sets all the defaults */
@@ -1592,10 +1600,12 @@ constexpr double BTUm2C_per_kWhft2F =
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
+inline double dC_TO_dF(double temperature) { return (FperC * temperature); }
 inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
 inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
 inline double K_TO_C(double kelvin) { return (kelvin + absolute_zeroT_C); }
 inline double C_TO_K(double C) { return (C - absolute_zeroT_C); }
+inline double K_TO_F(double K) { return C_TO_F(K_TO_C(K)); }
 inline double F_TO_K(double F) { return C_TO_K(F_TO_C(F)); }
 inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
