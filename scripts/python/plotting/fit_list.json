@@ -244,14 +244,25 @@
 
   "parameters": [
 		{	
-			"type": "performance-point",
+			"type": "performance-points-offset",
 			"variable": "Pout",
 			"dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
 			"heat_source": "compressor",
-			"coordinates": [1, 1, 0],
+			"value": 2,
+			"increment": 10
+		},
+		{	
+			"type": "performance-points-offset",
+			"variable": "Pin",
+			"dependent": "COP",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+			"heat_source": "compressor",
+			"value": -3,
 			"increment": 10
 		}
 	],
@@ -264,7 +275,16 @@
 			"group": "24-hr-test",
 			"item": "EF",
       "target": 3.89,
-			"tolerance": 0.005
+			"tolerance": 0.0005
+    },
+    {
+      "type": "analysis",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+			"group": "24-hr-test",
+			"item": "energyUsed_kJ",
+      "target": 7825.20,
+			"tolerance": 1
     }
   ]
 }

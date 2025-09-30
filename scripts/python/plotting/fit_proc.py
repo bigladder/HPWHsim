@@ -15,8 +15,8 @@ def get_damped_inverse_left(M, nu):
 	wMT_M = MT_M + np.diag(np.full(num, nu))
 	if np.linalg.det(wMT_M) == 0:
 			print("det = 0")
-			return M
-	return np.matmul(np.linalg.inv(wMT_M), MT)	
+			return M, False
+	return np.matmul(np.linalg.inv(wMT_M), MT), True
 
 class FitProc:
 		
@@ -225,6 +225,36 @@ class FitProc:
 		perf_map["lookup_variables"] = lookup_vars		
 		set_perf_map(model_data, perf_map)
 	
+	def set_performance_points_offset(self, model_data, variable, dependent, value):
+		is_central = "central_system" in model_data
+		
+		orig_perf_map = get_perf_map(model_data)
+		perf_map = orig_perf_map
+		grid_vars = perf_map["grid_variables"]
+		
+		nTs = [len(grid_vars["evaporator_environment_dry_bulb_temperature"])]
+		col2_name = "condenser_entering_temperature" if is_central else "heat_source_temperature"
+		nTs.append(len(grid_vars[col2_name]))
+		nTs.append(1 if not is_central else len(grid_vars["condenser_leaving_temperature"]))
+	
+		lookup_vars = perf_map["lookup_variables"]
+		for x0 in range(nTs[0]):
+			for x1 in range(nTs[1]):
+				for x2 in range(nTs[2]):
+					elem = nTs[2] * (nTs[1] * x0 + x1) + x2
+					if variable == "Pin":
+						lookup_vars["input_power"][elem] += value
+					if variable == "Pout":
+						lookup_vars["heating_capacity"][elem] += value
+					if variable == "COP":
+						if dependent == "Pin":
+							Pin = lookup_vars["input_power"][elem]
+							lookup_vars["input_power"][elem] = 1 / ((1 / Pin) + (value / lookup_vars["heating_capacity"][elem])) - Pin
+						else:
+							lookup_vars["heating_capacity"][elem] += value * lookup_vars["input_power"][elem]
+		
+		perf_map["lookup_variables"] = lookup_vars		
+		set_perf_map(model_data, perf_map)
 			
 	def apply_constraint(self, constraint):
 		if constraint['type'] == 'bilinear-points':		
@@ -327,6 +357,17 @@ class FitProc:
 				model_data = self.read_cache_model(model_id)
 				self.set_performance_point(model_data, parameter['coordinates'], variable, dependent, x)	
 				self.write_cache_model(model_id, model_data)
+				
+		if parameter['type'] == 'performance-points-offset':		
+			variable =  parameter['variable']
+			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
+			if dependent == variable:
+				return
+			for model_id in parameter['models']:
+				model_data = self.read_cache_model(model_id)
+				self.set_performance_points_offset(model_data, variable, dependent, x)	
+				self.write_cache_model(model_id, model_data)
+			parameter['value'] = x
 
 	def get_parameter_value(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
@@ -355,6 +396,9 @@ class FitProc:
 			for model_id in parameter['models']:
 				model_data = self.read_cache_model(model_id)
 				return self.get_performance_point(model_data, parameter['coordinates'], variable)	
+
+		if parameter['type'] == 'performance-points-offset':		
+			return parameter['value']
 
 	def get_metric_value(self, metric):
 		if metric['type'] == 'analysis':		
@@ -412,11 +456,13 @@ class FitProc:
 			self.set_parameter_value(parameter, paramsV[i_param])		
 			
 		nu = 0.1
-		for iter in range(10):
+		for iter in range(3):
 			print(f"\niteration {iter}")
-						
+					
+			print(f"parameters: {paramsV}")	
+			
 			metricsV = self.get_metric_values()
-			print(f"metrics:\n {metricsV}")
+			print(f"metrics: {metricsV}")
 
 			diff0V = [0] * len(metricsV)
 			for i_metric, metric in enumerate(self.metrics):
@@ -424,46 +470,55 @@ class FitProc:
 			FOM = np.matmul(diff0V, diff0V)
 			print(f"FOM: {FOM}")
 				
-			jacobiM = [[0] * len(metricsV)] * len(paramsV)
+			# get jacobian
+			jM = [0] * len(metricsV) * len(paramsV)
 			for (i_param, parameter) in enumerate(self.parameters):
 				self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])
+				print(f"parameter {i_param}: {paramsV[i_param] + parameter['increment']}, inc: {parameter['increment']}")	
 				metricsV = self.get_metric_values()
-				print(f"metricsV: {metricsV}")
+				print(f"metrics: {metricsV}")	
 				for i_metric, metric in enumerate(self.metrics):
-					diff = (metricsV[i_metric] - metric['target']) / metric['tolerance']				
-					jacobiM[i_param][i_metric] = (diff - diff0V[i_metric]) / parameter['increment']			
-				self.set_parameter_value(parameter, paramsV[i_param])								
-			print(f"jacobiM: {jacobiM}")		
-			jM = np.array(jacobiM)
+					diff = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+					jM[len(metricsV) * i_param + i_metric] = (diff - diff0V[i_metric]) / parameter['increment']
+				self.set_parameter_value(parameter, paramsV[i_param])									
+			jacobiM = (np.array(jM)).reshape(len(metricsV), len(paramsV))
+			print(f"jacobian:\n{jacobiM}")	
 			
-			ijML = get_damped_inverse_left(jM, nu)		
-			p_inc1V = -np.matmul(ijML, np.array(diff0V))
-			print(f"\np_inc1V: {p_inc1V}")
-			for (i_param, parameter) in enumerate(self.parameters):
-				self.set_parameter_value(parameter, paramsV[i_param] + p_inc1V[i_param])				
-			time.sleep(1)
-			metricsV = self.get_metric_values()
-			print(f"metricsV_1: {metricsV}")
+			# try inversion with damping nu
+			FOM_1 = 1e12
+			(ijML, got1) = get_damped_inverse_left(jacobiM, nu)
+			if got1:	
+				p_inc1V = -np.matmul(ijML, np.array(diff0V)).astype(float)
+				print(f"\np_inc1: {p_inc1V}")
+				for (i_param, parameter) in enumerate(self.parameters):
+					self.set_parameter_value(parameter, paramsV[i_param] + p_inc1V[i_param])
+					print(f"parameter {i_param}: {paramsV[i_param] + p_inc1V[i_param]}")				
+				time.sleep(0.1)
+				metricsV = self.get_metric_values()
+				print(f"metrics: {metricsV}")			
+				diffV = [0] * len(metricsV)
+				for i_metric, metric in enumerate(self.metrics):
+					diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+				FOM_1 = np.matmul(diffV, diffV)
+				print(f"FOM_1: {FOM_1}")
 			
-			diffV = [0] * len(metricsV)
-			for i_metric, metric in enumerate(self.metrics):
-				diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
-			FOM_1 = np.matmul(diffV, diffV)
-			print(f"FOM_1: {FOM_1}")
-			
-			ijML = get_damped_inverse_left(jM, nu / 2)
-			p_inc2V = -np.matmul(ijML, np.array(diff0V))
-			print(f"\np_inc2V: {p_inc2V}")
-			for (i_param, parameter) in enumerate(self.parameters):
-				self.set_parameter_value(parameter, paramsV[i_param] + p_inc2V[i_param])
-			time.sleep(1)
-			metricsV = self.get_metric_values()
-			print(f"metricsV_2: {metricsV}")
-			diffV = [0] * len(metricsV)
-			for i_metric, metric in enumerate(self.metrics):
-				diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
-			FOM_2 = np.matmul(diffV, diffV)
-			print(f"FOM_2: {FOM_2}")	
+			# try inversion with damping nu/2
+			FOM_2 = 1e12
+			(ijML, got2) = get_damped_inverse_left(jacobiM, nu / 2)
+			if got2:
+				p_inc2V = -np.matmul(ijML, np.array(diff0V)).astype(float)
+				print(f"\np_inc2: {p_inc2V}")
+				for (i_param, parameter) in enumerate(self.parameters):
+					self.set_parameter_value(parameter, paramsV[i_param] + p_inc2V[i_param])
+					print(f"parameter {i_param}: {paramsV[i_param] + p_inc2V[i_param]}")	
+				time.sleep(0.1)
+				metricsV = self.get_metric_values()
+				print(f"metrics: {metricsV}")
+				diffV = [0] * len(metricsV)
+				for i_metric, metric in enumerate(self.metrics):
+					diffV[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+				FOM_2 = np.matmul(diffV, diffV)
+				print(f"FOM_2: {FOM_2}")	
 			
 			if FOM_1 < FOM or FOM_2 < FOM:
 				if FOM_1 < FOM_2:

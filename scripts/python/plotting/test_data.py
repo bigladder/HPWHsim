@@ -28,7 +28,6 @@ class EF_Bounds:
 
 class DataSet:
 	def __init__(self, dataSpec):
-		print(dataSpec)
 		self.model_id = dataSpec['model_id']
 		self.test_id = dataSpec['test_id']
 		self.ef_bounds = EF_Bounds()
@@ -154,7 +153,7 @@ class DataSet:
 
 	def analyze(self):	
 			self.find_EF_bounds()
-			print("analyzing")
+
 			initialTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_start_time]
 			finalTankAvgT_C = self.df["Tank Average Temperature"].iloc[self.ef_bounds.test_end_time]
 			
