@@ -853,7 +853,7 @@ TEST_F(PerformanceMapTest, LegacyTest)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Legacy";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -862,5 +862,28 @@ TEST_F(PerformanceMapTest, LegacyTest)
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
         EXPECT_NEAR_REL_TOL(checkPoint.output_kW, output_kW, 1.e-2) << modelName << ": data model";
+    }
+    {
+        const std::string modelName = "Mitsubishi_QAHV_N136TAU_HPB_SP";
+        hpwh.initLegacy(modelName);
+
+        PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
+
+        // using legacy grid
+        checkPoint = {45., 40., 135, 40.19555};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": Legacy";
+
+        reloadFromDataModel(hpwh);
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << modelName << ": data model";
     }
 }

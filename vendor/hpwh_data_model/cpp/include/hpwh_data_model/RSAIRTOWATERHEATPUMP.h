@@ -88,7 +88,7 @@ namespace hpwh_data_model {
 			double maximum_setpoint_temperature;
 			bool maximum_setpoint_temperature_is_set = false;
 			static constexpr std::string_view maximum_setpoint_temperature_units = "K";
-			static constexpr std::string_view maximum_setpoint_temperature_description = "Maximum setpoint temperature below threshold_temperature";
+			static constexpr std::string_view maximum_setpoint_temperature_description = "Maximum setpoint temperature below `threshold_environment_temperature`";
 			static constexpr std::string_view maximum_setpoint_temperature_name = "maximum_setpoint_temperature";
 		};
 		struct ResistanceElementDefrost {

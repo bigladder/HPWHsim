@@ -1420,6 +1420,8 @@ class HPWH : public Courier::Sender
                              std::size_t axis_i,
                              std::size_t axis_j);
 
+    bool useCOP_inBtwxt = false;
+
   private:
     void setAllDefaults(); /**< sets all the defaults */
 
