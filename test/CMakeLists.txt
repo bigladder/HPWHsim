@@ -223,7 +223,7 @@ set(LG_Tests
 function(add_model_test)
     set(options)
     set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME AIR_T_F)
-    set(multValueArgs)
+    set(multiValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if (${ARG_SPEC_TYPE} STREQUAL "JSON")
@@ -272,7 +272,7 @@ function(add_regression_test)
             "${CMAKE_CURRENT_BINARY_DIR}/output/${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
             "${CMAKE_CURRENT_SOURCE_DIR}/ref/${test_prefix}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
             )
-    #set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 endfunction()
 
 #Plot test
@@ -421,14 +421,14 @@ endforeach (model)
 foreach (test ${DR_Tests})
     foreach (model ${modelNames})
 			set(fullTestName "${DR_TestDir}/${test}")
-       add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+      add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
 # Max temp regression tests
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+       add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -468,22 +468,33 @@ foreach (test ${largeCompressorTests})
 endforeach (test)
 
 ## Yearly tests
-#Add small compressor yearly tests to the list
+# Small compressor yearly tests
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
-#Add LARGE compressor yearly tests to the list
+# LARGE compressor yearly tests
 foreach (test ${yearLargeTests})
     foreach (model ${yearLargeTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
-#Add regression test for yearly file
-add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY_${TestSpec}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY_${RefSpec}.csv")
+# Regression test for small compressor yearly tests
+foreach (test ${yearTests})
+    foreach (model ${yearTestsModels})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+    endforeach (model)
+endforeach (test)
+
+# Regression test for LARGE compressor yearly tests
+foreach (test ${yearLargeTests})
+    foreach (model ${yearLargeTestsModels})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+    endforeach (model)
+endforeach (test)
 
 # Add unit tests
 add_subdirectory(unit_tests)
