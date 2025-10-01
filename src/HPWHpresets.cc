@@ -235,11 +235,14 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
-    PerformancePolySet perfPolySet(
-        {{50., {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
-         {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}});
+    // altered UEF2Generic map to refer to test temperatures
+    PerformancePolySet perfPolySet({{50., {187.064124, 1.939747, 0.}, {5.4977772, -0.0243008, 0.}},
+                                    {67.5, {152.9195905, 2.476598, 0.}, {5.445, -0.0323732875, 0.}},
+                                    {95., {99.263895, 3.320221, 0.}, {7.26, -0.045058625, 0.}}});
 
-    compressor->minT = F_TO_C(45.);
+    compressor->evaluatePerformance = perfPolySet.make();
+
+    compressor->minT = F_TO_C(37.);
     compressor->maxT = F_TO_C(120.);
     compressor->hysteresis_dC = dF_TO_dC(2);
     compressor->configuration = Condenser::CONFIG_WRAPPED;
@@ -270,40 +273,14 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // set tank volume from input
     // use tank size setting function since it has bounds checking
-    setTankSize(tankVol_L);
+    tank->volume_L = tankVol_L;
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016
-    double tankVol_gal = tankVol_L / GAL_TO_L(1.);
+    double tankVol_gal = L_TO_GAL(tankVol_L);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
-    tank->UA_kJperHrC = 0.0076183819 * v1 * v1;
-
-    // do a linear interpolation to scale COP curve constant, using measured values
-    //  Chip's attempt 24-May-2014
-    double uefSpan = 3.4 - 2.0;
-
-    // force COP to be 70% of GE at UEF 2 and 95% at UEF 3.4
-    // use a fudge factor to scale cop and input power in tandem to maintain constant capacity
-    double fUEF = (energyFactor - 2.0) / uefSpan;
-    double genericFudge = (1. - fUEF) * .7 + fUEF * .95;
-
-    perfPolySet[0].COP_coeffs[0] *= genericFudge;
-    perfPolySet[0].COP_coeffs[1] *= genericFudge;
-    perfPolySet[0].COP_coeffs[2] *= genericFudge;
-
-    perfPolySet[1].COP_coeffs[0] *= genericFudge;
-    perfPolySet[1].COP_coeffs[1] *= genericFudge;
-    perfPolySet[1].COP_coeffs[2] *= genericFudge;
-
-    perfPolySet[0].inputPower_coeffs[0] /= genericFudge;
-    perfPolySet[0].inputPower_coeffs[1] /= genericFudge;
-    perfPolySet[0].inputPower_coeffs[2] /= genericFudge;
-
-    perfPolySet[1].inputPower_coeffs[0] /= genericFudge;
-    perfPolySet[1].inputPower_coeffs[1] /= genericFudge;
-    perfPolySet[1].inputPower_coeffs[2] /= genericFudge;
-
-    compressor->evaluatePerformance = perfPolySet.make();
+    double correction_UA = 6.5 / 7.9948937115672462; // scale to match UEF2Generic
+    tank->UA_kJperHrC = correction_UA * 0.0076183819 * v1 * v1;
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
@@ -313,7 +290,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resistiveElementBottom->followedByHeatSource = compressor;
 
     calcDerivedValues();
-
     checkInputs();
 
     isHeating = false;
@@ -324,6 +300,9 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
+    // scale to match result for UEF2Generic with input 2.
+    constexpr double correction_UEF = 1.7968735517046457 / 2.;
+    makeGenericEF(correction_UEF * energyFactor, testConfiguration_UEF, perfPolySet);
 }
 
 void HPWH::initLegacy(const std::string& modelName)

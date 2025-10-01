@@ -1,35 +1,68 @@
 {
-  "tests": [
-		{"group": "General tests", "id": "test30", "desc": "24h; 30F", "path": "general_tests"},
-		{"group": "General tests", "id": "test50", "desc": "24h; 50F", "path": "general_tests"},
-		{"group": "General tests", "id": "test70", "desc": "24h; 70F", "path": "general_tests"},
-		{"group": "General tests", "id": "test95", "desc": "24h; 95F", "path": "general_tests"},
-		{"group": "General tests", "id": "testSandenCombi", "desc": "SandenCombi", "path": "general_tests"},
+	"tests":
+	{
+		"E95": {"name": "24-hr E95 (95 ºF) test", "configuration": "E95"},	
+		"UEF": {"name": "24-hr UEF (67.5 ºF) test", "configuration": "UEF"},
+		"E50": {"name": "24-hr E50 (50 ºF) test", "configuration": "E50"},
 
-    {"group": "BradfordWhite AeroThermRE2H50", "id": "RE2H50_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H50", "measured": [{"id": "BradfordWhiteAeroThermRE2H50", "filename": "measured.csv"}]},
-		{"group": "BradfordWhite AeroThermRE2H50", "id": "RE2H50_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H50", "measured": [{"id": "BradfordWhiteAeroThermRE2H50", "filename": "measured.csv"}]},
-    {"group": "BradfordWhite_AeroThermRE2H65", "id": "RE2H65_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H65", "measured": [{"id": "BradfordWhiteAeroThermRE2H65", "filename": "measured.csv"}]},
-    {"group": "BradfordWhite_AeroThermRE2H65", "id": "RE2H65_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H65", "measured": [{"id": "BradfordWhiteAeroThermRE2H65", "filename": "measured.csv"}]},
-		{"group": "BradfordWhite AeroThermRE2H80", "id": "RE2H80_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H80", "measured": [{"id": "BradfordWhiteAeroThermRE2H80", "filename": "measured.csv"}]},
-		{"group": "BradfordWhite AeroThermRE2H80", "id": "RE2H80_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H80", "measured": [{"id": "BradfordWhiteAeroThermRE2H80", "filename": "measured.csv"}]},
+		"test30": {"desc": "24h; 30F", "path": "general_tests"},
+		"test50": {"desc": "24h; 50F", "path": "general_tests"},
+		"test70": {"desc": "24h; 70F", "path": "general_tests"},
+		"test95": {"desc": "24h; 95F", "path": "general_tests"},
+		"testSandenCombi": {"desc": "SandenCombi", "path": "general_tests"},
 
-		{"group": "Villara_AquaThermAire", "id": "villara_24hr67", "desc": "24h; 67F", "path": "Villara/AquaThermAire", "measured": [{"id": "AquaThermAire", "filename": "measured.csv"}]},
+		"RE2H50_UEF67": {"desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H50", "measured": {"BradfordWhiteAeroThermRE2H50": "measured.csv"}},
+    "RE2H65_UEF67": {"desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H65", "measured": {"BradfordWhiteAeroThermRE2H65": "measured.csv"}},
+		"RE2H80_UEF67": {"desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H80", "measured": {"BradfordWhiteAeroThermRE2H80": "measured.csv"}},
+    "RE2H50_UEF50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H50", "measured": {"BradfordWhiteAeroThermRE2H50": "measured.csv"}},
+    "RE2H65_UEF50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H65", "measured": {"BradfordWhiteAeroThermRE2H65": "measured.csv"}},
+		"RE2H80_UEF50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H80", "measured": {"BradfordWhiteAeroThermRE2H80": "measured.csv"}},
+    "RE2H50_HighVolumeDrawTest50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H50"},
 
-		{"group": "LG", "id": "DOE2014_LGC50_24hr50", "desc": "24h; 50F", "path": "LG/APHWC50", "measured": [{"id": "LG_APHWC50", "filename": "measured.csv"}]},
-		{"group": "LG", "id": "DOE2014_LGC50_24hr67", "desc": "24h; 67F", "path": "LG/APHWC50", "measured": [{"id": "LG_APHWC50", "filename": "measured.csv"}]},
-		{"group": "LG", "id": "DOE2014_LGC50_24hr95", "desc": "24h; 95F", "path": "LG/APHWC50", "measured": [{"id": "LG_APHWC50", "filename": "measured.csv"}]},
+		"RE2HP50_HVDT": {"desc": "high-volume-draw test", "path": "BradfordWhite/AeroThermRE2HP50", "measured": {"BradfordWhiteAeroThermRE2HP50": "measured.csv"}},
+		"RE2HP65_HVDT": {"desc": "high-volume-draw test", "path": "BradfordWhite/AeroThermRE2HP65", "measured": {"BradfordWhiteAeroThermRE2HP65": "measured.csv"}},
+		"RE2HP80_HVDT": {"desc": "high-volume-draw test", "path": "BradfordWhite/AeroThermRE2HP80", "measured": {"BradfordWhiteAeroThermRE2HP80": "measured.csv"}},
 
-		{"group": "Demand-response tests", "id": "testDr_LO", "path": "DR_tests"},
-		{"group": "Demand-response tests", "id": "testDr_TOO", "path": "DR_tests"},
-		{"group": "Demand-response tests", "id": "testDr_TOO2", "path": "DR_tests"},
-		{"group": "Demand-response tests", "id": "testDR_TOTLOR", "path": "DR_tests"},
+		"RE2HP50_UEF67": {"desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2HP50", "measured": {"BradfordWhiteAeroThermRE2HP50": "measured.csv"}},
+    "RE2HP65_UEF67": {"desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2HP65", "measured": {"BradfordWhiteAeroThermRE2HP65": "measured.csv"}},
+		"RE2HP80_UEF67": {"desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2HP80", "measured": {"BradfordWhiteAeroThermRE2HP80": "measured.csv"}},
 
-		{"group": "Standard tests", "id": "standard24hr", "name": "Standard 24-hr test"},
+    "RE2HP50_UEF50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2HP50", "measured": {"BradfordWhiteAeroThermRE2HP50": "measured.csv"}},
+    "RE2HP65_UEF50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2HP65", "measured": {"BradfordWhiteAeroThermRE2HP65": "measured.csv"}},
+		"RE2HP80_UEF50": {"desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2HP80", "measured": {"BradfordWhiteAeroThermRE2HP80": "measured.csv"}},
 
-		{"id": "testLockout", "name": "Lockout test"},
+	
+		"villara_24hr67": {"desc": "24h; 67F", "path": "Villara/AquaThermAire", "measured": {"AquaThermAire": "measured.csv"}},
+
+		"DOE2014_LGC50_24hr50": {"desc": "24h; 50F", "path": "LG/APHWC50", "measured": {"LG_APHWC50": "measured.csv"}},
+		"DOE2014_LGC50_24hr67": {"desc": "24h; 67F", "path": "LG/APHWC50", "measured": {"LG_APHWC50": "measured.csv"}},
+		"DOE2014_LGC50_24hr95": {"desc": "24h; 95F", "path": "LG/APHWC50", "measured": {"LG_APHWC50": "measured.csv"}},
+
+		"testDr_LO": {"path": "DR_tests"},
+		"testDr_TOO": {"path": "DR_tests"},
+		"testDr_TOO2": {"path": "DR_tests"},
+		"testDR_TOTLOR": {"path": "DR_tests"},
+
+
+		"testLockout": {"name": "Lockout test"},
  
-		{"group": "Central-system tests", "id": "testLargeComp45", "path": "large_compressor_tests"},
-		{"group": "Central-system tests", "id": "testLargeComp60", "path": "large_compressor_tests"},
-		{"group": "Central-system tests", "id": "testLargeCompHot", "path": "large_compressor_tests"}
-  ]
+		"draw_test": {"name": "draw test"},
+
+		"testLargeComp45": {"path": "large_compressor_tests"},
+		"testLargeComp60": {"path": "large_compressor_tests"},
+		"testLargeCompHot": {"path": "large_compressor_tests"}
+	},
+	"groups":
+	{
+		"standard_tests": {"name": "Standard 24-hr energy-factor tests", "tests": ["UEF", "E50", "E95"]},
+		"general_tests": {"name": "general tests", "tests": ["test30", "test50","test70", "test95", "testSandenCombi"]},
+		"BradfordWhiteAeroTherm": {"tests:": [
+			"RE2H50_UEF67", "RE2H50_UEF50", "RE2H65_UEF50", "RE2H65_UEF67", "RE2H80_UEF50", "RE2H80_UEF67",
+			"RE2HP50_UEF67", "RE2HP50_UEF50", "RE2HP65_UEF50", "RE2HP65_UEF67", "RE2HP80_UEF50", "RE2HP80_UEF67"
+		]},
+		"Villara_AquaThermAire": {"name": "Villara AquaThermAire", "tests": ["villara_24hr67"]},
+		"LG": {"tests": ["DOE2014_LGC50_24hr50", "DOE2014_LGC50_24hr67", "DOE2014_LGC50_24hr95"]},
+		"demand_response_tests": {"name": "Demand-response tests", "tests:": ["testDr_LO", "testDr_TOO", "testDr_TOO2", "testDR_TOTLOR"]},
+		"central_system tests": {"name": "Central-system tests", "tests": ["testLargeComp45", "testLargeComp60", "testLargeCompHot"]}
+	}
 }

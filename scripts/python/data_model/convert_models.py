@@ -1,6 +1,6 @@
 # uv run convert_models.py ../../../test/models_json/models.json ../../../build ../../../test/models_json
 #
-# calls `hpwh convert' for each model in models_list_file json
+# calls `hpwh convert -s Legacy' for each model in models_list_file json
 
 from pathlib import Path
 import os

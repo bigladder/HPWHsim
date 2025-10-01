@@ -546,7 +546,6 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
     // Heat transfer between nodes
     if (doConduction)
     {
-
         // Get the "constant" tau for the stability condition and the conduction calculation
         const double tau = 2. * KWATER_WpermC /
                            ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) *
@@ -672,7 +671,6 @@ double HPWH::Tank::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double ma
 
         // heat needed to bring all equal-temp nodes up to heatToT_C
         double qIncrement_kJ = numNodesToHeat * nodeCp_kJperC * (heatToT_C - nodeTs_C[nodeNum]);
-
         if (qIncrement_kJ > qAdd_kJ)
         {
             // insufficient heat to reach heatToT_C; use all available heat

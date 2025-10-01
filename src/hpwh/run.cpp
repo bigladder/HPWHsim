@@ -44,17 +44,17 @@ CLI::App* add_run(CLI::App& app)
     static int modelNumber = -1;
     model_group->add_option("-n,--number", modelNumber, "Model number");
 
-    static std::string modelFilename = "";
-    model_group->add_option("-f,--filename", modelFilename, "Model filename");
+    static std::string modelFilepath = "";
+    model_group->add_option("-f,--filepath", modelFilepath, "Model filepath");
 
     model_group->required(1);
 
     //
-    static std::string testName = "";
-    subcommand->add_option("-t,--test", testName, "Test name")->required();
+    static std::string fullTestName = "";
+    subcommand->add_option("-t,--test", fullTestName, "Test name")->required();
 
-    static std::string sOutputDir = ".";
-    subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
+    static std::string outputDir = ".";
+    subcommand->add_option("-d,--dir", outputDir, "Output directory");
 
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
@@ -63,6 +63,7 @@ CLI::App* add_run(CLI::App& app)
         [&]()
         {
             HPWH hpwh;
+            modelName = std::filesystem::path(modelName).stem().string();
             if (specType == "Preset")
             {
                 if (!modelName.empty())
@@ -72,13 +73,20 @@ CLI::App* add_run(CLI::App& app)
             }
             else if (specType == "JSON")
             {
-                if (!modelFilename.empty())
+                if (!modelName.empty())
+                    modelFilepath = "./models_json/" + modelName + ".json";
+                else if (!modelFilepath.empty())
+                    modelName = getModelNameFromFilepath(modelFilepath);
+
+                std::ifstream inputFile;
+                inputFile.open(modelFilepath.c_str(), std::ifstream::in);
+                if (!inputFile.is_open())
                 {
-                    std::ifstream inputFile(modelFilename + ".json");
-                    nlohmann::json j = nlohmann::json::parse(inputFile);
-                    modelName = getModelNameFromFilename(modelFilename);
-                    hpwh.initFromJSON(j, modelName);
+                    hpwh.get_courier()->send_error(
+                        fmt::format("Could not open input file {}\n", modelFilepath));
                 }
+                nlohmann::json j = nlohmann::json::parse(inputFile);
+                hpwh.initFromJSON(j, modelName);
             }
             else if (specType == "Legacy")
             {
@@ -87,7 +95,7 @@ CLI::App* add_run(CLI::App& app)
                 else if (modelNumber != -1)
                     hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
-            run(specType, hpwh, testName, sOutputDir, airTemp);
+            run(specType, hpwh, fullTestName, outputDir, airTemp);
         });
 
     return subcommand;
@@ -98,15 +106,13 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 void run(const std::string specType,
          HPWH& hpwh,
          std::string fullTestName,
-         std::string sOutputDir,
+         std::string outputDir,
          double airTemp)
 {
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
     hpwh_presets::MODELS model;
 
     const double EBALTHRESHOLD = 1.e-6;
-
-    const int nTestTCouples = 6;
 
     const double soCMinTUse_C = F_TO_C(110.);
     const double soCMains_C = F_TO_C(65.);
@@ -134,9 +140,6 @@ void run(const std::string specType,
     ifstream controlFile;
 
     string strPreamble;
-    string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
-    string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
-    string strHeadSoC = "targetSoCFract,soCFract,";
 
     std::cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
@@ -330,7 +333,7 @@ void run(const std::string specType,
 
     if (minutesToRun > 500000.)
     {
-        fileToOpen = sOutputDir + "/DHW_YRLY_" + specType + ".csv";
+        fileToOpen = outputDir + "/DHW_YRLY_" + specType + ".csv";
         yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
         if (!yearOutFile.is_open())
         {
@@ -341,7 +344,7 @@ void run(const std::string specType,
     else
     {
 
-        fileToOpen = sOutputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
+        fileToOpen = outputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
 
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
@@ -350,17 +353,7 @@ void run(const std::string specType,
             exit(1);
         }
 
-        string header = strHead;
-        if (hpwh.isCompressorExternalMultipass() == 1)
-        {
-            header += strHeadMP;
-        }
-        if (useSoC)
-        {
-            header += strHeadSoC;
-        }
-        int csvOptions = HPWH::CSVOPT_NONE;
-        hpwh.writeCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
+        hpwh.writeCSVHeading(&outputFile, HPWH::CSVOPT_NONE);
     }
 
     // ------------------------------------- Simulate --------------------------------------- //
@@ -455,33 +448,35 @@ void run(const std::string specType,
         // Recording
         if (minutesToRun < 500000.)
         {
-            // Copy current status into the output file
             if (HPWH_doTempDepress)
             {
                 airTemp2 = hpwh.getLocationTemp_C();
             }
-            strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-                          std::to_string(hpwh.getSetpoint()) + ", " +
-                          std::to_string(allSchedules[0][i]) + ", " +
-                          std::to_string(allSchedules[1][i]) + ", ";
-            // Add some more outputs for mp tests
-            if (hpwh.isCompressorExternalMultipass() == 1)
+
+            HPWH::TestData testData;
+            testData.time_min = i;
+            testData.ambientT_C = airTemp2;
+            testData.setpointT_C = hpwh.getSetpoint();
+            testData.inletT_C = allSchedules[0][i];
+            testData.drawVolume_L = GAL_TO_L(allSchedules[1][i]);
+            testData.outletT_C = hpwh.getOutletTemp();
+
+            testData.h_srcIn_kWh = {};
+            testData.h_srcOut_kWh = {};
+            for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
-                strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
-                               std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
-                               std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+                testData.h_srcIn_kWh.push_back(
+                    hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                testData.h_srcOut_kWh.push_back(
+                    hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
-            if (useSoC)
-            {
-                strPreamble += std::to_string(allSchedules[6][i]) + ", " +
-                               std::to_string(hpwh.getSoCFraction()) + ", ";
-            }
-            int csvOptions = HPWH::CSVOPT_NONE;
-            if (allSchedules[1][i] > 0.)
-            {
-                csvOptions |= HPWH::CSVOPT_IS_DRAWING;
-            }
-            hpwh.writeCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
+
+            testData.thermocoupleT_C = {};
+            for (int iTC = 0; iTC < HPWH::TestData::nTCouples; iTC++)
+                testData.thermocoupleT_C.push_back(
+                    hpwh.getNthSimTcouple(iTC + 1, HPWH::TestData::nTCouples, HPWH::UNITS_C));
+
+            hpwh.writeCSVRow(&outputFile, testData);
         }
         else
         {

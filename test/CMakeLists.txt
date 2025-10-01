@@ -163,7 +163,7 @@ set(yearLargeTests
         )
 
 #
-set(SancoModels 
+set(SancoModels
         Sanco83
 )
 set(SancoTests
@@ -272,13 +272,13 @@ function(add_regression_test)
             "${CMAKE_CURRENT_BINARY_DIR}/output/${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
             "${CMAKE_CURRENT_SOURCE_DIR}/ref/${test_prefix}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
             )
-    #set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 endfunction()
 
 #Plot test
 function(add_plot_test)
     set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -299,10 +299,9 @@ function(add_plot_test)
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-
         add_test(NAME "${plotTestName}"
                 COMMAND uv run "${PROJECT_SOURCE_DIR}/scripts/python/plotting/test_plot.py"
-                ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath}
+                "${ARG_MODEL_NAME}" "${ARG_TEST_NAME}" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath}
                 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python/plotting"
                 )
 

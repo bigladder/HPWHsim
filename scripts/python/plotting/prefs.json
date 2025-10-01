@@ -1,1 +1,24 @@
-{"model_id": "AOSmithHPTS80", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "All tests", "test_id": "test95", "show_simulated": true, "show_measured": false, "draw_profile": "High"}
+{
+  "model_id": "BradfordWhiteAeroThermRE2HP50",
+  "build_dir": "../../../build",
+  "heat_source_id": "resistiveElementTop",
+  "tests": {
+    "list": "tests_with_data",
+    "id": "RE2HP50_UEF67",
+    "draw_profile": "medium",
+    "plots": {
+      "show_simulated": true,
+      "show_measured": true
+    }
+  },
+  "performance": {
+    "plots": {
+      "contour_variable": 2,
+      "contour_coloring": 2,
+      "interpolate": 0,
+      "Nx": 5,
+      "Ny": 10,
+      "show_points": 1
+    }
+  }
+}

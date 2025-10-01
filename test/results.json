@@ -1,0 +1,17 @@
+{
+  "24_hr_test": {
+    "EF": 2.1697694659905413,
+    "adjusted_daily_water_heating_energy_consumption_kJ": 22298.1927289336,
+    "annual_electrical_energy_consumption_kJ": 4326147.203868087,
+    "annual_energy_consumption_kJ": 4326147.203868087,
+    "average_inlet_temperature_degC": 14.444444444444441,
+    "average_outlet_temperature_degC": 50.95173987089725,
+    "daily_water_heating_energy_consumption_kJ": 20181.289161173907,
+    "designation": "High",
+    "modified_daily_water_heating_energy_consumption_kJ": 22736.401038567783,
+    "recovery_efficiency": 2.3925291491629466,
+    "standby_loss_coefficient_kJperhC": 3.549481353026792,
+    "total_volume_drawn_L": 317.99999999999994,
+    "usedEnergy_kJ": 22011.713673524548
+  }
+}

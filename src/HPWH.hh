@@ -703,20 +703,6 @@ class HPWH : public Courier::Sender
 
     void setMinutesPerStep(double newMinutesPerStep);
 
-    int writeCSVHeading(std::ofstream& outFILE,
-                        const char* preamble = "",
-                        int nTCouples = 6,
-                        int options = CSVOPT_NONE) const;
-
-    int writeCSVRow(std::ofstream& outFILE,
-                    const char* preamble = "",
-                    int nTCouples = 6,
-                    int options = CSVOPT_NONE) const;
-    /**< a couple of function to write the outputs to a file
-        they both will return 0 for success
-        the preamble should be supplied with a trailing comma, as these functions do
-        not add one.  Additionally, a newline is written with each call.  */
-
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
     void setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
@@ -1053,6 +1039,7 @@ class HPWH : public Courier::Sender
     /**< functions to check for and set specific high temperature shut off logics.
     HPWHs can only have one of these, which is at least typical */
 
+    double _targetSoC;
     void setTargetSoCFraction(double target);
 
     bool canUseSoCControls();
@@ -1120,13 +1107,14 @@ class HPWH : public Courier::Sender
             {Designation::High, "High"}};
 
         double drawVolume_L;
-        std::string report();
+        nlohmann::json report();
     };
 
     /// fields for test output to csv
     struct TestData
     {
-        int time_min;
+        static const int nTCouples = 6;
+        double time_min;
         double ambientT_C;
         double setpointT_C;
         double inletT_C;
@@ -1136,27 +1124,35 @@ class HPWH : public Courier::Sender
         std::vector<double> h_srcOut_kWh;
         std::vector<double> thermocoupleT_C;
         double outletT_C;
+
+        void writeCSV_row(HPWH& hpwh, std::ofstream& outFILE);
     };
+
+    void writeCSVHeading(std::ostream* out, int options = CSVOPT_NONE) const;
+
+    void writeCSVRow(std::ostream* out, TestData& testData, int options = CSVOPT_NONE) const;
+
+    /**< a couple of function to write the outputs to a file
+        they both will return 0 for success
+        the preamble should be supplied with a trailing comma, as these functions do
+        not add one.  Additionally, a newline is written with each call.  */
 
     /// collection of information derived from standard 24-h test
     struct TestSummary
     {
         // first recovery values
-        double recoveryEfficiency = 0.; // eta_r
+        double recoveryPeriodEndTime_min = 0.;
+        double recoveryVolumeDrawn_L = 0.;
         double recoveryDeliveredEnergy_kJ = 0.;
         double recoveryStoredEnergy_kJ = 0.;
         double recoveryUsedEnergy_kJ = 0.; // Q_r
+        double recoveryEfficiency = 0.;    // eta_r
 
         //
-        double standbyPeriodTime_h = 0; // tau_stby,1
-
-        double standbyStartTankT_C = 0.; // T_su,0
-        double standbyEndTankT_C = 0.;   // T_su,f
-
-        double standbyStartEnergy_kJ = 0.; // Q_su,0
-        double standbyEndEnergy_kJ = 0.;   // Q_su,f
-        double standbyUsedEnergy_kJ = 0.;  // Q_stby
-
+        double standbyStartTankT_C = 0.;            // T_su,0
+        double standbyEndTankT_C = 0.;              // T_su,f
+        double standbyUsedEnergy_kJ = 0.;           // Q_stby
+        double standbyPeriodDuration_h = 0;         // tau_stby,1
         double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
         double standbyLossCoefficient_kJperhC = 0.; // UA
 
@@ -1169,9 +1165,10 @@ class HPWH : public Courier::Sender
         double averageOutletT_C = 0.;      // <Tdel,i>
         double averageInletT_C = 0.;       // <Tin,i>
 
-        double usedFossilFuelEnergy_kJ = 0.;               // Q_f
-        double usedElectricalEnergy_kJ = 0.;               // Q_e
-        double usedEnergy_kJ = 0.;                         // Q
+        double usedFossilFuelEnergy_kJ = 0.; // Q_f
+        double usedElectricalEnergy_kJ = 0.; // Q_e
+        double usedEnergy_kJ = 0.;           // Q
+        double deliveredEnergy_kJ = 0.;
         double consumedHeatingEnergy_kJ = 0.;              // Q_d
         double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
         double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
@@ -1182,12 +1179,13 @@ class HPWH : public Courier::Sender
         double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
         double annualConsumedEnergy_kJ = 0.;           // E_annual
 
+        FirstHourRating::Designation designation = FirstHourRating::Designation::Medium;
         bool qualifies = false;
 
         std::vector<TestData> testDataSet = {};
 
         // return a verbose string summary
-        std::string report();
+        nlohmann::json report();
     };
 
     struct TestConfiguration
@@ -1210,27 +1208,26 @@ class HPWH : public Courier::Sender
 
     /// run 24-hr draw pattern
     TestSummary run24hrTest(TestConfiguration testConfiguration,
-                            FirstHourRating::Designation designation,
-                            bool saveOutput = false);
+                            FirstHourRating::Designation designation);
 
-    TestSummary run24hrTest(TestConfiguration testConfiguration, bool saveOutput = false)
+    TestSummary run24hrTest(TestConfiguration testConfiguration)
     {
-        return run24hrTest(testConfiguration, findFirstHourRating().designation, saveOutput);
+        return run24hrTest(testConfiguration, findFirstHourRating().designation);
     }
 
     /// specific information for a single draw
     struct Draw
     {
         double startTime_min;
-        double volume_L;
-        double flowRate_L_per_min;
+        double volume_gal;
+        double flowRate_gal_per_min;
 
         Draw(const double startTime_min_in,
-             const double volume_L_in,
-             const double flowRate_Lper_min_in)
+             const double volume_gal_in,
+             const double flowRate_galper_min_in)
             : startTime_min(startTime_min_in)
-            , volume_L(volume_L_in)
-            , flowRate_L_per_min(flowRate_Lper_min_in)
+            , volume_gal(volume_gal_in)
+            , flowRate_gal_per_min(flowRate_galper_min_in)
         {
         }
     };
@@ -1416,12 +1413,12 @@ class HPWH : public Courier::Sender
 
     static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
+    bool useCOP_inBtwxt = false;
+
     static void swapGridAxes(std::vector<std::vector<double>>& perfGrid,
                              std::vector<std::vector<double>>& perfGridValues,
                              std::size_t axis_i,
                              std::size_t axis_j);
-
-    bool useCOP_inBtwxt = false;
 
   private:
     void setAllDefaults(); /**< sets all the defaults */
@@ -1656,13 +1653,13 @@ inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, con
     return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
 }
 
-inline std::string getModelNameFromFilename(const std::string& modelFilename)
+inline std::string getModelNameFromFilepath(const std::string& modelFilepath)
 {
     std::string modelName = "custom";
-    if (modelFilename.find("/") != std::string::npos)
+    if (modelFilepath.find("/") != std::string::npos)
     {
-        std::size_t iLast = modelFilename.find_last_of("/");
-        modelName = modelFilename.substr(iLast + 1);
+        std::size_t iLast = modelFilepath.find_last_of("/");
+        modelName = modelFilepath.substr(iLast + 1);
     }
     if (modelName.find(".") != std::string::npos)
     {
