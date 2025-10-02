@@ -182,10 +182,11 @@ class DataSet:
 			recoveryDeliveredEnergy_kJ = 0
 		
 			isStandbyPeriod = False
-			standbyUsedEnergy_kJ = 0
+			standbyPeriodEnded = False
 			standbySumTime_min = self.ef_bounds.standby_period_end_time - self.ef_bounds.standby_period_start_time + 1
 			standbySumTimeTankT_minC = 0
 			standbySumTimeAmbientT_minC = 0
+			standbyUsedEnergy_kJ = 0
 			
 			deliveredEnergy_kJ = 0
 			standardSetpointT_C = 51.7
@@ -249,6 +250,7 @@ class DataSet:
 					else:
 						tStandby = self.ef_bounds.standby_period_end_time
 						isStandbyPeriod = False
+						standbyPeriodEnded = True
 						standbyEndT_C = tankAvgT_C
 					dt = tStandby - (t_min - 1)
 					standbySumTimeTankT_minC += tankAvgT_C * dt
@@ -282,62 +284,63 @@ class DataSet:
 				recovery_summary[k] = float(v)
 			self.test_summary['first-recovery-period'] = recovery_summary
 			
-			standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
-			standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
-			standbyTankLoss_kJ = tank_heat_capacity_kJperC * (standbyEndT_C - standbyStartT_C)
-			standbyHourlyLossEnergy_kJperh = (standbyUsedEnergy_kJ - standbyTankLoss_kJ) / recoveryEfficiency / (standbySumTime_min / 60)
-			standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)			
-			standby_summary = {
-				'standbyPeriodStartTime_min': self.ef_bounds.standby_period_start_time,
-				'standbyPeriodEndTime_min': self.ef_bounds.standby_period_end_time,
-				'standbyTestDuration h': standbySumTime_min / 60,
-				'standbyStartT_C': standbyStartT_C,
-				'standbyEndT_C': standbyEndT_C,
-				'standbyAvgTankT_C': standbyAvgTankT_C,
-				'standbyAvgAmbientT_C': standbyAvgAmbientT_C,
-				'standbyUsedEnergy_kJ': standbyUsedEnergy_kJ,
-				'standbyTankLoss_kJ': standbyTankLoss_kJ,
-				'standbyHourlyLossEnergy_kJperh': standbyHourlyLossEnergy_kJperh,
-				'standbyLossCoefficient_kJperhC': standbyLossCoefficient_kJperhC
-			}
-			for k, v in standby_summary.items():
-				standby_summary[k] = float(v)
-			self.test_summary['standby-period'] = standby_summary
+			if standbyPeriodEnded:
+				standbyAvgTankT_C = standbySumTimeTankT_minC / standbySumTime_min
+				standbyAvgAmbientT_C = standbySumTimeAmbientT_minC / standbySumTime_min
+				standbyTankLoss_kJ = tank_heat_capacity_kJperC * (standbyEndT_C - standbyStartT_C)
+				standbyHourlyLossEnergy_kJperh = (standbyUsedEnergy_kJ - standbyTankLoss_kJ) / recoveryEfficiency / (standbySumTime_min / 60)
+				standbyLossCoefficient_kJperhC = standbyHourlyLossEnergy_kJperh / (standbyAvgTankT_C - standbyAvgAmbientT_C)			
+				standby_summary = {
+					'standbyPeriodStartTime_min': self.ef_bounds.standby_period_start_time,
+					'standbyPeriodEndTime_min': self.ef_bounds.standby_period_end_time,
+					'standbyTestDuration h': standbySumTime_min / 60,
+					'standbyStartT_C': standbyStartT_C,
+					'standbyEndT_C': standbyEndT_C,
+					'standbyAvgTankT_C': standbyAvgTankT_C,
+					'standbyAvgAmbientT_C': standbyAvgAmbientT_C,
+					'standbyUsedEnergy_kJ': standbyUsedEnergy_kJ,
+					'standbyTankLoss_kJ': standbyTankLoss_kJ,
+					'standbyHourlyLossEnergy_kJperh': standbyHourlyLossEnergy_kJperh,
+					'standbyLossCoefficient_kJperhC': standbyLossCoefficient_kJperhC
+				}
+				for k, v in standby_summary.items():
+					standby_summary[k] = float(v)
+				self.test_summary['standby-period'] = standby_summary
 			
-			avgInletT_C = sumDrawInletT / sumDraw_L	
-			avgOutletT_C =	sumDrawOutletT / sumDraw_L	
-			waterHeatingEnergy_kJ = deliveredEnergy_kJ / recoveryEfficiency
-			standardRemovedEnergy_kJ = sumDrawHeatCap_kJperC * (standardSetpointT_C - standardInletT_C)
-			standardWaterHeatingEnergy_kJ = standardRemovedEnergy_kJ / recoveryEfficiency
-			waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
-			removedHeatCapacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * sumDraw_L	
-			standardDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C)
-			standardEnergyUsedToHeatWater_kJ = standardDeliveredEnergy_kJ/ recoveryEfficiency							
-			actualDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (avgOutletT_C - avgInletT_C)
-			energyUsedToHeatWater_kJ = actualDeliveredEnergy_kJ / recoveryEfficiency
-			waterHeatingDifferenceEnergy_kJ = standardEnergyUsedToHeatWater_kJ - energyUsedToHeatWater_kJ			
-			waterHeatingEnergy_kJ = tank_heat_capacity_kJperC * (tankAvgT_C - initialTankAvgT_C) / recoveryEfficiency
-			dailyWaterHeaterEnergyConsumption_kJ = sumInputEnergy_kJ - waterHeatingEnergy_kJ	
-			adjustedDailyWaterHeaterEnergyConsumption_kJ = dailyWaterHeaterEnergyConsumption_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
-			modifiedConsumedWaterHeatingEnergy_kJ = adjustedDailyWaterHeaterEnergyConsumption_kJ + waterHeatingDifferenceEnergy_kJ
-			_24_hr_test_summary = {
-				'initialTankAvgT_C': initialTankAvgT_C,
-				'avgInletT_C': avgInletT_C,
-				'avgOutletT_C': avgOutletT_C,
-				'sumDraw_L': sumDraw_L,
-				'energyUsed_kJ': sumInputEnergy_kJ,
-				'standardDeliveredEnergy_kJ': standardDeliveredEnergy_kJ,
-				'waterHeatingEnergy_kJ': waterHeatingEnergy_kJ,
-				'dailyWaterHeaterEnergyConsumption_kJ': dailyWaterHeaterEnergyConsumption_kJ,
-				'standardWaterHeatingEnergy_kJ': standardWaterHeatingEnergy_kJ,
-				'energyUsedToHeatWater_kJ': energyUsedToHeatWater_kJ,
-				'actualDeliveredEnergy_kJ': actualDeliveredEnergy_kJ,
-				'waterHeatingEnergy_kJ': waterHeatingEnergy_kJ,
-				'waterHeatingDifferenceEnergy_kJ': waterHeatingDifferenceEnergy_kJ,
-				'adjustedDailyWaterHeaterEnergyConsumption_kJ': adjustedDailyWaterHeaterEnergyConsumption_kJ,
-				'modifiedConsumedWaterHeatingEnergy_kJ': modifiedConsumedWaterHeatingEnergy_kJ,
-				'EF': standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
-			}
-			for k, v in _24_hr_test_summary.items():
-				_24_hr_test_summary[k] = float(v)
-			self.test_summary['24-hr-test'] = _24_hr_test_summary
+				avgInletT_C = sumDrawInletT / sumDraw_L	
+				avgOutletT_C =	sumDrawOutletT / sumDraw_L	
+				waterHeatingEnergy_kJ = deliveredEnergy_kJ / recoveryEfficiency
+				standardRemovedEnergy_kJ = sumDrawHeatCap_kJperC * (standardSetpointT_C - standardInletT_C)
+				standardWaterHeatingEnergy_kJ = standardRemovedEnergy_kJ / recoveryEfficiency
+				waterHeatingDifferenceEnergy_kJ = standardWaterHeatingEnergy_kJ - waterHeatingEnergy_kJ
+				removedHeatCapacity_kJperC = water_specific_heat_kJperkgC * water_density_kgperL * sumDraw_L	
+				standardDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C)
+				standardEnergyUsedToHeatWater_kJ = standardDeliveredEnergy_kJ/ recoveryEfficiency							
+				actualDeliveredEnergy_kJ = removedHeatCapacity_kJperC * (avgOutletT_C - avgInletT_C)
+				energyUsedToHeatWater_kJ = actualDeliveredEnergy_kJ / recoveryEfficiency
+				waterHeatingDifferenceEnergy_kJ = standardEnergyUsedToHeatWater_kJ - energyUsedToHeatWater_kJ			
+				waterHeatingEnergy_kJ = tank_heat_capacity_kJperC * (tankAvgT_C - initialTankAvgT_C) / recoveryEfficiency
+				dailyWaterHeaterEnergyConsumption_kJ = sumInputEnergy_kJ - waterHeatingEnergy_kJ	
+				adjustedDailyWaterHeaterEnergyConsumption_kJ = dailyWaterHeaterEnergyConsumption_kJ - (standardAmbientT_C - noDrawAvgAmbientT_C) * standbyLossCoefficient_kJperhC * (sumNoDrawTime_min / 60)
+				modifiedConsumedWaterHeatingEnergy_kJ = adjustedDailyWaterHeaterEnergyConsumption_kJ + waterHeatingDifferenceEnergy_kJ
+				_24_hr_test_summary = {
+					'initialTankAvgT_C': initialTankAvgT_C,
+					'avgInletT_C': avgInletT_C,
+					'avgOutletT_C': avgOutletT_C,
+					'sumDraw_L': sumDraw_L,
+					'energyUsed_kJ': sumInputEnergy_kJ,
+					'standardDeliveredEnergy_kJ': standardDeliveredEnergy_kJ,
+					'waterHeatingEnergy_kJ': waterHeatingEnergy_kJ,
+					'dailyWaterHeaterEnergyConsumption_kJ': dailyWaterHeaterEnergyConsumption_kJ,
+					'standardWaterHeatingEnergy_kJ': standardWaterHeatingEnergy_kJ,
+					'energyUsedToHeatWater_kJ': energyUsedToHeatWater_kJ,
+					'actualDeliveredEnergy_kJ': actualDeliveredEnergy_kJ,
+					'waterHeatingEnergy_kJ': waterHeatingEnergy_kJ,
+					'waterHeatingDifferenceEnergy_kJ': waterHeatingDifferenceEnergy_kJ,
+					'adjustedDailyWaterHeaterEnergyConsumption_kJ': adjustedDailyWaterHeaterEnergyConsumption_kJ,
+					'modifiedConsumedWaterHeatingEnergy_kJ': modifiedConsumedWaterHeatingEnergy_kJ,
+					'EF': standardDeliveredEnergy_kJ / modifiedConsumedWaterHeatingEnergy_kJ
+				}
+				for k, v in _24_hr_test_summary.items():
+					_24_hr_test_summary[k] = float(v)
+				self.test_summary['24-hr-test'] = _24_hr_test_summary

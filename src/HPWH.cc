@@ -730,7 +730,7 @@ void HPWH::writeCSVRow(std::ostream* out, TestData& testData, int options) const
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        *out << fmt::format(",{:0.2f},{:0.2f}",
+        *out << fmt::format(",{:0.4f},{:0.4f}",
                             testData.h_srcIn_kWh[iHS] * 1000.,
                             testData.h_srcOut_kWh[iHS] * 1000.);
     }

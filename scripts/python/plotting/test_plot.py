@@ -381,18 +381,20 @@ class TestPlotter:
 		for dataset in self.datasets:
 				dataset.analyze()
 				for summary in ['first-recovery-period', 'standby-period', '24-hr-test']:
-					for item in dataset.test_summary[summary]:
-						if item not in summary_data_dict:
-							summary_data_dict[item] = []
+					if summary in dataset.test_summary:
+						for item in dataset.test_summary[summary]:
+							if item not in summary_data_dict:
+								summary_data_dict[item] = []
 							
 		for dataset in self.datasets:
 			for item in summary_data_dict:
 				have_item = False
 				for summary in ['first-recovery-period', 'standby-period', '24-hr-test']:
-					if item in dataset.test_summary[summary]:
-						have_item = True
-						summary_data_dict[item].append(dataset.test_summary[summary][item])
-						break
+					if summary in dataset.test_summary:
+						if item in dataset.test_summary[summary]:
+							have_item = True
+							summary_data_dict[item].append(dataset.test_summary[summary][item])
+							break
 				if not(have_item):
 					summary_data_dict[item].append("")	
 
