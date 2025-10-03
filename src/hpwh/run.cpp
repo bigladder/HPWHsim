@@ -122,8 +122,8 @@ void run(const std::string specType,
 
     string fileToOpen, fileToOpen2, scheduleName, var1;
     string inputVariableName, firstCol;
-    double testVal, newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit,
-        initialTankT_C;
+    double newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
+    std::vector<double> initialTankTs_C = {};
     bool useSoC;
     int i, outputCode;
     long minutesToRun;
@@ -185,7 +185,6 @@ void run(const std::string specType,
     outputCode = 0;
     minutesToRun = 0;
     newSetpoint = 0.;
-    initialTankT_C = 0.;
     doCondu = 1;
     doInvMix = 1;
     inletH = 0.;
@@ -197,48 +196,60 @@ void run(const std::string specType,
 
     std::cout << "Running: " << hpwh.name << ", " << specType << ", " << fullTestName << endl;
 
-    while (controlFile >> var1 >> testVal)
+    std::string line;
+    while (std::getline(controlFile, line))
     {
-        if (var1 == "setpoint")
-        { // If a setpoint was specified then override the default
-            newSetpoint = testVal;
-        }
-        else if (var1 == "length_of_test")
+        std::vector<std::string> entries = {};
+        std::string entry;
+        std::stringstream ss(line);
+        while (std::getline(ss, entry, ' '))
+            entries.push_back(entry);
+
+        if (size(entries) > 0)
         {
-            minutesToRun = (int)testVal;
-        }
-        else if (var1 == "doInversionMixing")
-        {
-            doInvMix = (testVal > 0.0) ? 1 : 0;
-        }
-        else if (var1 == "doConduction")
-        {
-            doCondu = (testVal > 0.0) ? 1 : 0;
-        }
-        else if (var1 == "inletH")
-        {
-            inletH = testVal;
-        }
-        else if (var1 == "tanksize")
-        {
-            newTankSize = testVal;
-        }
-        else if (var1 == "tot_limit")
-        {
-            tot_limit = testVal;
-        }
-        else if (var1 == "useSoC")
-        {
-            useSoC = (bool)testVal;
-        }
-        else if (var1 == "initialTankT_C")
-        { // Initialize at this temperature instead of setpoint
-            initialTankT_C = testVal;
-            hasInitialTankTemp = true;
-        }
-        else
-        {
-            std::cout << var1 << " in testInfo.txt is an unrecogized key.\n";
+            var1 = entries[0];
+            if (var1 == "setpoint")
+            { // If a setpoint was specified then override the default
+                newSetpoint = std::stod(entries[1]);
+            }
+            else if (var1 == "length_of_test")
+            {
+                minutesToRun = std::stoi(entries[1]);
+            }
+            else if (var1 == "doInversionMixing")
+            {
+                doInvMix = (std::stod(entries[1]) > 0.0) ? 1 : 0;
+            }
+            else if (var1 == "doConduction")
+            {
+                doCondu = (std::stod(entries[1]) > 0.0) ? 1 : 0;
+            }
+            else if (var1 == "inletH")
+            {
+                inletH = std::stod(entries[1]);
+            }
+            else if (var1 == "tanksize")
+            {
+                newTankSize = std::stod(entries[1]);
+            }
+            else if (var1 == "tot_limit")
+            {
+                tot_limit = std::stod(entries[1]);
+            }
+            else if (var1 == "useSoC")
+            {
+                useSoC = static_cast<bool>(std::stoi(entries[1]));
+            }
+            else if (var1 == "initialTankT_C")
+            { // Initialize at this temperature instead of setpoint
+                for (auto it = entries.begin() + 1; it != entries.end(); ++it)
+                    initialTankTs_C.push_back(std::stod(*it));
+                hasInitialTankTemp = true;
+            }
+            else
+            {
+                std::cout << var1 << " in testInfo.txt is an unrecognized key.\n";
+            }
         }
     }
 
@@ -305,7 +316,7 @@ void run(const std::string specType,
             }
         }
         if (hasInitialTankTemp)
-            hpwh.setTankToTemperature(initialTankT_C);
+            hpwh.tank->setNodeTs_C(initialTankTs_C);
         else if (measuredFilepath != "")
             hpwh.setTankFromMeasured(measuredFilepath, 0);
         else
