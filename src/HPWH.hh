@@ -749,6 +749,9 @@ class HPWH : public Courier::Sender
     void setTankToTemperature(double temp_C);
     /**< helper function for testing */
 
+    void setTankFromMeasured(const std::string& measuredFilepath, int i_min = 0);
+    /**< set tank to the measured temperature preceeding minute i_min */
+
     void setAirFlowFreedom(double fanFraction);
     /**< This is a simple setter for the AirFlowFreedom */
 
@@ -1419,6 +1422,8 @@ class HPWH : public Courier::Sender
                              std::vector<std::vector<double>>& perfGridValues,
                              std::size_t axis_i,
                              std::size_t axis_j);
+
+    bool useCOP_inBtwxt = false;
 
   private:
     void setAllDefaults(); /**< sets all the defaults */
