@@ -2083,6 +2083,88 @@ double HPWH::getAverageTankTemp_C(const Distribution& dist) const
 
 void HPWH::setTankToTemperature(double temp_C) { tank->setNodeT_C(temp_C); }
 
+void HPWH::setTankFromMeasured(const std::string& measuredFilepath, int i_min /*= 0*/)
+{
+    std::ifstream measuredFile;
+    measuredFile.open(measuredFilepath.c_str());
+    if (!measuredFile.is_open())
+    {
+        std::cout << "Could not open measured file " << measuredFilepath << "\n";
+        exit(1);
+    }
+
+    std::regex tankT_form("TankT[1-6](C)");
+
+    std::vector<std::vector<double>> measuredTs = {};
+    std::vector<int> iNodes = {};
+    std::vector<int> node_cols = {};
+
+    int iTimeCol = -1;
+    int irow = 0;
+    std::string line;
+    while (std::getline(measuredFile, line))
+    {
+        std::vector<std::string> entries = {};
+        std::stringstream ss(line);
+        std::string token;
+        while (std::getline(ss, token, ','))
+            entries.push_back(token);
+
+        int icol = 0;
+        if (irow == 0)
+        {
+            for (auto& entry : entries)
+            {
+                if (entry == "Time(min)")
+                    iTimeCol = icol;
+
+                std::smatch matches;
+                if (std::regex_search(line, matches, tankT_form))
+                {
+                    iNodes.push_back(std::stoi(matches[1].str()) - 1);
+                    node_cols.push_back(icol);
+                }
+                ++icol;
+            }
+            measuredTs.resize(std::size(iNodes));
+            continue;
+        }
+
+        int j_min = std::stoi(entries[iTimeCol]);
+        std::vector<double> rowTs(std::size(iNodes));
+        for (std::size_t i = 0; i < std::size(iNodes); ++i)
+            rowTs[iNodes[i]] = std::stod(entries[node_cols[i]]);
+
+        if (j_min == i_min - 1)
+        {
+            measuredTs.push_back(rowTs);
+            break;
+        }
+
+        if (j_min < 0)
+            continue;
+
+        measuredTs.push_back(rowTs);
+
+        if (j_min == 1)
+            break;
+    }
+    measuredFile.close();
+
+    int nNodes = std::size(measuredTs);
+    std::vector<double> setTs(nNodes);
+    for (int iNode = 0; iNode < nNodes; ++iNode)
+    {
+        int nTimes = std::size(measuredTs[iNode]);
+        if (nTimes == 1)
+            setTs[iNode] = measuredTs[iNode][0];
+        else
+            setTs[iNode] = 2. * measuredTs[iNode][0] - measuredTs[iNode][1];
+    }
+
+    tank->setNodeTs_C(setTs);
+}
+
 double HPWH::getTankVolume_L() const { return tank->getVolume_L(); }
 
 double HPWH::getTankHeatContent_kJ() const { return tank->getHeatContent_kJ(); }

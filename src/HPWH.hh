@@ -763,6 +763,9 @@ class HPWH : public Courier::Sender
     void setTankToTemperature(double temp_C);
     /**< helper function for testing */
 
+    void setTankFromMeasured(const std::string& measuredFilepath, int i_min = 0);
+    /**< set tank to the measured temperature preceeding minute i_min */
+
     void setAirFlowFreedom(double fanFraction);
     /**< This is a simple setter for the AirFlowFreedom */
 

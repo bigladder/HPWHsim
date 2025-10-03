@@ -26,7 +26,8 @@ static void run(const std::string specType,
                 HPWH& hpwh,
                 std::string sTestName,
                 std::string sOutputDir,
-                double airTemp);
+                double airTemp,
+                std::string measuredFilepath);
 
 CLI::App* add_run(CLI::App& app)
 {
@@ -59,6 +60,9 @@ CLI::App* add_run(CLI::App& app)
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
+    static std::string measuredFilepath = "";
+    subcommand->add_option("-i,--init_tank_temps", measuredFilepath, "Measured filepath");
+
     subcommand->callback(
         [&]()
         {
@@ -87,7 +91,7 @@ CLI::App* add_run(CLI::App& app)
                 else if (modelNumber != -1)
                     hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
-            run(specType, hpwh, testName, sOutputDir, airTemp);
+            run(specType, hpwh, testName, sOutputDir, airTemp, measuredFilepath);
         });
 
     return subcommand;
@@ -99,7 +103,8 @@ void run(const std::string specType,
          HPWH& hpwh,
          std::string fullTestName,
          std::string sOutputDir,
-         double airTemp)
+         double airTemp,
+         std::string measuredFilepath)
 {
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
     hpwh_presets::MODELS model;
@@ -301,6 +306,8 @@ void run(const std::string specType,
         }
         if (hasInitialTankTemp)
             hpwh.setTankToTemperature(initialTankT_C);
+        else if (measuredFilepath != "")
+            hpwh.setTankFromMeasured(measuredFilepath, 0);
         else
             hpwh.resetTankToSetpoint();
     }
