@@ -674,6 +674,74 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
 }
 
 // public members to write to CSV file
+int HPWH::writeCSVHeading(std::ofstream& outFILE,
+                          const char* preamble,
+                          int nTCouples,
+                          int options) const
+{
+
+    bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
+    outFILE << preamble;
+
+    outFILE << "DRstatus";
+
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        outFILE << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
+    }
+
+    for (int iTC = 0; iTC < nTCouples; iTC++)
+    {
+        outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
+    }
+
+    outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
+
+    return 0;
+}
+
+int HPWH::writeCSVRow(std::ofstream& outFILE,
+                      const char* preamble,
+                      int nTCouples,
+                      int options) const
+{
+
+    bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
+    outFILE << preamble;
+
+    outFILE << prevDRstatus;
+
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        outFILE << fmt::format(",{:0.2f},{:0.2f}",
+                               getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
+    }
+
+    for (int iTC = 0; iTC < nTCouples; iTC++)
+    {
+        outFILE << fmt::format(",{:0.2f}",
+                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+    }
+
+    if (options & HPWH::CSVOPT_IS_DRAWING)
+    {
+        outFILE << fmt::format(",{:0.2f}",
+                               doIP ? C_TO_F(tank->getOutletT_C()) : tank->getOutletT_C());
+    }
+    else
+    {
+        outFILE << ",";
+    }
+
+    outFILE << std::endl;
+
+    return 0;
+}
+
+// public members to write to CSV file
 void HPWH::writeCSVHeading(std::ostream* out, int options) const
 {
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
