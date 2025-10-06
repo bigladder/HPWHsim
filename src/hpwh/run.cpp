@@ -319,7 +319,7 @@ void run(const std::string specType,
             }
         }
         if (hasInitialTankTemp)
-            hpwh.tank->setNodeTs_C(initialTankTs_C);
+            hpwh.tank->setProfileTs_C(initialTankTs_C);
         else if (measuredFilepath != "")
             hpwh.setTankFromMeasured(measuredFilepath, 0);
         else

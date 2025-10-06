@@ -250,26 +250,37 @@ def create_test_into(test_dir, data_filename):
 		if not first:
 			jLine = jLine + 1
 			columns = line.split(',')
-			if jLine >= numRowsPerMin:
-				if not haveInitialTankTs:
-					if iMin >= initTime_min - 1:
+			
+			if not haveInitialTankTs:
+				if iMin >= initTime_min - 1:
+					for iCol in range(numTankTs):
+						rowTs[2][iCol] = rowTs[1][iCol]
+						rowTs[1][iCol] = rowTs[0][iCol]
+						rowTs[0][iCol] = columns[orig_columns["TankT1"] + tankTsOrder * (numTankTs - 1 - iCol)]
+					nT_rows = nT_rows + 1
+					if nT_rows >= 3:
 						for iCol in range(numTankTs):
-							rowTs[2][iCol] = rowTs[1][iCol]
-							rowTs[1][iCol] = rowTs[0][iCol]
-							rowTs[0][iCol] = columns[orig_columns["TankT1"] + tankTsOrder * iCol]
-						nT_rows = nT_rows + 1
-						if nT_rows >= 3:
-							for iCol in range(numTankTs):
-								f0 = rowTs[2][iCol]
-								f1 = rowTs[1][iCol]
-								f2 = rowTs[0][iCol]
-								a = f0
-								b = -1.5 * f0 + 2 * f1 - 0.5 * f2
-								c = 0.5 * f0 - f1 + 0.5 * f2
-								initialTankTs[iCol] =  a - b + c
-							haveInitialTankTs = True
+							f0 = rowTs[2][iCol]
+							f1 = rowTs[1][iCol]
+							f2 = rowTs[0][iCol]
+							a = f0
+							b = -1.5 * f0 + 2 * f1 - 0.5 * f2
+							c = 0.5 * f0 - f1 + 0.5 * f2
+							initialTankTs[iCol] = a - b + c
+
+			if jLine >= numRowsPerMin:
+				if nT_rows >= 3:
+					for iCol in range(numTankTs):
+						f0 = rowTs[2][iCol]
+						f1 = rowTs[1][iCol]
+						f2 = rowTs[0][iCol]
+						a = f0
+						b = -1.5 * f0 + 2 * f1 - 0.5 * f2
+						c = 0.5 * f0 - f1 + 0.5 * f2
+						initialTankTs[iCol] = a - b + c
+					haveInitialTankTs = True
 						
-					jLine = 0
+				jLine = 0
 				iMin = iMin + 1
 				if iMin >= initTime_min:
 					testTime_min = testTime_min + 1
