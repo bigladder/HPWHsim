@@ -10,7 +10,6 @@ import shutil
 import sys
 import time
 
-lattice_branch ="default-is-set"
 
 def generate(repo_dir, build_dir):
 	data_model_dir = os.path.join(build_dir, "hpwh_data_model")
