@@ -939,9 +939,6 @@ class HPWH : public Courier::Sender
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
     /// get a pointer to the Nth heat source
-    HeatSource* getNthHeatSource(int N);
-
-    /// get a pointer to the Nth heat source
     bool getNthHeatSource(int N, HPWH::HeatSource*& heatSource);
 
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
