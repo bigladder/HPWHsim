@@ -2235,17 +2235,16 @@ void HPWH::setTankFromMeasured(const std::string& measuredFilepath, int i_min /*
     }
     measuredFile.close();
 
-    int nNodes = std::size(measuredTs);
+    auto nNodes = static_cast<int>(measuredTs.size());
     std::vector<double> setTs(nNodes);
     for (int iNode = 0; iNode < nNodes; ++iNode)
     {
-        int nTimes = std::size(measuredTs[iNode]);
+        auto nTimes = static_cast<int>(measuredTs[iNode].size());
         if (nTimes == 1)
             setTs[iNode] = measuredTs[iNode][0];
         else
             setTs[iNode] = 2. * measuredTs[iNode][0] - measuredTs[iNode][1];
     }
-
     tank->setNodeTs_C(setTs);
 }
 
