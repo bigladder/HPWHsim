@@ -160,14 +160,14 @@
           "heat_distribution": {
             "normalized_height": [
               0.1,
-              0.4,
+              0.42,
               0.5,
               1
             ],
             "weight": [
-              0.5,
+              0.4806928626412471,
               1,
-              0.5,
+              0.9949504999985282,
               0
             ]
           },
@@ -201,14 +201,14 @@
                   "heating_capacity": [
                     1239.315135809439,
                     1217.7838432401704,
-                    1990.8811302022177,
-                    2705.5522689311447
+                    2090.8811302022177,
+                    2413.8317154613537
                   ],
                   "input_power": [
                     187.25483810614867,
                     324.7555042399076,
                     128.0628008020184,
-                    790.2678709806434
+                    902.2147819991718
                   ]
                 }
               },
@@ -221,7 +221,7 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
-                "differential_temperature": 24.2,
+                "differential_temperature": 22.2,
                 "temperature_weight_distribution": {
                   "normalized_height": [
                     0.24,

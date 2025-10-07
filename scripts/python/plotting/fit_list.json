@@ -457,15 +457,15 @@
 	    "target": 3.89,
 			"tolerance": 0.001
 	  },
-    {
-      "type": "temperature-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Tank Temperature - #6",
-			"i_min": 159,
-      "target": 106.52,
-			"tolerance": 1
-    },
+	  {
+	    "type": "analysis",
+	    "model_id": "BradfordWhiteAeroThermRE2HP50",
+	    "test_id": "RE2HP50_UEF67",
+			"group": "24-hr-test",
+			"item": "energyUsed_kJ",
+	    "target": 7835.20,
+			"tolerance": 5
+	  },
     {
       "type": "temperature-point",
       "model_id": "BradfordWhiteAeroThermRE2HP50",
