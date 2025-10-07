@@ -388,7 +388,8 @@ class FitProc:
 				values = dist[parameter['value']]
 				p0 = (parameter['min'] + parameter['max']) / 2
 				dp = parameter['max'] - parameter['min']
-				values[parameter['index']] =  p0 + parameter['damping'] * (dp / 2) * math.tanh(x)
+				p = p0 + parameter['damping'] * (dp / 2) * math.tanh(x)
+				values[parameter['index']] =  p
 				self.write_cache_model(model_id, model_data)
 		
 	def get_parameter_value(self, parameter):
@@ -435,7 +436,10 @@ class FitProc:
 				p = values[parameter['index']]
 				p0 = (parameter['min'] + parameter['max']) / 2
 				dp = parameter['max'] - parameter['min']
-				return math.atanh((p - p0) / parameter['damping'] / (dp / 2))
+				x = (p - p0) / parameter['damping'] / (dp / 2)
+				if (math.fabs(x) < 1):
+					return math.atanh(x)
+				return 0
 			
 	def get_metric_value(self, metric):
 		if metric['type'] == 'analysis':		
@@ -484,6 +488,29 @@ class FitProc:
 			data_filepath = os.path.join(self.prefs["build_dir"], "test", "output", data_filename)	
 			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Simulated", 'filepath': data_filepath})
 			return dataset.df[metric['variable']].iloc[metric['i_min']]
+
+		if metric['type'] == 'temperature-point':
+			test_index = read_file("./test_index.json");
+			test_data = test_index['tests'][metric['test_id']]
+			test_dir = "../../../test/" 											 
+			if 'path' in test_data:
+					test_dir = os.path.join(test_dir, test_data['path' ])			 
+			test_dir = os.path.join(test_dir, metric['test_id'])
+			model_filepath = self.find_cache_model(metric['model_id'])
+			data = {	
+				"model_spec": "JSON",		
+				"model_id_or_filepath": model_filepath,
+				"is_standard_test": 1 if "is_standard_test" in metric else 0,
+				'test_dir': test_dir,
+				'build_dir': self.prefs['build_dir']
+			}
+			simulate(data)
+
+			data_filename = metric['test_id'] + "_JSON_" + metric["model_id"] + ".csv";
+			data_filepath = os.path.join(self.prefs["build_dir"], "test", "output", data_filename)	
+			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Simulated", 'filepath': data_filepath})
+			T_C = dataset.df[metric['variable']].iloc[metric['i_min']]
+			return 1.8 * T_C + 32
 		
 		return 0	
 	
@@ -541,7 +568,6 @@ class FitProc:
 				self.set_parameter_value(parameter, paramsV[i_param])
 										
 			print(f"jacobian:\n{jacobiM}")	
-			
 			
 			# invert with damping nu
 			print("\nusing nu")
@@ -627,5 +653,5 @@ if __name__ == "__main__":
 	n_args = len(sys.argv) - 1
 	if n_args == 0:
 
-		result = fit_proc.start({})
+		result = fit_proc.fit({})
 
