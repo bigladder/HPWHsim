@@ -288,6 +288,19 @@
 			"heat_source": "compressor",
 			"coordinates": [1,1,0],
 			"increment": 10
+		},
+		{
+			"type": "heat-distribution-term",
+			"models": [
+				"BradfordWhiteAeroThermRE2HP50"
+			],
+			"increment": 0.001,
+			"heat_source": "compressor",	
+			"value": "weight",
+			"index": 1,
+			"min": 0.01,
+			"max": 0.9999,
+			"damping": 0.99
 		}
 	],
 

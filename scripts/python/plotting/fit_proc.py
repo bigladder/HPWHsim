@@ -3,6 +3,7 @@ from pathlib import Path
 import os, sys
 import time
 import multiprocessing as mp
+import math
 from common import read_file, write_file, get_perf_map, set_perf_map, get_heat_source_configuration, set_heat_source_configuration,get_tank
 import numpy as np
 from simulate import simulate
@@ -378,6 +379,17 @@ class FitProc:
 				model_data = self.read_cache_model(model_id)
 				self.apply_tank_mixing(x, model_data)
 				self.write_cache_model(model_id, model_data)
+				
+		if parameter['type'] == 'heat-distribution-term':		
+			for model_id in parameter['models']:
+				model_data = self.read_cache_model(model_id)
+				heat_source_config = get_heat_source_configuration(model_data, parameter['heat_source'])
+				dist = heat_source_config['heat_distribution']
+				values = dist[parameter['value']]
+				p0 = (parameter['min'] + parameter['max']) / 2
+				dp = parameter['max'] - parameter['min']
+				values[parameter['index']] =  p0 + parameter['damping'] * (dp / 2) * math.tanh(x)
+				self.write_cache_model(model_id, model_data)
 		
 	def get_parameter_value(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
@@ -413,7 +425,18 @@ class FitProc:
 		
 		if parameter['type'] == 'tank-mixing':		
 				return parameter['value']
-
+		
+		if parameter['type'] == 'heat-distribution-term':		
+			for model_id in parameter['models']:
+				model_data = self.read_cache_model(model_id)
+				heat_source_config = get_heat_source_configuration(model_data, parameter['heat_source'])
+				dist = heat_source_config['heat_distribution']
+				values = dist[parameter['value']]
+				p = values[parameter['index']]
+				p0 = (parameter['min'] + parameter['max']) / 2
+				dp = parameter['max'] - parameter['min']
+				return math.atanh((p - p0) / parameter['damping'] / (dp / 2))
+			
 	def get_metric_value(self, metric):
 		if metric['type'] == 'analysis':		
 			test_index = read_file("./test_index.json");
