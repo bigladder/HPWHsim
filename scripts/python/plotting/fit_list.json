@@ -401,19 +401,6 @@
       "target": 399.6,
 			"tolerance": 3
     },
-		{
-			"type": "heat-distribution-term",
-			"models": [
-				"BradfordWhiteAeroThermRE2HP50"
-			],
-			"heat_source": "compressor",	
-			"value": "weight",
-			"index": 0,
-			"min": 0.01,
-			"max": 0.9999,
-			"damping": 0.99,
-			"increment": 100
-		},
     {
       "type": "temperature-point",
       "model_id": "BradfordWhiteAeroThermRE2HP50",
@@ -421,15 +408,6 @@
 			"variable": "Tank Temperature - #5",
 			"i_min": 628,
       "target": 115.52,
-			"tolerance": 1
-    },
-    {
-      "type": "temperature-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Tank Temperature - #6",
-			"i_min": 628,
-      "target": 103.82,
 			"tolerance": 1
     }
 ],
@@ -443,13 +421,31 @@
       "target": 265.23,
 			"tolerance": 1
     },
-{
+		{
       "type": "performance-point",
       "model_id": "BradfordWhiteAeroThermRE2HP50",
       "test_id": "RE2HP50_UEF67",
 			"variable": "Power Input",
 			"i_min": 155,
       "target": 399.6,
+			"tolerance": 3
+    },
+ 		{
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+			"variable": "Power Input",
+			"i_min": 1038,
+      "target": 307.55,
+			"tolerance": 1
+    },
+		{
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+			"variable": "Power Input",
+			"i_min": 1100,
+      "target": 390.2,
 			"tolerance": 3
     },
 	  {
@@ -460,7 +456,25 @@
 			"item": "EF",
 	    "target": 3.89,
 			"tolerance": 0.001
-	  }
+	  },
+    {
+      "type": "temperature-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+			"variable": "Tank Temperature - #6",
+			"i_min": 159,
+      "target": 106.52,
+			"tolerance": 1
+    },
+    {
+      "type": "temperature-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+			"variable": "Tank Temperature - #6",
+			"i_min": 600,
+      "target": 103.64,
+			"tolerance": 1
+    }
   ],
 
   "parameters": [
@@ -485,6 +499,19 @@
 			"heat_source": "compressor",
 			"coordinates": [1,1,0],
 			"increment": 10
+		},
+		{
+			"type": "heat-distribution-term",
+			"models": [
+				"BradfordWhiteAeroThermRE2HP50"
+			],
+			"heat_source": "compressor",	
+			"value": "weight",
+			"index": 0,
+			"min": 0.01,
+			"max": 0.9999,
+			"damping": 0.99,
+			"increment": 100
 		}
 	]
 
