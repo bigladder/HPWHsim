@@ -195,7 +195,6 @@ void HPWH::Tank::setNodeTs_C(const std::vector<double>& nodeTs_C_in)
     resampleIntensive(nodeTs_C, nodeTs_C_in);
 }
 
-
 void HPWH::Tank::setProfileTs_C(const std::vector<double>& profileTs_C)
 {
 

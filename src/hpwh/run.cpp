@@ -370,7 +370,6 @@ void run(const std::string specType,
         hpwh.writeCSVHeading(&outputFile, HPWH::CSVOPT_NONE);
     }
 
-
     // ------------------------------------- Simulate --------------------------------------- //
     std::cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
