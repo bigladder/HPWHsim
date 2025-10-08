@@ -633,7 +633,7 @@ class FitProc:
 						return
 			else:
 				print(f"Unable to invert.")
-				break
+				done = True
 									
 			paramsV = self.get_parameter_values()									
 			metricsV = self.get_metric_values()
