@@ -59,8 +59,8 @@ jobs:
             experimental: true
           - os: ubuntu
             os_ver: "22.04"
-            config: Debug
-            coverage: false
+            config: Release
+            coverage: true
             cc: gcc-11
             cxx: g++-11
             experimental: false
