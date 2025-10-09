@@ -1,6 +1,56 @@
 {
-	"constraints": {
-	},	
+  "constraints": {
+    "BradfordWhiteAeroThermRE2HPXX-Pin": {
+      "type": "bilinear-points",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "variable": "Pin",
+      "dependent": "COP",
+      "value": [
+        {
+          "Te": 10,
+          "Ts": 10,
+          "value": 240
+        },
+        {
+          "Te": 19.72222,
+          "Ts": 10,
+          "value": 218.6920673666104
+        },
+        {
+          "Te": 19.72222,
+          "Ts": 51.7,
+          "value": 434.4917002418191
+        }
+      ]
+    },
+    "BradfordWhiteAeroThermRE2HPXX-Pout": {
+      "type": "bilinear-points",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "variable": "Pout",
+      "dependent": "COP",
+      "value": [
+        {
+          "Te": 10,
+          "Ts": 10,
+          "value": 1070
+        },
+        {
+          "Te": 19.72222,
+          "Ts": 10,
+          "value": 976.6204580307218
+        },
+        {
+          "Te": 19.72222,
+          "Ts": 51.7,
+          "value": 1954.636981430425
+        }
+      ]
+    }
+  },
   "constraints_unused": {
     "BradfordWhiteAeroThermRE2HPXX-Pin": {
       "type": "bilinear-points",
@@ -61,7 +111,7 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": {
         "normalized_height": [
           0.04166667,
@@ -80,10 +130,10 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": {
         "normalized_height": [
-         	0.33333,
+          0.33333,
           0.375,
           1
         ],
@@ -99,16 +149,15 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": 25
     },
-
     "BradfordWhiteAeroThermRE2HP65-condheatdist": {
       "type": "heat-distribution",
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": {
         "normalized_height": [
           0.04,
@@ -127,10 +176,10 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": {
         "normalized_height": [
-         	0.2999,
+          0.2999,
           0.3001,
           1
         ],
@@ -146,11 +195,11 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
       ],
-			"heat_source": "resistiveElementTop",
-			"on_logic_index": 1,
+      "heat_source": "resistiveElementTop",
+      "on_logic_index": 1,
       "value": {
         "normalized_height": [
-         	0.999,
+          0.999,
           1
         ],
         "weight": [
@@ -164,16 +213,15 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP65"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": 16
     },
-
     "BradfordWhiteAeroThermRE2HP80-condheatdist": {
       "type": "heat-distribution",
       "models": [
         "BradfordWhiteAeroThermRE2HP80"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": {
         "normalized_height": [
           0.03,
@@ -192,10 +240,10 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP80"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": {
         "normalized_height": [
-         	0.31,
+          0.31,
           0.375,
           1
         ],
@@ -211,10 +259,9 @@
       "models": [
         "BradfordWhiteAeroThermRE2HP80"
       ],
-			"heat_source": "compressor",
+      "heat_source": "compressor",
       "value": 11
     },
-
     "BradfordWhiteAeroThermRE2HPXX-coilconfig": {
       "type": "coil-configuration",
       "models": [
@@ -243,338 +290,383 @@
       "value": 1.6666667
     }
   },
-
   "parameters_unused": [
-		{	
-			"type": "performance-point",
-			"variable": "Pout",
-			"dependent": "COP",
+    {
+      "type": "bilinear-point",
+      "constraint": "BradfordWhiteAeroThermRE2HPXX-Pout",
+      "point": 1,
+      "increment": 0.0001534050094742623
+    },
+    {
+      "type": "bilinear-point",
+      "constraint": "BradfordWhiteAeroThermRE2HPXX-Pin",
+      "point": 1,
+      "increment": 0.0006752904545085525
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pout",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,0,0],
-			"increment": 10
-		},
-		{	
-			"type": "performance-point",
-			"variable": "Pout",
-			"dependent": "COP",
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        0,
+        0
+      ],
+      "increment": 10
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pout",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,1,0],
-			"increment": 10
-		},
-		{	
-			"type": "performance-point",
-			"variable": "Pin",
-			"dependent": "COP",
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        1,
+        0
+      ],
+      "increment": 10
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pin",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,0,0],
-			"increment": 10
-		},
-		{	
-			"type": "performance-point",
-			"variable": "Pin",
-			"dependent": "COP",
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        0,
+        0
+      ],
+      "increment": 10
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pin",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,1,0],
-			"increment": 10
-		},
-		{
-			"type": "heat-distribution-height",
-			"models": [
-				"BradfordWhiteAeroThermRE2HP50"
-			],
-			"increment": 0.01
-		},
-		{
-			"type": "tank-mixing",
-			"models": [
-				"BradfordWhiteAeroThermRE2HP50"
-			],
-			"value": 0.25,
-			"increment": 0.005
-		},
-		{
-			"type": "heat-distribution-term",
-			"models": [
-				"BradfordWhiteAeroThermRE2HP50"
-			],
-			"heat_source": "compressor",	
-			"value": "weight",
-			"index": 2,
-			"min": 0.01,
-			"max": 0.9999,
-			"damping": 0.99,
-			"increment": 100
-		},
-	  {
-	    "type": "analysis",
-	    "model_id": "BradfordWhiteAeroThermRE2HP50",
-	    "test_id": "RE2HP50_UEF67",
-			"group": "standby-period",
-			"item": "standbyEndT_C",
-	    "target": 47.43,
-			"tolerance": 0.002
-	  }
-	],
-
-  "metrics_unused": [
-	{
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 9,
-      "target": 265.23,
-			"tolerance": 1
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        1,
+        0
+      ],
+      "increment": 10
     },
     {
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 60,
-      "target": 346.55,
-			"tolerance": 1
+      "type": "heat-distribution-height",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "increment": 0.01
     },
     {
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 40,
-      "target": 318.67,
-			"tolerance": 1
+      "type": "tank-mixing",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "value": 0.25,
+      "increment": 0.005
     },
     {
-      "type": "performance-point",
+      "type": "analysis",
       "model_id": "BradfordWhiteAeroThermRE2HP50",
       "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 110,
-      "target": 344.98,
-			"tolerance": 1
-    },
-	  {
-	    "type": "analysis",
-	    "model_id": "BradfordWhiteAeroThermRE2HP50",
-	    "test_id": "RE2HP50_UEF67",
-			"group": "24-hr-test",
-			"item": "EF",
-	    "target": 3.89,
-			"tolerance": 0.001
-	  },
-	  {
-	    "type": "analysis",
-	    "model_id": "BradfordWhiteAeroThermRE2HP50",
-	    "test_id": "RE2HP50_UEF67",
-			"group": "standby-period",
-			"item": "standbyEndT_C",
-	    "target": 47.43,
-			"tolerance": 0.002
-	  },
-    {
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 110,
-      "target": 344.98,
-			"tolerance": 3
-    },
-    {
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 155,
-      "target": 399.6,
-			"tolerance": 3
-    },
-    {
-      "type": "temperature-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Tank Temperature - #5",
-			"i_min": 628,
-      "target": 115.52,
-			"tolerance": 1
-    }
-],
-"metrics": [
- 		{
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 9,
-      "target": 265.23,
-			"tolerance": 1
-    },
-		{
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 155,
-      "target": 399.6,
-			"tolerance": 3
-    },
- 		{
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 1038,
-      "target": 307.55,
-			"tolerance": 1
-    },
-		{
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 1100,
-      "target": 390.2,
-			"tolerance": 3
-    },
-	  {
-	    "type": "analysis",
-	    "model_id": "BradfordWhiteAeroThermRE2HP50",
-	    "test_id": "RE2HP50_UEF67",
-			"group": "24-hr-test",
-			"item": "EF",
-	    "target": 3.89,
-			"tolerance": 0.001
-	  },
-	  {
-	    "type": "analysis",
-	    "model_id": "BradfordWhiteAeroThermRE2HP50",
-	    "test_id": "RE2HP50_UEF67",
-			"group": "24-hr-test",
-			"item": "energyUsed_kJ",
-	    "target": 7835.20,
-			"tolerance": 5
-	  },
-    {
-      "type": "performance-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Power Input",
-			"i_min": 155,
-      "target": 399.6,
-			"tolerance": 3
-    },
-    {
-      "type": "temperature-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Tank Temperature - #5",
-			"i_min": 628,
-      "target": 115.52,
-			"tolerance": 0.2
-    },
-    {
-      "type": "temperature-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Tank Temperature - #6",
-			"i_min": 600,
-      "target": 103.64,
-			"tolerance": 0.2
-    },
-    {
-      "type": "temperature-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF67",
-			"variable": "Tank Temperature - #6",
-			"i_min": 1439,
-      "target": 112.64,
-			"tolerance": 0.2
+      "group": "standby-period",
+      "item": "standbyEndT_C",
+      "target": 47.43,
+      "tolerance": 0.002
     }
   ],
-
+  "metrics_unused": [
+    {
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 9,
+      "target": 265.23,
+      "tolerance": 1
+    },
+    {
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 60,
+      "target": 346.55,
+      "tolerance": 1
+    },
+    {
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 40,
+      "target": 318.67,
+      "tolerance": 1
+    },
+    {
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 110,
+      "target": 344.98,
+      "tolerance": 1
+    },
+    {
+      "type": "analysis",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "group": "24-hr-test",
+      "item": "EF",
+      "target": 3.89,
+      "tolerance": 0.001
+    },
+    {
+      "type": "analysis",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "group": "standby-period",
+      "item": "standbyEndT_C",
+      "target": 47.43,
+      "tolerance": 0.002
+    },
+    {
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 110,
+      "target": 344.98,
+      "tolerance": 3
+    },
+    {
+      "type": "performance-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 155,
+      "target": 399.6,
+      "tolerance": 3
+    },
+    {
+      "type": "temperature-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Tank Temperature - #5",
+      "i_min": 628,
+      "target": 115.52,
+      "tolerance": 1
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pin",
+      "dependent": "COP",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        0,
+        0
+      ],
+      "increment": 1
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pin",
+      "dependent": "COP",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        1,
+        0
+      ],
+      "increment": 1
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "index": 0,
+      "min": 0.01,
+      "max": 0.9999,
+      "damping": 0.99,
+      "increment": 1
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "index": 2,
+      "min": 0.01,
+      "max": 0.9999,
+      "damping": 0.99,
+      "increment": 1
+    }
+  ],
+  "metrics": [
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 9,
+      "target": 265.23,
+      "tolerance": 1
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 155,
+      "target": 399.6,
+      "tolerance": 3
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 1038,
+      "target": 307.55,
+      "tolerance": 1
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 1100,
+      "target": 390.2,
+      "tolerance": 3
+    },
+    {
+      "type": "analysis",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "group": "24-hr-test",
+      "item": "EF",
+      "target": 3.89,
+      "tolerance": 0.005
+    },
+    {
+      "type": "analysis",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "group": "24-hr-test",
+      "item": "energyUsed_kJ",
+      "target": 7835.2,
+      "tolerance": 5
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Power Input",
+      "i_min": 155,
+      "target": 399.6,
+      "tolerance": 3
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Tank Temperature - #5",
+      "i_min": 628,
+      "target": 115.52,
+      "tolerance": 0.5
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Tank Temperature - #6",
+      "i_min": 600,
+      "target": 103.64,
+      "tolerance": 0.5
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Tank Temperature - #6",
+      "i_min": 1439,
+      "target": 112.64,
+      "tolerance": 0.5
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Tank Temperature - #6",
+      "i_min": 750,
+      "target": 104.36,
+      "tolerance": 0.5
+    },
+    {
+      "type": "test-point",
+      "model_id": "BradfordWhiteAeroThermRE2HP50",
+      "test_id": "RE2HP50_UEF67",
+      "variable": "Tank Temperature - #6",
+      "i_min": 700,
+      "target": 121.82,
+      "tolerance": 0.5
+    }
+  ],
   "parameters": [
-		{	
-			"type": "performance-point",
-			"variable": "Pout",
-			"dependent": "COP",
+    {
+      "type": "performance-point",
+      "variable": "Pout",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,0,0],
-			"increment": 2
-		},
-		{	
-			"type": "performance-point",
-			"variable": "Pout",
-			"dependent": "COP",
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        1,
+        0
+      ],
+      "increment": -3.387108418076155
+    },
+    {
+      "type": "performance-point",
+      "variable": "Pout",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,1,0],
-			"increment": 2
-		},
-		{	
-			"type": "performance-point",
-			"variable": "Pin",
-			"dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
+      "heat_source": "compressor",
+      "coordinates": [
+        1,
+        0,
+        0
       ],
-			"heat_source": "compressor",
-			"coordinates": [1,0,0],
-			"increment": 1
-		},
-		{	
-			"type": "performance-point",
-			"variable": "Pin",
-			"dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-			"heat_source": "compressor",
-			"coordinates": [1,1,0],
-			"increment": 1
-		},
-		{
-			"type": "heat-distribution-term",
-			"models": [
-				"BradfordWhiteAeroThermRE2HP50"
-			],
-			"heat_source": "compressor",	
-			"value": "weight",
-			"index": 0,
-			"min": 0.01,
-			"max": 0.9999,
-			"damping": 0.99,
-			"increment": 10
-		},
-		{
-			"type": "heat-distribution-term",
-			"models": [
-				"BradfordWhiteAeroThermRE2HP50"
-			],
-			"heat_source": "compressor",	
-			"value": "weight",
-			"index": 2,
-			"min": 0.01,
-			"max": 0.9999,
-			"damping": 0.99,
-			"increment": 10
-		}
-	]
-
+      "increment": -0.06577192745130915
+    }
+  ]
 }
