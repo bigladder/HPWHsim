@@ -16,12 +16,12 @@
         {
           "Te": 19.72222,
           "Ts": 10,
-          "value": 218.6920673666104
+          "value": 214.7887952041485
         },
         {
           "Te": 19.72222,
           "Ts": 51.7,
-          "value": 434.4917002418191
+          "value": 436.2374664307562
         }
       ]
     },
@@ -41,12 +41,12 @@
         {
           "Te": 19.72222,
           "Ts": 10,
-          "value": 976.6204580307218
+          "value": 1040.7361774214214
         },
         {
           "Te": 19.72222,
           "Ts": 51.7,
-          "value": 1954.636981430425
+          "value": 1986.391719580612
         }
       ]
     }
@@ -639,34 +639,54 @@
   ],
   "parameters": [
     {
-      "type": "performance-point",
-      "variable": "Pout",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        1,
-        1,
-        0
-      ],
-      "increment": -3.387108418076155
+      "type": "bilinear-point-term",
+      "constraint": "BradfordWhiteAeroThermRE2HPXX-Pout",
+      "point": 1,
+      "increment": -0.00018590697587556672
     },
     {
-      "type": "performance-point",
-      "variable": "Pout",
-      "dependent": "COP",
+      "type": "bilinear-point-term",
+      "constraint": "BradfordWhiteAeroThermRE2HPXX-Pout",
+      "point": 2,
+      "increment": 7.622199875027603e-05
+    },
+    {
+      "type": "bilinear-point-term",
+      "constraint": "BradfordWhiteAeroThermRE2HPXX-Pin",
+      "point": 1,
+      "increment": -0.0013781009517469006
+    },
+    {
+      "type": "bilinear-point-term",
+      "constraint": "BradfordWhiteAeroThermRE2HPXX-Pin",
+      "point": 2,
+      "increment": -0.00012176082278430602
+    },
+    {
+      "type": "heat-distribution-term",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
       "heat_source": "compressor",
-      "coordinates": [
-        1,
-        0,
-        0
+      "value": "weight",
+      "index": 0,
+      "min": 0.01,
+      "max": 0.9999,
+      "damping": 0.99,
+      "increment": 34.64194514578322
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
       ],
-      "increment": -0.06577192745130915
+      "heat_source": "compressor",
+      "value": "weight",
+      "index": 2,
+      "min": 0.01,
+      "max": 0.9999,
+      "damping": 0.99,
+      "increment": 0.5379850995271191
     }
   ]
 }

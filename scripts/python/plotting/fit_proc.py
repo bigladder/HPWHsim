@@ -345,7 +345,16 @@ class FitProc:
 				return							
 			constraint['value'][parameter['point']]['value']	= x
 			self.apply_constraint(constraint)
-		
+	
+		if parameter['type'] == 'bilinear-point-term':					
+			constraint = self.fit_list['constraints'][parameter['constraint']]
+			variable = constraint['variable']
+			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
+			if dependent == variable:
+				return							
+			constraint['value'][parameter['point']]['value'] = math.exp(x)
+			self.apply_constraint(constraint)
+				
 		if parameter['type'] == 'bilinear-coeff':		
 			constraint = self.fit_list['constraints'][parameter['constraint']]
 			variable = constraint['variable']
@@ -354,7 +363,7 @@ class FitProc:
 				return
 			constraint['value'][parameter['term']]	= x							
 			self.apply_constraint(constraint)
-						
+
 		if parameter['type'] == 'performance-point':		
 			variable =  parameter['variable']
 			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
@@ -401,16 +410,22 @@ class FitProc:
 			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
 			if dependent == variable:
 				return							
-			return constraint['value'][parameter['point']]	['value']
+			return constraint['value'][parameter['point']]['value']
+
+		if parameter['type'] == 'bilinear-point-term':					
+			constraint = self.fit_list['constraints'][parameter['constraint']]
+			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
+			if dependent == constraint['variable']:
+				return							
+			return math.log(constraint['value'][parameter['point']]['value'])
 		
 		if parameter['type'] == 'bilinear-coeff':		
 			constraint = self.fit_list.constraints[parameter['constraint']]
-			variable = constraint['variable']
 			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
-			if dependent == variable:
+			if dependent == constraint['variable']:
 				return
-			return constraint['value'][parameter['term']]								
-					
+			return constraint['value'][parameter['term']]
+																			
 		if parameter['type'] == 'performance-point':		
 			variable =  parameter['variable']
 			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
