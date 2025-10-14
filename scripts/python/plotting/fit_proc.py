@@ -9,10 +9,18 @@ import numpy as np
 from simulate import simulate
 from test_data import DataSet
 
+def get_inverse_left(M):
+	MT = M.transpose()
+	MT_M = np.matmul(MT, M)	
+	d = np.linalg.det(MT_M)
+	if d == 0:
+		print("det = 0")
+		return M, False
+	return np.matmul(np.linalg.inv(MT_M), MT).astype(float), True
+
 def get_damped_inverse_left(M, nu):
 	MT = M.transpose()
 	MT_M = np.matmul(MT, M)	
-	num = np.size(MT_M, 0)
 	wMT_M = MT_M + nu * np.diag(np.diag(MT_M))
 	d = np.linalg.det(wMT_M)
 	if d == 0:
@@ -23,7 +31,6 @@ def get_damped_inverse_left(M, nu):
 class FitProc:
 		
 	def __init__(self):
-
 		self.i_send = 0
 		self.running = False
 		self.prefs = read_file("prefs.json")
@@ -342,17 +349,11 @@ class FitProc:
 			variable = constraint['variable']
 			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
 			if dependent == variable:
-				return							
-			constraint['value'][parameter['point']]['value']	= x
-			self.apply_constraint(constraint)
-	
-		if parameter['type'] == 'bilinear-point-term':					
-			constraint = self.fit_list['constraints'][parameter['constraint']]
-			variable = constraint['variable']
-			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
-			if dependent == variable:
-				return							
-			constraint['value'][parameter['point']]['value'] = math.exp(x)
+				return
+			if 'use_log' in parameter and parameter['use_log']:
+				constraint['value'][parameter['point']]['value'] = math.exp(x)
+			else:
+				constraint['value'][parameter['point']]['value']	= x
 			self.apply_constraint(constraint)
 				
 		if parameter['type'] == 'bilinear-coeff':		
@@ -406,19 +407,16 @@ class FitProc:
 	def get_parameter_value(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
 			constraint = self.fit_list['constraints'][parameter['constraint']]
-			variable = constraint['variable']
-			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
-			if dependent == variable:
-				return							
-			return constraint['value'][parameter['point']]['value']
-
-		if parameter['type'] == 'bilinear-point-term':					
-			constraint = self.fit_list['constraints'][parameter['constraint']]
 			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
 			if dependent == constraint['variable']:
-				return							
-			return math.log(constraint['value'][parameter['point']]['value'])
-		
+				return
+			val =	constraint['value'][parameter['point']]['value']		
+			if 'use_log' in parameter and parameter['use_log']:
+				if val <= 0:
+					return 0
+				return math.log(val)		
+			return val
+
 		if parameter['type'] == 'bilinear-coeff':		
 			constraint = self.fit_list.constraints[parameter['constraint']]
 			dependent = "COP" if ('dependent' not in constraint) else constraint['dependent']
@@ -496,7 +494,8 @@ class FitProc:
 				'test_dir': test_dir,
 				'build_dir': self.prefs['build_dir']
 			}
-			simulate(data)
+			result = simulate(data)
+			
 			data_filename = metric['test_id'] + "_JSON_" + metric["model_id"] + ".csv";
 			data_filepath = os.path.join(self.prefs["build_dir"], "test", "output", data_filename)	
 			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Simulated", 'filepath': data_filepath})
@@ -507,21 +506,21 @@ class FitProc:
 		
 		return 0	
 	
-	def get_parameter_values(self):
+	def get_parameter_values(self, parameters):
 		paramV = []
-		for parameter in self.fit_list['parameters']:
+		for parameter in parameters:
 			paramV.append(self.get_parameter_value(parameter))
 		return paramV
 				
-	def get_parameters(self):
+	def get_parameters(self, parameters):
 		paramV = []
-		for parameter in self.fit_list['parameters']:
+		for parameter in parameters:
 			param = self.get_parameter(parameter)
 			paramV.append({"value": param, "increment": parameter['increment']})
 		return paramV
 				
-	def apply_parameters(self):
-		for parameter in self.fit_list['parameters']:
+	def apply_parameters(self, parameters):
+		for parameter in parameters:
 			self.apply_parameter(parameter)
 	
 	def get_metric_values(self):
@@ -535,7 +534,8 @@ class FitProc:
 		#self.apply_constraints()
 		
 		have_jacobian = False
-		paramsV = self.get_parameter_values()	
+		parameters_fullL = self.fit_list['parameters']
+		paramsV = self.get_parameter_values(parameters_fullL)	
 		metricsV = self.get_metric_values()
 		diff0V = np.zeros(len(metricsV))
 		for i_metric, metric in enumerate(self.fit_list['metrics']):
@@ -547,18 +547,22 @@ class FitProc:
 				
 		for parameter in self.fit_list['parameters']:
 			parameter['increment'] = 100 * parameter['increment']
-			
+
+	
 		nu = 0.1
 		iter = 0
 		iter_max = 10
 		done = False
 		while not done:
 			print(f"\niteration: {iter}")
+
+			parametersL = parameters_fullL.copy()			
 				
 			# get jacobian
-			if not have_jacobian:
-				jacobiM = np.zeros([len(metricsV), len(paramsV)])
-				for (i_param, parameter) in enumerate(self.fit_list['parameters']):
+			while not have_jacobian:
+				jacobiM = np.zeros([len(metricsV), len(parametersL)])
+				paramsV = self.get_parameter_values(parametersL)	
+				for (i_param, parameter) in enumerate(parametersL):
 					self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])
 					print(f"parameter {i_param}: {paramsV[i_param] + parameter['increment']}, inc: {parameter['increment']}")	
 					metricsV_t = self.get_metric_values()
@@ -566,8 +570,28 @@ class FitProc:
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
 						jacobiM[i_metric][i_param] = (metricsV_t[i_metric] - metricsV[i_metric]) / metric['tolerance'] / parameter['increment']									
 					self.set_parameter_value(parameter, paramsV[i_param])										
-				print(f"jacobian:\n{jacobiM}")
-				have_jacobian = True
+				#print(f"jacobian:\n{jacobiM}")
+				ijML, got = get_inverse_left(jacobiM)
+				if not got:
+					print("Jacobian is singular, removing least sensitive parameter.")
+					sensV = np.zeros(len(parametersL))
+					for (i_param, parameter) in enumerate(parametersL):
+						for i_metric, metric in enumerate(self.fit_list['metrics']):
+							sensV[i_param] += jacobiM[i_metric][i_param] * jacobiM[i_metric][i_param]
+					i_min = 0
+					s_min = sensV[0]
+					for (i_param, s) in enumerate(sensV):
+						if s < s_min:
+							s_min = s
+							i_min = i_param
+					print(f"removing parameter {i_min}, sensitivity: {s_min}")
+					parametersL.pop(i_min)
+					if len(parametersL) == 0:
+						print("No more parameters to remove, stopping fit.")
+						done = True
+						break
+				else:
+					have_jacobian = True
 			
 			improved = False
 			while not improved:
@@ -578,7 +602,7 @@ class FitProc:
 				if got1:	
 					p_inc1V = -np.matmul(ijML, np.array(diff0V)).astype(float)
 					print(f"p_inc: {p_inc1V}")
-					for (i_param, parameter) in enumerate(self.fit_list['parameters']):
+					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param] + p_inc1V[i_param])
 						print(f"parameter {i_param}: {paramsV[i_param] + p_inc1V[i_param]}")				
 					metricsV_t = self.get_metric_values()
@@ -588,7 +612,7 @@ class FitProc:
 						diffV[i_metric] = (metricsV_t[i_metric] - metric['target']) / metric['tolerance']
 					FOM_1 = np.matmul(diffV, diffV)
 					print(f"FOM_1: {FOM_1}")				
-					for (i_param, parameter) in enumerate(self.fit_list['parameters']):
+					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param])
 				
 				# invert with damping nu/2
@@ -598,7 +622,7 @@ class FitProc:
 				if got2:
 					p_inc2V = -np.matmul(ijML, np.array(diff0V)).astype(float)
 					print(f"p_inc: {p_inc2V}")
-					for (i_param, parameter) in enumerate(self.fit_list['parameters']):
+					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param] + p_inc2V[i_param])
 						#print(f"parameter {i_param}: {paramsV[i_param] + p_inc2V[i_param]}")	
 					metricsV_t = self.get_metric_values()
@@ -608,7 +632,7 @@ class FitProc:
 						diffV[i_metric] = (metricsV_t[i_metric] - metric['target']) / metric['tolerance']
 					FOM_2 = np.matmul(diffV, diffV)
 					print(f"FOM_2: {FOM_2}\n")	
-					for (i_param, parameter) in enumerate(self.fit_list['parameters']):
+					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param])
 				
 				p_incV = []	
@@ -627,7 +651,7 @@ class FitProc:
 						print("2 improved")		
 							
 				if improved:	
-					for (i_param, parameter) in enumerate(self.fit_list['parameters']):
+					for (i_param, parameter) in enumerate(parametersL):
 						paramsV[i_param] +=  p_incV[i_param]
 						self.set_parameter_value(parameter, paramsV[i_param])				
 						parameter['increment'] = 	p_incV[i_param] / 10	

@@ -34,6 +34,8 @@ def simulate(data):
 	result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
 	#print(run_list)
 	os.chdir(orig_dir)
+	
+	return result
 
 # main
 if __name__ == "__main__":
