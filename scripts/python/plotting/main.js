@@ -29,6 +29,15 @@
 		);
 	}
 
+	async function make_dir(dir) {
+		fst = 'filename=' + dir;
+		fst += '&cmd=mkdir';
+		await fetch('http://localhost:8000/file?' + fst,
+			{
+				method: 'GET'
+			}
+		);
+	}
 	async function copy_json_file(filename, new_filename) {
 		fst = 'cmd=copy';
 		fst += '&filename=' + filename;
@@ -254,6 +263,7 @@
 			const output_dir = prefs['build_dir'] + "/test/output";
 
 			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+	
 			var model_cache = await read_json_file("./model_cache.json");
 			if (!(prefs['model_id'] in model_cache))
 			{
@@ -401,6 +411,8 @@
 
 		const model_form = document.getElementById('model_form');
 		const build_form = document.getElementById('build_form');
+
+		await make_dir(prefs["build_dir"] + "/gui");
 
 		// update models control
 		let select_model = model_form.model_id;
@@ -936,6 +948,7 @@
 		{
 				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
 				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				sleep(1)
 				await write_json_file("./model_cache.json", model_cache);
 		}
 		model_filepath = 	model_cache[prefs['model_id']];

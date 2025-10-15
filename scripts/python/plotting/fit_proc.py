@@ -82,9 +82,11 @@ class FitProc:
 
 	def read_cache_model(self, model_id):
 			model_cache = read_file("./model_cache.json")	
+			if not os.path.exists(self.prefs["build_dir"] + "/gui"):
+				os.mkdir(self.prefs["build_dir"] + "/gui")	
 			if model_id not in model_cache:
 				ref_model_filepath = "../../../test/models_json/" + model_id + ".json"
-				model_data = read_file(ref_model_filepath)
+				model_data = read_file(ref_model_filepath)			
 				model_cache[model_id] = self.prefs["build_dir"] + "/gui/" + model_id + ".json"
 				write_file("./model_cache.json", model_cache)
 				write_file(model_id, model_data)
@@ -92,7 +94,9 @@ class FitProc:
 			return read_file(model_cache[model_id])
 	
 	def write_cache_model(self, model_id, model_data):
-			model_cache = read_file("./model_cache.json")	
+			model_cache = read_file("./model_cache.json")
+			if not os.path.exists(self.prefs["build_dir"] + "/gui"):
+				os.mkdir(self.prefs["build_dir"] + "/gui")		
 			if model_id not in model_cache:
 				model_cache[model_id] = self.prefs["build_dir"] + "/gui/" + model_id + ".json"
 				write_file("./model_cache.json", model_cache)

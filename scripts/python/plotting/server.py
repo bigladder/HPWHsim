@@ -65,6 +65,13 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					self.send_header("Content-type", "text/html")
 					self.send_header("Access-Control-Allow-Origin", "*")
 					self.end_headers()
+				elif cmd == 'mkdir':
+					if not os.path.exists(filename):
+						os.mkdir(filename)
+					self.send_response(200)
+					self.send_header("Content-type", "text/html")
+					self.send_header("Access-Control-Allow-Origin", "*")
+					self.end_headers()
 				return
 
 			elif self.path.startswith('/simulate'):
