@@ -14,7 +14,7 @@ def get_inverse_left(M):
 	MT_M = np.matmul(MT, M)	
 	d = np.linalg.det(MT_M)
 	if d == 0:
-		print("det = 0")
+		#print("det = 0")
 		return M, False
 	return np.matmul(np.linalg.inv(MT_M), MT).astype(float), True
 
@@ -24,7 +24,7 @@ def get_damped_inverse_left(M, nu):
 	wMT_M = MT_M + nu * np.diag(np.diag(MT_M))
 	d = np.linalg.det(wMT_M)
 	if d == 0:
-		print("det = 0")
+		#print("det = 0")
 		return M, False
 	return np.matmul(np.linalg.inv(wMT_M), MT).astype(float), True
 
@@ -221,13 +221,13 @@ class FitProc:
 		perf_map = orig_perf_map
 		grid_vars = perf_map["grid_variables"]
 		
-		nT1s = len(grid_vars["evaporator_environment_dry_bulb_temperature"])
-		col2_name = "condenser_entering_temperature" if is_central else "heat_source_temperature"
-		nT2s = len(grid_vars[col2_name])
-		nT3s = 1 if not is_central else len(grid_vars["condenser_leaving_temperature"])
+		nT0s = len(grid_vars["evaporator_environment_dry_bulb_temperature"])
+		col1_name = "condenser_entering_temperature" if is_central else "heat_source_temperature"
+		nT1s = len(grid_vars[col1_name])
+		nT2s = 1 if not is_central else len(grid_vars["condenser_leaving_temperature"])
 	
 		lookup_vars = perf_map["lookup_variables"]
-		elem = nT3s * (nT2s * coordinates[0] + coordinates[1]) + coordinates[2]
+		elem = nT2s * (nT1s * coordinates[0] + coordinates[1]) + coordinates[2]
 		if variable == "Pin":
 			lookup_vars["input_power"][elem] = value
 		if variable == "Pout":
@@ -365,14 +365,18 @@ class FitProc:
 			constraint['value'][parameter['term']]	= x							
 			self.apply_constraint(constraint)
 
-		if parameter['type'] == 'performance-point':		
+		if parameter['type'] == 'grid-point-value':		
 			variable =  parameter['variable']
 			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
 			if dependent == variable:
 				return
+			if 'use_log' in parameter and parameter['use_log']:
+					val = math.exp(x)
+			else:
+				val = x
 			for model_id in parameter['models']:
-				model_data = self.read_cache_model(model_id)
-				self.set_performance_point(model_data, parameter['coordinates'], variable, dependent, x)	
+				model_data = self.read_cache_model(model_id)			
+				self.set_performance_point(model_data, parameter['coordinates'], variable, dependent, val)	
 				self.write_cache_model(model_id, model_data)
 				
 		if parameter['type'] == 'performance-points-offset':		
@@ -424,14 +428,19 @@ class FitProc:
 				return
 			return constraint['value'][parameter['term']]
 																			
-		if parameter['type'] == 'performance-point':		
+		if parameter['type'] == 'grid-point-value':		
 			variable =  parameter['variable']
 			dependent = "COP" if ('dependent' not in parameter) else parameter['dependent']
 			if dependent == variable:
 				return
 			for model_id in parameter['models']:
 				model_data = self.read_cache_model(model_id)
-				return self.get_performance_point(model_data, parameter['coordinates'], variable)
+				val = self.get_performance_point(model_data, parameter['coordinates'], variable)
+				if 'use_log' in parameter and parameter['use_log']:
+					if val <= 0:
+						return 0
+					return math.log(val)	
+				return val
 
 		if parameter['type'] == 'performance-points-offset':		
 			return parameter['value']
@@ -494,7 +503,7 @@ class FitProc:
 				'test_dir': test_dir,
 				'build_dir': self.prefs['build_dir']
 			}
-			result = simulate(data)
+			simulate(data)
 			
 			data_filename = metric['test_id'] + "_JSON_" + metric["model_id"] + ".csv";
 			data_filepath = os.path.join(self.prefs["build_dir"], "test", "output", data_filename)	
@@ -564,16 +573,15 @@ class FitProc:
 				paramsV = self.get_parameter_values(parametersL)	
 				for (i_param, parameter) in enumerate(parametersL):
 					self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])
-					print(f"parameter {i_param}: {paramsV[i_param] + parameter['increment']}, inc: {parameter['increment']}")	
+					#print(f"parameter {i_param}: {paramsV[i_param] + parameter['increment']}, inc: {parameter['increment']}")	
 					metricsV_t = self.get_metric_values()
-					print(f"metrics: {metricsV_t}")	
+					#print(f"metrics: {metricsV_t}")	
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
 						jacobiM[i_metric][i_param] = (metricsV_t[i_metric] - metricsV[i_metric]) / metric['tolerance'] / parameter['increment']									
 					self.set_parameter_value(parameter, paramsV[i_param])										
 				#print(f"jacobian:\n{jacobiM}")
 				ijML, got = get_inverse_left(jacobiM)
 				if not got:
-					print("Jacobian is singular, removing least sensitive parameter.")
 					sensV = np.zeros(len(parametersL))
 					for (i_param, parameter) in enumerate(parametersL):
 						for i_metric, metric in enumerate(self.fit_list['metrics']):
@@ -584,7 +592,7 @@ class FitProc:
 						if s < s_min:
 							s_min = s
 							i_min = i_param
-					print(f"removing parameter {i_min}, sensitivity: {s_min}")
+					print(f"Jacobian is singular, removing parameter {i_min}, sensitivity: {s_min}")
 					parametersL.pop(i_min)
 					if len(parametersL) == 0:
 						print("No more parameters to remove, stopping fit.")
@@ -601,12 +609,12 @@ class FitProc:
 				ijML, got1 = get_damped_inverse_left(jacobiM, nu)
 				if got1:	
 					p_inc1V = -np.matmul(ijML, np.array(diff0V)).astype(float)
-					print(f"p_inc: {p_inc1V}")
+					#print(f"p_inc: {p_inc1V}")
 					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param] + p_inc1V[i_param])
-						print(f"parameter {i_param}: {paramsV[i_param] + p_inc1V[i_param]}")				
+						#print(f"parameter {i_param}: {paramsV[i_param] + p_inc1V[i_param]}")				
 					metricsV_t = self.get_metric_values()
-					print(f"metrics: {metricsV_t}")			
+					#print(f"metrics: {metricsV_t}")			
 					diffV = [0] * len(metricsV)
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
 						diffV[i_metric] = (metricsV_t[i_metric] - metric['target']) / metric['tolerance']
@@ -621,7 +629,7 @@ class FitProc:
 				ijML, got2 = get_damped_inverse_left(jacobiM, nu / 2)
 				if got2:
 					p_inc2V = -np.matmul(ijML, np.array(diff0V)).astype(float)
-					print(f"p_inc: {p_inc2V}")
+					#print(f"p_inc: {p_inc2V}")
 					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param] + p_inc2V[i_param])
 						#print(f"parameter {i_param}: {paramsV[i_param] + p_inc2V[i_param]}")	
@@ -640,17 +648,16 @@ class FitProc:
 					if FOM_1 < FOM:
 						improved = True
 						p_incV = p_inc1V
-						FOM = FOM_1	
-						print("1 improved")				
+						FOM = FOM_1		
 				if got2:
 					if FOM_2 < FOM:
 						improved = True
 						p_incV = p_inc2V
 						FOM = FOM_2
 						nu /= 2
-						print("2 improved")		
-							
+											
 				if improved:	
+					print(f"using nu={nu}")
 					for (i_param, parameter) in enumerate(parametersL):
 						paramsV[i_param] +=  p_incV[i_param]
 						self.set_parameter_value(parameter, paramsV[i_param])				
