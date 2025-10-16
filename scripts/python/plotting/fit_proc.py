@@ -405,13 +405,20 @@ class FitProc:
 				model_data = self.read_cache_model(model_id)
 				heat_source_config = get_heat_source_configuration(model_data, parameter['heat_source'])
 				dist = heat_source_config['heat_distribution']
-				values = dist[parameter['value']]
-				p0 = (parameter['min'] + parameter['max']) / 2
-				dp = parameter['max'] - parameter['min']
-				p = p0 + parameter['damping'] * (dp / 2) * math.tanh(x)
-				values[parameter['index']] =  p
+				if 'method' in parameter:
+					if parameter['method'] == 'log':
+						dist[parameter['value']][parameter['index']] = math.exp(x)
+					elif parameter['method'] == 'atanh':							
+						p0 = (parameter['min'] + parameter['max']) / 2
+						dp = parameter['max'] - parameter['min']
+						dist[parameter['value']][parameter['index']] = p0 + parameter['damping'] * (dp / 2) * math.tanh(x)
+					else:
+						dist[parameter['value']][parameter['index']] = x
+				else:
+					dist[parameter['value']][parameter['index']] = x				
 				self.write_cache_model(model_id, model_data)
-		
+
+
 	def get_parameter_value(self, parameter):
 		if parameter['type'] == 'bilinear-point':					
 			constraint = self.fit_list['constraints'][parameter['constraint']]
@@ -456,16 +463,73 @@ class FitProc:
 			for model_id in parameter['models']:
 				model_data = self.read_cache_model(model_id)
 				heat_source_config = get_heat_source_configuration(model_data, parameter['heat_source'])
+				dist = heat_source_config['heat_distribution']			
+				if 'method' in parameter:
+					if parameter['method'] == 'log':
+						return math.log(dist[parameter['value']][parameter['index']])
+					elif parameter['method'] == 'atanh':
+						p = dist[parameter['value']][parameter['index']]
+						p0 = (parameter['min'] + parameter['max']) / 2
+						dp = parameter['max'] - parameter['min']
+						x = (p - p0) / parameter['damping'] / (dp / 2)
+						if (math.fabs(x) < 1):
+							return math.atanh(x)
+						return 0
+					else:
+						return dist[parameter['value']][parameter['index']]
+				else:
+					return dist[parameter['value']][parameter['index']]
+
+		if parameter['type'] == 'heat-distribution-weight':		
+			for model_id in parameter['models']:
+				model_data = self.read_cache_model(model_id)
+				heat_source_config = get_heat_source_configuration(model_data, parameter['heat_source'])
 				dist = heat_source_config['heat_distribution']
 				values = dist[parameter['value']]
-				p = values[parameter['index']]
-				p0 = (parameter['min'] + parameter['max']) / 2
-				dp = parameter['max'] - parameter['min']
-				x = (p - p0) / parameter['damping'] / (dp / 2)
-				if (math.fabs(x) < 1):
-					return math.atanh(x)
-				return 0
-			
+				val = values[parameter['index']]
+				if 'use_log' in parameter and parameter['use_log']:
+					if val <= 0:
+						return 0
+					return math.log(val)	
+				return val
+	
+	def get_metric_ref_value(self, metric):
+		if metric['type'] == 'analysis':		
+			test_index = read_file("./test_index.json");
+			test_data = test_index['tests'][metric['test_id']]
+			model_id = metric["model_id"]
+			if 'measured_model_id' in metric:
+				model_id = metric['measured_model_id']
+
+			data_filename = test_data['measured'][model_id];
+			data_filepath = "../../../test"
+			if 'path' in test_data:
+				data_filepath = os.path.join(data_filepath, test_data['path'])
+			data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
+			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
+			dataset.analyze()
+			if metric['group'] in dataset.test_summary:
+				if metric['item'] in dataset.test_summary[metric['group']]:
+					return dataset.test_summary[metric['group']][metric['item']]
+				
+		if metric['type'] == 'test-point':
+			test_index = read_file("./test_index.json");
+			test_data = test_index['tests'][metric['test_id']]
+			model_id = metric["model_id"]
+			if 'measured_model_id' in metric:
+				model_id = metric['measured_model_id']
+				
+			data_filename = test_data['measured'][model_id];
+			data_filepath = "../../../test"
+			if 'path' in test_data:
+				data_filepath = os.path.join(data_filepath, test_data['path'])
+			data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
+			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
+			res = dataset.df[metric['variable']].iloc[metric['i_min']]
+			if "Temperature" in metric['variable']:
+				res = 1.8 * res + 32		
+			return res		
+				
 	def get_metric_value(self, metric):
 		if metric['type'] == 'analysis':		
 			test_index = read_file("./test_index.json");
@@ -541,6 +605,12 @@ class FitProc:
 		for metric in self.fit_list['metrics']:
 			metricV.append(self.get_metric_value(metric))
 		return metricV
+	
+	def get_metric_ref_values(self):
+		metricV = []
+		for metric in self.fit_list['metrics']:
+			metricV.append(self.get_metric_ref_value(metric))
+		return metricV
 			
 	def fit(self, data):
 		self.read_fit()	
@@ -549,16 +619,20 @@ class FitProc:
 		have_jacobian = False
 		parameters_fullL = self.fit_list['parameters']
 		paramsV = self.get_parameter_values(parameters_fullL)	
+		
+		metricsRefV = self.get_metric_ref_values()
+		print(f"metric refs: {metricsRefV}")
+
 		metricsV = self.get_metric_values()
 		diff0V = np.zeros(len(metricsV))
 		for i_metric, metric in enumerate(self.fit_list['metrics']):
-			diff0V[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+			diff0V[i_metric] = (metricsV[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 		FOM = np.matmul(diff0V, diff0V)								
 		print(f"parameters: {paramsV}")		
 		print(f"metrics: {metricsV}")
 		print(f"FOM: {FOM}")
 				
-		for parameter in self.fit_list['parameters']:
+		for parameter in parameters_fullL:
 			parameter['increment'] = 100 * parameter['increment']
 
 	
@@ -596,7 +670,7 @@ class FitProc:
 						if s < s_min:
 							s_min = s
 							i_min = i_param
-					print(f"Jacobian is singular, removing parameter {i_min}, sensitivity: {s_min}")
+					print(f"Jacobian is singular, removing parameter {i_min}, {parametersL[i_min]['type']}, sensitivity: {s_min}")
 					parametersL.pop(i_min)
 					if len(parametersL) == 0:
 						print("No more parameters to remove, stopping fit.")
@@ -621,7 +695,7 @@ class FitProc:
 					#print(f"metrics: {metricsV_t}")			
 					diffV = [0] * len(metricsV)
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
-						diffV[i_metric] = (metricsV_t[i_metric] - metric['target']) / metric['tolerance']
+						diffV[i_metric] = (metricsV_t[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM_1 = np.matmul(diffV, diffV)
 					print(f"FOM_1: {FOM_1}")				
 					for (i_param, parameter) in enumerate(parametersL ):
@@ -641,7 +715,7 @@ class FitProc:
 					#print(f"metrics: {metricsV}")
 					diffV = [0] * len(metricsV)
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
-						diffV[i_metric] = (metricsV_t[i_metric] - metric['target']) / metric['tolerance']
+						diffV[i_metric] = (metricsV_t[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM_2 = np.matmul(diffV, diffV)
 					print(f"FOM_2: {FOM_2}\n")	
 					for (i_param, parameter) in enumerate(parametersL ):
@@ -669,7 +743,7 @@ class FitProc:
 					metricsV = self.get_metric_values()
 					diff0V = np.zeros(len(metricsV))
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
-						diff0V[i_metric] = (metricsV[i_metric] - metric['target']) / metric['tolerance']
+						diff0V[i_metric] = (metricsV[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM = np.matmul(diff0V, diff0V)
 					have_jacobian = False
 					self.write_fit()

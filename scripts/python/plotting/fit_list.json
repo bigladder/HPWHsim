@@ -504,7 +504,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Power Input",
       "i_min": 9,
-      "target": 265.23,
       "tolerance": 5
     },
     {
@@ -513,7 +512,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Power Input",
       "i_min": 155,
-      "target": 399.6,
       "tolerance": 5
     },
     {
@@ -522,7 +520,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Power Input",
       "i_min": 1038,
-      "target": 307.55,
       "tolerance": 5
     },
     {
@@ -531,7 +528,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Power Input",
       "i_min": 1100,
-      "target": 390.2,
       "tolerance": 5
     },
     {
@@ -540,7 +536,6 @@
       "test_id": "RE2HP50_UEF67",
       "group": "24-hr-test",
       "item": "energyUsed_kJ",
-      "target": 7835.2,
       "tolerance": 50
     },
     {
@@ -550,24 +545,6 @@
       "group": "24-hr-test",
       "item": "EF",
       "target": 3.89,
-      "tolerance": 0.0005
-    },
-    {
-      "type": "analysis",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "group": "24-hr-test",
-      "item": "energyUsed_kJ",
-      "target": 10385.06,
-      "tolerance": 50
-    },
-    {
-      "type": "analysis",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "group": "24-hr-test",
-      "item": "EF",
-      "target": 3.29,
       "tolerance": 0.0005
     },
     {
@@ -585,7 +562,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Tank Temperature - #5",
       "i_min": 628,
-      "target": 115.52,
       "tolerance": 0.5
     },
     {
@@ -594,8 +570,7 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Tank Temperature - #6",
       "i_min": 600,
-      "target": 103.64,
-      "tolerance": 1
+      "tolerance": 0.5
     },
     {
       "type": "test-point",
@@ -603,7 +578,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Tank Temperature - #6",
       "i_min": 1439,
-      "target": 112.64,
       "tolerance": 1
     },
     {
@@ -612,7 +586,6 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Tank Temperature - #6",
       "i_min": 750,
-      "target": 104.36,
       "tolerance": 0.5
     },
     {
@@ -621,106 +594,12 @@
       "test_id": "RE2HP50_UEF67",
       "variable": "Tank Temperature - #6",
       "i_min": 700,
-      "target": 121.82,
       "tolerance": 1
-    },
-    {
-      "type": "test-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Power Input",
-      "i_min": 210,
-      "target": 373.4,
-      "tolerance": 5
-    },
-    {
-      "type": "test-point",
-      "model_id": "BradfordWhiteAeroThermRE2HP50",
-      "test_id": "RE2HP50_UEF50",
-      "variable": "Power Input",
-      "i_min": 20,
-      "target": 272.95,
-      "tolerance": 5
     }
   ],
   "parameters": [
     {
       "type": "grid-point-value",
-      "variable": "Pin",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        0,
-        0,
-        0
-      ],
-      "increment": -6.0268473894471326e-05
-    },
-    {
-      "type": "grid-point-value",
-      "variable": "Pin",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        1,
-        0,
-        0
-      ],
-      "increment": -9.300409809983244e-07
-    },
-    {
-      "type": "grid-point-value",
-      "variable": "Pin",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        0,
-        1,
-        0
-      ],
-      "increment": -2.84379090115544e-07
-    },
-    {
-      "type": "grid-point-value",
-      "variable": "Pin",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        1,
-        1,
-        0
-      ],
-      "increment": -2.8047014785659766e-08
-    },
-    {
-      "type": "grid-point-value",
-      "variable": "Pout",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        0,
-        0,
-        0
-      ],
-      "increment": -3.0580731458256706e-10
-    },
-    {
-      "type": "grid-point-value",
       "variable": "Pout",
       "dependent": "COP",
       "models": [
@@ -732,22 +611,8 @@
         0,
         0
       ],
-      "increment": 2.2632326844823242e-10
-    },
-    {
-      "type": "grid-point-value",
-      "variable": "Pout",
-      "dependent": "COP",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP50"
-      ],
-      "heat_source": "compressor",
-      "coordinates": [
-        0,
-        1,
-        0
-      ],
-      "increment": 4.765349234071812e-11
+      "use_log": false,
+      "increment": 0.0479105441334264
     },
     {
       "type": "grid-point-value",
@@ -762,33 +627,40 @@
         1,
         0
       ],
-      "increment": 1.360023014049543e-10
+      "use_log": true,
+      "increment": 9.068854608754207e-06
     },
     {
-      "type": "heat-distribution-term",
+      "type": "grid-point-value",
+      "variable": "Pin",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
       "heat_source": "compressor",
-      "value": "weight",
-      "index": 0,
-      "min": 0.01,
-      "max": 0.9999,
-      "damping": 0.99,
-      "increment": 1.5160927550476141e-06
+      "coordinates": [
+        1,
+        0,
+        0
+      ],
+      "use_log": false,
+      "increment": 0.020462069726387276
     },
     {
-      "type": "heat-distribution-term",
+      "type": "grid-point-value",
+      "variable": "Pin",
+      "dependent": "COP",
       "models": [
         "BradfordWhiteAeroThermRE2HP50"
       ],
       "heat_source": "compressor",
-      "value": "weight",
-      "index": 2,
-      "min": 0.01,
-      "max": 0.9999,
-      "damping": 0.99,
-      "increment": -5.439297741776683e-07
+      "coordinates": [
+        1,
+        1,
+        0
+      ],
+      "use_log": true,
+      "increment": 3.444297535236261e-05
     }
   ]
 }
