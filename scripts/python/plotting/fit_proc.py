@@ -703,7 +703,7 @@ class FitProc:
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
 						diffV[i_metric] = (metricsV_t[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM_1 = np.matmul(diffV, diffV)
-					print(f"FOM_1: {FOM_1}")				
+					print(f"FOM: {FOM_1}")				
 					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param])
 				
@@ -723,7 +723,7 @@ class FitProc:
 					for i_metric, metric in enumerate(self.fit_list['metrics']):
 						diffV[i_metric] = (metricsV_t[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM_2 = np.matmul(diffV, diffV)
-					print(f"FOM_2: {FOM_2}\n")	
+					print(f"FOM: {FOM_2}")	
 					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param])
 				
@@ -759,7 +759,7 @@ class FitProc:
 						print(f"Reached max iterations.")
 				else:
 					nu *= 10
-					print("no improvement")	
+
 				if nu > 1e9:
 					print(f"Unable to improve fit.")
 					done = True
