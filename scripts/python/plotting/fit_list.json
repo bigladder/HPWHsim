@@ -612,7 +612,7 @@
         0
       ],
       "use_log": false,
-      "increment": 0.0479105441334264
+      "increment": -0.0002822029144948257
     },
     {
       "type": "grid-point-value",
@@ -628,7 +628,7 @@
         0
       ],
       "use_log": true,
-      "increment": 9.068854608754207e-06
+      "increment": -1.110176784608573e-09
     },
     {
       "type": "grid-point-value",
@@ -644,7 +644,7 @@
         0
       ],
       "use_log": false,
-      "increment": 0.020462069726387276
+      "increment": -0.00092508933386109
     },
     {
       "type": "grid-point-value",
@@ -660,7 +660,29 @@
         0
       ],
       "use_log": true,
-      "increment": 3.444297535236261e-05
+      "increment": -1.80949613833896e-06
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "index": 0,
+      "method": "log",
+      "increment": 2.0306645085942469e-07
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "index": 2,
+      "method": "log",
+      "increment": -9.690402688337128e-06
     }
   ]
 }

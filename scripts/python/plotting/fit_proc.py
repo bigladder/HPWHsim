@@ -507,10 +507,13 @@ class FitProc:
 				data_filepath = os.path.join(data_filepath, test_data['path'])
 			data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
 			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
-			dataset.analyze()
-			if metric['group'] in dataset.test_summary:
-				if metric['item'] in dataset.test_summary[metric['group']]:
-					return dataset.test_summary[metric['group']][metric['item']]
+			if dataset.df.empty:
+				return metric['value']
+			else:
+				dataset.analyze()
+				if metric['group'] in dataset.test_summary:
+					if metric['item'] in dataset.test_summary[metric['group']]:
+						return dataset.test_summary[metric['group']][metric['item']]
 				
 		if metric['type'] == 'test-point':
 			test_index = read_file("./test_index.json");
@@ -525,10 +528,13 @@ class FitProc:
 				data_filepath = os.path.join(data_filepath, test_data['path'])
 			data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
 			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
-			res = dataset.df[metric['variable']].iloc[metric['i_min']]
-			if "Temperature" in metric['variable']:
-				res = 1.8 * res + 32		
-			return res		
+			if dataset.df.empty:
+				return metric['value']
+			else:
+				res = dataset.df[metric['variable']].iloc[metric['i_min']]
+				if "Temperature" in metric['variable']:
+					res = 1.8 * res + 32		
+				return res		
 				
 	def get_metric_value(self, metric):
 		if metric['type'] == 'analysis':		
