@@ -869,7 +869,7 @@
       ],
       "method": "log",
       "increment": -1.4842536082819886e-05,
-      "status": ""
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -906,7 +906,7 @@
         0
       ],
       "method": "log",
-      "increment": -3.855416808342565e-06,
+      "increment": -0.0003855416808342565,
       "status": "hold"
     },
     {
@@ -945,7 +945,7 @@
       ],
       "method": "log",
       "increment": -0.0001262807823753947,
-      "status": ""
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -963,8 +963,8 @@
         0
       ],
       "method": "",
-      "increment": -0.004098658434204974,
-      "status": ""
+      "increment": -0.0001778589707029014,
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -982,7 +982,7 @@
         0
       ],
       "method": "log",
-      "increment": 0.00026291411361863343,
+      "increment": -0.07317477909856498,
       "status": "hold"
     },
     {
@@ -1016,7 +1016,7 @@
       "min": 0.01,
       "max": 1.9999,
       "damping": 0.99,
-      "increment": 0.0001990288681925169,
+      "increment": 0.00011949721473301898,
       "status": "hold"
     },
     {
@@ -1031,7 +1031,7 @@
       "min": 0.01,
       "max": 2,
       "damping": 0.99,
-      "increment": 0.00012038414333721612,
+      "increment": 1e-4,
       "status": "hold"
     },
     {
@@ -1046,53 +1046,53 @@
       "min": 0.01,
       "max": 2.1,
       "damping": 0.99,
-      "increment": 8.701392790860145e-10,
+      "increment": 0.00019161430595049535,
+      "status": "hold"
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP65"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "method": "atanh",
+      "index": 2,
+      "min": 0.01,
+      "max": 2,
+      "damping": 0.99,
+      "increment": -0.00047639803314085605,
+      "status": "hold"
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP80"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "method": "atanh",
+      "index": 0,
+      "min": 0.01,
+      "max": 2.1,
+      "damping": 0.99,
+      "increment": -0.0010780985205857108,
+      "status": "hold"
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP80"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "method": "atanh",
+      "index": 2,
+      "min": 0.01,
+      "max": 2,
+      "damping": 0.99,
+      "increment": 1e-4,
       "status": ""
-    },
-    {
-      "type": "heat-distribution-term",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP65"
-      ],
-      "heat_source": "compressor",
-      "value": "weight",
-      "method": "atanh",
-      "index": 2,
-      "min": 0.01,
-      "max": 2,
-      "damping": 0.99,
-      "increment": 4.025358308655622e-05,
-      "status": "hold"
-    },
-    {
-      "type": "heat-distribution-term",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP80"
-      ],
-      "heat_source": "compressor",
-      "value": "weight",
-      "method": "atanh",
-      "index": 0,
-      "min": 0.01,
-      "max": 2.1,
-      "damping": 0.99,
-      "increment": -1.563866852493353e-05,
-      "status": "hold"
-    },
-    {
-      "type": "heat-distribution-term",
-      "models": [
-        "BradfordWhiteAeroThermRE2HP80"
-      ],
-      "heat_source": "compressor",
-      "value": "weight",
-      "method": "atanh",
-      "index": 2,
-      "min": 0.01,
-      "max": 2,
-      "damping": 0.99,
-      "increment": 4.639275829074154e-06,
-      "status": "hold"
     }
   ]
 }
