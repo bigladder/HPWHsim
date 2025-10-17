@@ -494,47 +494,49 @@ class FitProc:
 				return val
 	
 	def get_metric_ref_value(self, metric):
-		if metric['type'] == 'analysis':		
-			test_index = read_file("./test_index.json");
-			test_data = test_index['tests'][metric['test_id']]
-			model_id = metric["model_id"]
-			if 'measured_model_id' in metric:
-				model_id = metric['measured_model_id']
-
-			data_filename = test_data['measured'][model_id];
-			data_filepath = "../../../test"
-			if 'path' in test_data:
-				data_filepath = os.path.join(data_filepath, test_data['path'])
-			data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
-			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
-			if dataset.df.empty:
+		if metric['type'] == 'analysis':
+			if 'value' in metric:
 				return metric['value']
 			else:
-				dataset.analyze()
-				if metric['group'] in dataset.test_summary:
-					if metric['item'] in dataset.test_summary[metric['group']]:
-						return dataset.test_summary[metric['group']][metric['item']]
+				test_index = read_file("./test_index.json");
+				test_data = test_index['tests'][metric['test_id']]
+				model_id = metric["model_id"]
+				if 'measured_model_id' in metric:
+					model_id = metric['measured_model_id']
+
+				data_filename = test_data['measured'][model_id];
+				data_filepath = "../../../test"
+				if 'path' in test_data:
+					data_filepath = os.path.join(data_filepath, test_data['path'])
+				data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
+				dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
+				if not dataset.df.empty:
+					dataset.analyze()
+					if metric['group'] in dataset.test_summary:
+						if metric['item'] in dataset.test_summary[metric['group']]:
+							return dataset.test_summary[metric['group']][metric['item']]
 				
 		if metric['type'] == 'test-point':
-			test_index = read_file("./test_index.json");
-			test_data = test_index['tests'][metric['test_id']]
-			model_id = metric["model_id"]
-			if 'measured_model_id' in metric:
-				model_id = metric['measured_model_id']
-				
-			data_filename = test_data['measured'][model_id];
-			data_filepath = "../../../test"
-			if 'path' in test_data:
-				data_filepath = os.path.join(data_filepath, test_data['path'])
-			data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
-			dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
-			if dataset.df.empty:
+			if 'value' in metric:
 				return metric['value']
 			else:
-				res = dataset.df[metric['variable']].iloc[metric['i_min']]
-				if "Temperature" in metric['variable']:
-					res = 1.8 * res + 32		
-				return res		
+				test_index = read_file("./test_index.json");
+				test_data = test_index['tests'][metric['test_id']]
+				model_id = metric["model_id"]
+				if 'measured_model_id' in metric:
+					model_id = metric['measured_model_id']
+					
+				data_filename = test_data['measured'][model_id];
+				data_filepath = "../../../test"
+				if 'path' in test_data:
+					data_filepath = os.path.join(data_filepath, test_data['path'])
+				data_filepath = os.path.join(data_filepath, metric['test_id'], data_filename)	
+				dataset = DataSet({'model_id': metric['model_id'], 'test_id': metric['test_id'], 'type': "Measured", 'filepath': data_filepath})
+				if not dataset.df.empty:
+					res = dataset.df[metric['variable']].iloc[metric['i_min']]
+					if "Temperature" in metric['variable']:
+						res = 1.8 * res + 32		
+					return res		
 				
 	def get_metric_value(self, metric):
 		if metric['type'] == 'analysis':		
@@ -606,15 +608,15 @@ class FitProc:
 		for parameter in parameters:
 			self.apply_parameter(parameter)
 	
-	def get_metric_values(self):
+	def get_metric_values(self, metricsL):
 		metricV = []
-		for metric in self.fit_list['metrics']:
+		for metric in metricsL:
 			metricV.append(self.get_metric_value(metric))
 		return metricV
 	
-	def get_metric_ref_values(self):
+	def get_metric_ref_values(self, metricsL):
 		metricV = []
-		for metric in self.fit_list['metrics']:
+		for metric in metricsL:
 			metricV.append(self.get_metric_ref_value(metric))
 		return metricV
 			
@@ -634,12 +636,20 @@ class FitProc:
 				
 		paramsV = self.get_parameter_values(parameters_varyL)	
 		
-		metricsRefV = self.get_metric_ref_values()
+		metrics_fullL = self.fit_list['metrics']
+		metrics_ignoreL = []
+		metricsL = []
+		for metric in metrics_fullL :
+			if ('status' in metric) and (metric['status'] == 'ignore'):
+				metrics_ignoreL.append(metric)
+			else:
+				metricsL.append(metric)
+		metricsRefV = self.get_metric_ref_values(metricsL)
 		print(f"metric refs: {metricsRefV}")
 
-		metricsV = self.get_metric_values()
+		metricsV = self.get_metric_values(metricsL)
 		diff0V = np.zeros(len(metricsV))
-		for i_metric, metric in enumerate(self.fit_list['metrics']):
+		for i_metric, metric in enumerate(metricsL):
 			diff0V[i_metric] = (metricsV[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 		FOM = np.matmul(diff0V, diff0V)								
 		print(f"parameters: {paramsV}")		
@@ -649,7 +659,6 @@ class FitProc:
 		for parameter in parameters_varyL:
 			parameter['increment'] = 100 * parameter['increment']
 
-	
 		nu = 0.1
 		iter = 0
 		iter_max = 10
@@ -666,9 +675,9 @@ class FitProc:
 				for (i_param, parameter) in enumerate(parametersL):
 					self.set_parameter_value(parameter, paramsV[i_param] + parameter['increment'])
 					#print(f"parameter {i_param}: {paramsV[i_param] + parameter['increment']}, inc: {parameter['increment']}")	
-					metricsV_t = self.get_metric_values()
+					metricsV_t = self.get_metric_values(metricsL)
 					#print(f"metrics: {metricsV_t}")	
-					for i_metric, metric in enumerate(self.fit_list['metrics']):
+					for i_metric, metric in enumerate(metricsL):
 						jacobiM[i_metric][i_param] = (metricsV_t[i_metric] - metricsV[i_metric]) / metric['tolerance'] / parameter['increment']									
 					self.set_parameter_value(parameter, paramsV[i_param])										
 				#print(f"jacobian:\n{jacobiM}")
@@ -676,7 +685,7 @@ class FitProc:
 				if not got:
 					sensV = np.zeros(len(parametersL))
 					for (i_param, parameter) in enumerate(parametersL):
-						for i_metric, metric in enumerate(self.fit_list['metrics']):
+						for i_metric, metric in enumerate(metricsL):
 							sensV[i_param] += jacobiM[i_metric][i_param] * jacobiM[i_metric][i_param]
 					i_min = 0
 					s_min = sensV[0]
@@ -705,10 +714,10 @@ class FitProc:
 					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param] + p_inc1V[i_param])
 						#print(f"parameter {i_param}: {paramsV[i_param] + p_inc1V[i_param]}")				
-					metricsV_t = self.get_metric_values()
+					metricsV_t = self.get_metric_values(metricsL)
 					#print(f"metrics: {metricsV_t}")			
 					diffV = [0] * len(metricsV)
-					for i_metric, metric in enumerate(self.fit_list['metrics']):
+					for i_metric, metric in enumerate(metricsL):
 						diffV[i_metric] = (metricsV_t[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM_1 = np.matmul(diffV, diffV)
 					print(f"FOM: {FOM_1}")				
@@ -725,10 +734,10 @@ class FitProc:
 					for (i_param, parameter) in enumerate(parametersL ):
 						self.set_parameter_value(parameter, paramsV[i_param] + p_inc2V[i_param])
 						#print(f"parameter {i_param}: {paramsV[i_param] + p_inc2V[i_param]}")	
-					metricsV_t = self.get_metric_values()
+					metricsV_t = self.get_metric_values(metricsL)
 					#print(f"metrics: {metricsV}")
 					diffV = [0] * len(metricsV)
-					for i_metric, metric in enumerate(self.fit_list['metrics']):
+					for i_metric, metric in enumerate(metricsL):
 						diffV[i_metric] = (metricsV_t[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM_2 = np.matmul(diffV, diffV)
 					print(f"FOM: {FOM_2}")	
@@ -754,13 +763,14 @@ class FitProc:
 						paramsV[i_param] +=  p_incV[i_param]
 						self.set_parameter_value(parameter, paramsV[i_param])				
 						parameter['increment'] = 	p_incV[i_param] / 10	
-					metricsV = self.get_metric_values()
+					metricsV = self.get_metric_values(metricsL)
 					diff0V = np.zeros(len(metricsV))
-					for i_metric, metric in enumerate(self.fit_list['metrics']):
+					for i_metric, metric in enumerate(metricsL):
 						diff0V[i_metric] = (metricsV[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM = np.matmul(diff0V, diff0V)
 					have_jacobian = False
 					parameters_fullL = parameters_varyL + parameters_holdL
+					metrics_fullL = metricsL + metrics_ignoreL
 					self.write_fit()
 					iter = iter + 1
 					if iter >= iter_max:
