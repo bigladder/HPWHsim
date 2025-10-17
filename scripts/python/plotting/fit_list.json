@@ -687,8 +687,8 @@
         0
       ],
       "method": "log",
-      "increment": -0.0001678056838801422,
-			"status": "hold"
+      "increment": 7.431567690384603e-09,
+      "status": ""
     },
     {
       "type": "grid-point-value",
@@ -704,8 +704,8 @@
         0
       ],
       "method": "",
-      "increment": -4.384747349137317e-05,
-			"status": "hold"
+      "increment": -8.00071888739036e-04,
+      "status": ""
     },
     {
       "type": "grid-point-value",
@@ -721,8 +721,8 @@
         0
       ],
       "method": "log",
-      "increment": -0.00016699185530413303,
-			"status": "hold"
+      "increment": -4.0123523793836716e-04,
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -738,8 +738,8 @@
         0
       ],
       "method": "",
-      "increment": -0.0001509017597650304,
-			"status": "hold"
+      "increment": -3.625751889178621e-04,
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -755,8 +755,8 @@
         0
       ],
       "method": "log",
-      "increment": -3.19495953371526e-05,
-			"status": "hold"
+      "increment": 0.005881114124401326,
+      "status": ""
     },
     {
       "type": "grid-point-value",
@@ -772,8 +772,8 @@
         0
       ],
       "method": "",
-      "increment": -1.9259080889258717e-05,
-			"status": "hold"
+      "increment": 7.213844961842809e-06,
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -789,8 +789,8 @@
         0
       ],
       "method": "log",
-      "increment": -8.289918993941375e-05,
-			"status": "hold"
+      "increment": 0.031486574846116416,
+      "status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -806,7 +806,23 @@
         0
       ],
       "method": "",
-      "increment": -8.80662934841987e-05
+      "increment": 0.6681980411251761,
+      "status": "hold"
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "method": "atanh",
+      "index": 0,
+      "min": 0.01,
+      "max": 1.9999,
+      "damping": 0.99,
+      "increment": -1.939832152723774e-06,
+      "status": ""
     },
     {
       "type": "heat-distribution-term",
@@ -818,9 +834,10 @@
       "method": "atanh",
       "index": 2,
       "min": 0.01,
-      "max": 0.9999,
+      "max": 1.9999,
       "damping": 0.99,
-      "increment": -8.247679340289674e-05
+      "increment": -0.001,
+      "status": "hold"
     }
   ]
 }

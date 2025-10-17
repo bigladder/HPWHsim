@@ -627,10 +627,10 @@ class FitProc:
 		parameters_holdL = []
 		parameters_varyL = []
 		for parameter in parameters_fullL :
-			if ('status' in 'parameter') and (parameter['status'] == 'hold'):
-				parameters_holdL.push(parameter)
+			if ('status' in parameter) and (parameter['status'] == 'hold'):
+				parameters_holdL.append(parameter)
 			else:
-				parameters_varyL.push(parameter)
+				parameters_varyL.append(parameter)
 				
 		paramsV = self.get_parameter_values(parameters_varyL)	
 		
