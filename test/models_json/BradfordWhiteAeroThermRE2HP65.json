@@ -28,10 +28,10 @@
     "performance": {
       "heat_source_configurations": [
         {
-        	"companion_heat_source_id": "compressor",
+          "companion_heat_source_id": "compressor",
           "heat_distribution": {
             "normalized_height": [
-              0.60,
+              0.6,
               0.63,
               1.0
             ],
@@ -132,19 +132,19 @@
             }
           ]
         },
-       {
+        {
           "backup_heat_source_id": "resistiveElementBottom",
           "heat_distribution": {
             "normalized_height": [
               0.1,
-              0.4,
-              0.5,
+              0.3,
+              0.45,
               1
             ],
             "weight": [
-              0.0,
-							0.94,
-              1.0,
+              0.4943081083373698,
+              1,
+              0.8340092360643023,
               0
             ]
           },
@@ -176,16 +176,16 @@
                 },
                 "lookup_variables": {
                   "heating_capacity": [
-                    689.3583482335649,
-                    1261.5339409396245,
-                    890.5339512574708,
-                    4115.499151601763
+                    682.8190033570804,
+                    1245.5594085599998,
+                    935.8291360997199,
+                    4238.80328527053
                   ],
                   "input_power": [
-                    140.6166923220633,
-                    496.6456010360266,
-                    228.2463070183352,
-                    608.9815124652761
+                    228.59608577759113,
+                    445.69341521975525,
+                    142.06231947604226,
+                    625.2396709394011
                   ]
                 }
               },
@@ -198,11 +198,11 @@
             {
               "comparison_type": "LESS_THAN",
               "heating_logic": {
-                "differential_temperature": 12.2,
+                "differential_temperature": 15,
                 "temperature_weight_distribution": {
                   "normalized_height": [
-                    0.25,
-                    0.29,
+                    0.23,
+                    0.26,
                     1
                   ],
                   "weight": [
