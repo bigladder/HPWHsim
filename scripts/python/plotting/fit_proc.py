@@ -624,7 +624,15 @@ class FitProc:
 		
 		have_jacobian = False
 		parameters_fullL = self.fit_list['parameters']
-		paramsV = self.get_parameter_values(parameters_fullL)	
+		parameters_holdL = []
+		parameters_varyL = []
+		for parameter in parameters_fullL :
+			if ('status' in 'parameter') and (parameter['status'] == 'hold'):
+				parameters_holdL.push(parameter)
+			else:
+				parameters_varyL.push(parameter)
+				
+		paramsV = self.get_parameter_values(parameters_varyL)	
 		
 		metricsRefV = self.get_metric_ref_values()
 		print(f"metric refs: {metricsRefV}")
@@ -638,7 +646,7 @@ class FitProc:
 		print(f"metrics: {metricsV}")
 		print(f"FOM: {FOM}")
 				
-		for parameter in parameters_fullL:
+		for parameter in parameters_varyL:
 			parameter['increment'] = 100 * parameter['increment']
 
 	
@@ -649,7 +657,7 @@ class FitProc:
 		while not done:
 			print(f"\niteration: {iter}")
 
-			parametersL = parameters_fullL.copy()			
+			parametersL = parameters_varyL.copy()			
 				
 			# get jacobian
 			while not have_jacobian:
@@ -752,6 +760,7 @@ class FitProc:
 						diff0V[i_metric] = (metricsV[i_metric] - metricsRefV[i_metric]) / metric['tolerance']
 					FOM = np.matmul(diff0V, diff0V)
 					have_jacobian = False
+					parameters_fullL = parameters_varyL + parameters_holdL
 					self.write_fit()
 					iter = iter + 1
 					if iter >= iter_max:

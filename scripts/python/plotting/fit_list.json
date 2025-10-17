@@ -687,7 +687,8 @@
         0
       ],
       "method": "log",
-      "increment": -5.094545590648976e-05
+      "increment": -0.0001678056838801422,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -703,7 +704,8 @@
         0
       ],
       "method": "",
-      "increment": -4.171372366190756e-05
+      "increment": -4.384747349137317e-05,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -719,7 +721,8 @@
         0
       ],
       "method": "log",
-      "increment": -0.00010027003563232366
+      "increment": -0.00016699185530413303,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -735,7 +738,8 @@
         0
       ],
       "method": "",
-      "increment": -9.060875933777026e-05
+      "increment": -0.0001509017597650304,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -751,7 +755,8 @@
         0
       ],
       "method": "log",
-      "increment": 0.00039380994826087684
+      "increment": -3.19495953371526e-05,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -767,7 +772,8 @@
         0
       ],
       "method": "",
-      "increment": 2.9781162390206816e-05
+      "increment": -1.9259080889258717e-05,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -783,7 +789,8 @@
         0
       ],
       "method": "log",
-      "increment": 0.00012819510911313056
+      "increment": -8.289918993941375e-05,
+			"status": "hold"
     },
     {
       "type": "grid-point-value",
@@ -799,7 +806,21 @@
         0
       ],
       "method": "",
-      "increment": 0.0012215844586342761
+      "increment": -8.80662934841987e-05
+    },
+    {
+      "type": "heat-distribution-term",
+      "models": [
+        "BradfordWhiteAeroThermRE2HP50"
+      ],
+      "heat_source": "compressor",
+      "value": "weight",
+      "method": "atanh",
+      "index": 2,
+      "min": 0.01,
+      "max": 0.9999,
+      "damping": 0.99,
+      "increment": -8.247679340289674e-05
     }
   ]
 }
