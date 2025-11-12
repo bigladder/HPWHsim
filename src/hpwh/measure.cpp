@@ -114,7 +114,6 @@ void measure(HPWH& hpwh,
         if (!foundProfile)
         {
             hpwh.get_courier()->send_error("Invalid input: Draw profile name not found.");
-            exit(1);
         }
     }
     else

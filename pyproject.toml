@@ -1,0 +1,47 @@
+[project]
+name = "HPWHsim-python-scripts"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "pre-commit",
+    "mypy"
+]
+
+[tool.uv.workspace]
+members = ["scripts/python/data_model/*", "scripts/python/plotting/*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors (see https://docs.astral.sh/ruff/rules/#pycodestyle-e-w)
+    "F",  # pyflakes (see https://docs.astral.sh/ruff/rules/#pyflakes-f)
+    "PL", # Pylint (see https://docs.astral.sh/ruff/rules/#pylint-pl)
+    "I001" # isort unsorted-imports (see https://docs.astral.sh/ruff/rules/#isort-i)
+    ]
+ignore = [
+    "F405", # undefined-local-with-import-star-usage
+]
+
+[tool.ruff.lint.pylint]
+max-args = 6
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+disallow_incomplete_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["scripts.python.*"]
+disable_error_code = ["annotation-unchecked","import"]
+
