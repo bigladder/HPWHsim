@@ -1,7 +1,6 @@
 [project]
-name = "HPWHsim-python-scripts"
+name = "data_model"
 version = "0.1.0"
-description = "Add your description here"
 dependencies = [
     "cbor2 >= 5.6.5",
     "lattice",

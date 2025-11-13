@@ -1,12 +1,11 @@
 [project]
-name = "HPWHsim-python-scripts"
+name = "plotting"
 version = "0.1.0"
-description = "Add your description here"
 dependencies = [
     "pandas",
     "plotly",
     "koozie",
-    "dimes",
+    "dimes"
 ]
 
 [tool.uv.sources]

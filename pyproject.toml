@@ -10,11 +10,18 @@ dependencies = [
 dev = [
     "ruff",
     "pre-commit",
-    "mypy"
+    "mypy",
+    "data_model",
+    "plotting"
 ]
 
 [tool.uv.workspace]
-members = ["scripts/python/data_model/*", "scripts/python/plotting/*"]
+members = ["scripts/python/data_model",
+           "scripts/python/plotting"]
+
+[tool.uv.sources]
+data_model = { workspace = true }
+plotting = { workspace = true }
 
 [tool.ruff]
 line-length = 120
