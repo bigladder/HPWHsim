@@ -51,4 +51,3 @@ check_untyped_defs = true
 [[tool.mypy.overrides]]
 module = ["scripts.python.*"]
 disable_error_code = ["annotation-unchecked","import"]
-
