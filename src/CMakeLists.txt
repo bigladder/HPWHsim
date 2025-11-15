@@ -11,7 +11,7 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
-set(presets_directory "${PROJECT_BINARY_DIR}/presets")
+set(presets_directory "${PROJECT_SOURCE_DIR}/src/presets")
 file(GLOB presets_headers "${presets_directory}/include/*.h")
 
 # Not sure why this is needed, but otherwise the CMake coverage checker can't find the target file

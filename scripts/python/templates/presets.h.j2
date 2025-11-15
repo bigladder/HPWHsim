@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+/// @note  This file has been auto-generated. Local changes will not be saved!
+
 namespace hpwh_presets {
 
 /// specifies the allowable preset HPWH models
@@ -12,7 +14,7 @@ enum MODELS: int
 {
 {% for model in models %}
 	{{ model.name }} = {{ model.number }},
-{% endfor %}	
+{% endfor %}
 	unknown = -1
 };
 
