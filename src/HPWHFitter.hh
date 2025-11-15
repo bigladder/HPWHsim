@@ -172,7 +172,7 @@ struct HPWH::Fitter : public Sender
         /// get current EF
         double evaluate() override
         {
-            testSummary = hpwh->run24hrTest(testConfiguration, designation, false);
+            testSummary = hpwh->run24hrTest(testConfiguration, designation);
             return testSummary.EF;
         }
 

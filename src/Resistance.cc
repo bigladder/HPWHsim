@@ -87,7 +87,7 @@ void HPWH::Resistance::addHeat(double minutesToRun)
     calcHeatDist(heatDistribution);
 
     double cap_kJ = power_kW * (minutesToRun * sec_per_min);
-    double leftoverCap_kJ = heat(cap_kJ, 100.);
+    auto leftoverCap_kJ = heat(cap_kJ, 100.);
 
     runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
     if (runtime_min < -TOL_MINVALUE)
