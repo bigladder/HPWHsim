@@ -58,7 +58,7 @@ set(python_script_dir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
 add_custom_command(
         OUTPUT "${PROJECT_BINARY_DIR}/presets/presets.cpp" "${PROJECT_BINARY_DIR}/presets/presets.h"
         COMMAND ${UV_EXECUTABLE} sync
-        COMMAND ${UV_EXECUTABLE} run "scripts/python/data_model/incorporate_presets.py" "src" "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
+        COMMAND ${UV_EXECUTABLE} run "scripts/python/data_model/incorporate_presets.py" "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
         MAIN_DEPENDENCY "${python_script_dir}/incorporate_presets.py"
         DEPENDS "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
