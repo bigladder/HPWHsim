@@ -30,13 +30,6 @@ jobs:
             cxx: cl
             experimental: false
           - os: macos
-            os_ver: "13"
-            config: Release
-            coverage: false
-            cc: clang
-            cxx: clang++
-            experimental: false
-          - os: macos
             os_ver: "14"
             config: Release
             coverage: false
