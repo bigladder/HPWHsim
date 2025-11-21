@@ -59,10 +59,10 @@ jobs:
             experimental: true
           - os: ubuntu
             os_ver: "22.04"
-            config: Release
+            config: Debug
             coverage: true
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-10
+            cxx: g++-10
             experimental: false
     defaults:
       run:
