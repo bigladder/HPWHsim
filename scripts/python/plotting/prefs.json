@@ -5,7 +5,7 @@
   "tests": {
     "list": "tests_with_data",
     "id": "RE2HP50_UEF67",
-    "draw_profile": "medium",
+    "draw_profile": "auto",
     "plots": {
       "show_simulated": true,
       "show_measured": true

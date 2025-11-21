@@ -273,7 +273,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // set tank volume from input
     // use tank size setting function since it has bounds checking
-    tank->volume_L = tankVol_L;
+    setTankSize(tankVol_L);
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016

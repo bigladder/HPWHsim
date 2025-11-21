@@ -26,7 +26,8 @@ static void run(const std::string specType,
                 HPWH& hpwh,
                 std::string sTestName,
                 std::string sOutputDir,
-                double airTemp);
+                double airTemp,
+                std::string measuredFilepath);
 
 CLI::App* add_run(CLI::App& app)
 {
@@ -58,6 +59,9 @@ CLI::App* add_run(CLI::App& app)
 
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
+
+    static std::string measuredFilepath = "";
+    subcommand->add_option("-i,--init_tank_temps", measuredFilepath, "Measured filepath");
 
     subcommand->callback(
         [&]()
@@ -95,7 +99,7 @@ CLI::App* add_run(CLI::App& app)
                 else if (modelNumber != -1)
                     hpwh.initLegacy(static_cast<hpwh_presets::MODELS>(modelNumber));
             }
-            run(specType, hpwh, fullTestName, outputDir, airTemp);
+            run(specType, hpwh, fullTestName, outputDir, airTemp, measuredFilepath);
         });
 
     return subcommand;
@@ -107,7 +111,8 @@ void run(const std::string specType,
          HPWH& hpwh,
          std::string fullTestName,
          std::string outputDir,
-         double airTemp)
+         double airTemp,
+         std::string measuredFilepath)
 {
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
     hpwh_presets::MODELS model;
@@ -123,8 +128,8 @@ void run(const std::string specType,
 
     string fileToOpen, fileToOpen2, scheduleName, var1;
     string inputVariableName, firstCol;
-    double testVal, newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit,
-        initialTankT_C;
+    double newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
+    std::vector<double> initialTankTs_C = {};
     bool useSoC;
     int i, outputCode;
     long minutesToRun;
@@ -136,7 +141,6 @@ void run(const std::string specType,
     int doInvMix, doCondu;
 
     std::ofstream outputFile;
-    std::ofstream yearOutFile;
     ifstream controlFile;
 
     string strPreamble;
@@ -184,7 +188,6 @@ void run(const std::string specType,
     outputCode = 0;
     minutesToRun = 0;
     newSetpoint = 0.;
-    initialTankT_C = 0.;
     doCondu = 1;
     doInvMix = 1;
     inletH = 0.;
@@ -192,51 +195,64 @@ void run(const std::string specType,
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
+    int subhourTime_min = 0;
 
     std::cout << "Running: " << hpwh.name << ", " << specType << ", " << fullTestName << endl;
 
-    while (controlFile >> var1 >> testVal)
+    std::string line;
+    while (std::getline(controlFile, line))
     {
-        if (var1 == "setpoint")
-        { // If a setpoint was specified then override the default
-            newSetpoint = testVal;
-        }
-        else if (var1 == "length_of_test")
+        std::vector<std::string> entries = {};
+        std::string entry;
+        std::stringstream ss(line);
+        while (std::getline(ss, entry, ' '))
+            entries.push_back(entry);
+
+        if (size(entries) > 0)
         {
-            minutesToRun = (int)testVal;
-        }
-        else if (var1 == "doInversionMixing")
-        {
-            doInvMix = (testVal > 0.0) ? 1 : 0;
-        }
-        else if (var1 == "doConduction")
-        {
-            doCondu = (testVal > 0.0) ? 1 : 0;
-        }
-        else if (var1 == "inletH")
-        {
-            inletH = testVal;
-        }
-        else if (var1 == "tanksize")
-        {
-            newTankSize = testVal;
-        }
-        else if (var1 == "tot_limit")
-        {
-            tot_limit = testVal;
-        }
-        else if (var1 == "useSoC")
-        {
-            useSoC = (bool)testVal;
-        }
-        else if (var1 == "initialTankT_C")
-        { // Initialize at this temperature instead of setpoint
-            initialTankT_C = testVal;
-            hasInitialTankTemp = true;
-        }
-        else
-        {
-            std::cout << var1 << " in testInfo.txt is an unrecogized key.\n";
+            var1 = entries[0];
+            if (var1 == "setpoint")
+            { // If a setpoint was specified then override the default
+                newSetpoint = std::stod(entries[1]);
+            }
+            else if (var1 == "length_of_test")
+            {
+                minutesToRun = std::stoi(entries[1]);
+            }
+            else if (var1 == "doInversionMixing")
+            {
+                doInvMix = (std::stod(entries[1]) > 0.0) ? 1 : 0;
+            }
+            else if (var1 == "doConduction")
+            {
+                doCondu = (std::stod(entries[1]) > 0.0) ? 1 : 0;
+            }
+            else if (var1 == "inletH")
+            {
+                inletH = std::stod(entries[1]);
+            }
+            else if (var1 == "tanksize")
+            {
+                newTankSize = std::stod(entries[1]);
+            }
+            else if (var1 == "tot_limit")
+            {
+                tot_limit = std::stod(entries[1]);
+            }
+            else if (var1 == "useSoC")
+            {
+                useSoC = static_cast<bool>(std::stoi(entries[1]));
+            }
+            else if (var1 == "initialTankT_C")
+            { // Initialize at this temperature instead of setpoint
+                for (auto it = entries.begin() + 1; it != entries.end(); ++it)
+                    initialTankTs_C.push_back(std::stod(*it));
+                hasInitialTankTemp = true;
+            }
+            else
+            {
+                std::cout << var1 << " in testInfo.txt is an unrecognized key.\n";
+            }
         }
     }
 
@@ -303,7 +319,9 @@ void run(const std::string specType,
             }
         }
         if (hasInitialTankTemp)
-            hpwh.setTankToTemperature(initialTankT_C);
+            hpwh.tank->setProfileTs_C(initialTankTs_C);
+        else if (measuredFilepath != "")
+            hpwh.setTankFromMeasured(measuredFilepath, 0);
         else
             hpwh.resetTankToSetpoint();
     }
@@ -331,28 +349,24 @@ void run(const std::string specType,
     // ----------------------Open the Output Files and Print the Header----------------------------
     // //
 
+    fileToOpen = outputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
+    outputFile.open(fileToOpen.c_str(), std::ifstream::out);
+    if (!outputFile.is_open())
+    {
+        std::cout << "Could not open output file " << fileToOpen << "\n";
+        exit(1);
+    }
     if (minutesToRun > 500000.)
     {
-        fileToOpen = outputDir + "/DHW_YRLY_" + specType + ".csv";
-        yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
-        if (!yearOutFile.is_open())
+        outputFile << "time (day)";
+        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
         {
-            std::cout << "Could not open output file " << fileToOpen << "\n";
-            exit(1);
+            outputFile << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
         }
+        outputFile << std::endl;
     }
     else
     {
-
-        fileToOpen = outputDir + "/" + sTestName + "_" + specType + "_" + hpwh.name + ".csv";
-
-        outputFile.open(fileToOpen.c_str(), std::ifstream::out);
-        if (!outputFile.is_open())
-        {
-            std::cout << "Could not open output file " << fileToOpen << "\n";
-            exit(1);
-        }
-
         hpwh.writeCSVHeading(&outputFile, HPWH::CSVOPT_NONE);
     }
 
@@ -485,32 +499,30 @@ void run(const std::string specType,
                 cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH) * 1000.;
                 cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
             }
+
+            if (subhourTime_min >= 1439.)
+            {
+                outputFile << fmt::format("{:d}", static_cast<int>(trunc((i + 1) / 1440.) - 1));
+                for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+                {
+                    outputFile << fmt::format(",{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
+                }
+                outputFile << std::endl;
+
+                subhourTime_min = 0;
+                for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+                {
+                    cumHeatIn[iHS] = 0.;
+                    cumHeatOut[iHS] = 0.;
+                }
+            }
+            else
+                ++subhourTime_min;
         }
     }
 
-    if (minutesToRun > 500000.)
-    {
-        firstCol = sTestName + "," + hpwh.name;
-        yearOutFile << firstCol;
-        double totalIn = 0, totalOut = 0;
-        for (int iHS = 0; iHS < 3; iHS++)
-        {
-            yearOutFile << fmt::format(",{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
-            totalIn += cumHeatIn[iHS];
-            totalOut += cumHeatOut[iHS];
-        }
-        yearOutFile << fmt::format(",{:0.0f},{:0.0f}", totalIn, totalOut);
-        for (int iHS = 0; iHS < 3; iHS++)
-        {
-            yearOutFile << fmt::format(",{:0.2f}", cumHeatOut[iHS] / cumHeatIn[iHS]);
-        }
-        yearOutFile << fmt::format(",{:0.2f}", totalOut / totalIn) << std::endl;
-        yearOutFile.close();
-    }
-    else
-    {
-        yearOutFile.close();
-    }
+    outputFile.close();
+
     controlFile.close();
 }
 

@@ -29,6 +29,15 @@
 		);
 	}
 
+	async function make_dir(dir) {
+		fst = 'filename=' + dir;
+		fst += '&cmd=mkdir';
+		await fetch('http://localhost:8000/file?' + fst,
+			{
+				method: 'GET'
+			}
+		);
+	}
 	async function copy_json_file(filename, new_filename) {
 		fst = 'cmd=copy';
 		fst += '&filename=' + filename;
@@ -116,6 +125,9 @@
 			{
 				await sleep(1000.);
 			}
+		  ws_connection.onerror = function (error) {
+		    console.log(error);
+		  };
 
 	}
 
@@ -251,6 +263,7 @@
 			const output_dir = prefs['build_dir'] + "/test/output";
 
 			const ref_model_filepath = "../../../test/models_json/" + prefs['model_id'] + ".json";
+	
 			var model_cache = await read_json_file("./model_cache.json");
 			if (!(prefs['model_id'] in model_cache))
 			{
@@ -259,7 +272,7 @@
 				await write_json_file("./model_cache.json", model_cache);
 			}
 			model_filepath = 	model_cache[prefs['model_id']];
-
+			dataset_specs = []
 			const test_index = await read_json_file("./test_index.json");
 			const tests = test_index["tests"], groups = test_index['groups'];
 			let test_data = tests[prefs['tests']['id']];
@@ -273,19 +286,48 @@
 					'draw_profile': prefs['tests']["draw_profile"],
 					'configuration': test_data["configuration"]};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
+				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+				dataset_specs.push({
+						'id': "Simulated",
+						'model_id': prefs['model_id'],
+						'test_id': prefs['tests']['id'],
+						'type': "Simulated",
+						'filepath': simulated_filepath}
+					);
 			}
 			else
 			{
 				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
-				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+				let data = {
+					'model_spec': 'JSON', 
+					'model_id_or_filepath': model_filepath,
+					'build_dir': prefs['build_dir'], 
+					'test_dir': test_dir
+				};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
-			}
+				simulated_filepath = output_dir + "/" + prefs['tests']['id'] + "_JSON_" + prefs["model_id"] + ".csv";
+				dataset_specs.push({
+						'id': "Simulated",
+						'model_id': prefs['model_id'],
+						'test_id': prefs['tests']['id'],
+						'type': "Simulated",
+						'filepath': simulated_filepath
+						});
+			};
 
 			var msg = {
 				'source': 'index',
 				'dest': 'test-proc',
-				'cmd': 'update'
-				}
+				'cmd': 'update',
+				'dataset_specs': dataset_specs,
+				'model_filepath': model_filepath,
+				'build_dir': prefs['build_dir'],
+			};
+			while(!ws_connection.readyState == ws_connection.OPEN)
+			{
+				await init_websocket();
+			}
+
 			await ws_connection.send(JSON.stringify(msg));
 			test_plot.style = "display:block;";
 		}
@@ -321,13 +363,33 @@
 					'draw_profile': prefs['tests']["draw_profile"],
 					'configuration': test_data["configuration"]};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
+				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+				dataset_specs.push({
+						'id': "Simulated",
+						'model_id': prefs['model_id'],
+						'test_id': prefs['tests']['id'],
+						'type': "Simulated",
+						'filepath': simulated_filepath}
+					);
 			}
 			else
 			{
 				const test_dir = "../../../test/" + (('path' in test_data)? test_data['path' ] + "/": "") + prefs['tests']['id'];
-				let data = {'model_spec': 'JSON', 'model_id_or_filepath': model_filepath, 'build_dir': prefs['build_dir'], 'test_dir': test_dir};
+				let data = {
+					'model_spec': 'JSON', 
+					'model_id_or_filepath': model_filepath,
+					'build_dir': prefs['build_dir'], 
+					'test_dir': test_dir
+				};
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
-			}
+				dataset_specs.push({
+						'id': "Simulated",
+						'model_id': prefs['model_id'],
+						'test_id': prefs['tests']['id'],
+						'type': "Simulated",
+						'filepath': simulated_filepath}
+					);
+			};
 
 			var msg = {
 				'source': 'index',
@@ -349,6 +411,8 @@
 
 		const model_form = document.getElementById('model_form');
 		const build_form = document.getElementById('build_form');
+
+		await make_dir(prefs["build_dir"] + "/gui");
 
 		// update models control
 		let select_model = model_form.model_id;
@@ -482,6 +546,7 @@
 			}
 			model_filepath = 	model_cache[prefs['model_id']];
 
+			dataset_specs = []
 			if (is_standard_test)
 			{
 				let data = {
@@ -492,6 +557,15 @@
 					'configuration': test_data['configuration']};
 				await callPyServer("measure", "data=" + JSON.stringify(data))
 				simulated_filepath = output_dir + "/test24hrEF_" + prefs["model_id"] + ".csv";
+
+				dataset_specs.push({
+					'id': "Simulated",
+					'model_id': prefs['model_id'],
+					'test_id': prefs['tests']['id'],
+					'type': "Simulated",
+					'filepath': simulated_filepath}
+				);
+
 			}
 			else
 			{
@@ -500,10 +574,25 @@
 				await callPyServer("simulate", "data=" + JSON.stringify(data))
 
 				simulated_filepath = output_dir + "/" + prefs['tests']['id'] + "_JSON_" + prefs["model_id"] + ".csv";
+				dataset_specs.push({
+					'id': "Simulated",
+					'model_id': prefs['model_id'],
+					'test_id': prefs['tests']['id'],
+					'type': "Simulated",
+					'filepath': simulated_filepath}
+				);
+
 				if ("measured" in test_data)
 					for (let model_id in test_data["measured"])
 						if (model_id == prefs["model_id"]) {
 							measured_filepath = test_dir + "/" + test_data['measured'][model_id];
+							dataset_specs.push({
+								'id': "Measured",
+								'model_id': prefs['model_id'],
+								'test_id': prefs['tests']['id'],
+								'type': "Measured",
+								'filepath': measured_filepath}
+							);
 							break;
 						}
 			}
@@ -512,8 +601,7 @@
 				'source': 'index',
 				'dest': 'test-proc',
 				'cmd': 'plot',
-				'measured_filepath': measured_filepath,
-				'simulated_filepath': simulated_filepath,
+				'dataset_specs': dataset_specs,
 				'is_standard_test': (is_standard_test ? 1 : 0),
 				'model_filepath': model_filepath,
 				'build_dir': prefs['build_dir'],
@@ -860,6 +948,7 @@
 		{
 				model_cache[prefs['model_id']] = prefs["build_dir"] + "/gui/" + prefs['model_id'] + ".json"
 				await copy_json_file(ref_model_filepath, model_cache[prefs['model_id']]);
+				sleep(1)
 				await write_json_file("./model_cache.json", model_cache);
 		}
 		model_filepath = 	model_cache[prefs['model_id']];

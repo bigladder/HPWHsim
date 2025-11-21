@@ -140,6 +140,8 @@ class HPWH::Tank : public Sender
 
     void setNodeT_C(double T_C) { setNodeTs_C({T_C}); }
 
+    void setProfileTs_C(const std::vector<double>& profileTs_C_in);
+
     void getNodeTs_C(std::vector<double>& tankTemps) { tankTemps = nodeTs_C; }
 
     double getAverageNodeT_C() const;

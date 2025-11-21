@@ -1,4 +1,6 @@
-﻿#include "HPWH.hh"
+﻿#include <btwxt/btwxt.h>
+
+#include "HPWH.hh"
 #include "HPWHUtils.hh"
 #include "Tank.hh"
 
@@ -191,6 +193,24 @@ void HPWH::Tank::setNodeTs_C(const std::vector<double>& nodeTs_C_in)
 
     // set node temps
     resampleIntensive(nodeTs_C, nodeTs_C_in);
+}
+
+void HPWH::Tank::setProfileTs_C(const std::vector<double>& profileTs_C)
+{
+
+    std::vector<double> z_axis = {};
+    for (double_t i = 0; i < profileTs_C.size(); ++i)
+        z_axis.push_back((static_cast<double>(i) + 0.5) / profileTs_C.size());
+
+    std::vector<std::vector<double>> axes = {z_axis};
+    std::vector<std::vector<double>> values = {profileTs_C};
+    Btwxt::RegularGridInterpolator rgi(axes, values, "RegularGridInterpolator", get_courier());
+    auto numNodes = static_cast<int>(nodeTs_C.size());
+    for (int i = 0; i < numNodes; ++i)
+    {
+        std::vector<double> z = {(static_cast<double>(i) + 0.5) / numNodes};
+        nodeTs_C[i] = rgi.get_values_at_target(z)[0];
+    }
 }
 
 double HPWH::Tank::getNodeT_C(int nodeNum) const

@@ -31,6 +31,7 @@
 		"LG_APHWC80": {"manufacturer": "LG", "specs": ["Preset", "Legacy", "JSON"]},
 
 		"Stiebel220e": {"manufacturer": "Stiebel", "specs": ["Preset", "Legacy", "JSON"]},
+		"GE2012_50": {"manufacturer": "GE", "specs": ["Preset", "Legacy", "JSON"]},
 		"GE2014_50": {"manufacturer": "GE", "specs": ["Preset", "Legacy", "JSON"]},
 		"GE2014STDMode_50": {"manufacturer": "GE", "specs": ["Preset", "Legacy", "JSON"]},
 

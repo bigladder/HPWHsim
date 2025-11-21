@@ -1,13 +1,14 @@
 # Raw script for converting typical supplied data to HPWHsim schedules and measured data.
-# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP50/RE2HP50_HVDT RE2HP50_HVDT
+# uv run convert.py ../../../test/BradfordWhite/AeroThermRE2HP80/RE2HP80_HVDT RE2HP80_HVDT
 import os
 import sys
 from pathlib import Path
+import numpy as np
 
 setpointT_C = 51.1
 initialTankT_C = 51.1
 initTime_min = 0
-numRowsPerMin = 60
+numRowsPerMin = 6
 numTankTs = 6
 tankTsOrder = 1
 
@@ -240,10 +241,45 @@ def create_test_into(test_dir, data_filename):
 	iMin = 0
 	testTime_min = 0
 	first = True
+	
+	rowTs = np.zeros((3, numTankTs))
+	initialTankTs = np.zeros(numTankTs)
+	haveInitialTankTs = False
+	nT_rows = 0
 	for line in Lines:
 		if not first:
 			jLine = jLine + 1
+			columns = line.split(',')
+			
+			if not haveInitialTankTs:
+				if iMin >= initTime_min - 1:
+					for iCol in range(numTankTs):
+						rowTs[2][iCol] = rowTs[1][iCol]
+						rowTs[1][iCol] = rowTs[0][iCol]
+						rowTs[0][iCol] = columns[orig_columns["TankT1"] + tankTsOrder * (numTankTs - 1 - iCol)]
+					nT_rows = nT_rows + 1
+					if nT_rows >= 3:
+						for iCol in range(numTankTs):
+							f0 = rowTs[2][iCol]
+							f1 = rowTs[1][iCol]
+							f2 = rowTs[0][iCol]
+							a = f0
+							b = -1.5 * f0 + 2 * f1 - 0.5 * f2
+							c = 0.5 * f0 - f1 + 0.5 * f2
+							initialTankTs[iCol] = a - b + c
+
 			if jLine >= numRowsPerMin:
+				if nT_rows >= 3:
+					for iCol in range(numTankTs):
+						f0 = rowTs[2][iCol]
+						f1 = rowTs[1][iCol]
+						f2 = rowTs[0][iCol]
+						a = f0
+						b = -1.5 * f0 + 2 * f1 - 0.5 * f2
+						c = 0.5 * f0 - f1 + 0.5 * f2
+						initialTankTs[iCol] = a - b + c
+					haveInitialTankTs = True
+						
 				jLine = 0
 				iMin = iMin + 1
 				if iMin >= initTime_min:
@@ -253,7 +289,15 @@ def create_test_into(test_dir, data_filename):
 	out_file = open(out_file_path,"w+")
 	out_file.writelines(f"setpoint {setpointT_C}\n")
 	out_file.writelines(f"length_of_test {iMin - initTime_min}\n")
-	out_file.writelines(f"initialTankT_C {initialTankT_C}\n")
+	
+	if haveInitialTankTs:
+		sTs = f"initialTankT_C"
+		for iCol in range(numTankTs):
+			sTs = sTs + f" {initialTankTs[iCol]:.1f}"
+		out_file.writelines(sTs + "\n")
+		
+	print(initialTankTs)
+		
 	out_file.close()
 
 # measured data
@@ -311,7 +355,7 @@ def convert_measured(test_dir, data_filename):
 			
 			for iCol in range(numTankTs):
 				new_columns.append(columns[orig_columns["TankT1"] + tankTsOrder * iCol])
-						
+							
 			if drawSum > 0:
 				new_columns.append(str(inletT_sum / nLines))
 				new_columns.append(str(outletT_sum / nLines))
@@ -349,15 +393,13 @@ if __name__ == "__main__":
 		test_dir = Path(sys.argv[1])
 		data_filename = Path(sys.argv[2])
 
-		convert_draw_schedule(test_dir,data_filename)
-		convert_ambientT_schedule(test_dir,data_filename)
-		convert_evaporatorT_schedule(test_dir,data_filename)
-		convert_inletT_schedule(test_dir,data_filename)
-		create_DR_schedule(test_dir,data_filename)
-		create_test_into(test_dir,data_filename)
-		convert_measured(test_dir,data_filename)
-	else:
-		sys.exit(
-		  "Expected two arguments: test_dir data_filename"
-		  )
-  
+	#test_dir = "../../../test/BradfordWhite/AeroThermRE2HP50/RE2HP50_UEF50"
+	#data_filename = "RE2HP50_UEF50"
+	convert_draw_schedule(test_dir,data_filename)
+	convert_ambientT_schedule(test_dir,data_filename)
+	convert_evaporatorT_schedule(test_dir,data_filename)
+	convert_inletT_schedule(test_dir,data_filename)
+	create_DR_schedule(test_dir,data_filename)
+	create_test_into(test_dir,data_filename)
+	convert_measured(test_dir,data_filename)
+

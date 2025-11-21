@@ -31,8 +31,8 @@ def simulate(data):
 		run_list = [app_cmd, 'run', '-s', model_spec, '-f', model_id_or_filepath, '-t', test_dir, '-d', output_dir]
 	else:	
 		run_list = [app_cmd, 'run', '-s', model_spec, '-m', model_id_or_filepath, '-t', test_dir, '-d', output_dir]
-	print(run_list)
 	result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
+	#print(run_list)
 	os.chdir(orig_dir)
 
 # main
