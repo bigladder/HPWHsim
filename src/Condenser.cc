@@ -435,6 +435,7 @@ void HPWH::Condenser::to(std::unique_ptr<hpwh_data_model::ashrae205::HeatSourceT
         return to(*hsp);
     }
 }
+
 void HPWH::Condenser::to(
     hpwh_data_model::rscondenserwaterheatsource::RSCONDENSERWATERHEATSOURCE& hs) const
 {
@@ -469,6 +470,11 @@ void HPWH::Condenser::to(
         break;
     }
     }
+
+    checkTo(1000. * standbyPower_kW,
+            perf.standby_power_is_set,
+            perf.standby_power,
+            standbyPower_kW > 0.);
 
     checkTo(hysteresis_dC,
             perf.compressor_lockout_temperature_hysteresis_is_set,
@@ -691,6 +697,11 @@ void HPWH::Condenser::to(hpwh_data_model::rsairtowaterheatpump::RSAIRTOWATERHEAT
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
 
+    checkTo(1000. * standbyPower_kW,
+            perf.standby_power_is_set,
+            perf.standby_power,
+            standbyPower_kW > 0.);
+
     auto& map = perf.performance_map;
     auto& grid_vars = map.grid_variables;
 
@@ -882,10 +893,10 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
         performance = getPerformance(externalT_C, getTankTemp());
         double cap_kJ = W_TO_KW(performance.outputPower_W) * (60. * minutesToRun);
 
-        double leftoverCap_kJ = heat(cap_kJ, maxSetpoint_C);
+        auto leftoverCap_kJ = heat(cap_kJ, maxSetpoint_C);
 
         // compute actual runtime
-        runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
+        runtime_min = (1. - leftoverCap_kJ / cap_kJ) * minutesToRun;
         if (runtime_min < -TOL_MINVALUE)
         {
             send_error(fmt::format("Negative runtime: {:g} min", runtime_min));
@@ -893,6 +904,8 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
 
         // outlet temperature is the condenser temperature after heat has been added
         hpwh->condenserOutlet_C = getTankTemp();
+        energyInput_kWh += W_TO_KW(performance.inputPower_W) * (runtime_min / min_per_hr);
+        energyOutput_kWh += W_TO_KW(performance.outputPower_W) * (runtime_min / min_per_hr);
         break;
     }
 
@@ -908,12 +921,10 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
         {
             runtime_min = addHeatExternal(externalT_C, minutesToRun, performance);
         }
+        energyInput_kWh += W_TO_KW(performance.inputPower_W) * (runtime_min / min_per_hr);
+        energyOutput_kWh += W_TO_KW(performance.outputPower_W) * (runtime_min / min_per_hr);
         break;
     }
-
-    // update the input & output energy
-    energyInput_kWh += W_TO_KW(performance.inputPower_W) * (runtime_min / min_per_hr);
-    energyOutput_kWh += W_TO_KW(performance.outputPower_W) * (runtime_min / min_per_hr);
 }
 
 HPWH::Performance HPWH::Condenser::getPerformance(double externalT_C, double condenserT_C) const

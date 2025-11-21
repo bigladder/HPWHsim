@@ -104,7 +104,7 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.config }} -j ${{ steps.cpu-cores.outputs.count }}
       - name: Test
-        run: ctest -C ${{ matrix.config }} --output-on-failure #  -j ${{ steps.cpu-cores.outputs.count }} Can't use yet since some test append to the same output file
+        run: ctest -C ${{ matrix.config }} -j ${{ steps.cpu-cores.outputs.count }} --output-on-failure
         working-directory: build
       - name: Code Coverage Analysis
         if: "matrix.coverage"
