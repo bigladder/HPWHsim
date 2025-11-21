@@ -56,7 +56,7 @@ find_program(UV_EXECUTABLE NAMES uv REQUIRED)
 set(python_script_dir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
 
 add_custom_command(
-        OUTPUT "src/presets/presets.cpp" "src/presets/presets.h"
+        OUTPUT "${PROJECT_BINARY_DIR}/presets/presets.cpp" "${PROJECT_BINARY_DIR}/presets/presets.h"
         COMMAND ${UV_EXECUTABLE} sync
         COMMAND ${UV_EXECUTABLE} run "scripts/python/data_model/incorporate_presets.py" "src" "${PROJECT_SOURCE_DIR}/test/models_json/models.json"
         MAIN_DEPENDENCY "${python_script_dir}/incorporate_presets.py"
@@ -64,7 +64,7 @@ add_custom_command(
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(generate_hpwhsim_presets DEPENDS
-        "src/presets/presets.cpp"
+        "${PROJECT_BINARY_DIR}/presets/presets.cpp"
 )
 
 add_subdirectory(src)
