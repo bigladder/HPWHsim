@@ -24,6 +24,7 @@ set(modelNames
         #  RheemPlugInDedicated50
         )
 
+
 set(general_TestDir "general_tests")
 set(general_Tests
         test30
@@ -155,9 +156,6 @@ set(yearLargeTestsModels
 set(heatExchangeModelNames
         AquaThermAire
         )
-set(heatExchangeTests
-        villara_24hr67
-        )
 set(yearLargeTests
         testCA_36Unit_CTZ12
         )
@@ -184,41 +182,6 @@ set(SoC_Tests
         )
 
 #
-set(VillaraModels "AquaThermAire")
-set(VillaraTestDir "Villara/AquaThermAire")
-set(VillaraTests
-        villara_24hr67
-        )
-
-#
-set(BradfordWhiteModels
-        AeroThermRE2H50
-        AeroThermRE2H65
-        AeroThermRE2H80
-        )
-set(BradfordWhiteAeroThermRE2H50_Tests
-        RE2H50_UEF50
-        RE2H50_UEF67
-        )
-set(BradfordWhiteAeroThermRE2H65_Tests
-        RE2H65_UEF50
-        RE2H65_UEF67
-        )
-set(BradfordWhiteAeroThermRE2H80_Tests
-        RE2H80_UEF50
-        RE2H80_UEF67
-        )
-
-#
-set(LG_Models LG_APHWC50 LG_APHWC80)
-set(LG_TestDir "LG/APHWC50")
-set(LG_Tests
-        DOE2014_LGC50_24hr50
-        DOE2014_LGC50_24hr67
-        DOE2014_LGC50_24hr95
-        DP_LGC50_HVT
-        )
-
 #Tests for successful runs
 function(add_model_test)
     set(options)
@@ -316,6 +279,7 @@ foreach (test ${general_Tests})
     foreach (model ${modelNames})
 				set(fullTestName "${general_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -335,63 +299,43 @@ foreach (model ${lockoutTestModels})
 		continue()
   endif ()
   add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" AIR_T_F "${airT_F}")
+  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
 endforeach (model)
 
 # Sanco tests
 foreach (test ${SancoTests})
     foreach (model ${SancoModels})
-				set(fullTestName "${test}")
-				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+        set(fullTestName "${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
     endforeach (model)
 endforeach (test)
 
 # DR tests
 foreach (test ${DR_Tests})
     foreach (model ${modelNames})
-				set(fullTestName "${DR_TestDir}/${test}")
-				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+		set(fullTestName "${DR_TestDir}/${test}")
+		add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+        add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
-# Villara AquaThermAire tests
-foreach (model ${VillaraModels})
-    foreach (test ${VillaraTests})
-				set(fullTestName "${VillaraTestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-    endforeach (test)
-endforeach (model)
-
 ## Plot test
 add_plot_test(SPEC_TYPE "${TestSpec}" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
-
-# Bradford White AeroTherm tests
-foreach (model ${BradfordWhiteModels})
-    foreach (test "${BradfordWhite${model}_Tests}")
-		set(fullTestName "BradfordWhite/${model}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "${TestSpec}")
-    endforeach (test)
-endforeach (model)
-
-# LG tests
-foreach(model ${LG_Models})
-    foreach (test ${LG_Tests})
-        set(fullTestName "${LG_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-    endforeach (test)
-endforeach (model)
 
 # Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
-# State-of-Charge tests 
+# State-of-Charge tests
 foreach (test ${SoC_Tests})
     foreach (model ${SoC_Models})
-			set(fullTestName "${SoC_TestDir}/${test}")
+		set(fullTestName "${SoC_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -400,68 +344,6 @@ foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         set(fullTestName "${largeCompressor_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-    endforeach (model)
-endforeach (test)
-
-## Regression tests
-# general regression tests
-foreach (test ${general_Tests})
-    foreach (model ${modelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (model)
-endforeach (test)
-
-# lockout test regressions
-foreach (model ${lockoutTestModels})
-  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-endforeach (model)
-
-# DR regression tests
-foreach (test ${DR_Tests})
-    foreach (model ${modelNames})
-			set(fullTestName "${DR_TestDir}/${test}")
-      add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (model)
-endforeach (test)
-
-# Max temp regression tests
-foreach (test ${maxTempTests})
-    foreach (model ${maxTempModels})
-       add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (model)
-endforeach (test)
-
-# State-of-charge regression tests
-foreach (test ${SoC_Tests})
-    foreach (model ${SoC_Models})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (model)
-endforeach (test)
-
-# Villara Aerotherm regression tests
-foreach (model ${VillaraModels})
-    foreach (test ${VillaraTests})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (test)
-endforeach (model)
-
-# BradfordWhite regression tests
-foreach (model ${BradfordWhiteModels})
-    foreach (test "${BradfordWhite${model}_Tests}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (test)
-endforeach (model)
-
-# LG regression tests
-foreach (model ${LG_Models})
-    foreach (test ${LG_Tests})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (test)
-endforeach (model)
-
-# Large-compressor regression tests
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
@@ -471,6 +353,7 @@ endforeach (test)
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
 
@@ -478,19 +361,6 @@ endforeach (test)
 foreach (test ${yearLargeTests})
     foreach (model ${yearLargeTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-    endforeach (model)
-endforeach (test)
-
-# Regression test for small compressor yearly tests
-foreach (test ${yearTests})
-    foreach (model ${yearTestsModels})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
-    endforeach (model)
-endforeach (test)
-
-# Regression test for LARGE compressor yearly tests
-foreach (test ${yearLargeTests})
-    foreach (model ${yearLargeTestsModels})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
     endforeach (model)
 endforeach (test)
