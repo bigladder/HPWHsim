@@ -1,2 +1,0 @@
-setpoint 125
-length_of_test 1440
