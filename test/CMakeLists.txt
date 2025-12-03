@@ -184,10 +184,11 @@ set(SoC_Tests
 #
 #Tests for successful runs
 function(add_model_test)
-    set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME AIR_T_F)
-    set(multiValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(ARG
+                          ""
+                          "SPEC_TYPE;MODEL_NAME;TEST_NAME;AIR_T_F"
+                          ""
+                          ${ARGN})
 
     if (${ARG_SPEC_TYPE} STREQUAL "JSON")
         set(hpwhArgs run -s ${ARG_SPEC_TYPE} -f "models_json/${ARG_MODEL_NAME}" -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
@@ -200,6 +201,7 @@ function(add_model_test)
     endif()
 
     set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
+    set(Model_test_title "${TEST_TITLE}", PARENT_SCOPE)
 
     add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:hpwh> ${hpwhArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -209,10 +211,11 @@ endfunction()
 
 # Tests for regression differences against reference results
 function(add_regression_test)
-    set(options)
-    set(oneValueArgs TEST_NAME SPEC_TYPE MODEL_NAME COMPARE_SPEC_TYPE)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(ARG
+                          ""
+                          "TEST_NAME;SPEC_TYPE;MODEL_NAME;COMPARE_SPEC_TYPE;DEPENDS_ON"
+                          ""
+                          ${ARGN})
 
     if (DEFINED ARG_COMPARE_SPEC_TYPE)
         set(compareSpecType ${ARG_COMPARE_SPEC_TYPE})
@@ -235,7 +238,8 @@ function(add_regression_test)
             "${CMAKE_CURRENT_BINARY_DIR}/output/${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
             "${CMAKE_CURRENT_SOURCE_DIR}/ref/${test_prefix}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
             )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS ${ARG_DEPENDS_ON})
+    message(STATUS "${TEST_TITLE} depends on test: ${ARG_DEPENDS_ON}")
 endfunction()
 
 #Plot test
@@ -279,7 +283,7 @@ foreach (test ${general_Tests})
     foreach (model ${modelNames})
 				set(fullTestName "${general_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
@@ -299,7 +303,7 @@ foreach (model ${lockoutTestModels})
 		continue()
   endif ()
   add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" AIR_T_F "${airT_F}")
-  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
 endforeach (model)
 
 # Sanco tests
@@ -315,7 +319,7 @@ foreach (test ${DR_Tests})
     foreach (model ${modelNames})
 		set(fullTestName "${DR_TestDir}/${test}")
 		add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
@@ -326,7 +330,7 @@ add_plot_test(SPEC_TYPE "${TestSpec}" MODEL_NAME "AquaThermAire" TEST_NAME "Vill
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
@@ -335,7 +339,7 @@ foreach (test ${SoC_Tests})
     foreach (model ${SoC_Models})
 		set(fullTestName "${SoC_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
@@ -344,7 +348,7 @@ foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         set(fullTestName "${largeCompressor_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
@@ -353,7 +357,7 @@ endforeach (test)
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
@@ -361,7 +365,7 @@ endforeach (test)
 foreach (test ${yearLargeTests})
     foreach (model ${yearLargeTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "${TestSpec}" COMPARE_SPEC_TYPE "${RefSpec}" DEPENDS_ON "${Model_test_title}")
     endforeach (model)
 endforeach (test)
 
