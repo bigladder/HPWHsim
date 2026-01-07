@@ -9,18 +9,18 @@ jobs:
       matrix:
          include:
           - os: ubuntu
-            os_ver: "22.04"
+            os_ver: "latest"
             config: Release
             coverage: false
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-14
+            cxx: g++-14
             experimental: false
           - os: ubuntu
             os_ver: "22.04"
             config: Release
             coverage: false
-            cc: gcc-10
-            cxx: g++-10
+            cc: gcc-13
+            cxx: g++-13
             experimental: false
           - os: windows
             os_ver: "2022"
@@ -28,13 +28,6 @@ jobs:
             coverage: false
             cc: cl
             cxx: cl
-            experimental: false
-          - os: macos
-            os_ver: "13"
-            config: Release
-            coverage: false
-            cc: clang
-            cxx: clang++
             experimental: false
           - os: macos
             os_ver: "14"
