@@ -19,8 +19,8 @@ jobs:
             os_ver: "22.04"
             config: Release
             coverage: false
-            cc: gcc-13
-            cxx: g++-13
+            cc: gcc-11
+            cxx: g++-11
             experimental: false
           - os: windows
             os_ver: "2022"
@@ -54,8 +54,8 @@ jobs:
             os_ver: "22.04"
             config: Debug
             coverage: true
-            cc: gcc-10
-            cxx: g++-10
+            cc: gcc-11
+            cxx: g++-11
             experimental: false
     defaults:
       run:
