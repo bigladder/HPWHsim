@@ -14,7 +14,7 @@ jobs:
             coverage: false
             cc: gcc-14
             cxx: g++-14
-            experimental: false
+            experimental: true
           - os: ubuntu
             os_ver: "22.04"
             config: Release
@@ -35,14 +35,14 @@ jobs:
             coverage: false
             cc: clang
             cxx: clang++
-            experimental: true
+            experimental: false
           - os: macos
             os_ver: "15"
             config: Release
             coverage: false
             cc: clang
             cxx: clang++
-            experimental: true
+            experimental: false
           - os: macos
             os_ver: "26"
             config: Release
