@@ -168,16 +168,21 @@ namespace hpwh_data_model {
 			static constexpr std::string_view temperature_weight_distribution_units = "";
 			static constexpr std::string_view temperature_weight_distribution_description = "Weighted distribution for comparison, by division, in order";
 			static constexpr std::string_view temperature_weight_distribution_name = "temperature_weight_distribution";
+			bool checks_standby_logic;
+			bool checks_standby_logic_is_set = false;
+			static constexpr std::string_view checks_standby_logic_units = "";
+			static constexpr std::string_view checks_standby_logic_description = "Check standby logic for activation";
+			static constexpr std::string_view checks_standby_logic_name = "checks_standby_logic";
 		};
 		struct StateOfChargeBasedHeatingLogic : heat_source_configuration::HeatingLogicTemplate {
 			double decision_point;
 			bool decision_point_is_set = false;
-			static constexpr std::string_view decision_point_units = "";
+			static constexpr std::string_view decision_point_units = "-";
 			static constexpr std::string_view decision_point_description = "Decision point";
 			static constexpr std::string_view decision_point_name = "decision_point";
 			double minimum_useful_temperature;
 			bool minimum_useful_temperature_is_set = false;
-			static constexpr std::string_view minimum_useful_temperature_units = "";
+			static constexpr std::string_view minimum_useful_temperature_units = "K";
 			static constexpr std::string_view minimum_useful_temperature_description = "Minimum useful temperature";
 			static constexpr std::string_view minimum_useful_temperature_name = "minimum_useful_temperature";
 			double hysteresis_fraction;

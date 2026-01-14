@@ -131,7 +131,7 @@ namespace hpwh_data_model {
 			static constexpr std::string_view liquid_constituent_name = "liquid_constituent";
 			double concentration;
 			bool concentration_is_set = false;
-			static constexpr std::string_view concentration_units = "";
+			static constexpr std::string_view concentration_units = "-";
 			static constexpr std::string_view concentration_description = "Concentration of this component of the mixture";
 			static constexpr std::string_view concentration_name = "concentration";
 		};

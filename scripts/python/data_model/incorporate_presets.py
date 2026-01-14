@@ -3,183 +3,92 @@
 # calls `hpwh convert' for each model in models_list_file json,
 # then creates a C++ header file containing that data.
 
-from pathlib import Path
+import json
 import os
 import sys
-import json
-import subprocess
+from pathlib import Path
+
 import cbor2
-
-def incorp_presets(presets_list_files, build_dir, spec_type):
-    
-	orig_dir = str(Path.cwd())
-	os.chdir(build_dir)
-	abs_build_dir = str(Path.cwd())
-	os.chdir(orig_dir)
-
-	presets_headers_text = ""
-	presets_identifiers_text = ""
-	presets_models_text = ""
-	presets_vector_text = ""
-	
-	presets_dir = os.path.join(abs_build_dir, 'presets')
-	if not os.path.exists(presets_dir):
-			os.mkdir(presets_dir)
-			
-	presets_include_dir = os.path.join(presets_dir, 'include')
-	if not os.path.exists(presets_include_dir):
-			os.mkdir(presets_include_dir)	
-	
-	if spec_type == "Preset":			
-		
-		if not os.path.exists(output_dir):
-			os.mkdir(output_dir)	
-		app_cmd = os.path.join(abs_build_dir , 'src', 'hpwh', 'hpwh')
-		output_dir = os.path.join(abs_build_dir , "test", "output")
-	else:	
-		test_json_dir = os.path.join("../../..", "test", "models_json")	
-														 
-	first = True
-	for preset_list_file in presets_list_files:
-		with open(preset_list_file) as json_file:
-			models_dict= json.load(json_file)
-			json_file.close()
-			
-			for name in models_dict:  
-				preset_json_path = os.path.join(test_json_dir, name + ".json")
-			  
-				json_data = {}
-				try:
-					with open(preset_json_path, 'r', encoding='utf-8') as f:
-						json_data = json.load(f)
-						f.close()
-				except:
-					continue
-			
-				cbor_data = cbor2.dumps(json_data)
-					
-				guard_name = name.upper() + "_H"
-				
-				preset_text = "#ifndef " + guard_name + "\n"
-				preset_text += "#define " + guard_name + "\n\n"
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
-				preset_text += "#include <array>\n\n"
-				
-				preset_text += "namespace hpwh_presets {\n\n"
-				
-				nbytes = len(cbor_data)
-				preset_text += "const std::array<uint8_t, " + str(nbytes) + "> cbor_" + name + "{\n"
-				for i, entry  in enumerate(cbor_data):
-					preset_text += hex(entry) + ", "
-					if (i % 40 == 0) and (i != 0): 
-						preset_text += "\n";
-				
-				preset_text += " };\n\n"
-				
-				preset_text += "}\n"
-				preset_text += "#endif\n"
-				
-				try:	
-					preset_text_path = os.path.join(presets_include_dir, name + ".h")
-					with open(preset_text_path, "w") as preset_text_file:
-						preset_text_file.write(preset_text)
-						preset_text_file.close()
-				except:
-					print("Failed to create file")
-			
-				if not first:
-					presets_vector_text += ",\n"
-					presets_models_text += ",\n"
-					
-				presets_headers_text += "#include \"" + name + ".h\"\n"
-				presets_models_text += "\t" + name + " = " + str(models_dict[name])
-				presets_vector_text += "\t{ MODELS::" + name + ", \"" + name +"\", cbor_" + name + ".data(), sizeof(cbor_" + name + ")}"
-				first = False
+def incorporate_presets(presets_list_file: Path, build_dir: Path):
+    """Using a json-formatted list of numbered presets, convert the preset's model representation
+    into binary-encoded text for compilation into the HPWHsim library.
 
-		# create library header
-		presets_header =  """
-#ifndef PRESETS_H
-#define PRESETS_H
+    Args:
+        presets_list_file (Path): JSON-formatted file containing list of presets (names, numbers)
+        build_dir (Path): Output directory for generated files
+    """
 
-#include <iostream>
-"""
-		# add the includes	
-		presets_header += presets_headers_text
+    template_dir = Path(__file__).parent.parent / "templates"
 
-		presets_header += """
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+        autoescape=select_autoescape(["html", "xml"]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+        comment_start_string="{##",
+        comment_end_string="##}",
+    )
 
-namespace hpwh_presets {
+    with open(presets_list_file, "r", encoding="utf-8") as json_file:
+        models_dict = json.load(json_file)
+        models_list = [{"name": name, "number": str(number)} for name, number in models_dict.items()]
 
-/// specifies the allowable preset HPWH models
-/// values may vary - names should be used
-enum MODELS: int
-{
-"""
-		presets_header += presets_models_text + ",\n"
-		presets_header += "\tunknown = -1\n"
-		presets_header += "};\n"
+        presets_dir = build_dir / "presets"
+        presets_dir.mkdir(exist_ok=True)
 
-		presets_header += """
-struct Model
-{
-	int id;
-	std::string name;
-	const std::uint8_t *cbor_data;
-	std::size_t size;
-	Model(const int id_in, const char* name_in, const std::uint8_t *cbor_data_in, const std::size_t size_in):
-		id(id_in), name(name_in), cbor_data(cbor_data_in), size(size_in){}
-	MODELS model() const {return static_cast<MODELS>(id);}
-};
-"""
-#
-		presets_header += """
-inline std::vector<Model> models({
-"""	
-		presets_header  += presets_vector_text + "\n});\n"
-#		
-		presets_header  += """
-inline Model find_by_name(const std::string& name)
-{
-    auto it = find_if(models.begin(),
-                      models.end(),
-                      [&name](Model& model){ return model.name == name; });
-    if (it != models.end())
-        return *it;
-    return {MODELS::unknown, "unknown", nullptr, 0};
-}
+        # create library header file
+        presets_h = env.get_template("presets.h.j2")
+        presets_header = presets_h.render(models=models_list)
+        with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
+            presets_header_file.write(presets_header)
 
-inline Model find_by_id(const MODELS id)
-{
-    auto it =
-        find_if(models.begin(),
-                models.end(),
-                [&id](Model& model) { return model.id == id; });
-    if (it != models.end())
-        return *it;
-    return {MODELS::unknown, "unknown", nullptr, 0};
-}
-}
-#endif
-"""
-		try:	
-			with open(os.path.join(presets_dir, "presets.h"), "w") as presets_header_file:
-				presets_header_file.write(presets_header)
-				presets_header_file.close()
-		except:
-			print("Failed to create presets.h")
+        # create library implementation file
+        presets_cpp = env.get_template("presets.cpp.j2")
+        presets_implementation = presets_cpp.render(models=models_list)
+        with open(os.path.join(presets_dir, "presets.cpp"), "w") as presets_implementation_file:
+            presets_implementation_file.write(presets_implementation)
 
-# main
+        preset_model_h = env.get_template("preset_model.h.j2")
+
+        for name in models_dict:
+            test_json_dir = Path(presets_list_file).parent
+            preset_json_path = (test_json_dir / name).with_suffix(".json")
+
+            try:
+                with open(preset_json_path, "r", encoding="utf-8") as f:
+                    json_data = json.load(f)
+                    nbytes, cbor_text = get_cbor_as_text(json_data)
+
+                    presets_include_dir = presets_dir / "include"
+                    presets_include_dir.mkdir(exist_ok=True)
+
+                    preset_model_header = preset_model_h.render(
+                        name=name, size=nbytes, cbor=cbor_text, guard_name=name.upper() + "_H"
+                    )
+                    preset_model_header_path = (presets_include_dir / name).with_suffix(".h")
+                    with open(preset_model_header_path, "w") as preset_model_header_file:
+                        preset_model_header_file.write(preset_model_header)
+            except FileNotFoundError:
+                raise
+
+
+def get_cbor_as_text(json_data):
+    cbor_data = cbor2.dumps(json_data)
+    nbytes = len(cbor_data)
+    cbor_text = ""
+    for i, entry in enumerate(cbor_data):
+        cbor_text += hex(entry) + ", "
+        if (i % 40 == 0) and (i != 0):
+            cbor_text += "\n"
+    return nbytes, cbor_text
+
+
 if __name__ == "__main__":
-	n_args = len(sys.argv) - 1
+    if len(sys.argv) == 3:  # noqa: PLR2004
+        build_dir = sys.argv[1]
+        presets_list_files = sys.argv[2]
 
-	if n_args > 1:
-		spec_type = sys.argv[1]
-		build_dir = sys.argv[2]
-
-		presets_list_files = []
-		for i in range(3, n_args + 1):
-			presets_list_files.append(sys.argv[i])
-
-		incorp_presets(presets_list_files, build_dir, spec_type)
-
+        incorporate_presets(Path(presets_list_files), Path(build_dir))

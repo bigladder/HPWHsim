@@ -75,7 +75,7 @@ void HPWH::initResistanceTank(double tankVol_L,
 
     // standard logic conditions
     resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-    resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
+    resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10)));
 
     if (resistiveElementTop && resistiveElementBottom)
     {
@@ -170,7 +170,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         resistiveElementBottom->setup(0, lowerPower_W);
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
-        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10.)));
+        resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10.)));
     }
 
     if (resistiveElementTop && resistiveElementBottom)
@@ -235,11 +235,14 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor->setCondensity({1., 0., 0.});
 
-    PerformancePolySet perfPolySet(
-        {{50., {187.064124, 1.939747, 0.0}, {5.4977772, -0.0243008, 0.0}},
-         {70, {148.0418, 2.553291, 0.0}, {7.207307, -0.0335265, 0.0}}});
+    // altered UEF2Generic map to refer to test temperatures
+    PerformancePolySet perfPolySet({{50., {187.064124, 1.939747, 0.}, {5.4977772, -0.0243008, 0.}},
+                                    {67.5, {152.9195905, 2.476598, 0.}, {5.445, -0.0323732875, 0.}},
+                                    {95., {99.263895, 3.320221, 0.}, {7.26, -0.045058625, 0.}}});
 
-    compressor->minT = F_TO_C(45.);
+    compressor->evaluatePerformance = perfPolySet.make();
+
+    compressor->minT = F_TO_C(37.);
     compressor->maxT = F_TO_C(120.);
     compressor->hysteresis_dC = dF_TO_dC(2);
     compressor->configuration = Condenser::CONFIG_WRAPPED;
@@ -261,7 +264,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
     compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-    compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+    compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
     // custom adjustment for poorer performance
     // compressor->addShutOffLogic(lowT(F_TO_C(37)));
@@ -274,36 +277,10 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016
-    double tankVol_gal = tankVol_L / GAL_TO_L(1.);
+    double tankVol_gal = L_TO_GAL(tankVol_L);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
-    tank->UA_kJperHrC = 0.0076183819 * v1 * v1;
-
-    // do a linear interpolation to scale COP curve constant, using measured values
-    //  Chip's attempt 24-May-2014
-    double uefSpan = 3.4 - 2.0;
-
-    // force COP to be 70% of GE at UEF 2 and 95% at UEF 3.4
-    // use a fudge factor to scale cop and input power in tandem to maintain constant capacity
-    double fUEF = (energyFactor - 2.0) / uefSpan;
-    double genericFudge = (1. - fUEF) * .7 + fUEF * .95;
-
-    perfPolySet[0].COP_coeffs[0] *= genericFudge;
-    perfPolySet[0].COP_coeffs[1] *= genericFudge;
-    perfPolySet[0].COP_coeffs[2] *= genericFudge;
-
-    perfPolySet[1].COP_coeffs[0] *= genericFudge;
-    perfPolySet[1].COP_coeffs[1] *= genericFudge;
-    perfPolySet[1].COP_coeffs[2] *= genericFudge;
-
-    perfPolySet[0].inputPower_coeffs[0] /= genericFudge;
-    perfPolySet[0].inputPower_coeffs[1] /= genericFudge;
-    perfPolySet[0].inputPower_coeffs[2] /= genericFudge;
-
-    perfPolySet[1].inputPower_coeffs[0] /= genericFudge;
-    perfPolySet[1].inputPower_coeffs[1] /= genericFudge;
-    perfPolySet[1].inputPower_coeffs[2] /= genericFudge;
-
-    compressor->evaluatePerformance = perfPolySet.make();
+    double correction_UA = 6.5 / 7.9948937115672462; // scale to match UEF2Generic
+    tank->UA_kJperHrC = correction_UA * 0.0076183819 * v1 * v1;
 
     //
     compressor->backupHeatSource = resistiveElementBottom;
@@ -313,7 +290,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resistiveElementBottom->followedByHeatSource = compressor;
 
     calcDerivedValues();
-
     checkInputs();
 
     isHeating = false;
@@ -324,6 +300,9 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
             isHeating = true;
         }
     }
+    // scale to match result for UEF2Generic with input 2.
+    constexpr double correction_UEF = 1.7968735517046457 / 2.;
+    makeGenericEF(correction_UEF * energyFactor, testConfiguration_UEF, perfPolySet);
 }
 
 void HPWH::initLegacy(const std::string& modelName)
@@ -373,7 +352,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
+        resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10)));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->isVIP = true;
@@ -404,7 +383,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -435,7 +414,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -483,7 +462,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -511,7 +490,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(bottomThird(20));
-        compressor->addTurnOnLogic(standby(15));
+        compressor->addTurnOnLogic(topNode(15));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
@@ -573,7 +552,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -637,7 +616,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -700,7 +679,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(40.0);
         double standbyT = dF_TO_dC(5.2);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
         // compressor->addShutOffLogic(largeDraw(F_TO_C(66)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
@@ -1193,14 +1172,14 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         else
         {
             compressor->minT = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
+
+            // Defines the maximum outlet temperature at low air temperature
+            compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
+            compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
         }
         compressor->maxT = F_TO_C(120.0); // Max air temperature
         compressor->hysteresis_dC = 0;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
-
-        // Defines the maximum outlet temperature at the a low air temperature
-        compressor->maxOut_at_LowT.outT_C = F_TO_C(140.);
-        compressor->maxOut_at_LowT.airT_C = F_TO_C(40.);
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
@@ -1649,6 +1628,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         for (auto& val : perfGridValues[0])
             val = KW_TO_W(val);
 
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
+
+        useCOP_inBtwxt = true;
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
     }
     // if rheem multipass
@@ -2003,6 +1985,9 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         for (auto& val : perfGridValues[0])
             val = BTUperH_TO_W(val);
 
+        swapGridAxes(perfGrid, perfGridValues, 1, 2);
+
+        useCOP_inBtwxt = true;
         compressor->makePerformanceBtwxt(perfGrid, perfGridValues);
 
         compressor->secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
@@ -2172,8 +2157,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-50(?:N|DR|CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:69|86|87)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(66.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 66.;
             rating10CFR430.recovery_efficiency = 4.07;
             rating10CFR430.uniform_energy_factor = 3.45;
         }
@@ -2240,7 +2225,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2271,8 +2256,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-66(?:N:DR:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"2064287(?:70|86|98)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 66.;
+            rating10CFR430.first_hour_rating = 79.;
             rating10CFR430.recovery_efficiency = 2.65;
             rating10CFR430.uniform_energy_factor = 3.45;
             tank->volume_L = 244.6;
@@ -2345,7 +2330,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2376,8 +2361,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Pump Water Heater - Tall (1PH, 4.5kW, 208/240V)"};
             productInformation = {"A. O. Smith", "HPTU-80(?:N:CTA) 1.."};
             rating10CFR430.certified_reference_number = {"206428(?:771|810)"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 86.;
             rating10CFR430.recovery_efficiency = 2.33;
             rating10CFR430.uniform_energy_factor = 3.45;
         }
@@ -2444,7 +2429,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2470,8 +2455,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
     {
         productInformation = {"A. O. Smith", "HPTU-80DR 1.."};
         rating10CFR430.certified_reference_number = {"206428809"};
-        rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-        rating10CFR430.first_hour_rating = GAL_TO_L(86.) / 1000.;
+        rating10CFR430.nominal_tank_volume = 80.;
+        rating10CFR430.first_hour_rating = 86.;
         rating10CFR430.recovery_efficiency = 2.33;
         rating10CFR430.uniform_energy_factor = 3.45;
 
@@ -2519,7 +2504,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(34.1636);
         double standbyT = dF_TO_dC(7.1528);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80.108)));
 
@@ -2589,7 +2574,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(5.25);
         double standbyT = dF_TO_dC(5.); // Given CMP_T test
         compressor->addTurnOnLogic(secondSixth(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         double resistanceStart = 12.;
         resistiveElementTop->addTurnOnLogic(topThird(resistanceStart));
@@ -2629,8 +2614,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ProLine XE® Voltex® AL 50-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-50 2.."};
             rating10CFR430.certified_reference_number = {"208531033"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 65.;
             rating10CFR430.recovery_efficiency = 4.52;
             rating10CFR430.uniform_energy_factor = 3.80;
             tank->volume_L = GAL_TO_L(45.6);
@@ -2642,8 +2627,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ProLine XE® Voltex® AL 66-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-66 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(66.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(82.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 66.;
+            rating10CFR430.first_hour_rating = 82.;
             rating10CFR430.recovery_efficiency = 4.25;
             rating10CFR430.uniform_energy_factor = 3.70;
             tank->volume_L = GAL_TO_L(67.63);
@@ -2655,8 +2640,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ProLine XE® Voltex® AL 80-Gallon Smart Hybrid Electric Heat Pump Water Heater"};
             productInformation.model_number = {"HPTS-80 2.."};
             rating10CFR430.certified_reference_number = {"208531171"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(95.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 95.;
             rating10CFR430.recovery_efficiency = 4.30;
             rating10CFR430.uniform_energy_factor = 3.88;
             tank->volume_L = GAL_TO_L(81.94);
@@ -2696,7 +2681,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(30.2);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(11.87)));
 
@@ -2760,7 +2745,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -2812,7 +2797,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
         compressor->minT = F_TO_C(37);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
@@ -2872,7 +2857,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -2933,7 +2918,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
         // compressor->addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
@@ -2994,7 +2979,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird_absolute(F_TO_C(87)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
 
@@ -3053,7 +3038,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -3133,7 +3118,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3219,7 +3204,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(30);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3245,8 +3230,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE40T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471723."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(40.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(45.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 40.;
+            rating10CFR430.first_hour_rating = 45.;
             rating10CFR430.recovery_efficiency = 3.87;
             rating10CFR430.uniform_energy_factor = 2.80;
             tank->volume_L = GAL_TO_L(36.0);
@@ -3259,8 +3244,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE50T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471724."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(55.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 55.;
             rating10CFR430.recovery_efficiency = 3.67;
             rating10CFR430.uniform_energy_factor = 3.00;
             tank->volume_L = GAL_TO_L(45.0);
@@ -3273,8 +3258,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE65T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471725."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(63.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 65.;
+            rating10CFR430.first_hour_rating = 63.;
             rating10CFR430.recovery_efficiency = 3.98;
             rating10CFR430.uniform_energy_factor = 3.33;
             tank->volume_L = GAL_TO_L(58.5);
@@ -3287,8 +3272,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "Water Heater with 10-Year Warranty"};
             productInformation.model_number = {"XE80T10HMS?00U0"};
             rating10CFR430.certified_reference_number = {"21471726."};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(84.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 84.;
             rating10CFR430.recovery_efficiency = 3.93;
             rating10CFR430.uniform_energy_factor = 3.46;
             tank->volume_L = GAL_TO_L(72.0);
@@ -3323,7 +3308,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
     }
     else if (presetNum == hpwh_presets::MODELS::RheemPlugInDedicated40 ||
              presetNum == hpwh_presets::MODELS::RheemPlugInDedicated50)
@@ -3371,7 +3356,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(20);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
     }
     else if (presetNum == hpwh_presets::MODELS::RheemHB50)
     {
@@ -3421,7 +3406,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         double compStart = dF_TO_dC(38);
         double standbyT = dF_TO_dC(13.2639);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(76.7747)));
 
@@ -3519,7 +3504,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40.0)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3576,7 +3561,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(60)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3636,7 +3621,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(55)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(60)));
@@ -3697,7 +3682,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -3772,7 +3757,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -3972,7 +3957,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
     {
         description = {"AquaThermAire-CHT2021-48A"};
         productInformation = {"Villara", "AquaThermAire - CHT2021-48A"};
-        rating10CFR430.first_hour_rating = GAL_TO_L(78.) / 1000.;
+        rating10CFR430.first_hour_rating = 78.;
         rating10CFR430.recovery_efficiency = 3.837;
         rating10CFR430.uniform_energy_factor = 2.95;
 
@@ -4014,7 +3999,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(wholeTank(111, UNITS_F, true));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(14)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(14)));
     }
     else if (presetNum == hpwh_presets::MODELS::GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
@@ -4050,7 +4035,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.)));
 
         // top resistor values
         resistiveElementTop->setup(6, 4500.);
@@ -4132,7 +4117,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(12.0)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.0)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(9.0)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(9.0)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -4158,8 +4143,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ENERGY STAR Certified Aerotherm 50 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H50S.-....."};
             rating10CFR430.certified_reference_number = {"200094643"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(50.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(65.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 50.;
+            rating10CFR430.first_hour_rating = 65.;
             rating10CFR430.recovery_efficiency = 4.06;
             rating10CFR430.uniform_energy_factor = 3.44;
             tank->volume_L = GAL_TO_L(45.0);
@@ -4171,8 +4156,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ENERGY STAR Certified Aerotherm 65 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H65T..-....."};
             rating10CFR430.certified_reference_number = {"204835481"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(65.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(79.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 65.;
+            rating10CFR430.first_hour_rating = 79.;
             rating10CFR430.recovery_efficiency = 3.91;
             rating10CFR430.uniform_energy_factor = 3.64;
             tank->volume_L = GAL_TO_L(64.0);
@@ -4184,8 +4169,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                 "ENERGY STAR Certified Aerotherm 80 Gallon Residential Heat Pump Water Heater"};
             productInformation.model_number = {"RE2H80T.-....."};
             rating10CFR430.certified_reference_number = {"200094645"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(88.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 88.;
             rating10CFR430.recovery_efficiency = 3.92;
             rating10CFR430.uniform_energy_factor = 3.59;
             tank->volume_L = GAL_TO_L(75.0);
@@ -4231,7 +4216,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(25)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -4254,8 +4239,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC501."};
             rating10CFR430.certified_reference_number = {"213352429"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(58.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(76.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 58.;
+            rating10CFR430.first_hour_rating = 76.;
             rating10CFR430.recovery_efficiency = 4.10;
             rating10CFR430.uniform_energy_factor = 3.93;
             tank->volume_L = GAL_TO_L(52.8);
@@ -4267,8 +4252,8 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
                            "(3.8/5 kW, 208/240V)"};
             productInformation.model_number = {"APHWC801."};
             rating10CFR430.certified_reference_number = {"213363354"};
-            rating10CFR430.nominal_tank_volume = GAL_TO_L(80.) / 1000.;
-            rating10CFR430.first_hour_rating = GAL_TO_L(94.) / 1000.;
+            rating10CFR430.nominal_tank_volume = 80.;
+            rating10CFR430.first_hour_rating = 94.;
             rating10CFR430.recovery_efficiency = 4.10;
             rating10CFR430.uniform_energy_factor = 3.90;
             tank->volume_L = GAL_TO_L(72.0);
@@ -4320,7 +4305,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(52.9)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(9.)));
 
         // top resistor values
         resistiveElementTop->setup(8, 5000.);
@@ -4344,6 +4329,7 @@ void HPWH::initLegacy(hpwh_presets::MODELS presetNum)
         send_error("You have tried to select a preset model which does not exist.");
     }
 
+    useCOP_inBtwxt = true;
     if (hasInitialTankTemp)
         setTankToTemperature(initialTankT_C);
     else // start tank off at setpoint

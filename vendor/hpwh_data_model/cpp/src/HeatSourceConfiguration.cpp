@@ -95,12 +95,14 @@ namespace hpwh_data_model  {
 			json_get<double>(j, logger.get(), "differential_temperature", x.differential_temperature, x.differential_temperature_is_set, false);
 			json_get<heat_source_configuration::StandbyTemperatureLocation>(j, logger.get(), "standby_temperature_location", x.standby_temperature_location, x.standby_temperature_location_is_set, false);
 			json_get<heat_source_configuration::WeightedDistribution>(j, logger.get(), "temperature_weight_distribution", x.temperature_weight_distribution, x.temperature_weight_distribution_is_set, false);
+			json_get<bool>(j, logger.get(), "checks_standby_logic", x.checks_standby_logic, x.checks_standby_logic_is_set, false);
 		}
 		void to_json(nlohmann::json& j, const TemperatureBasedHeatingLogic& x) {
 			json_set<double>(j, "absolute_temperature", x.absolute_temperature, x.absolute_temperature_is_set);
 			json_set<double>(j, "differential_temperature", x.differential_temperature, x.differential_temperature_is_set);
 			json_set<heat_source_configuration::StandbyTemperatureLocation>(j, "standby_temperature_location", x.standby_temperature_location, x.standby_temperature_location_is_set);
 			json_set<heat_source_configuration::WeightedDistribution>(j, "temperature_weight_distribution", x.temperature_weight_distribution, x.temperature_weight_distribution_is_set);
+			json_set<bool>(j, "checks_standby_logic", x.checks_standby_logic, x.checks_standby_logic_is_set);
 		}
 		void from_json(const nlohmann::json& j, StateOfChargeBasedHeatingLogic& x) {
 			json_get<double>(j, logger.get(), "decision_point", x.decision_point, x.decision_point_is_set, true);
