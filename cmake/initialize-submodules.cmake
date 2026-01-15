@@ -27,7 +27,7 @@ macro(add_submodule submodule_name)
     # Clone repository
     if (GIT_FOUND AND NOT EXISTS "${submodule_path}/.git")
         message(STATUS "Cloning submodule \"${submodule_name}\"")
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init ${submodule_path}
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive ${submodule_path}
                 WORKING_DIRECTORY ${submodule_path}
                 RESULT_VARIABLE GIT_SUBMOD_RESULT)
         if (NOT GIT_SUBMOD_RESULT EQUAL "0")

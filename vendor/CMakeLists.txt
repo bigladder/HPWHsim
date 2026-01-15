@@ -11,7 +11,7 @@ if (${PROJECT_NAME}_BUILD_TESTING)
     set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
     mark_as_advanced(BUILD_GTEST BUILD_GMOCK INSTALL_GTEST)
-    add_submodule(googletest gtest "${btwxt_SOURCE_DIR}")
+    add_submodule(googletest gtest PARENT_SUBMODULE_PATH "${btwxt_SOURCE_DIR}")
 endif()
 
 # CLI11 library

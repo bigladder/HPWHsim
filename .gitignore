@@ -6,6 +6,7 @@
 *.png
 .idea
 .vscode
+.vs
 .Rproj.user
 *TestToolOutput.csv
 !Documentation/**
@@ -19,3 +20,19 @@ builds/
 file_system_backend
 
 src/presets/
+
+Dockerfile.format
+Doxyfile
+vendor/hpwh_data_model/cpp/.clang-format
+vendor/hpwh_data_model/cpp/.clang-tidy
+vendor/hpwh_data_model/cpp/.github/
+vendor/hpwh_data_model/cpp/.gitignore
+vendor/hpwh_data_model/cpp/CMakePresets.json
+vendor/hpwh_data_model/cpp/Dockerfile.format
+vendor/hpwh_data_model/cpp/LICENSE.txt
+vendor/hpwh_data_model/cpp/README.md
+vendor/hpwh_data_model/cpp/Taskfile.yml
+vendor/hpwh_data_model/cpp/app/
+vendor/hpwh_data_model/cpp/cmake/
+vendor/hpwh_data_model/cpp/forge.toml
+vendor/hpwh_data_model/cpp/test/

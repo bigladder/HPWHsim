@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: © 2026 Big Ladder Software <info@bigladdersoftware.com>
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef ASHRAE205_H_
 #define ASHRAE205_H_
 #include <string>
@@ -113,9 +115,9 @@ namespace hpwh_data_model {
 		inline std::shared_ptr<Courier::Courier> logger;
 		void set_logger(std::shared_ptr<Courier::Courier> value);
 		struct Schema {
-			static constexpr std::string_view schema_title = "ASHRAE 205";
-			static constexpr std::string_view schema_version = "0.2.0";
-			static constexpr std::string_view schema_description = "Base schema for ASHRAE 205 representations";
+			const static std::string_view schema_title;
+			const static std::string_view schema_version;
+			const static std::string_view schema_description;
 		};
 		struct RepresentationSpecificationTemplate {
 			virtual ~RepresentationSpecificationTemplate() = default;
@@ -126,26 +128,26 @@ namespace hpwh_data_model {
 		struct LiquidComponent {
 			ashrae205::LiquidConstituent liquid_constituent;
 			bool liquid_constituent_is_set = false;
-			static constexpr std::string_view liquid_constituent_units = "";
-			static constexpr std::string_view liquid_constituent_description = "Substance of this component of the mixture";
-			static constexpr std::string_view liquid_constituent_name = "liquid_constituent";
+			const static std::string_view liquid_constituent_units;
+			const static std::string_view liquid_constituent_description;
+			const static std::string_view liquid_constituent_name;
 			double concentration;
 			bool concentration_is_set = false;
-			static constexpr std::string_view concentration_units = "-";
-			static constexpr std::string_view concentration_description = "Concentration of this component of the mixture";
-			static constexpr std::string_view concentration_name = "concentration";
+			const static std::string_view concentration_units;
+			const static std::string_view concentration_description;
+			const static std::string_view concentration_name;
 		};
 		struct LiquidMixture {
 			std::vector<ashrae205::LiquidComponent> liquid_components;
 			bool liquid_components_is_set = false;
-			static constexpr std::string_view liquid_components_units = "";
-			static constexpr std::string_view liquid_components_description = "An array of all liquid components within the liquid mixture";
-			static constexpr std::string_view liquid_components_name = "liquid_components";
+			const static std::string_view liquid_components_units;
+			const static std::string_view liquid_components_description;
+			const static std::string_view liquid_components_name;
 			ashrae205::ConcentrationType concentration_type;
 			bool concentration_type_is_set = false;
-			static constexpr std::string_view concentration_type_units = "";
-			static constexpr std::string_view concentration_type_description = "Defines whether concentration is defined on a volume or mass basis";
-			static constexpr std::string_view concentration_type_name = "concentration_type";
+			const static std::string_view concentration_type_units;
+			const static std::string_view concentration_type_description;
+			const static std::string_view concentration_type_name;
 		};
 		NLOHMANN_JSON_SERIALIZE_ENUM (SchemaType, {
 			{SchemaType::UNKNOWN, "UNKNOWN"},

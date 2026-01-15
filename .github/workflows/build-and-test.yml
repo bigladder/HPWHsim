@@ -9,18 +9,25 @@ jobs:
       matrix:
          include:
           - os: ubuntu
-            os_ver: "22.04"
+            os_ver: "24.04"
             config: Release
             coverage: false
-            cc: gcc-11
-            cxx: g++-11
+            cc: gcc-14
+            cxx: g++-14
+            experimental: false
+          - os: ubuntu
+            os_ver: "24.04"
+            config: Debug
+            coverage: true
+            cc: gcc-14
+            cxx: g++-14
             experimental: false
           - os: ubuntu
             os_ver: "22.04"
             config: Release
             coverage: false
-            cc: gcc-10
-            cxx: g++-10
+            cc: gcc-11
+            cxx: g++-11
             experimental: false
           - os: windows
             os_ver: "2022"
@@ -54,8 +61,8 @@ jobs:
             os_ver: "22.04"
             config: Debug
             coverage: true
-            cc: gcc-10
-            cxx: g++-10
+            cc: gcc-11
+            cxx: g++-11
             experimental: false
     defaults:
       run:
@@ -71,6 +78,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v2
+        id: cpu-cores
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v2
         id: cpu-cores

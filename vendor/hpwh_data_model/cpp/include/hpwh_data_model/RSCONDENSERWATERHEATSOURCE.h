@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: © 2026 Big Ladder Software <info@bigladdersoftware.com>
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef RSCONDENSERWATERHEATSOURCE_H_
 #define RSCONDENSERWATERHEATSOURCE_H_
 #include <ASHRAE205.h>
@@ -25,113 +27,113 @@ namespace hpwh_data_model {
 		inline std::shared_ptr<Courier::Courier> logger;
 		void set_logger(std::shared_ptr<Courier::Courier> value);
 		struct Schema {
-			static constexpr std::string_view schema_title = "Condenser Water Heat Source";
-			static constexpr std::string_view schema_version = "0.1.0";
-			static constexpr std::string_view schema_description = "Schema for ASHRAE 205 annex RSCONDENSERWATERHEATSOURCE: Condenser heat source";
+			const static std::string_view schema_title;
+			const static std::string_view schema_version;
+			const static std::string_view schema_description;
 		};
 		struct ProductInformation {
 			std::string manufacturer;
 			bool manufacturer_is_set = false;
-			static constexpr std::string_view manufacturer_units = "";
-			static constexpr std::string_view manufacturer_description = "Manufacturer name";
-			static constexpr std::string_view manufacturer_name = "manufacturer";
+			const static std::string_view manufacturer_units;
+			const static std::string_view manufacturer_description;
+			const static std::string_view manufacturer_name;
 			std::string model_number;
 			bool model_number_is_set = false;
-			static constexpr std::string_view model_number_units = "";
-			static constexpr std::string_view model_number_description = "Model number";
-			static constexpr std::string_view model_number_name = "model_number";
-		};
-		struct Description {
-			rscondenserwaterheatsource::ProductInformation product_information;
-			bool product_information_is_set = false;
-			static constexpr std::string_view product_information_units = "";
-			static constexpr std::string_view product_information_description = "Data group describing product information";
-			static constexpr std::string_view product_information_name = "product_information";
+			const static std::string_view model_number_units;
+			const static std::string_view model_number_description;
+			const static std::string_view model_number_name;
 		};
 		struct GridVariables {
 			std::vector<double> evaporator_environment_dry_bulb_temperature;
 			bool evaporator_environment_dry_bulb_temperature_is_set = false;
-			static constexpr std::string_view evaporator_environment_dry_bulb_temperature_units = "K";
-			static constexpr std::string_view evaporator_environment_dry_bulb_temperature_description = "Dry bulb temperature of the air entering the evaporator coil";
-			static constexpr std::string_view evaporator_environment_dry_bulb_temperature_name = "evaporator_environment_dry_bulb_temperature";
+			const static std::string_view evaporator_environment_dry_bulb_temperature_units;
+			const static std::string_view evaporator_environment_dry_bulb_temperature_description;
+			const static std::string_view evaporator_environment_dry_bulb_temperature_name;
 			std::vector<double> heat_source_temperature;
 			bool heat_source_temperature_is_set = false;
-			static constexpr std::string_view heat_source_temperature_units = "K";
-			static constexpr std::string_view heat_source_temperature_description = "Average water temperature at the heat source";
-			static constexpr std::string_view heat_source_temperature_name = "heat_source_temperature";
+			const static std::string_view heat_source_temperature_units;
+			const static std::string_view heat_source_temperature_description;
+			const static std::string_view heat_source_temperature_name;
 		};
 		struct LookupVariables {
 			std::vector<double> input_power;
 			bool input_power_is_set = false;
-			static constexpr std::string_view input_power_units = "W";
-			static constexpr std::string_view input_power_description = "Power draw from the compressor, evaporator fan, and any auxiliary power used by the units controls";
-			static constexpr std::string_view input_power_name = "input_power";
+			const static std::string_view input_power_units;
+			const static std::string_view input_power_description;
+			const static std::string_view input_power_name;
 			std::vector<double> heating_capacity;
 			bool heating_capacity_is_set = false;
-			static constexpr std::string_view heating_capacity_units = "W";
-			static constexpr std::string_view heating_capacity_description = "Total heat added by the condenser to the adjacent water";
-			static constexpr std::string_view heating_capacity_name = "heating_capacity";
+			const static std::string_view heating_capacity_units;
+			const static std::string_view heating_capacity_description;
+			const static std::string_view heating_capacity_name;
+		};
+		struct Description {
+			rscondenserwaterheatsource::ProductInformation product_information;
+			bool product_information_is_set = false;
+			const static std::string_view product_information_units;
+			const static std::string_view product_information_description;
+			const static std::string_view product_information_name;
 		};
 		struct PerformanceMap {
 			rscondenserwaterheatsource::GridVariables grid_variables;
 			bool grid_variables_is_set = false;
-			static constexpr std::string_view grid_variables_units = "";
-			static constexpr std::string_view grid_variables_description = "Data group defining the grid variables for heating performance";
-			static constexpr std::string_view grid_variables_name = "grid_variables";
+			const static std::string_view grid_variables_units;
+			const static std::string_view grid_variables_description;
+			const static std::string_view grid_variables_name;
 			rscondenserwaterheatsource::LookupVariables lookup_variables;
 			bool lookup_variables_is_set = false;
-			static constexpr std::string_view lookup_variables_units = "";
-			static constexpr std::string_view lookup_variables_description = "Data group defining the lookup variables for heating performance";
-			static constexpr std::string_view lookup_variables_name = "lookup_variables";
+			const static std::string_view lookup_variables_units;
+			const static std::string_view lookup_variables_description;
+			const static std::string_view lookup_variables_name;
 		};
 		struct Performance {
 			rscondenserwaterheatsource::PerformanceMap performance_map;
 			bool performance_map_is_set = false;
-			static constexpr std::string_view performance_map_units = "";
-			static constexpr std::string_view performance_map_description = "Performance map";
-			static constexpr std::string_view performance_map_name = "performance_map";
+			const static std::string_view performance_map_units;
+			const static std::string_view performance_map_description;
+			const static std::string_view performance_map_name;
 			double standby_power;
 			bool standby_power_is_set = false;
-			static constexpr std::string_view standby_power_units = "W";
-			static constexpr std::string_view standby_power_description = "";
-			static constexpr std::string_view standby_power_name = "standby_power";
+			const static std::string_view standby_power_units;
+			const static std::string_view standby_power_description;
+			const static std::string_view standby_power_name;
 			rscondenserwaterheatsource::CoilConfiguration coil_configuration;
 			bool coil_configuration_is_set = false;
-			static constexpr std::string_view coil_configuration_units = "";
-			static constexpr std::string_view coil_configuration_description = "Coil configuration";
-			static constexpr std::string_view coil_configuration_name = "coil_configuration";
+			const static std::string_view coil_configuration_units;
+			const static std::string_view coil_configuration_description;
+			const static std::string_view coil_configuration_name;
 			double maximum_refrigerant_temperature;
 			bool maximum_refrigerant_temperature_is_set = false;
-			static constexpr std::string_view maximum_refrigerant_temperature_units = "K";
-			static constexpr std::string_view maximum_refrigerant_temperature_description = "Maximum temperature of the refrigerant entering the condenser";
-			static constexpr std::string_view maximum_refrigerant_temperature_name = "maximum_refrigerant_temperature";
+			const static std::string_view maximum_refrigerant_temperature_units;
+			const static std::string_view maximum_refrigerant_temperature_description;
+			const static std::string_view maximum_refrigerant_temperature_name;
 			double compressor_lockout_temperature_hysteresis;
 			bool compressor_lockout_temperature_hysteresis_is_set = false;
-			static constexpr std::string_view compressor_lockout_temperature_hysteresis_units = "K";
-			static constexpr std::string_view compressor_lockout_temperature_hysteresis_description = "Hysteresis for compressor lockout";
-			static constexpr std::string_view compressor_lockout_temperature_hysteresis_name = "compressor_lockout_temperature_hysteresis";
+			const static std::string_view compressor_lockout_temperature_hysteresis_units;
+			const static std::string_view compressor_lockout_temperature_hysteresis_description;
+			const static std::string_view compressor_lockout_temperature_hysteresis_name;
 			bool use_defrost_map;
 			bool use_defrost_map_is_set = false;
-			static constexpr std::string_view use_defrost_map_units = "";
-			static constexpr std::string_view use_defrost_map_description = "Use defrost map";
-			static constexpr std::string_view use_defrost_map_name = "use_defrost_map";
+			const static std::string_view use_defrost_map_units;
+			const static std::string_view use_defrost_map_description;
+			const static std::string_view use_defrost_map_name;
 		};
 		struct RSCONDENSERWATERHEATSOURCE : ashrae205::HeatSourceTemplate {
 			core::Metadata metadata;
 			bool metadata_is_set = false;
-			static constexpr std::string_view metadata_units = "";
-			static constexpr std::string_view metadata_description = "Metadata data group";
-			static constexpr std::string_view metadata_name = "metadata";
+			const static std::string_view metadata_units;
+			const static std::string_view metadata_description;
+			const static std::string_view metadata_name;
 			rscondenserwaterheatsource::Description description;
 			bool description_is_set = false;
-			static constexpr std::string_view description_units = "";
-			static constexpr std::string_view description_description = "Data group describing product and rating information";
-			static constexpr std::string_view description_name = "description";
+			const static std::string_view description_units;
+			const static std::string_view description_description;
+			const static std::string_view description_name;
 			rscondenserwaterheatsource::Performance performance;
 			bool performance_is_set = false;
-			static constexpr std::string_view performance_units = "";
-			static constexpr std::string_view performance_description = "Data group containing performance information";
-			static constexpr std::string_view performance_name = "performance";
+			const static std::string_view performance_units;
+			const static std::string_view performance_description;
+			const static std::string_view performance_name;
 		};
 		NLOHMANN_JSON_SERIALIZE_ENUM (CoilConfiguration, {
 			{CoilConfiguration::UNKNOWN, "UNKNOWN"},
