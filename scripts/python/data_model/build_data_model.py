@@ -58,9 +58,9 @@ def generate(repo_dir, build_dir):
 
     # generate code
     try:
-        lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)
+        lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)  # version from pyproject.toml
         lat.generate_cpp_project(
-            False, False, "Big Ladder Software", "info@bigladdersoftware.com", "2026", "BSD-3-Clause"
+            False, False, False, "Big Ladder Software", "info@bigladdersoftware.com", "2026", "BSD-3-Clause"
         )
     except Exception as e:
         print("Code generation failed")
