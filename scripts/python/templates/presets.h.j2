@@ -3,6 +3,8 @@
 #define PRESETS_H
 
 #include <iostream>
+#include <cstdint>
+#include <vector>
 
 namespace hpwh_presets {
 
@@ -12,7 +14,7 @@ enum MODELS: int
 {
 {% for model in models %}
 	{{ model.name }} = {{ model.number }},
-{% endfor %}	
+{% endfor %}
 	unknown = -1
 };
 
