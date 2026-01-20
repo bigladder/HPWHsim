@@ -2,10 +2,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # See the LICENSE.txt file for additional terms and conditions.
 # NOTE: THIS FILE IS AUTO-GENERATED.
-# Main library
-set(library_sources
-    ${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}/version.h
-)
+
+file(GLOB lib_headers "${PROJECT_SOURCE_DIR}/include/hpwh_data_model/*.h")
+file(GLOB lib_src "${PROJECT_SOURCE_DIR}/src/*.cpp")
+
+set (library_sources "${lib_headers}"
+                     "${lib_src}")
+
+option(${PROJECT_NAME}_STATIC_LIB "Make ${PROJECT_NAME} a static library" ON)
 
 if (${PROJECT_NAME}_STATIC_LIB)
     add_library(${PROJECT_NAME} STATIC ${library_sources})
@@ -23,7 +27,11 @@ target_include_directories(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt)
+target_link_libraries(hpwh_data_model PUBLIC nlohmann_json)
+target_link_libraries(hpwh_data_model PUBLIC courier)
+target_link_libraries(hpwh_data_model PUBLIC fmt)
+
+target_include_directories(hpwh_data_model PUBLIC ${PROJECT_SOURCE_DIR}/include/hpwh_data_model)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_build_options)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
