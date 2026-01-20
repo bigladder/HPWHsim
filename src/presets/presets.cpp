@@ -116,7 +116,8 @@
 #include "RheemHPHD60.h"
 #include "RheemHPHD135.h"
 
-namespace hpwh_presets {
+namespace hpwh_presets
+{
 
 // clang-format off
 std::vector<Model> models({
@@ -233,9 +234,8 @@ std::vector<Model> models({
 
 Model find_by_name(const std::string& name)
 {
-    auto it = std::find_if(models.begin(),
-                      models.end(),
-                      [&name](Model& model){ return model.name == name; });
+    auto it = std::find_if(
+        models.begin(), models.end(), [&name](Model& model) { return model.name == name; });
     if (it != models.end())
         return *it;
     return {MODELS::unknown, "unknown", nullptr, 0};
@@ -244,12 +244,10 @@ Model find_by_name(const std::string& name)
 Model find_by_id(const MODELS id)
 {
     auto it =
-        std::find_if(models.begin(),
-                models.end(),
-                [&id](Model& model) { return model.id == id; });
+        std::find_if(models.begin(), models.end(), [&id](Model& model) { return model.id == id; });
     if (it != models.end())
         return *it;
     return {MODELS::unknown, "unknown", nullptr, 0};
 }
 
-}
+} // namespace hpwh_presets
