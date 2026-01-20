@@ -19,7 +19,7 @@ builds/
 *.pyc
 file_system_backend
 
-src/presets/
+# src/presets/
 
 Dockerfile.format
 Doxyfile

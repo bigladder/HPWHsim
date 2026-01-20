@@ -118,6 +118,7 @@
 
 namespace hpwh_presets {
 
+// clang-format off
 std::vector<Model> models({
 	{ MODELS::restankNoUA, "restankNoUA", cbor_restankNoUA.data(), sizeof(cbor_restankNoUA)},
 	{ MODELS::restankHugeUA, "restankHugeUA", cbor_restankHugeUA.data(), sizeof(cbor_restankHugeUA)},
@@ -228,6 +229,7 @@ std::vector<Model> models({
 	{ MODELS::RheemHPHD60, "RheemHPHD60", cbor_RheemHPHD60.data(), sizeof(cbor_RheemHPHD60)},
 	{ MODELS::RheemHPHD135, "RheemHPHD135", cbor_RheemHPHD135.data(), sizeof(cbor_RheemHPHD135)},
 });
+// clang-format on
 
 Model find_by_name(const std::string& name)
 {
