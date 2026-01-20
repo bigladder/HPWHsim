@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: © 2026 Big Ladder Software <info@bigladdersoftware.com>
+// SPDX-License-Identifier: BSD-3-Clause
 #include <HPWHSimInput.h>
 #include <load-object.h>
 

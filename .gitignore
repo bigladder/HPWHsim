@@ -35,3 +35,4 @@ vendor/hpwh_data_model/cpp/Taskfile.yml
 vendor/hpwh_data_model/cpp/app/
 vendor/hpwh_data_model/cpp/cmake/
 vendor/hpwh_data_model/cpp/test/
+*.log

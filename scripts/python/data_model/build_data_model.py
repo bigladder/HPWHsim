@@ -1,7 +1,17 @@
-# uv run build_data_model.py
-# generates source code based on hpwh_data_model schema.
-# schema repo is cloned in build directory
+# /// script
+# dependencies = [ "pyyaml", "lattice" ]
+# [tool.uv.sources]
+# lattice = { git = "https://github.com/bigladder/lattice", branch = "add-back-support-headers" }
+# ///
 
+"""
+Use: e.g. 'uv run scripts/python/data_model/build_data_model.py . ./build' [from HPWHSim project dir]
+This script generates source code based on hpwh_data_model schema. The schema repo is cloned
+in the project's main build directory; only the source schema are strictly necessary.
+"""
+
+import logging
+import logging.config
 import os
 import shutil
 import stat
@@ -9,22 +19,26 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
 from lattice import Lattice
 
 
-def generate(repo_dir, build_dir):
-    data_model_dir = Path(build_dir) / "hpwh_data_model"
-    working_dir = Path(__file__).parent
-    gen_out_dir = Path(repo_dir) / "vendor" / "hpwh_data_model"
+def generate(project_directory: Path, build_directory: Path) -> None:
+    """Generate source code from data model schema.
 
-    orig_dir = Path.cwd()
+    Args:
+        project_directory (Path): Home of the project that will host the lattice-built source code
+        build_directory (Path): Usually project_directory / "build"
+    """
+    data_model_dir = Path(build_directory) / "hpwh_data_model"
+    output_directory = Path(project_directory) / "vendor" / "hpwh_data_model"
 
     # remove hpwh-data-model repo dir, then recreate
     if data_model_dir.exists():
         shutil.rmtree(data_model_dir, onerror=onerror)
 
     try:
-        data_model_dir.mkdir()
+        data_model_dir.mkdir(parents=True)
     except FileExistsError:
         print(f"Directory '{data_model_dir} already exists.")
     except FileNotFoundError:
@@ -33,38 +47,37 @@ def generate(repo_dir, build_dir):
 
     # clone hpwh-data-model repo
     cmd = ["git", "clone", "https://github.com/bigladder/hpwh-data-model.git", data_model_dir]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=False)
-    print(result.stdout)
+    subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=False)
 
     # change to repo dir and checkout branch
-    os.chdir(data_model_dir)
     cmd = ["git", "fetch"]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=False)
-    print(result.stdout)
+    subprocess.run(cmd, stdout=subprocess.PIPE, cwd=data_model_dir, text=True, check=False)
 
     cmd = ["git", "checkout", "use-lattice-forge-generation"]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=False)
-    print(result.stdout)
+    subprocess.run(cmd, stdout=subprocess.PIPE, cwd=data_model_dir, text=True, check=False)
 
     # create generated-code dir
-    os.chdir(orig_dir)
     try:
-        gen_out_dir.mkdir()
+        output_directory.mkdir(parents=True)
     except FileExistsError:
-        print(f"Directory '{gen_out_dir}' already exists.")
+        print(f"Directory '{output_directory}' exists. Files will be updated according to existing configuration.")
     except FileNotFoundError:
-        print(f"Cannot create code-generation directory {gen_out_dir}")
+        print(f"Cannot create code-generation directory {output_directory}")
         return
+
+    with open(Path(__file__).with_name("logger.yaml"), "r", encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+        logging.config.dictConfig(config)
 
     # generate code
     try:
-        lat = Lattice(data_model_dir, working_dir, gen_out_dir, False)  # version from pyproject.toml
+        working_dir = Path(__file__).parent
+        lat = Lattice(data_model_dir, working_dir, output_directory, False)  # version from pyproject.toml
         lat.generate_cpp_project(
             False, False, False, "Big Ladder Software", "info@bigladdersoftware.com", "2026", "BSD-3-Clause"
         )
     except Exception as e:
-        print("Code generation failed")
-        print(e)
+        print("Code generation failed:", e)
 
 
 # Source - https://stackoverflow.com/questions/2656322/shutil-rmtree-fails-on-windows-with-access-is-denied
@@ -94,10 +107,10 @@ def onerror(func, path, exc_info):
 
 # main
 if __name__ == "__main__":
-    repo_dir = "../../../"
-    build_dir = Path(repo_dir) / "build"
+    project_dir = Path(__file__).parent.parent.parent.parent
+    build_dir = Path(project_dir) / "build"
     n_args = len(sys.argv) - 1
     if n_args == 2:  # noqa: PLR2004
-        repo_dir = sys.argv[1]
-        build_dir = sys.argv[2]
-    generate(repo_dir, build_dir)
+        project_dir = Path(sys.argv[1]).resolve()
+        build_dir = Path(sys.argv[2]).resolve()
+    generate(project_dir, build_dir)

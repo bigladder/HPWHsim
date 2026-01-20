@@ -1,3 +1,7 @@
+skip = [
+    "src/CMakeLists.txt",
+    "vendor/CMakeLists.txt"
+]
 SPDX_license_name = "BSD-3-Clause"
 # clang_format_version = 16
 contact_email = "info@bigladdersoftware.com"
@@ -41,7 +45,3 @@ git_url = "https://github.com/nlohmann/json.git"
 git_checkout = "master"
 add_to_cmake = true
 link_library_spec = "json"
-skip = [
-    "src/CMakeLists.txt",
-    "vendor/CMakeLists.txt"
-]

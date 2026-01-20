@@ -1,0 +1,17 @@
+
+version: 1
+disable_existing_loggers: false
+formatters:
+    defaultFormatter:
+        format: "%(asctime)s  [%(levelname)s]   %(message)s"
+        use_colors: false
+handlers:
+    defaultFileHandler:
+        formatter: defaultFormatter
+        class: logging.FileHandler
+        filename: atheneum_forge_log.log
+loggers:
+    forge:
+        handlers: [defaultFileHandler]
+        level: INFO
+        propagate: false
