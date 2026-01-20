@@ -37,13 +37,6 @@ jobs:
             cxx: cl
             experimental: false
           - os: macos
-            os_ver: "14"
-            config: Release
-            coverage: false
-            cc: clang
-            cxx: clang++
-            experimental: true
-          - os: macos
             os_ver: "15"
             config: Release
             coverage: false
@@ -57,13 +50,6 @@ jobs:
             cc: clang
             cxx: clang++
             experimental: true
-          - os: ubuntu
-            os_ver: "22.04"
-            config: Debug
-            coverage: true
-            cc: gcc-11
-            cxx: g++-11
-            experimental: false
     defaults:
       run:
         shell: bash
