@@ -96,6 +96,13 @@ set(largeCompressorNames
         Mitsubishi_QAHV_N136TAU_HPB_SP
 
         AOSmithCAHP120
+        BradfordWhiteAeroThermRE2H50
+        BradfordWhiteAeroThermRE2H65
+        BradfordWhiteAeroThermRE2H80
+        BradfordWhiteAeroThermRE2HP50
+        BradfordWhiteAeroThermRE2HP65
+        BradfordWhiteAeroThermRE2HP80
+
         ColmacCxV_5_SP
         ColmacCxA_10_SP
         ColmacCxA_15_SP
@@ -239,7 +246,6 @@ function(add_regression_test)
             "${CMAKE_CURRENT_SOURCE_DIR}/ref/${test_prefix}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
             )
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS ${ARG_DEPENDS_ON})
-    message(STATUS "${TEST_TITLE} depends on test: ${ARG_DEPENDS_ON}")
 endfunction()
 
 #Plot test
