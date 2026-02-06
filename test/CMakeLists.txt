@@ -131,6 +131,11 @@ set(largeCompressorNames
 
         TamScalable_SP_Half
         #Scalable_MP
+
+        MultiPassModelccHPWH275D
+        MultiPassModelccHPWH275S
+        MultiPassModelccHPWH550D
+        MultiPassModelccHPWH550S
         )
 
 set(yearLargeTestsModels

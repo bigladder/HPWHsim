@@ -1,0 +1,205 @@
+{
+    "central_system": {
+        "control_type": "FIXED_FLOW_RATE",
+        "external_inlet_height": 0.2917,
+        "external_outlet_height": 0.0,
+        "fixed_flow_rate": 0.0037504506187325264,
+        "heat_source_configurations": [
+            {
+                "heat_distribution": {
+                    "normalized_height": [
+                        0.25,
+                        0.3333333333333333,
+                        1.0
+                    ],
+                    "weight": [
+                        0.0,
+                        1.0,
+                        0.0
+                    ]
+                },
+                "heat_source": {
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "Ice Air",
+                            "model_number": "Multi Pass Model ccHPWH275-D"
+                        }
+                    },
+                    "metadata": {
+                        "author": "California Energy Commission",
+                        "description": "Representation of embedded HPWH element",
+                        "schema_author": "Big Ladder Software, LLC",
+                        "schema_name": "RSAIRTOWATERHEATPUMP",
+                        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSAIRTOWATERHEATPUMP.schema.yaml",
+                        "schema_version": "0.1.0",
+                        "source": "Provided by Ice Air",
+                        "time_of_creation": "2025-09-26T18:39Z"
+                    },
+                    "performance": {
+                        "compressor_lockout_temperature_hysteresis": 0.0,
+                        "maximum_refrigerant_temperature": 344.26,
+                        "maximum_setpoint_at_low_temperature": {
+                            "maximum_setpoint_temperature": 333.15,
+                            "threshold_environment_temperature": 277.59
+                        },
+                        "performance_map": {
+                            "grid_variables": {
+                                "evaporator_environment_dry_bulb_temperature": [
+                                    249.81667,
+                                    272.03889,
+                                    294.26111,
+                                    316.48333
+                                ],
+                                "condenser_entering_temperature": [
+                                    283.15,
+                                    294.26111,
+                                    299.81667,
+                                    310.92778,
+                                    316.48333,
+                                    327.59444
+                                ],
+                                "condenser_leaving_temperature": [
+                                    285.37621
+                                ]
+                            },
+                            "lookup_variables": {
+                                "input_power": [
+                                    17500.0,
+                                    19900.0,
+                                    20800.0,
+                                    23200.0,
+                                    24200.0,
+                                    28200.0,
+                                    17200.0,
+                                    19300.0,
+                                    20200.0,
+                                    22600.0,
+                                    24500.0,
+                                    27000.0,
+                                    16700.0,
+                                    18600.0,
+                                    19400.0,
+                                    22000.0,
+                                    23800.0,
+                                    27000.0,
+                                    22000.0,
+                                    24600.0,
+                                    25800.0,
+                                    29100.0,
+                                    30800.0,
+                                    34900.0
+                                ],
+                                "heating_capacity": [
+                                    42300.0,
+                                    41200.0,
+                                    39600.0,
+                                    36800.0,
+                                    36000.0,
+                                    34700.0,
+                                    65300.0,
+                                    63700.0,
+                                    61300.0,
+                                    57100.0,
+                                    55500.0,
+                                    52000.0,
+                                    99000.0,
+                                    96500.0,
+                                    93100.0,
+                                    86800.0,
+                                    84300.0,
+                                    79600.0,
+                                    152800.0,
+                                    149000.0,
+                                    143800.0,
+                                    138600.0,
+                                    136400.0,
+                                    132500.0
+                                ]
+                            }
+                        },
+                        "use_defrost_map": true
+                    }
+                },
+                "heat_source_type": "AIRTOWATERHEATPUMP",
+                "id": "compressor",
+                "shut_off_logic": [
+                    {
+                        "comparison_type": "GREATER_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.33,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.25,
+                                    0.3333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ],
+                "turn_on_logic": [
+                    {
+                        "comparison_type": "LESS_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 2.7777777777777777,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.25,
+                                    0.3333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ]
+            }
+        ],
+        "primary_heat_source_id": "compressor",
+        "tank": {
+            "metadata": {
+                "author": "California Energy Commission",
+                "description": "Representation of embedded HPWH element",
+                "schema_author": "Big Ladder Software, LLC",
+                "schema_name": "RSTANK",
+                "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml",
+                "schema_version": "0.1.0",
+                "source": "",
+                "time_of_creation": "2026-01-28T15:53Z"
+            },
+            "performance": {
+                "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+                "fittings_ua": 0.0,
+                "ua": 6.426538638300477,
+                "volume": 1.892705
+            }
+        }
+    },
+    "depresses_temperature": false,
+    "fixed_volume": false,
+    "interpolate_cop": false,
+    "metadata": {
+        "author": "California Energy Commission",
+        "description": "Representation of embedded HPWH element",
+        "schema_author": "Big Ladder Software, LLC",
+        "schema_name": "HPWHSimInput",
+        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml",
+        "schema_version": "0.1.0",
+        "source": "Data provided by Ice Air",
+        "time_of_creation": "2026-01-28T15:53Z"
+    },
+    "number_of_nodes": 1,
+    "standard_setpoint": 330.372,
+    "system_type": "CENTRAL"
+}
