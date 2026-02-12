@@ -110,8 +110,6 @@
 	"NyleC250A_C_MP": 345,
 	"RheemHPHD60": 350,
 	"RheemHPHD135": 353,
-	"MultiPassModelccHPWH275D": 1200,
-	"MultiPassModelccHPWH275S": 1201,
-	"MultiPassModelccHPWH550D": 1202,
-	"MultiPassModelccHPWH550S": 1203
+	"IceAirccHPWH275D": 1200,
+	"IceAirccHPWH550D": 1201
 }
