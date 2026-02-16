@@ -14,6 +14,12 @@ set(modelNames
         AOSmithHPTS50
         AOSmithPHPT60
         AOSmithHPTU80
+        BradfordWhiteAeroThermRE2H50
+        BradfordWhiteAeroThermRE2H65
+        BradfordWhiteAeroThermRE2H80
+        BradfordWhiteAeroThermRE2HP50
+        BradfordWhiteAeroThermRE2HP65
+        BradfordWhiteAeroThermRE2HP80
         Sanco83
         RheemHB50
         Stiebel220E
@@ -96,12 +102,6 @@ set(largeCompressorNames
         Mitsubishi_QAHV_N136TAU_HPB_SP
 
         AOSmithCAHP120
-        BradfordWhiteAeroThermRE2H50
-        BradfordWhiteAeroThermRE2H65
-        BradfordWhiteAeroThermRE2H80
-        BradfordWhiteAeroThermRE2HP50
-        BradfordWhiteAeroThermRE2HP65
-        BradfordWhiteAeroThermRE2HP80
 
         ColmacCxV_5_SP
         ColmacCxA_10_SP
