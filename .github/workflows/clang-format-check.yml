@@ -10,6 +10,11 @@ jobs:
     - name: Run clang-format style check on implementation files.
       uses: DoozyX/clang-format-lint-action@v0.20
       with:
-        source: 'src test'
+        source: 'src'
+        clangFormatVersion: 18
+    - name: Run clang-format style check on test files.
+      uses: DoozyX/clang-format-lint-action@v0.20
+      with:
+        source: 'test'
         clangFormatVersion: 18
 
