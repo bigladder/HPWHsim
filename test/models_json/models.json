@@ -62,6 +62,9 @@
 	"BradfordWhiteAeroThermRE2H50": 500,
 	"BradfordWhiteAeroThermRE2H65":  501,
 	"BradfordWhiteAeroThermRE2H80":  502,
+	"BradfordWhiteAeroThermRE2HP50": 503,
+	"BradfordWhiteAeroThermRE2HP65": 504,
+	"BradfordWhiteAeroThermRE2HP80": 505,
 	"StorageTank":  180,
 	"Sanco43": 120,
 	"Sanco83": 121,
@@ -106,5 +109,7 @@
 	"NyleC185A_C_MP": 344,
 	"NyleC250A_C_MP": 345,
 	"RheemHPHD60": 350,
-	"RheemHPHD135": 353
+	"RheemHPHD135": 353,
+	"IceAirccHPWH275D": 1200,
+	"IceAirccHPWH550D": 1201
 }
