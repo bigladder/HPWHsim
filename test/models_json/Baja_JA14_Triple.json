@@ -13,9 +13,9 @@
                         1.0
                     ],
                     "weight": [
-                        "0.0",
+                        0.0,
                         1.0,
-                        "0.0"
+                        0.0
                     ]
                 },
                 "heat_source": {
@@ -180,9 +180,9 @@
                                     1.0
                                 ],
                                 "weight": [
-                                    "0.0",
+                                    0.0,
                                     1.0,
-                                    "0.0"
+                                    0.0
                                 ]
                             }
                         },
@@ -201,9 +201,9 @@
                                     1.0
                                 ],
                                 "weight": [
-                                    "0.0",
+                                    0.0,
                                     1.0,
-                                    "0.0"
+                                    0.0
                                 ]
                             }
                         },
@@ -225,8 +225,8 @@
                 "time_of_creation": "2026-01-28T15:53Z"
             },
             "performance": {
-                "bottom_fraction_of_tank_mixing_on_draw": "0.0",
-                "fittings_ua": "0.0",
+                "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+                "fittings_ua": 0.0,
                 "ua": 6.426538638300477,
                 "volume": 1.892705
             }
