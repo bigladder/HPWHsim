@@ -22,7 +22,7 @@
                     "description": {
                         "product_information": {
                             "manufacturer": "AOSmith/EmergeXC",
-                            "model_number": "Baja-JA14-Triple"
+                            "model_number": "CAHP3CO-6"
                         }
                     },
                     "metadata": {
@@ -57,7 +57,9 @@
                                     322.03889
                                 ],
                                 "condenser_leaving_temperature": [
-                                    297.85666
+                                    327.59444,
+                                    341.48333,
+                                    355.37222
                                 ]
                             },
                             "lookup_variables": {
@@ -175,8 +177,8 @@
                             "differential_temperature": 8.33,
                             "temperature_weight_distribution": {
                                 "normalized_height": [
-                                    "0.25",
-                                    "0.3333333333333333",
+                                    0.25,
+                                    0.3333333333333333,
                                     1.0
                                 ],
                                 "weight": [
@@ -196,8 +198,8 @@
                             "differential_temperature": 2.7777777777777777,
                             "temperature_weight_distribution": {
                                 "normalized_height": [
-                                    "0.25",
-                                    "0.3333333333333333",
+                                    0.25,
+                                    0.3333333333333333,
                                     1.0
                                 ],
                                 "weight": [
