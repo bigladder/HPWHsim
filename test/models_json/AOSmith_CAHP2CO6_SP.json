@@ -247,7 +247,7 @@
         "source": "Data provided by AOSmith",
         "time_of_creation": "2026-01-28T15:53Z"
     },
-    "number_of_nodes": 1,
+    "number_of_nodes": 24,
     "standard_setpoint": 330.372,
     "system_type": "CENTRAL"
 }
