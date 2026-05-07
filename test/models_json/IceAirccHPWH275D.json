@@ -58,9 +58,9 @@
                                     316.48333,
                                     327.59444
                                 ],
-                                "condenser_leaving_temperature": [
-                                    285.37621
-                                ]
+                              "condenser_leaving_temperature": [
+                                330.3722222222222
+                              ]
                             },
                             "lookup_variables": {
                                 "input_power": [
@@ -126,7 +126,7 @@
                     {
                         "comparison_type": "GREATER_THAN",
                         "heating_logic": {
-                            "differential_temperature": 8.33,
+                            "differential_temperature": 0.0,
                             "temperature_weight_distribution": {
                                 "normalized_height": [
                                     0.25,
