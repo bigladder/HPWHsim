@@ -1,235 +1,227 @@
 {
-  "central_system": {
-    "control_type": "FIXED_OUTLET_TEMPERATURE",
-    "external_inlet_height": 0.2917,
-    "external_outlet_height": 0.0,
-    "fixed_flow_rate": 7.273065423134002e-05,
-    "heat_source_configurations": [
-      {
-        "heat_distribution": {
-          "normalized_height": [
-            0.25,
-            0.3333333333333333,
-            1.0
-          ],
-          "weight": [
-            0.0,
-            1.0,
-            0.0
-          ]
-        },
-        "heat_source": {
-          "description": {
-            "product_information": {
-              "manufacturer": "AOSmith/EmergeXC",
-              "model_number": "CAHP2CO-6"
+    "central_system": {
+        "control_type": "FIXED_OUTLET_TEMPERATURE",
+        "external_inlet_height": 0.2917,
+        "external_outlet_height": 0.0,
+        "fixed_flow_rate": 7.273065423134002e-05,
+        "heat_source_configurations": [
+            {
+                "heat_distribution": {
+                    "normalized_height": [
+                        0.25,
+                        0.3333333333333333,
+                        1.0
+                    ],
+                    "weight": [
+                        0.0,
+                        1.0,
+                        0.0
+                    ]
+                },
+                "heat_source": {
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "AOSmith/EmergeXC",
+                            "model_number": "CAHP2CO-6"
+                        }
+                    },
+                    "metadata": {
+                        "author": "California Energy Commission",
+                        "description": "Representation of embedded HPWH element",
+                        "schema_author": "Big Ladder Software, LLC",
+                        "schema_name": "RSAIRTOWATERHEATPUMP",
+                        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSAIRTOWATERHEATPUMP.schema.yaml",
+                        "schema_version": "0.1.0",
+                        "source": "Provided by AOSmith",
+                        "time_of_creation": "2025-09-26T18:39Z"
+                    },
+                    "performance": {
+                        "compressor_lockout_temperature_hysteresis": 0.0,
+                        "maximum_refrigerant_temperature": 344.26,
+                        "performance_map": {
+                            "grid_variables": {
+                                "evaporator_environment_dry_bulb_temperature": [
+                                    248.15,
+                                    270.92778,
+                                    293.15,
+                                    315.92778
+                                ],
+                                "condenser_entering_temperature": [
+                                    277.59444,
+                                    295.37222,
+                                    312.59444,
+                                    322.03889
+                                ],
+                                "condenser_leaving_temperature": [
+                                    327.59444,
+                                    341.48333,
+                                    355.37222
+                                ]
+                            },
+                            "lookup_variables": {
+                                "input_power": [
+                                    5680.0,
+                                    5920.0,
+                                    6160.0,
+                                    5584.31418,
+                                    5820.0,
+                                    5980.0,
+                                    5486.87981,
+                                    5640.0,
+                                    5800.0,
+                                    5395.53532,
+                                    5550.9391,
+                                    5699.14463,
+                                    4160.0,
+                                    4480.0,
+                                    4800.0,
+                                    4096.08675,
+                                    4420.0,
+                                    4560.0,
+                                    4047.92974,
+                                    4180.0,
+                                    4320.0,
+                                    3951.74429,
+                                    4046.71983,
+                                    4174.49329,
+                                    2614.42541,
+                                    3022.45156,
+                                    3400.0,
+                                    2695.62344,
+                                    3047.559,
+                                    3360.0,
+                                    2695.35296,
+                                    3007.06923,
+                                    3320.0,
+                                    2663.00963,
+                                    2996.6382,
+                                    3305.14661,
+                                    1700.0,
+                                    2020.0,
+                                    2340.0,
+                                    1509.01057,
+                                    1820.0,
+                                    2120.0,
+                                    1302.07067,
+                                    1600.0,
+                                    1880.0,
+                                    1214.61964,
+                                    1491.0517,
+                                    1762.21953
+                                ],
+                                "heating_capacity": [
+                                    9440.0,
+                                    9000.0,
+                                    8560.0,
+                                    7641.26558,
+                                    7200.0,
+                                    6660.0,
+                                    5877.94833,
+                                    5360.0,
+                                    4820.0,
+                                    4775.18865,
+                                    4325.03353,
+                                    3828.70844,
+                                    13440.0,
+                                    12780.0,
+                                    12120.0,
+                                    10583.05944,
+                                    9940.0,
+                                    9280.0,
+                                    7832.35018,
+                                    7180.0,
+                                    6540.0,
+                                    6320.48724,
+                                    5686.14384,
+                                    5030.23429,
+                                    13890.87345,
+                                    13695.73256,
+                                    13500.0,
+                                    11493.22191,
+                                    11185.19661,
+                                    10860.0,
+                                    8781.15898,
+                                    8627.44499,
+                                    8280.0,
+                                    7074.2108,
+                                    6997.27792,
+                                    6879.14681,
+                                    13060.0,
+                                    12540.0,
+                                    12020.0,
+                                    9953.64561,
+                                    9460.0,
+                                    9280.0,
+                                    6976.73241,
+                                    6800.0,
+                                    6620.0,
+                                    5575.95383,
+                                    5362.45817,
+                                    5171.53457
+                                ]
+                            }
+                        },
+                        "use_defrost_map": true
+                    }
+                },
+                "heat_source_type": "AIRTOWATERHEATPUMP",
+                "id": "compressor",
+                "shut_off_logic": [
+                    {
+                        "comparison_type": "GREATER_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.3,
+                            "temperature_weight_distribution": {
+                                "normalized_height": "[0.083333333333333333, 1.0]",
+                                "weight": "[1.0, 0.0]"
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ],
+                "turn_on_logic": [
+                    {
+                        "comparison_type": "LESS_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.3,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.25,
+                                    0.3333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ]
             }
-          },
-          "metadata": {
-            "author": "California Energy Commission",
-            "description": "Representation of embedded HPWH element",
-            "schema_author": "Big Ladder Software, LLC",
-            "schema_name": "RSAIRTOWATERHEATPUMP",
-            "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSAIRTOWATERHEATPUMP.schema.yaml",
-            "schema_version": "0.1.0",
-            "source": "Provided by AOSmith",
-            "time_of_creation": "2025-09-26T18:39Z"
-          },
-          "performance": {
-            "compressor_lockout_temperature_hysteresis": 0.0,
-            "maximum_refrigerant_temperature": 344.26,
-            "performance_map": {
-              "grid_variables": {
-                "evaporator_environment_dry_bulb_temperature": [
-                  248.15,
-                  270.92778,
-                  293.15,
-                  315.92778
-                ],
-                "condenser_entering_temperature": [
-                  277.59444,
-                  295.37222,
-                  312.59444,
-                  322.03889
-                ],
-                "condenser_leaving_temperature": [
-                  327.59444,
-                  341.48333,
-                  355.37222
-                ]
-              },
-              "lookup_variables": {
-                "input_power": [
-                  5680.0,
-                  5920.0,
-                  6160.0,
-                  5584.31418,
-                  5820.0,
-                  5980.0,
-                  5486.87981,
-                  5640.0,
-                  5800.0,
-                  5395.53532,
-                  5550.9391,
-                  5699.14463,
-                  4160.0,
-                  4480.0,
-                  4800.0,
-                  4096.08675,
-                  4420.0,
-                  4560.0,
-                  4047.92974,
-                  4180.0,
-                  4320.0,
-                  3951.74429,
-                  4046.71983,
-                  4174.49329,
-                  2614.42541,
-                  3022.45156,
-                  3400.0,
-                  2695.62344,
-                  3047.559,
-                  3360.0,
-                  2695.35296,
-                  3007.06923,
-                  3320.0,
-                  2663.00963,
-                  2996.6382,
-                  3305.14661,
-                  1700.0,
-                  2020.0,
-                  2340.0,
-                  1509.01057,
-                  1820.0,
-                  2120.0,
-                  1302.07067,
-                  1600.0,
-                  1880.0,
-                  1214.61964,
-                  1491.0517,
-                  1762.21953
-                ],
-                "heating_capacity": [
-                  9440.0,
-                  9000.0,
-                  8560.0,
-                  7641.26558,
-                  7200.0,
-                  6660.0,
-                  5877.94833,
-                  5360.0,
-                  4820.0,
-                  4775.18865,
-                  4325.03353,
-                  3828.70844,
-                  13440.0,
-                  12780.0,
-                  12120.0,
-                  10583.05944,
-                  9940.0,
-                  9280.0,
-                  7832.35018,
-                  7180.0,
-                  6540.0,
-                  6320.48724,
-                  5686.14384,
-                  5030.23429,
-                  13890.87345,
-                  13695.73256,
-                  13500.0,
-                  11493.22191,
-                  11185.19661,
-                  10860.0,
-                  8781.15898,
-                  8627.44499,
-                  8280.0,
-                  7074.2108,
-                  6997.27792,
-                  6879.14681,
-                  13060.0,
-                  12540.0,
-                  12020.0,
-                  9953.64561,
-                  9460.0,
-                  9280.0,
-                  6976.73241,
-                  6800.0,
-                  6620.0,
-                  5575.95383,
-                  5362.45817,
-                  5171.53457
-                ]
-              }
-            },
-            "use_defrost_map": true
-          }
-        },
-        "heat_source_type": "AIRTOWATERHEATPUMP",
-        "id": "compressor",
-        "shut_off_logic": [
-          {
-            "comparison_type": "GREATER_THAN",
-            "heating_logic": {
-              "differential_temperature": 0.0,
-              "temperature_weight_distribution": {
-                "normalized_height": [
-                  0.25,
-                  0.3333333333333333, 
-                  1.0
-                ],
-                "weight": [
-                  0.0,
-                  1.0,
-                  0.0
-                ]
-              }
-            },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
         ],
-        "turn_on_logic": [
-          {
-            "comparison_type": "LESS_THAN",
-            "heating_logic": {
-              "differential_temperature": 2.7777777777777777,
-              "temperature_weight_distribution": {
-                "normalized_height": [
-                  0.25,
-                  0.3333333333333333,
-                  1.0
-                ],
-                "weight": [
-                  0.0,
-                  1.0,
-                  0.0
-                ]
-              }
+        "primary_heat_source_id": "compressor",
+        "tank": {
+            "metadata": {
+                "author": "California Energy Commission",
+                "description": "Representation of embedded HPWH element",
+                "schema_author": "Big Ladder Software, LLC",
+                "schema_name": "RSTANK",
+                "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml",
+                "schema_version": "0.1.0",
+                "source": "",
+                "time_of_creation": "2026-01-28T15:53Z"
             },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
-        ]
-      }
-    ],
-    "primary_heat_source_id": "compressor",
-    "tank": {
-      "metadata": {
-        "author": "California Energy Commission",
-        "description": "Representation of embedded HPWH element",
-        "schema_author": "Big Ladder Software, LLC",
-        "schema_name": "RSTANK",
-        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml",
-        "schema_version": "0.1.0",
-        "source": "",
-        "time_of_creation": "2026-01-28T15:53Z"
-      },
-      "performance": {
-        "bottom_fraction_of_tank_mixing_on_draw": 0.0,
-        "fittings_ua": 0.0,
-        "ua": 6.426538638300477,
-        "volume": 1.892705
-      }
-    }
-  },
+            "performance": {
+                "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+                "fittings_ua": 0.0,
+                "ua": 6.426538638300477,
+                "volume": 1.892705
+            }
+        }
+    },
     "depresses_temperature": false,
     "fixed_volume": false,
     "interpolate_cop": false,
