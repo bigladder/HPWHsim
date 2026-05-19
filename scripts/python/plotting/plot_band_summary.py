@@ -7,11 +7,11 @@ from plotly.subplots import make_subplots
 X2 = np.linspace(0.5, 1.05, 1000)
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-DEFAULT_SETPOINT = 60.0
-DEFAULT_TEMP_TURNON_DIFF = 8.3  # °C below setpoint → turn on
-DEFAULT_TEMP_SHUTOFF_DIFF = 8.3  # °C below setpoint → shut off
-DEFAULT_COMP_TURNON = 52.0  # current turn-on node temperature
-DEFAULT_COMP_SHUTOFF = 52.0  # current shut-off node temperature
+DEFAULT_SETPOINT = 140.0
+DEFAULT_TEMP_TURNON_DIFF = 15.0  # °F below setpoint → turn on
+DEFAULT_TEMP_SHUTOFF_DIFF = 15.0  # °F below setpoint → shut off
+DEFAULT_COMP_TURNON = 125.6  # current turn-on node temperature
+DEFAULT_COMP_SHUTOFF = 125.6  # current shut-off node temperature
 
 
 # ── Figure builder ────────────────────────────────────────────────────────────
@@ -19,8 +19,8 @@ def make_figure(temp_turnon_diff, temp_shutoff_diff, setpoint, comp_turnon, comp
     temp_turnon_thresh = setpoint - temp_turnon_diff
     temp_shutoff_thresh = setpoint - temp_shutoff_diff
 
-    x_lo = 0
-    x_hi = 100
+    x_lo = 32
+    x_hi = 212
     X1 = np.linspace(x_lo, x_hi, 500)
 
     y1_turnon = np.where(X1 < temp_turnon_thresh, 1.0, 0.0)
@@ -36,7 +36,7 @@ def make_figure(temp_turnon_diff, temp_shutoff_diff, setpoint, comp_turnon, comp
         rows=2,
         cols=1,
         subplot_titles=(
-            f"Temperature-Based Logic  (turn-on {temp_turnon_thresh:.1f} °C, shut-off {temp_shutoff_thresh:.1f} °C)",
+            f"Temperature-Based Logic  (turn-on {temp_turnon_thresh:.1f} °F, shut-off {temp_shutoff_thresh:.1f} °F)",
         ),
         vertical_spacing=0.18,
     )
@@ -94,7 +94,7 @@ def make_figure(temp_turnon_diff, temp_shutoff_diff, setpoint, comp_turnon, comp
                 symbol="diamond",
                 line=dict(color="black", width=2),
             ),
-            name=f"Setpoint ({setpoint:.0f} °C)",
+            name=f"Setpoint ({setpoint:.0f} °F)",
             legend="legend",
         ),
         row=1,
@@ -204,7 +204,7 @@ def make_figure(temp_turnon_diff, temp_shutoff_diff, setpoint, comp_turnon, comp
             "y",
             temp_turnon_thresh,
             1.10,
-            f"{temp_turnon_thresh:.1f} °C (turn-on)",
+            f"{temp_turnon_thresh:.1f} °F (turn-on)",
             font=dict(size=10),
             xanchor="center",
         ),
@@ -213,20 +213,20 @@ def make_figure(temp_turnon_diff, temp_shutoff_diff, setpoint, comp_turnon, comp
             "y",
             temp_shutoff_thresh,
             1.10,
-            f"{temp_shutoff_thresh:.1f} °C (shut-off)",
+            f"{temp_shutoff_thresh:.1f} °F (shut-off)",
             font=dict(size=10),
             xanchor="center",
         ),
-        label("x", "y", setpoint, 1.10, f"{setpoint:.0f} °C", font=dict(size=10, color="black"), xanchor="center"),
+        label("x", "y", setpoint, 1.10, f"{setpoint:.0f} °F", font=dict(size=10, color="black"), xanchor="center"),
         label("x", "y", (temp_band_lo + temp_band_hi) / 2, 0.50, "Deadband", font=dict(size=12, color="steelblue")),
         # subplot 1 arrows
-        arrow("x", "y", x=temp_turnon_thresh - 4, y=0.97, ax=temp_turnon_thresh - 6, ay=0.97, color="firebrick"),
-        arrow("x", "y", x=temp_shutoff_thresh + 4, y=0.03, ax=temp_shutoff_thresh + 6, ay=0.03, color="darkorange"),
+        arrow("x", "y", x=temp_turnon_thresh - 7, y=0.97, ax=temp_turnon_thresh - 11, ay=0.97, color="firebrick"),
+        arrow("x", "y", x=temp_shutoff_thresh + 7, y=0.03, ax=temp_shutoff_thresh + 11, ay=0.03, color="darkorange"),
     ]
     for a in annotations:
         fig.add_annotation(**a)
 
-    fig.update_xaxes(title_text="Tank Node Temperature (°C)", range=[x_lo, x_hi], row=1, col=1)
+    fig.update_xaxes(title_text="Tank Node Temperature (°F)", range=[x_lo, x_hi], row=1, col=1)
     fig.update_yaxes(title_text="State", tickvals=[0, 1], ticktext=["OFF", "ON"], range=[-0.1, 1.15], row=1, col=1)
     fig.update_layout(
         title_text="Heat Source Control Band Summary",
@@ -266,6 +266,7 @@ def slider_with_input(base_id, label, min_val, max_val, step, value):
                         min=min_val,
                         max=max_val,
                         step=step,
+                        debounce=True,
                         style=_input_style,
                     ),
                 ],
@@ -312,22 +313,22 @@ app.layout = html.Div(
                 html.Div(
                     [
                         slider_with_input(
-                            "setpoint", "Setpoint (°C)", min_val=40, max_val=80, step=0.5, value=DEFAULT_SETPOINT
+                            "setpoint", "Setpoint (°F)", min_val=104, max_val=176, step=1.0, value=DEFAULT_SETPOINT
                         ),
                         slider_with_input(
                             "temp-turnon-diff",
-                            "Turn-on differential (°C below setpoint)",
+                            "Turn-on differential (°F below setpoint)",
                             min_val=0,
-                            max_val=20,
-                            step=0.1,
+                            max_val=36,
+                            step=0.2,
                             value=DEFAULT_TEMP_TURNON_DIFF,
                         ),
                         slider_with_input(
                             "temp-shutoff-diff",
-                            "Shut-off differential (°C below setpoint)",
+                            "Shut-off differential (°F below setpoint)",
                             min_val=0,
-                            max_val=20,
-                            step=0.1,
+                            max_val=36,
+                            step=0.2,
                             value=DEFAULT_TEMP_SHUTOFF_DIFF,
                         ),
                     ],
@@ -338,18 +339,18 @@ app.layout = html.Div(
                     [
                         slider_with_input(
                             "comp-turnon",
-                            "Turn-on comparison node current state (°C)",
-                            min_val=0,
-                            max_val=100,
-                            step=0.1,
+                            "Turn-on comparison node current state (°F)",
+                            min_val=32,
+                            max_val=212,
+                            step=0.2,
                             value=DEFAULT_COMP_TURNON,
                         ),
                         slider_with_input(
                             "comp-shutoff",
-                            "Shut-off comparison node current state (°C)",
-                            min_val=0,
-                            max_val=100,
-                            step=0.1,
+                            "Shut-off comparison node current state (°F)",
+                            min_val=32,
+                            max_val=212,
+                            step=0.2,
                             value=DEFAULT_COMP_SHUTOFF,
                         ),
                     ],
