@@ -8,12 +8,10 @@
             {
                 "heat_distribution": {
                     "normalized_height": [
-                        0.25,
-                        0.3333333333333333,
+                        0.08333333333333333,
                         1.0
                     ],
                     "weight": [
-                        0.0,
                         1.0,
                         0.0
                     ]
@@ -176,8 +174,14 @@
                         "heating_logic": {
                             "differential_temperature": 8.3,
                             "temperature_weight_distribution": {
-                                "normalized_height": "[0.083333333333333333, 1.0]",
-                                "weight": "[1.0, 0.0]"
+                                "normalized_height": [
+                                    0.08333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    1.0,
+                                    0.0
+                                ]
                             }
                         },
                         "heating_logic_type": "TEMPERATURE_BASED"
