@@ -20,7 +20,7 @@
                     "description": {
                         "product_information": {
                             "manufacturer": "Watts",
-                            "model_number": "Aegis-500A-HPL-90-70-HIT"
+                            "model_number": "Aegis 500A"
                         }
                     },
                     "metadata": {
@@ -51,10 +51,9 @@
                                     303.15
                                 ],
                                 "condenser_leaving_temperature": [
-                                    [
-                                        324.81667,
-                                        343.28144
-                                    ]
+                                    324.81667,
+                                    337.31667,
+                                    349.81667
                                 ]
                             },
                             "lookup_variables": {

@@ -20,7 +20,7 @@
                     "description": {
                         "product_information": {
                             "manufacturer": "Laars",
-                            "model_number": "ECHV0325-AXA-XXX"
+                            "model_number": "ECHV0325"
                         }
                     },
                     "metadata": {
@@ -51,10 +51,9 @@
                                     294.26111
                                 ],
                                 "condenser_leaving_temperature": [
-                                    [
-                                        324.81667,
-                                        350.8579
-                                    ]
+                                    324.81667,
+                                    340.09444,
+                                    355.37222
                                 ]
                             },
                             "lookup_variables": {
