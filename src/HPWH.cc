@@ -696,7 +696,14 @@ int HPWH::writeCSVHeading(std::ofstream& outFILE,
         outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
     }
 
-    outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
+    if (options & HPWH::CSVOPT_IS_DRAWING)
+    {
+        outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
+    }
+    else
+    {
+        outFILE << std::endl;
+    }
 
     return 0;
 }
