@@ -689,7 +689,6 @@ int HPWH::writeCSVHeading(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
-        outFILE << fmt::format(",h_src{}IsHeating", iHS + 1);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
@@ -697,14 +696,7 @@ int HPWH::writeCSVHeading(std::ofstream& outFILE,
         outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
     }
 
-    if (options & HPWH::CSVOPT_IS_DRAWING)
-    {
-        outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
-    }
-    else
-    {
-        outFILE << std::endl;
-    }
+    outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
 
     return 0;
 }
@@ -723,10 +715,9 @@ int HPWH::writeCSVRow(std::ofstream& outFILE,
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        outFILE << fmt::format(",{:0.2f},{:0.2f},{:d}",
+        outFILE << fmt::format(",{:0.2f},{:0.2f}",
                                getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.,
-                               isNthHeatSourceRunning(iHS));
+                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
