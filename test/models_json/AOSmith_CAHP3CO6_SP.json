@@ -1,9 +1,8 @@
 {
     "central_system": {
         "control_type": "FIXED_OUTLET_TEMPERATURE",
-        "external_inlet_height": 0.2917,
+        "external_inlet_height": 0.989583,
         "external_outlet_height": 0.0,
-        "fixed_flow_rate": 0.00010909598134701004,
         "heat_source_configurations": [
             {
                 "heat_distribution": {
