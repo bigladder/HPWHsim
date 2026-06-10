@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <regex>
 #include <queue>
+#include <memory>
 
 #include <fmt/format.h>
 
@@ -507,7 +508,7 @@ void HPWH::runOneStep(double drawVolume_L,
                     }
                 }
             } // heat source not engaged
-        }     // end while iHS heat source
+        } // end while iHS heat source
     }
     if (areAllHeatSourcesOff())
     {
@@ -696,14 +697,30 @@ int HPWH::writeCSVHeading(std::ofstream& outFILE,
         outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
     }
 
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        if (std::dynamic_pointer_cast<Condenser>(heatSources[iHS]))
+        {
+            outFILE << fmt::format(
+                ",T_turnon_value_{},T_turnon_target_{},T_shutoff_value_{},T_shutoff_target_{},T_external_outlet_{}",
+                iHS + 1,
+                iHS + 1,
+                iHS + 1,
+                iHS + 1,
+                iHS + 1);
+        }
+    }
+
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
+        outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C");
     }
     else
     {
-        outFILE << std::endl;
+        outFILE << ",";
     }
+
+    outFILE << std::endl;
 
     return 0;
 }
@@ -731,6 +748,22 @@ int HPWH::writeCSVRow(std::ofstream& outFILE,
     {
         outFILE << fmt::format(",{:0.2f}",
                                getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+    }
+
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        auto hs = std::dynamic_pointer_cast<Condenser>(heatSources[iHS]);
+        if (hs) {
+            double externalOutletT_C = 1000.0;
+            if (hs->externalOutletHeight >= 0)
+                externalOutletT_C = tank->nodeTs_C[hs->externalOutletHeight];
+            outFILE << fmt::format(",{:0.2f},{:0.2f},{:0.2f},{:0.2f},{:0.2f}",
+                hs->turnOnLogicSet[0]->getTankValue(),
+                hs->turnOnLogicSet[0]->getComparisonValue(),
+                hs->shutOffLogicSet[0]->getTankValue(),
+                hs->shutOffLogicSet[0]->getComparisonValue(),
+                C_TO_F(externalOutletT_C));
+        }
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
