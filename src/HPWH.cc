@@ -758,11 +758,11 @@ int HPWH::writeCSVRow(std::ofstream& outFILE,
             if (hs->externalOutletHeight >= 0)
                 externalOutletT_C = tank->nodeTs_C[hs->externalOutletHeight];
             outFILE << fmt::format(",{:0.2f},{:0.2f},{:0.2f},{:0.2f},{:0.2f}",
-                hs->turnOnLogicSet[0]->getTankValue(),
-                hs->turnOnLogicSet[0]->getComparisonValue(),
-                hs->shutOffLogicSet[0]->getTankValue(),
-                hs->shutOffLogicSet[0]->getComparisonValue(),
-                C_TO_F(externalOutletT_C));
+                doIP ? C_TO_F(hs->turnOnLogicSet[0]->getTankValue()) : hs->turnOnLogicSet[0]->getTankValue(),
+                doIP ? C_TO_F(hs->turnOnLogicSet[0]->getComparisonValue()) : hs->turnOnLogicSet[0]->getComparisonValue(),
+                doIP ? C_TO_F(hs->shutOffLogicSet[0]->getTankValue()) : hs->shutOffLogicSet[0]->getTankValue(),
+                doIP ? C_TO_F(hs->shutOffLogicSet[0]->getComparisonValue()) : hs->shutOffLogicSet[0]->getComparisonValue(),
+                doIP ? C_TO_F(externalOutletT_C) : externalOutletT_C);
         }
     }
 
