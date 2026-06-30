@@ -173,8 +173,7 @@
                 "ua": 6.426538638300477,
                 "volume": 1.892705
             }
-        },
-        "fixed_flow_rate": 0.001326465499895446
+        }
     },
     "depresses_temperature": false,
     "fixed_volume": false,
