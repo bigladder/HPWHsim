@@ -58,7 +58,7 @@ struct HPWH::Fitter : public Sender
 
         std::string show() override
         {
-            return fmt::format(getFormat(), temperatureIndex, *data_ptr);
+            return fmt::format(fmt::runtime(getFormat()), temperatureIndex, *data_ptr);
         }
 
       protected:
