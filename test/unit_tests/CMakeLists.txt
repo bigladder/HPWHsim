@@ -16,7 +16,7 @@ set(library_files
 
 add_executable(${PROJECT_NAME}_tests ${library_files})
 
-target_compile_features(${PROJECT_NAME}_tests PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME}_tests PRIVATE cxx_std_20)
 
 target_include_directories(${PROJECT_NAME}_tests PRIVATE ${PROJECT_BINARY_DIR}/src "${PROJECT_SOURCE_DIR}/src")
 
