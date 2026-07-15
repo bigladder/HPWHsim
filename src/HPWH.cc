@@ -699,15 +699,21 @@ int HPWH::writeCSVHeading(std::ofstream& outFILE,
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        if (std::dynamic_pointer_cast<Condenser>(heatSources[iHS]))
+        auto hs = std::dynamic_pointer_cast<Condenser>(heatSources[iHS]);
+        if (hs)
         {
-            outFILE << fmt::format(
-                ",T_turnon_value_{},T_turnon_target_{},T_shutoff_value_{},T_shutoff_target_{},T_external_outlet_{}",
-                iHS + 1,
-                iHS + 1,
-                iHS + 1,
-                iHS + 1,
-                iHS + 1);
+            if (hs->turnOnLogicSet.size())
+            {
+                outFILE << fmt::format(",T_turnon_value_{},T_turnon_target_{}", iHS + 1, iHS + 1);
+            }
+            if (hs->shutOffLogicSet.size())
+            {
+                outFILE << fmt::format(",T_shutoff_value_{},T_shutoff_target_{}", iHS + 1, iHS + 1);
+            }
+            if (hs->externalOutletHeight >= 0)
+            {
+                outFILE << fmt::format(",T_external_outlet_{}", iHS + 1);
+            }
         }
     }
 
@@ -753,16 +759,33 @@ int HPWH::writeCSVRow(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         auto hs = std::dynamic_pointer_cast<Condenser>(heatSources[iHS]);
-        if (hs) {
+        if (hs)
+        {
+            if (hs->turnOnLogicSet.size())
+            {
+                outFILE << fmt::format(",{:0.2f}",
+                                       doIP ? C_TO_F(hs->turnOnLogicSet[0]->getTankValue())
+                                            : hs->turnOnLogicSet[0]->getTankValue());
+                outFILE << fmt::format(",{:0.2f}",
+                                       doIP ? C_TO_F(hs->turnOnLogicSet[0]->getComparisonValue())
+                                            : hs->turnOnLogicSet[0]->getComparisonValue());
+            }
+            if (hs->shutOffLogicSet.size())
+            {
+                outFILE << fmt::format(",{:0.2f}",
+                                       doIP ? C_TO_F(hs->shutOffLogicSet[0]->getTankValue())
+                                            : hs->shutOffLogicSet[0]->getTankValue());
+                outFILE << fmt::format(",{:0.2f}",
+                                       doIP ? C_TO_F(hs->shutOffLogicSet[0]->getComparisonValue())
+                                            : hs->shutOffLogicSet[0]->getComparisonValue());
+            }
             double externalOutletT_C = 1000.0;
             if (hs->externalOutletHeight >= 0)
+            {
                 externalOutletT_C = tank->nodeTs_C[hs->externalOutletHeight];
-            outFILE << fmt::format(",{:0.2f},{:0.2f},{:0.2f},{:0.2f},{:0.2f}",
-                doIP ? C_TO_F(hs->turnOnLogicSet[0]->getTankValue()) : hs->turnOnLogicSet[0]->getTankValue(),
-                doIP ? C_TO_F(hs->turnOnLogicSet[0]->getComparisonValue()) : hs->turnOnLogicSet[0]->getComparisonValue(),
-                doIP ? C_TO_F(hs->shutOffLogicSet[0]->getTankValue()) : hs->shutOffLogicSet[0]->getTankValue(),
-                doIP ? C_TO_F(hs->shutOffLogicSet[0]->getComparisonValue()) : hs->shutOffLogicSet[0]->getComparisonValue(),
-                doIP ? C_TO_F(externalOutletT_C) : externalOutletT_C);
+                outFILE << fmt::format(",{:0.2f}",
+                                       doIP ? C_TO_F(externalOutletT_C) : externalOutletT_C);
+            }
         }
     }
 
