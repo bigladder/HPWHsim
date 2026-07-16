@@ -1,0 +1,244 @@
+{
+    "central_system": {
+        "control_type": "FIXED_OUTLET_TEMPERATURE",
+        "external_inlet_height": 0.989583,
+        "external_outlet_height": 0.0,
+        "heat_source_configurations": [
+            {
+                "heat_distribution": {
+                    "normalized_height": [
+                        0.8333333333333334,
+                        1.0
+                    ],
+                    "weight": [
+                        1.0,
+                        0.0
+                    ]
+                },
+                "heat_source": {
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "AOSmith/EmergeXC",
+                            "model_number": "CAHP3CO-6"
+                        }
+                    },
+                    "metadata": {
+                        "author": "California Energy Commission",
+                        "description": "Representation of embedded HPWH element",
+                        "schema_author": "Big Ladder Software, LLC",
+                        "schema_name": "RSAIRTOWATERHEATPUMP",
+                        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSAIRTOWATERHEATPUMP.schema.yaml",
+                        "schema_version": "0.1.0",
+                        "source": "Provided by AOSmith",
+                        "time_of_creation": "2025-09-26T18:39Z"
+                    },
+                    "performance": {
+                        "compressor_lockout_temperature_hysteresis": 0.0,
+                        "maximum_refrigerant_temperature": 344.26111111111106,
+                        "performance_map": {
+                            "grid_variables": {
+                                "evaporator_environment_dry_bulb_temperature": [
+                                    248.15,
+                                    270.92778,
+                                    293.15,
+                                    315.92778
+                                ],
+                                "condenser_entering_temperature": [
+                                    277.59444,
+                                    295.37222,
+                                    312.59444,
+                                    319.26111
+                                ],
+                                "condenser_leaving_temperature": [
+                                    327.59444,
+                                    341.48333,
+                                    355.37222
+                                ]
+                            },
+                            "lookup_variables": {
+                                "input_power": [
+                                    8520.0,
+                                    8880.0,
+                                    9240.0,
+                                    8122.98808,
+                                    8490.0,
+                                    8940.0,
+                                    7776.50007,
+                                    8190.0,
+                                    8640.0,
+                                    7890.21856,
+                                    8370.0,
+                                    8527.90256,
+                                    6240.0,
+                                    6720.0,
+                                    7200.0,
+                                    5664.51771,
+                                    6120.0,
+                                    6420.0,
+                                    5176.41451,
+                                    5370.0,
+                                    5670.0,
+                                    5539.26193,
+                                    6120.0,
+                                    5367.53276,
+                                    3690.0,
+                                    4410.0,
+                                    5100.0,
+                                    3840.0,
+                                    4350.0,
+                                    4800.0,
+                                    3824.78401,
+                                    4050.0,
+                                    4470.0,
+                                    3972.1299,
+                                    4410.0,
+                                    4363.28818,
+                                    2550.0,
+                                    3030.0,
+                                    3510.0,
+                                    2268.83698,
+                                    2730.0,
+                                    3060.0,
+                                    1967.9608,
+                                    2280.0,
+                                    2610.0,
+                                    1964.28028,
+                                    2280.0,
+                                    2442.92073
+                                ],
+                                "heating_capacity": [
+                                    14160.0,
+                                    13500.0,
+                                    12840.0,
+                                    11542.01165,
+                                    10860.0,
+                                    10200.0,
+                                    8953.7518,
+                                    8310.0,
+                                    7650.0,
+                                    7753.91451,
+                                    6960.0,
+                                    6673.62876,
+                                    20160.0,
+                                    19170.0,
+                                    18180.0,
+                                    15175.90544,
+                                    14190.0,
+                                    13590.0,
+                                    10487.96183,
+                                    9750.0,
+                                    9150.0,
+                                    9525.91387,
+                                    9180.0,
+                                    7424.5532,
+                                    20910.0,
+                                    20580.0,
+                                    20250.0,
+                                    17370.0,
+                                    16530.0,
+                                    15480.0,
+                                    13070.11796,
+                                    11910.0,
+                                    10830.0,
+                                    11629.70697,
+                                    11220.0,
+                                    9069.59749,
+                                    19590.0,
+                                    18810.0,
+                                    18030.0,
+                                    14948.11146,
+                                    14160.0,
+                                    13500.0,
+                                    10511.97272,
+                                    9780.0,
+                                    9150.0,
+                                    9292.05389,
+                                    8670.0,
+                                    7443.10551
+                                ]
+                            }
+                        },
+                        "use_defrost_map": true
+                    }
+                },
+                "heat_source_type": "AIRTOWATERHEATPUMP",
+                "id": "compressor",
+                "shut_off_logic": [
+                    {
+                        "comparison_type": "GREATER_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.3,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.0833333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ],
+                "turn_on_logic": [
+                    {
+                        "comparison_type": "LESS_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.3,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.25,
+                                    0.3333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ]
+            }
+        ],
+        "primary_heat_source_id": "compressor",
+        "tank": {
+            "metadata": {
+                "author": "California Energy Commission",
+                "description": "Representation of embedded HPWH element",
+                "schema_author": "Big Ladder Software, LLC",
+                "schema_name": "RSTANK",
+                "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml",
+                "schema_version": "0.1.0",
+                "source": "",
+                "time_of_creation": "2026-01-28T15:53Z"
+            },
+            "performance": {
+                "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+                "fittings_ua": 0.0,
+                "ua": 6.426538638300477,
+                "volume": 1.892705
+            }
+        }
+    },
+    "depresses_temperature": false,
+    "fixed_volume": false,
+    "interpolate_cop": false,
+    "metadata": {
+        "author": "California Energy Commission",
+        "description": "Representation of embedded HPWH element",
+        "schema_author": "Big Ladder Software, LLC",
+        "schema_name": "HPWHSimInput",
+        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml",
+        "schema_version": "0.1.0",
+        "source": "Data provided by AOSmith",
+        "time_of_creation": "2026-01-28T15:53Z"
+    },
+    "number_of_nodes": 24,
+    "standard_setpoint": 330.372,
+    "system_type": "CENTRAL"
+}

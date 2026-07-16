@@ -108,8 +108,15 @@
 	"NyleC125A_C_MP": 343,
 	"NyleC185A_C_MP": 344,
 	"NyleC250A_C_MP": 345,
+	"Nyle_e360_SP": 346,
+	"Nyle_e180_SP": 347,
 	"RheemHPHD60": 350,
 	"RheemHPHD135": 353,
 	"IceAirccHPWH275D": 1200,
-	"IceAirccHPWH550D": 1201
+	"IceAirccHPWH550D": 1201,
+	"AOSmith_CAHP1CO6_SP": 1202,
+	"AOSmith_CAHP2CO6_SP": 1203,
+	"AOSmith_CAHP3CO6_SP": 1204,
+	"Laars_ECHV0325_SP": 1205,
+	"Watts_Aegis_500A_HPL_90_70_HIT": 1206
 }
