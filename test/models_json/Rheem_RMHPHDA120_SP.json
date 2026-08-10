@@ -1,0 +1,244 @@
+{
+    "central_system": {
+        "control_type": "FIXED_OUTLET_TEMPERATURE",
+        "external_inlet_height": 0.989583,
+        "external_outlet_height": 0.0,
+        "heat_source_configurations": [
+            {
+                "heat_distribution": {
+                    "normalized_height": [
+                        0.08333333333333333,
+                        1.0
+                    ],
+                    "weight": [
+                        1.0,
+                        0.0
+                    ]
+                },
+                "heat_source": {
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "Rheem",
+                            "model_number": "RMHPHDA120"
+                        }
+                    },
+                    "metadata": {
+                        "author": "California Energy Commission",
+                        "description": "Representation of embedded HPWH element",
+                        "schema_author": "Big Ladder Software, LLC",
+                        "schema_name": "RSAIRTOWATERHEATPUMP",
+                        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSAIRTOWATERHEATPUMP.schema.yaml",
+                        "schema_version": "0.1.0",
+                        "source": "Provided by Rheem",
+                        "time_of_creation": "2025-09-26T18:39Z"
+                    },
+                    "performance": {
+                        "compressor_lockout_temperature_hysteresis": 0.0,
+                        "maximum_refrigerant_temperature": 344.26,
+                        "performance_map": {
+                            "grid_variables": {
+                                "evaporator_environment_dry_bulb_temperature": [
+                                    258.15000000000003,
+                                    278.5203703703704,
+                                    298.89074074074074,
+                                    319.2611111111111
+                                ],
+                                "condenser_entering_temperature": [
+                                    283.15000000000003,
+                                    298.8907407407408,
+                                    314.6314814814815,
+                                    330.37222222222226
+                                ],
+                                "condenser_leaving_temperature": [
+                                    302.1166666666667,
+                                    320.41111111111115,
+                                    338.7055555555556
+                                ]
+                            },
+                            "lookup_variables": {
+                                "input_power": [
+                                    12010.000000000002,
+                                    13327.694448400394,
+                                    21236.066548560455,
+                                    6148.502239709462,
+                                    11034.81998530849,
+                                    18078.805382541024,
+                                    1929.1684096616673,
+                                    9097.053359074773,
+                                    9820.813371312364,
+                                    -1806.7230566123253,
+                                    4803.500674736648,
+                                    9100.000000000005,
+                                    6404.293254284881,
+                                    15861.37256168687,
+                                    23803.905833575125,
+                                    2707.565995063421,
+                                    14366.250067633553,
+                                    22271.171328042197,
+                                    -124.5731720681897,
+                                    10153.81016165049,
+                                    20451.886288342343,
+                                    -3041.965135446497,
+                                    5490.137461304605,
+                                    12497.247568170122,
+                                    2462.0365564909334,
+                                    11302.098667129918,
+                                    22646.785106044714,
+                                    -1543.4347835694175,
+                                    6954.7830608372315,
+                                    16451.977529754135,
+                                    -3381.3931629186814,
+                                    5289.113596551146,
+                                    10326.68645703043,
+                                    -5293.861330949024,
+                                    2675.9418251584702,
+                                    9931.955568964717,
+                                    2247.4818834026646,
+                                    11863.946366044618,
+                                    22877.908629320707,
+                                    -2257.3933268788937,
+                                    6854.639568060026,
+                                    17434.55434289903,
+                                    -4794.72734240722,
+                                    3161.077214793259,
+                                    12374.239621631576,
+                                    -6781.665302397878,
+                                    566.4654995929768,
+                                    8630.693592836402
+                                ],
+                                "heating_capacity": [
+                                    24260.00000000002,
+                                    41299.39417738267,
+                                    48628.43744780669,
+                                    10538.547627620326,
+                                    25705.887739018854,
+                                    29122.92560771397,
+                                    -1859.0183906057955,
+                                    11264.399452928263,
+                                    14272.933982156143,
+                                    -13884.963138470452,
+                                    830.5866486189253,
+                                    12110.000000000033,
+                                    24899.82768232405,
+                                    44463.78720460584,
+                                    60389.27291533405,
+                                    11764.477642488822,
+                                    30055.912590692395,
+                                    43465.406766605796,
+                                    1996.5191902395982,
+                                    19308.482622398133,
+                                    33705.880941122174,
+                                    -8590.032324599732,
+                                    7259.571942616872,
+                                    14746.166613747515,
+                                    30246.973212913002,
+                                    51509.03847166742,
+                                    73308.73954504471,
+                                    16417.8482237821,
+                                    32413.038414100323,
+                                    44921.20248650781,
+                                    7649.2382024309045,
+                                    24300.65623346477,
+                                    25818.323917772635,
+                                    -2511.7994689389852,
+                                    13142.543336756367,
+                                    13627.579815615958,
+                                    44999.31003251458,
+                                    70907.94181481558,
+                                    90864.68365281989,
+                                    29495.616572385432,
+                                    48089.08084863053,
+                                    57286.570188251804,
+                                    17981.89423248577,
+                                    35672.7278613589,
+                                    40654.43908085325,
+                                    5700.986013095269,
+                                    22480.538816321852,
+                                    19210.04050096196
+                                ]
+                            }
+                        },
+                        "use_defrost_map": true
+                    }
+                },
+                "heat_source_type": "AIRTOWATERHEATPUMP",
+                "id": "compressor",
+                "shut_off_logic": [
+                    {
+                        "comparison_type": "GREATER_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.3,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.08333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ],
+                "turn_on_logic": [
+                    {
+                        "comparison_type": "LESS_THAN",
+                        "heating_logic": {
+                            "differential_temperature": 8.3,
+                            "temperature_weight_distribution": {
+                                "normalized_height": [
+                                    0.25,
+                                    0.3333333333333333,
+                                    1.0
+                                ],
+                                "weight": [
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "heating_logic_type": "TEMPERATURE_BASED"
+                    }
+                ]
+            }
+        ],
+        "primary_heat_source_id": "compressor",
+        "tank": {
+            "metadata": {
+                "author": "California Energy Commission",
+                "description": "Representation of embedded HPWH element",
+                "schema_author": "Big Ladder Software, LLC",
+                "schema_name": "RSTANK",
+                "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/RSTANK.schema.yaml",
+                "schema_version": "0.1.0",
+                "source": "",
+                "time_of_creation": "2026-01-28T15:53Z"
+            },
+            "performance": {
+                "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+                "fittings_ua": 0.0,
+                "ua": 6.426538638300477,
+                "volume": 1.892705
+            }
+        }
+    },
+    "depresses_temperature": false,
+    "fixed_volume": false,
+    "interpolate_cop": false,
+    "metadata": {
+        "author": "California Energy Commission",
+        "description": "Representation of embedded HPWH element",
+        "schema_author": "Big Ladder Software, LLC",
+        "schema_name": "HPWHSimInput",
+        "schema_url": "https://github.com/bigladder/hpwh-data-model/blob/main/schema/HPWHSimInput.schema.yaml",
+        "schema_version": "0.1.0",
+        "source": "Data provided by Rheem",
+        "time_of_creation": "2026-01-28T15:53Z"
+    },
+    "number_of_nodes": 24,
+    "standard_setpoint": 330.372,
+    "system_type": "CENTRAL"
+}
