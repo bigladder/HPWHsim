@@ -18,8 +18,8 @@
                 "heat_source": {
                     "description": {
                         "product_information": {
-                            "manufacturer": "Rheem",
-                            "model_number": "RMHPHDA120"
+                            "manufacturer": "LOREM IPSUM",
+                            "model_number": "Single Pass Model RMHPHDA120.gridded.rbf.thin_plate_spline"
                         }
                     },
                     "metadata": {
@@ -33,6 +33,8 @@
                         "time_of_creation": "2025-09-26T18:39Z"
                     },
                     "performance": {
+                        "compressor_lockout_temperature_hysteresis": 0.0,
+                        "maximum_refrigerant_temperature": 344.26,
                         "performance_map": {
                             "grid_variables": {
                                 "evaporator_environment_dry_bulb_temperature": [
@@ -254,7 +256,8 @@
                                     20025.76904
                                 ]
                             }
-                        }
+                        },
+                        "use_defrost_map": true
                     }
                 },
                 "heat_source_type": "AIRTOWATERHEATPUMP",
