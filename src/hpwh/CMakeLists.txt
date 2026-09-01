@@ -15,4 +15,4 @@ target_include_directories(hpwh
 set(libs ${PROJECT_NAME} ${PROJECT_NAME}_common_interface CLI11 hpwh_data_model)
 target_link_libraries(hpwh PRIVATE ${libs})
 
-target_compile_features(hpwh PRIVATE cxx_std_17)
+target_compile_features(hpwh PRIVATE cxx_std_20)
